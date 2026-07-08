@@ -126,7 +126,7 @@ export function Footer() {
             empresas e não é comunicação oficial de nenhum programa de fidelidade.
           </p>
           <p className="mt-3 font-mono text-xs text-gray-400">
-            © 2026 The Loyalty · Ponto leu até aqui.
+            © {new Date().getFullYear()} The Loyalty · Ponto leu até aqui.
           </p>
         </div>
       </div>
