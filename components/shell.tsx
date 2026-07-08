@@ -11,7 +11,7 @@ export function Nav() {
       <div className="tl-container flex h-16 items-center justify-between">
         <a href="#" className="inline-flex min-h-11 items-center font-display text-xl text-ink">
           <span className="font-semibold">The </span>
-          <span className="font-bold">Loyalty</span>
+          <span className="font-bold">Loyal</span>
         </a>
         <nav aria-label="Principal" className="flex items-center gap-2 sm:gap-4">
           <a href="#metodo" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
@@ -93,7 +93,7 @@ export function Footer() {
               </span>
               <span className="font-display text-xl">
                 <span className="font-semibold">The </span>
-                <span className="font-bold">Loyalty</span>
+                <span className="font-bold">Loyal</span>
               </span>
             </div>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-gray-400">
@@ -121,12 +121,12 @@ export function Footer() {
         <div className="mt-12 border-t border-gray-700 pt-6">
           <p className="text-xs leading-relaxed text-gray-400">
             Promoções podem mudar sem aviso. Confira sempre as regras no site
-            oficial antes de comprar, transferir ou resgatar. O The Loyalty não é
+            oficial antes de comprar, transferir ou resgatar. O The Loyal não é
             recomendação financeira personalizada, não usa dados internos de
             empresas e não é comunicação oficial de nenhum programa de fidelidade.
           </p>
           <p className="mt-3 font-mono text-xs text-gray-400">
-            © {new Date().getFullYear()} The Loyalty · Ponto leu até aqui.
+            © {new Date().getFullYear()} The Loyal · Ponto leu até aqui.
           </p>
         </div>
       </div>
