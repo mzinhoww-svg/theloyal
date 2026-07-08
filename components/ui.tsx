@@ -69,7 +69,12 @@ const VERDICT_STYLE: Record<Verdict, { label: string; cls: string }> = {
   },
 };
 
-export function TLBadge({ verdict, score }: { verdict: Verdict; score?: number }) {
+// Score obrigatorio em todo veredito, exceto "nao-confirmado" (DESIGN.md: sem dado, sem numero).
+type TLBadgeProps =
+  | { verdict: Exclude<Verdict, "nao-confirmado">; score: number }
+  | { verdict: "nao-confirmado"; score?: number };
+
+export function TLBadge({ verdict, score }: TLBadgeProps) {
   const v = VERDICT_STYLE[verdict];
   return (
     <span
