@@ -1,6 +1,6 @@
-# The Loyalty — Landing Page v1
+# The Loyal - Landing Page v1
 
-Landing de conversão para o The Loyalty Daily. Mídia editorial independente sobre loyalty,
+Landing de conversão para o The Loyal Daily. Mídia editorial independente sobre loyalty,
 pontos, milhas, cartões, bancos, varejo e cashback.
 
 Stack: **Next.js 14 App Router · TypeScript strict · Tailwind**. Sem outras dependências

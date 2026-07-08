@@ -1,4 +1,4 @@
-/* TL Graphics: sistema de imagem proprio do The Loyalty (TL-GRAPHICS.md).
+/* TL Graphics: sistema de imagem proprio do The Loyal (TL-GRAPHICS.md).
    Regra-mae: a imagem e dado. SVG inline, tokens oficiais, zero request externo.
    Excecao permitida ao "sem hex em componente": geometria SVG dos graficos usa as constantes documentadas. */
 
