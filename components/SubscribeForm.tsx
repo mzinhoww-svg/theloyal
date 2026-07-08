@@ -39,8 +39,13 @@ export function SubscribeForm({
 
     setStatus("loading");
     setMessage("");
-    // Mock de integracao. Substituir pelo endpoint do Beehiiv via route handler (ver README).
+    // ===== INTEGRACAO BEEHIIV: substituir este mock =====
+    // Trocar o delay abaixo por um fetch para uma route handler propria
+    // (app/api/subscribe/route.ts) que chama a API do Beehiiv no servidor com a
+    // chave em variavel de ambiente (BEEHIIV_API_KEY). Nunca expor a chave no
+    // client. Manter o honeypot acima e adicionar rate limit na route.
     await new Promise((r) => setTimeout(r, 900));
+    // ===== fim do trecho a substituir =====
     setStatus("success");
     setMessage("Pronto. A próxima edição chega às 8h. Ponto abanou o rabo, o que é raro.");
     onSuccess?.();
