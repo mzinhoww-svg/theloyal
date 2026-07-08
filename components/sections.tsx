@@ -207,7 +207,7 @@ const PRINCIPIOS = [
   ["Conta aberta", "CPM, VPM, preço implícito e spread com fórmula pública. Se falta dado, o item é Não confirmado."],
   ["TL Score", "Oito critérios com pesos declarados: valor, clareza, vigência, fricção, aplicabilidade, liquidez, risco e fontes."],
   ["Independência", "Nenhum dado interno, nenhuma métrica proprietária, nenhum texto pautado por programa ou banco."],
-  ["Conteúdo patrocinado sinalizado", "Quando existir, virá identificado antes do conteúdo. Sem exceção."],
+  ["Patrocínio sinalizado", "Quando existir, virá identificado antes do conteúdo. Sem exceção."],
 ] as const;
 
 export function ComoAnalisamos() {
