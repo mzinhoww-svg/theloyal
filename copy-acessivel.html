@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Loyalty — Proposta de copy acessível</title>
+<style>
+  :root { --ink:#1a1a1a; --gray:#555; --line:#e2e2e2; --green:#1f7a44; --paper:#faf9f6; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+         color: var(--ink); background: var(--paper); line-height:1.55; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+  header.note { background:#fff8e6; border:1px solid #f0d98a; border-radius:8px;
+                padding:14px 16px; font-size:14px; color:#5b4a12; margin-bottom:40px; }
+  section { padding: 28px 0; border-top: 1px solid var(--line); }
+  .label { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--gray); font-weight:700; margin-bottom:8px; }
+  h1 { font-size:34px; line-height:1.15; margin:.2em 0; }
+  h2 { font-size:24px; line-height:1.2; margin:.2em 0 .4em; }
+  h3 { font-size:18px; margin:.6em 0 .2em; }
+  p { margin:.5em 0; color:#333; }
+  .sub { color: var(--gray); font-size:17px; }
+  ul { padding-left:20px; }
+  li { margin:.4em 0; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin:12px 0; background:#fff; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase;
+         letter-spacing:.05em; padding:2px 8px; border-radius:20px; background:#e6f4ea; color:var(--green); }
+  .btn { display:inline-block; background:var(--green); color:#fff; font-weight:700;
+         padding:12px 22px; border-radius:6px; text-decoration:none; margin-top:8px; }
+  .muted { color:var(--gray); font-size:14px; }
+  .box { border-left:3px solid var(--ink); padding:6px 0 6px 16px; margin:14px 0; font-weight:600; }
+  .gloss { background:#fff; border:1px solid var(--line); border-radius:8px; padding:4px 18px; }
+  .gloss dt { font-weight:700; margin-top:12px; }
+  .gloss dd { margin:2px 0 0; color:var(--gray); }
+  code { background:#eee; padding:1px 6px; border-radius:4px; font-size:14px; }
+  .compare { font-size:14px; }
+  .compare td { padding:6px 12px 6px 0; }
+  .compare .old { color:#a33; }
+  .compare .new { color:var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="note">
+    <strong>Proposta de linguagem mais acessível.</strong> Este HTML é só um rascunho de texto
+    (sem design final) para você comparar com a copy atual. A ideia: menos jargão, e o jargão
+    que fica vem explicado. Estrutura e seções são as mesmas do site.
+  </header>
+
+  <!-- HERO -->
+  <section style="border-top:none">
+    <div class="label">Newsletter independente sobre pontos e milhas · Seg a sex, 8h, 5 min</div>
+    <h1>Pontos e milhas explicados com a conta feita.</h1>
+    <p class="sub">
+      Todo dia útil, um e-mail curto que mostra, em reais, se aquela promoção de pontos,
+      milhas, cartão ou cashback vale mesmo a pena — ou se é só um banner bonito.
+    </p>
+    <a class="btn" href="#">Receber grátis por e-mail</a>
+    <p class="muted">Sem promessa de milha grátis. Só informação que ajuda a decidir. Cancele quando quiser.</p>
+  </section>
+
+  <!-- PROBLEMA -->
+  <section>
+    <div class="label">O problema</div>
+    <h2>Quase toda oferta parece boa no título.</h2>
+    <p>
+      "Bônus de 110%." "40% de desconto." "Ponto pela metade do preço." Mas o custo de verdade
+      depende de detalhes que ninguém mostra: se você precisa pagar um clube, qual cartão usa,
+      a validade e a regra de cada programa.
+    </p>
+    <p class="box">
+      O The Loyalty faz a parte chata por você: lê o regulamento, confere se ainda está valendo
+      e calcula quanto cada opção realmente custa — antes de você gastar.
+    </p>
+    <p class="muted">
+      Exemplo: a <em>mesma</em> promoção pode custar R$ 34, R$ 24 ou R$ 16 por mil pontos,
+      dependendo de como você faz. O banner só te mostra o número bonito.
+    </p>
+  </section>
+
+  <!-- MÉTODO -->
+  <section>
+    <div class="label">Como funciona cada edição</div>
+    <h2>Quatro passos, todo dia, na mesma ordem.</h2>
+    <ul>
+      <li><strong>1. O que mudou</strong> — a novidade real do mercado hoje, sem repetição de notícia velha.</li>
+      <li><strong>2. A conta</strong> — quanto custa de verdade, em reais, com a fórmula à mostra pra você conferir.</li>
+      <li><strong>3. Por quê</strong> — o motivo por trás da jogada da empresa e o que ela quer que você faça.</li>
+      <li><strong>4. O veredito</strong> — uma recomendação clara: <em>vale a pena, dá pra olhar, melhor esperar</em> ou <em>evite</em> — e para quem vale.</li>
+    </ul>
+  </section>
+
+  <!-- O QUE RECEBE -->
+  <section>
+    <div class="label">O que você recebe</div>
+    <h2>Tudo incluído no mesmo e-mail.</h2>
+    <div class="card">
+      <span class="tag">Incluído</span>
+      <h3>Todo dia útil, às 8h</h3>
+      <p>Leitura de 5 minutos com a novidade do dia, a oferta analisada com a conta feita e o que vence hoje.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Incluído</span>
+      <h3>No fim de semana</h3>
+      <p>O resumo da semana, as melhores oportunidades ainda no ar e o que fazer nos próximos 7 dias.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Incluído</span>
+      <h3>Guias que não vencem</h3>
+      <p>Explicações de base pra você entender de vez como pontos, milhas e transferências funcionam.</p>
+    </div>
+    <div class="card" style="opacity:.75">
+      <span class="tag" style="background:#eee;color:#666">Em breve</span>
+      <h3>Versão Pro (para profissionais)</h3>
+      <p>Histórico, comparativos de preço e radar de mercado para quem trabalha com pontos, bancos e varejo.</p>
+    </div>
+  </section>
+
+  <!-- PARA QUEM -->
+  <section>
+    <div class="label">Para quem é</div>
+    <h2>Serve pra quem quer decidir melhor.</h2>
+    <ul>
+      <li><strong>Quem usa de vez em quando</strong> — quer saber se pontos e cashback valem a pena antes de mudar hábito.</li>
+      <li><strong>Quem já acumula muito</strong> — quer a conta, o momento certo e o prazo de cada oferta.</li>
+      <li><strong>Quem tem cartão premium</strong> — precisa decidir anuidade, sala VIP e benefícios sem depender do gerente.</li>
+      <li><strong>Quem trabalha com o assunto</strong> — lê os movimentos dos programas como estratégia de mercado.</li>
+    </ul>
+  </section>
+
+  <!-- COMO ANALISAMOS -->
+  <section>
+    <div class="label">Por que confiar</div>
+    <h2>A conta é aberta e as fontes são públicas.</h2>
+    <ul>
+      <li><strong>Fontes oficiais</strong> — a gente confere sempre o regulamento da própria empresa.</li>
+      <li><strong>Só o que está valendo</strong> — oferta sem data ou regra clara não vira recomendação.</li>
+      <li><strong>Conta à mostra</strong> — mostramos a fórmula. Se falta informação, avisamos que não dá pra confirmar.</li>
+      <li><strong>Nota de 0 a 100</strong> — cada oferta ganha uma nota, com os critérios explicados.</li>
+      <li><strong>Independência</strong> — nenhum programa ou banco paga pra influenciar o que a gente escreve.</li>
+      <li><strong>Anúncio é sinalizado</strong> — se algum dia houver publicidade, ela vem marcada, sempre.</li>
+    </ul>
+    <p class="muted">
+      Promoções mudam sem aviso. Confira sempre as regras no site oficial antes de comprar,
+      transferir ou resgatar. O The Loyalty não dá recomendação financeira personalizada.
+    </p>
+  </section>
+
+  <!-- CTA -->
+  <section>
+    <h2>Amanhã às 8h, a conta já vai estar pronta.</h2>
+    <p class="sub">Leitura de 5 minutos. Cancela em um clique. De graça.</p>
+    <a class="btn" href="#">Quero receber por e-mail</a>
+  </section>
+
+  <!-- GLOSSÁRIO -->
+  <section>
+    <div class="label">Se aparecer algum termo técnico</div>
+    <h2>Mini-glossário</h2>
+    <dl class="gloss">
+      <dt>Milheiro</dt><dd>O preço de mil pontos ou milhas. Serve pra comparar o custo de cada opção.</dd>
+      <dt>Custo por milheiro (CPM)</dt><dd>Quanto você paga, em reais, por mil pontos depois de todas as taxas.</dd>
+      <dt>Transferência com bônus</dt><dd>Passar pontos de um programa pra outro ganhando um extra (ex.: +110%).</dd>
+      <dt>Acumular / estoque</dt><dd>Juntar pontos pra usar depois, e não numa viagem já marcada.</dd>
+      <dt>Nota / score</dt><dd>De 0 a 100, o quanto uma oferta vale a pena, na nossa análise.</dd>
+    </dl>
+  </section>
+
+  <!-- COMPARATIVO -->
+  <section>
+    <div class="label">Antes → depois (exemplos de simplificação)</div>
+    <h2>O que mudou na linguagem</h2>
+    <table class="compare">
+      <tr><td class="old">"O mercado de loyalty explicado com conta feita."</td>
+          <td class="new">"Pontos e milhas explicados com a conta feita."</td></tr>
+      <tr><td class="old">"CPM efetivo, VPM, preço implícito e spread."</td>
+          <td class="new">"Quanto custa de verdade, em reais."</td></tr>
+      <tr><td class="old">"Deal Desk com conta feita."</td>
+          <td class="new">"A oferta do dia analisada com a conta feita."</td></tr>
+      <tr><td class="old">"Biblioteca evergreen."</td>
+          <td class="new">"Guias que não vencem."</td></tr>
+      <tr><td class="old">"Risco de estoque / liquidez."</td>
+          <td class="new">"Se vale acumular e se dá pra usar fácil."</td></tr>
+      <tr><td class="old">"Heavy user."</td>
+          <td class="new">"Quem já acumula muito."</td></tr>
+    </table>
+  </section>
+
+</div>
+</body>
+</html>

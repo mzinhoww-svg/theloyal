@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The Loyal - DESIGN.md. Flat editorial: hierarquia por tipografia e borda, nunca por sombra. */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-green-100 text-ink;
+  }
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(49, 92, 255, 0.35);
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  .tl-label {
+    @apply font-sans font-semibold text-[13px] uppercase tracking-[0.08em] text-gray-500;
+  }
+  .tl-container {
+    @apply mx-auto max-w-page px-6 lg:px-12;
+  }
+  .tl-section {
+    @apply py-16 md:py-24 lg:py-28;
+  }
+}
+
+/* Entrada de secao no scroll: fade + translateY(12px), 400ms, uma vez */
+.tl-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 400ms cubic-bezier(0.2, 0, 0, 1),
+    transform 400ms cubic-bezier(0.2, 0, 0, 1);
+}
+.tl-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ===== Mascote Ponto: idle (PONTO-MASCOTE-GUIA.md secao 5) ===== */
+@keyframes tl-blink {
+  0%, 96%, 100% { transform: scaleY(1); }
+  97.5% { transform: scaleY(0.08); }
+}
+@keyframes tl-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+@keyframes tl-ear {
+  0%, 94%, 100% { transform: rotate(0deg); }
+  96% { transform: rotate(-8deg); }
+  98% { transform: rotate(2deg); }
+}
+@keyframes tl-tag {
+  0%, 88%, 100% { transform: rotate(0deg); }
+  92% { transform: rotate(-6deg); }
+  96% { transform: rotate(6deg); }
+}
+@keyframes tl-wag {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(20deg); }
+  75% { transform: rotate(-14deg); }
+}
+@keyframes tl-sniff {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.12); }
+  60% { transform: scale(0.98); }
+  80% { transform: scale(1.08); }
+}
+@keyframes tl-tag-once {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(-9deg); }
+  70% { transform: rotate(8deg); }
+}
+
+.ponto-eyes { animation: tl-blink 4s infinite; transform-origin: center; transform-box: fill-box; }
+.ponto-body { animation: tl-breathe 3s ease-in-out infinite; transform-origin: 50% 90%; transform-box: fill-box; }
+.ponto-ear-l { animation: tl-ear 7s infinite; transform-origin: 80% 20%; transform-box: fill-box; }
+.ponto-tag { animation: tl-tag 10s infinite; transform-origin: 50% -10%; transform-box: fill-box; }
+.ponto-tail-wag { animation: tl-wag 450ms ease-in-out 2; transform-origin: 90% 90%; transform-box: fill-box; }
+.ponto-tag.wiggle { animation: tl-tag-once 600ms ease-in-out; }
+
+.p-pupil { transition: transform 80ms linear; transform-box: fill-box; }
+.p-nose { transform-box: fill-box; transform-origin: center; }
+.p-nose.sniff { animation: tl-sniff 500ms ease-in-out; }
+
+.ponto-head {
+  transition: transform 400ms cubic-bezier(0.2, 0, 0, 1);
+  transform-origin: 50% 80%;
+  transform-box: fill-box;
+}
+.ponto-head.is-tilt { transform: rotate(12deg); }
+
+/* Fallback estatico: desliga idle, reveal, tilt e smooth scroll (guia secao 5, DESIGN.md a11y) */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .tl-reveal { opacity: 1; transform: none; transition: none; }
+  .ponto-eyes,
+  .ponto-body,
+  .ponto-ear-l,
+  .ponto-tag,
+  .ponto-tail-wag,
+  .ponto-tag.wiggle,
+  .p-nose.sniff {
+    animation: none;
+  }
+  .p-pupil { transition: none; transform: none !important; }
+  .ponto-head { transition: none; }
+  .ponto-head.is-tilt { transform: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
