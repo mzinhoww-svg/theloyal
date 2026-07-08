@@ -15,6 +15,7 @@ const config: Config = {
         blue: { 100: "#E4EAFF", 600: "#315CFF", 700: "#2547CC" },
         yellow: { 100: "#FCF0CE", 500: "#F2C94C" },
         red: { 100: "#F9E2E2", 600: "#D64545", 700: "#B53A3A" },
+        caramel: { DEFAULT: "#D9A15B", dark: "#B8813F", cream: "#F3E3C3" },
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],
