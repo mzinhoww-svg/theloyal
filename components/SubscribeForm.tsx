@@ -8,10 +8,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export function SubscribeForm({
   compact = false,
+  submitLabel = "Quero receber grátis",
   onFocusChange,
   onSuccess,
 }: {
   compact?: boolean;
+  submitLabel?: string;
   onFocusChange?: (focused: boolean) => void;
   onSuccess?: () => void;
 }) {
@@ -100,7 +102,7 @@ export function SubscribeForm({
           disabled={status === "loading"}
           className="h-12 shrink-0 rounded bg-green-600 px-6 text-base font-semibold text-paper transition-colors duration-150 ease-standard hover:bg-green-700 active:translate-y-px disabled:bg-gray-400/40 disabled:text-gray-500"
         >
-          {status === "loading" ? "Enviando…" : "Receber o The Loyalty"}
+          {status === "loading" ? "Enviando…" : submitLabel}
         </button>
       </div>
       <div aria-live="polite">
@@ -112,7 +114,7 @@ export function SubscribeForm({
       </div>
       {!compact && (
         <p className="mt-3 text-sm text-gray-500">
-          Sem promessa de milha grátis. Só leitura útil.
+          De graça. Sem promessa de milha grátis. Cancela quando quiser, em um clique.
         </p>
       )}
     </form>

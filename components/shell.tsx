@@ -45,18 +45,18 @@ export function Hero() {
       <div className="tl-container relative grid items-center gap-12 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <div className="mb-8 flex items-baseline justify-between gap-4 border-t-2 border-ink pt-3">
-            <span className="tl-label !text-ink">Mídia independente de loyalty</span>
-            <span className="font-mono text-xs text-gray-500">SEG–SEX · 8H · 5 MIN</span>
+            <span className="tl-label !text-ink">Newsletter grátis de pontos e milhas</span>
+            <span className="font-mono text-xs text-gray-500">Seg a sex, 8h · 5 min de leitura</span>
           </div>
           <h1 className="font-display text-[40px] font-bold leading-[1.05] tracking-[-0.02em] md:text-[56px] lg:text-[64px]">
-            O mercado de loyalty explicado com conta feita.
+            Pontos e milhas sem pegadinha: a gente faz a conta pra você.
           </h1>
           <p className="mt-6 max-w-content text-lg leading-relaxed text-gray-500">
-            Pontos, milhas, cartões, bancos, varejo e cashback. Todos os dias, uma
-            leitura clara sobre onde existe valor real e onde só existe banner bonito.
+            Todo dia útil, às 8h, você recebe um e-mail de 5 minutos. Ele mostra, em
+            reais, se a promoção do dia vale a pena. E avisa quando é só banner bonito.
           </p>
           <div className="mt-10 max-w-xl">
-            <SubscribeForm onFocusChange={setTilt} onSuccess={() => setCelebrate(true)} />
+            <SubscribeForm submitLabel="Quero receber grátis" onFocusChange={setTilt} onSuccess={() => setCelebrate(true)} />
           </div>
           <a
             href="#como-analisamos"
