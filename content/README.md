@@ -7,11 +7,18 @@ Segue a estrutura e os checklists do Operating Manual v1. **Sem dependências**
 ## Fluxo
 
 ```bash
-npm run validate    # QA de cada edição → out/qa/NNNN.md (bloqueia em erro)
-npm run render      # gera out/email/NNNN.html e out/plain/NNNN.txt
-npm run publish     # valida + escreve content/latest.json e content/index.json
-npm run edition     # validate → render → publish
+npm run render:system   # UM JSON → 5 saídas: e-mail, plain, web archive, QA, manifest
+npm run validate        # só a validação editorial → out/qa/NNNN.md
+npm run render          # só e-mail + plain
+npm run render:web      # só o web archive (React) → out/web/NNNN.html
+npm run publish         # valida + escreve content/latest.json e content/index.json
+npm run edition         # render:system → publish
 ```
+
+`render:system` é o **sistema de renderização** completo: a partir de um único
+JSON gera e-mail (email-safe), plain text, web archive, relatório de QA e o
+manifest (lista de arquivos gerados), reauditando os artefatos. Detalhes e o
+checklist de QA em [`docs/RENDER-SYSTEM.md`](../docs/RENDER-SYSTEM.md).
 
 O `publish` **não envia e-mail**. O envio pelo Beehiiv é um passo manual, após
 revisão do `out/email` e aprovação do PR.

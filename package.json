@@ -9,10 +9,12 @@
     "lint": "next lint",
     "validate": "node scripts/validate.mjs",
     "render": "node scripts/render.mjs",
+    "render:web": "node scripts/render-web.mjs",
+    "render:system": "node scripts/render-system.mjs",
     "publish": "node scripts/publish.mjs",
     "qa": "node scripts/qa.mjs",
     "pro": "node scripts/pro.mjs",
-    "edition": "node scripts/validate.mjs && node scripts/render.mjs && node scripts/publish.mjs"
+    "edition": "node scripts/render-system.mjs && node scripts/publish.mjs"
   },
   "dependencies": {
     "next": "14.2.15",

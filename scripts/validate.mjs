@@ -3,11 +3,14 @@
 // Uso: node scripts/validate.mjs [caminho-da-edicao.json]
 import { mkdirSync, writeFileSync } from "node:fs";
 import {
-  DISCLAIMER, EMOJI_RE, URGENCY_RE, VERDICTS, TL_WEIGHTS,
-  collectStrings, editionSlug, listEditionFiles, loadEdition, verdictForScore,
+  DISCLAIMER, EMOJI_RE, URGENCY_RE, INTERNAL_RE, VERDICTS, TL_WEIGHTS,
+  collectStrings, editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, verdictForScore,
 } from "./lib.mjs";
 
 const REQUIRED = ["number", "date", "weekday", "publishTime", "readingMinutes", "signal", "deals", "sources", "disclaimer"];
+// Blocos obrigatórios da estrutura editorial (não só campos escalares).
+const REQUIRED_BLOCKS = ["signal", "deals", "sources", "disclaimer"];
+const DEAL_REQUIRED = ["category", "title", "context", "conta", "verdict", "source"];
 
 export function validateEdition(ed) {
   const errors = [];
@@ -37,21 +40,51 @@ export function validateEdition(ed) {
   if (withUrgency.length) err(`Urgência artificial proibida: ${withUrgency.slice(0, 2).map((s) => JSON.stringify(s.slice(0, 50))).join(", ")}`);
   else pass("Sem urgência artificial (imperdível/corra/última chance…)");
 
+  // 4b. Sem dado interno / CMI / métrica proprietária (regra inviolável 1).
+  const withInternal = strings.filter((s) => INTERNAL_RE.test(s));
+  if (withInternal.length) err(`Dado interno/CMI proibido no corpo editorial: ${withInternal.slice(0, 2).map((s) => JSON.stringify(s.slice(0, 50))).join(", ")}`);
+  else pass("Sem dado interno / CMI / métrica proprietária");
+
+  // 4c. Blocos obrigatórios presentes e não-vazios.
+  const emptyBlocks = REQUIRED_BLOCKS.filter((b) => {
+    const v = ed[b];
+    return v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
+  });
+  if (emptyBlocks.length) err(`Blocos obrigatórios ausentes ou vazios: ${emptyBlocks.join(", ")}`);
+  else pass("Blocos obrigatórios presentes (sinal, Deal Desk, fontes, disclaimer)");
+
   // 5. Deal Desk: fonte, vigência, cálculo, TL Score ↔ veredito.
   const deals = Array.isArray(ed.deals) ? ed.deals : [];
   if (!deals.length) warn("Deal Desk vazio: nenhuma oportunidade na edição");
   deals.forEach((d, i) => {
     const tag = `Deal ${i + 1} (${d.title ?? "sem título"})`;
 
+    // Estrutura do bloco: todos os campos obrigatórios do deal.
+    const dealMissing = DEAL_REQUIRED.filter((k) => d[k] === undefined || d[k] === null || d[k] === "");
+    if (dealMissing.length) err(`${tag}: campos obrigatórios ausentes: ${dealMissing.join(", ")}`);
+
     if (!d.source) err(`${tag}: sem fonte — sem fonte confiável não entra no Deal Desk (overrule)`);
+    // Integridade do Conta Block: linhas + resultado completo.
+    if (!d.conta || !Array.isArray(d.conta.rows) || d.conta.rows.length === 0) err(`${tag}: Conta Block sem linhas de cálculo`);
     if (!d.conta || !d.conta.result || !d.conta.result[1]) err(`${tag}: Conta Block incompleto (falta o resultado)`);
     if (!(d.verdict in VERDICTS)) { err(`${tag}: veredito "${d.verdict}" fora do vocabulário oficial`); return; }
+
+    // Link da fonte do deal (quando presente) deve ser http(s) válido; https recomendado.
+    if (d.sourceUrl !== undefined) {
+      if (!/^https?:\/\//.test(d.sourceUrl)) err(`${tag}: sourceUrl inválida (deve ser http(s) absoluta)`);
+      else if (!isValidLink(d.sourceUrl)) warn(`${tag}: sourceUrl não usa https`);
+    }
 
     const hasVigencia = Boolean(d.vigencia);
 
     // Overrule Operating Manual 5.4: sem vigência confirmada → Não confirmado.
     if (!hasVigencia && d.verdict !== "nao-confirmado") {
       err(`${tag}: sem vigência confirmada, o veredito final deve ser "nao-confirmado" (overrule 5.4)`);
+    }
+
+    // Vigência já vencida em relação à data da edição → o deal não está mais vivo.
+    if (hasVigencia && ed.date && isExpired(d.vigencia, ed.date)) {
+      err(`${tag}: vigência (${d.vigencia}) já vencida na data da edição (${ed.date})`);
     }
 
     if (d.verdict === "nao-confirmado") {
@@ -81,8 +114,16 @@ export function validateEdition(ed) {
   sources.forEach((s, i) => {
     if (!s.label) warn(`Fonte ${i + 1}: sem rótulo`);
     if (!/^https?:\/\//.test(s.url ?? "")) err(`Fonte ${i + 1}: URL inválida ou ausente`);
+    else if (!isValidLink(s.url)) warn(`Fonte ${i + 1}: URL não usa https`);
   });
-  if (sources.every((s) => /^https?:\/\//.test(s.url ?? "")) && sources.length) pass("Todas as fontes têm URL");
+  if (sources.every((s) => /^https?:\/\//.test(s.url ?? "")) && sources.length) pass("Todas as fontes têm URL válida");
+
+  // Vigência dos itens "Fecha logo" (quando presente): não pode estar vencida.
+  (Array.isArray(ed.fechaLogo) ? ed.fechaLogo : []).forEach((f, i) => {
+    if (f.vigencia && ed.date && isExpired(f.vigencia, ed.date)) {
+      err(`Fecha logo ${i + 1} (${f.tag ?? "sem tag"}): vigência (${f.vigencia}) já vencida na data da edição`);
+    }
+  });
 
   return { errors, warnings, ok };
 }
