@@ -70,9 +70,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, mock: true });
   }
 
+  // O Beehiiv exige o ID no formato pub_<uuid>. Tolera o UUID cru adicionando
+  // o prefixo se faltar.
+  const pubId = publicationId.startsWith("pub_")
+    ? publicationId
+    : `pub_${publicationId}`;
+
   try {
     const res = await fetch(
-      `https://api.beehiiv.com/v2/publications/${publicationId}/subscriptions`,
+      `https://api.beehiiv.com/v2/publications/${pubId}/subscriptions`,
       {
         method: "POST",
         headers: {
@@ -92,7 +98,7 @@ export async function POST(req: NextRequest) {
       console.error("[subscribe] Beehiiv respondeu", res.status, upstream.slice(0, 500));
       return NextResponse.json(
         debug
-          ? { error: "provider_error", upstreamStatus: res.status, upstreamBody: upstream.slice(0, 500), pubIdPrefix: publicationId.slice(0, 4) }
+          ? { error: "provider_error", upstreamStatus: res.status, upstreamBody: upstream.slice(0, 500), pubIdPrefix: pubId.slice(0, 4) }
           : { error: "provider_error" },
         { status: 502 },
       );
