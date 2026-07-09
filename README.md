@@ -1,6 +1,6 @@
-# The Loyalty — Landing Page v1
+# The Loyal - Landing Page v1
 
-Landing de conversão para o The Loyalty Daily. Mídia editorial independente sobre loyalty,
+Landing de conversão para o The Loyal Daily. Mídia editorial independente sobre loyalty,
 pontos, milhas, cartões, bancos, varejo e cashback.
 
 Stack: **Next.js 14 App Router · TypeScript strict · Tailwind**. Sem outras dependências
@@ -52,41 +52,13 @@ tailwind.config.ts  Tokens da marca (nunca hardcodar hex em componente)
 - Foco visível custom, alvos de toque ≥ 44px, contraste AA nos tokens.
 - `prefers-reduced-motion` desliga idle do mascote, reveals e smooth scroll.
 
-## Integração Beehiiv
+## Integração Beehiiv (próximo passo)
 
-O formulário (`components/SubscribeForm.tsx`) faz `POST` para a route handler
-`app/api/subscribe/route.ts`, que roda **no servidor**. A chave do Beehiiv nunca
-chega ao client.
+O formulário é mock. Para conectar:
 
-### Variáveis de ambiente
-
-Copie `.env.example` para `.env.local` e preencha:
-
-```bash
-cp .env.example .env.local
-```
-
-| Variável | Uso |
-|---|---|
-| `BEEHIIV_API_KEY` | Chave da API v2 do Beehiiv (server-only). |
-| `BEEHIIV_PUBLICATION_ID` | ID da publicação (`pub_...`). |
-
-Na Vercel, defina as duas em **Project → Settings → Environment Variables**
-(escopo Production/Preview). Nunca comite o `.env.local`.
-
-### Comportamento da rota (`POST /api/subscribe`)
-
-1. **Rate limit** por IP em memória (5 req / 60s, best-effort).
-2. **Honeypot** server-side: campo `empresa` preenchido → sucesso silencioso, sem
-   tocar no provedor.
-3. **Validação** do e-mail no servidor.
-4. **Sem credenciais** (dev / preview): responde em **modo mock** (`{ ok: true, mock: true }`)
-   para a demo não quebrar. **Com credenciais**: chama
-   `POST https://api.beehiiv.com/v2/publications/{id}/subscriptions` com
-   `Authorization: Bearer <BEEHIIV_API_KEY>`.
-
-O formulário preserva os estados de loading, erro (voz do Ponto) e sucesso, e trata
-`429` (rate limit) com mensagem própria.
-
-> Para produção de alto volume, trocar o rate limit em memória por um store externo
-> (Vercel KV / Redis), já que instâncias serverless não compartilham memória.
+1. Criar a publicação no Beehiiv e obter o endpoint de subscribe
+   (API v2: `POST /publications/{id}/subscriptions`) ou o embed.
+2. Em `components/SubscribeForm.tsx`, substituir o bloco marcado "Mock de integração"
+   por um `fetch` para uma route handler (`app/api/subscribe/route.ts`) que chama a API do
+   Beehiiv com a chave em variável de ambiente (`BEEHIIV_API_KEY`). Nunca expor a chave no client.
+3. Manter o honeypot e adicionar rate limit simples na route.

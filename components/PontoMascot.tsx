@@ -23,7 +23,7 @@ export function PontoMascot({
   celebrate = false,
   interactive = false,
   className = "",
-  label = "Ponto, o mascote do The Loyalty, um vira-lata caramelo com coleira verde e tag TL",
+  label = "Ponto, o mascote do The Loyal, um vira-lata caramelo com coleira verde e tag TL",
 }: {
   pose?: "padrao" | "lupa";
   tilt?: boolean;

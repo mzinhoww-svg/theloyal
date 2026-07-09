@@ -21,12 +21,13 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Loyalty — O mercado de loyalty explicado com conta feita",
+  title: "The Loyal | Pontos e milhas sem pegadinha",
   description:
-    "Pontos, milhas, cartões, bancos, varejo e cashback. Todos os dias, uma leitura clara sobre onde existe valor real e onde só existe banner bonito.",
+    "A gente faz a conta das promoções de pontos, milhas e cashback e diz, em reais, se vale a pena. E-mail grátis de 5 minutos, todo dia útil às 8h.",
   openGraph: {
-    title: "The Loyalty",
-    description: "O mercado de loyalty explicado com conta feita.",
+    title: "The Loyal | Pontos e milhas sem pegadinha",
+    description:
+      "A gente faz a conta das promoções de pontos, milhas e cashback e diz, em reais, se vale a pena. E-mail grátis de 5 minutos, todo dia útil às 8h.",
     type: "website",
     locale: "pt_BR",
   },
