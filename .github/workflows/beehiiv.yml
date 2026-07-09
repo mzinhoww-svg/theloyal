@@ -1,0 +1,107 @@
+name: Beehiiv Publish (manual)
+
+# Publicacao assistida no Beehiiv. NUNCA roda sozinha: so por acionamento manual
+# (workflow_dispatch). Por padrao cria apenas RASCUNHO (draft). Enviar de fato
+# (publish/schedule) exige confirmacao explicita no campo "confirm".
+#
+# Sem os secrets BEEHIIV_API_KEY / BEEHIIV_PUBLICATION_ID o script opera em modo
+# mock (nada e enviado a API) — seguro por construcao.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Acao no Beehiiv"
+        type: choice
+        default: draft
+        options:
+          - draft
+          - publish
+          - schedule
+      edition:
+        description: "Caminho da edicao (vazio = ultima em content/latest.json)"
+        type: string
+        required: false
+        default: ""
+      schedule_at:
+        description: "ISO 8601 para --schedule (ex: 2026-07-09T08:00:00-03:00)"
+        type: string
+        required: false
+        default: ""
+      confirm:
+        description: "Digite PUBLICAR para autorizar publish/schedule (ignorado em draft)"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serializa disparos para reforcar a idempotencia do ledger.
+  group: beehiiv-publish
+  cancel-in-progress: false
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  beehiiv:
+    name: beehiiv-${{ inputs.action }}
+    runs-on: ubuntu-latest
+    # Aponte este environment para um GitHub Environment com required reviewers
+    # para exigir aprovacao humana antes de qualquer envio real.
+    environment: beehiiv
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+
+      - name: Trava de confirmacao para envio real
+        if: ${{ inputs.action != 'draft' && inputs.confirm != 'PUBLICAR' }}
+        env:
+          ACTION: ${{ inputs.action }}
+        run: |
+          echo "::error::Acao '$ACTION' exige confirmacao. Reexecute com confirm=PUBLICAR."
+          exit 1
+
+      - name: Preparar artefatos (validate + render)
+        run: |
+          npm run validate
+          npm run render
+
+      - name: Beehiiv
+        env:
+          BEEHIIV_API_KEY: ${{ secrets.BEEHIIV_API_KEY }}
+          BEEHIIV_PUBLICATION_ID: ${{ secrets.BEEHIIV_PUBLICATION_ID }}
+          ACTION: ${{ inputs.action }}
+          EDITION: ${{ inputs.edition }}
+          SCHEDULE_AT: ${{ inputs.schedule_at }}
+        run: |
+          set -eu
+          ARGS=""
+          if [ -n "$EDITION" ]; then ARGS="$ARGS $EDITION"; fi
+          case "$ACTION" in
+            draft)    ARGS="$ARGS --draft" ;;
+            publish)  ARGS="$ARGS --publish" ;;
+            schedule)
+              if [ -z "$SCHEDULE_AT" ]; then
+                echo "::error::schedule exige schedule_at (ISO 8601)."; exit 1
+              fi
+              ARGS="$ARGS --schedule $SCHEDULE_AT" ;;
+          esac
+          echo "[beehiiv] node scripts/beehiiv-publish.mjs$ARGS"
+          node scripts/beehiiv-publish.mjs $ARGS
+
+      - name: Publicar relatorio e ledger como artefato
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beehiiv-${{ inputs.action }}
+          path: |
+            out/beehiiv/
+            content/beehiiv-status.json
+          if-no-files-found: warn

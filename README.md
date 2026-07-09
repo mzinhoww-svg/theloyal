@@ -11,10 +11,15 @@ THE-LOYALTY-LLM-SYSTEM.md > DESIGN.md > PONTO-MASCOTE-GUIA.md > TL-GRAPHICS.md.
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
-npm run build    # build de produção
+npm run dev        # http://localhost:3000
+npm run build      # build de produção
 npm run start
+npm run lint       # ESLint (next/core-web-vitals)
+npm run typecheck  # tsc --noEmit
 ```
+
+Pipeline editorial (validate → render → qa → publish → beehiiv): ver
+`content/README.md`. Produção e go-live: ver `docs/GO-LIVE.md`.
 
 ## Estrutura
 
@@ -52,13 +57,19 @@ tailwind.config.ts  Tokens da marca (nunca hardcodar hex em componente)
 - Foco visível custom, alvos de toque ≥ 44px, contraste AA nos tokens.
 - `prefers-reduced-motion` desliga idle do mascote, reveals e smooth scroll.
 
-## Integração Beehiiv (próximo passo)
+## Integração Beehiiv
 
-O formulário é mock. Para conectar:
+Já implementada. O formulário faz `POST /api/subscribe` (route handler server-only,
+`app/api/subscribe/route.ts`) com honeypot e rate limit. A chave fica só no servidor
+(`process.env`), nunca no client. Sem `BEEHIIV_API_KEY`/`BEEHIIV_PUBLICATION_ID` a
+inscrição e o Publisher operam em **modo mock** (sucesso/dry-run simulado).
 
-1. Criar a publicação no Beehiiv e obter o endpoint de subscribe
-   (API v2: `POST /publications/{id}/subscriptions`) ou o embed.
-2. Em `components/SubscribeForm.tsx`, substituir o bloco marcado "Mock de integração"
-   por um `fetch` para uma route handler (`app/api/subscribe/route.ts`) que chama a API do
-   Beehiiv com a chave em variável de ambiente (`BEEHIIV_API_KEY`). Nunca expor a chave no client.
-3. Manter o honeypot e adicionar rate limit simples na route.
+O envio das edições é feito pelo Publisher (`npm run beehiiv`, ver `content/README.md`):
+publica a peça já renderizada no Beehiiv, por padrão só como **rascunho**, com QA gate,
+idempotência e ledger em `content/beehiiv-status.json`.
+
+## Produção / go-live
+
+Passo a passo de ativação (GitHub Actions, secrets, publicação assistida, checklist
+de virada) em **`docs/GO-LIVE.md`**. CI em `.github/workflows/ci.yml`; publicação
+manual no Beehiiv em `.github/workflows/beehiiv.yml`.

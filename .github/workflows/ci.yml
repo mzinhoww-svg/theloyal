@@ -1,0 +1,83 @@
+name: CI
+
+# Gate de qualidade do The Loyalty. Roda em push e pull request.
+# Cobre: lint, typecheck, validate, render, qa, build e publish (indices locais).
+# Nenhum job envia e-mail nem toca a API do Beehiiv — publicacao real e manual
+# (ver .github/workflows/beehiiv.yml).
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  editorial:
+    # validate -> render -> qa -> publish compartilham o diretorio out/ e por isso
+    # rodam como passos sequenciais no mesmo job (o render precede o qa, que audita
+    # o HTML gerado). Cada passo bloqueia o pipeline em erro.
+    name: editorial-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: validate
+        run: npm run validate
+      - name: render
+        run: npm run render
+      - name: qa
+        run: npm run qa
+      - name: publish (indices locais, nao envia e-mail)
+        run: npm run publish
+
+  build:
+    name: build
+    needs: [lint, typecheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build

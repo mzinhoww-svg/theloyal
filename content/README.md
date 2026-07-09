@@ -17,6 +17,9 @@ npm run beehiiv     # publica no Beehiiv o conteúdo já renderizado (draft por 
 O `publish` **não envia e-mail** — apenas escreve os índices locais. O envio ao
 Beehiiv é o passo `beehiiv`, e por padrão cria só um **rascunho**.
 
+> Ativação em produção (GitHub Actions, secrets, checklist de go-live): ver
+> [`docs/GO-LIVE.md`](../docs/GO-LIVE.md).
+
 ### Publisher Beehiiv (`npm run beehiiv`)
 
 Publica a peça **já renderizada** (`out/email/NNNN.html`) sem reescrever nada.
