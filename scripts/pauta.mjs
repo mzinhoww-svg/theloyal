@@ -53,7 +53,13 @@ async function fetchFeed(url) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 15000);
   try {
-    const res = await fetch(url, { signal: ctrl.signal, headers: { "user-agent": "TheLoyalty-Pauta/1.0" } });
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: {
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+      },
+    });
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
     return { ok: true, xml: await res.text() };
   } catch (e) {
@@ -74,33 +80,55 @@ function previousLinks(dir) {
 
 function mdEscape(s) { return String(s).replace(/\|/g, "\\|"); }
 
-function buildMarkdown(date, grouped, meta) {
+function buildMarkdown(date, grouped, meta, cfg, generatedAt) {
   const L = [];
   L.push(`# Pauta — ${date}`, "");
   L.push("> Referencia interna de curadoria. NAO publicar verbatim: cada item vira texto proprio (regra de marca 2).");
-  L.push("> Marque `[x]` o que entra, confirme a Secao e preencha a Fonte apurada (URL oficial + vigencia) antes de virar edicao.", "");
+  L.push("> Marque `[x]` o que entra, confirme a Secao e APURE a fonte oficial (P0) de cada item antes de virar edicao.");
+  L.push(`> Consulta: ${generatedAt}. Regra 6: item P1/P2 nao gera \"Vale Agir\" sem confirmacao oficial P0.`, "");
   for (const key of Object.keys(SECTION_LABELS)) {
     const items = grouped[key];
     if (!items || !items.length) continue;
     L.push(`## ${SECTION_LABELS[key]}`, "");
     for (const it of items) {
-      L.push(`- [ ] **${mdEscape(it.title) || "(sem titulo)"}**  _(manchete da fonte, nao copiar)_`);
+      const tier = it.tier || "P?";
+      L.push(`- [ ] **${mdEscape(it.title) || "(sem titulo)"}**  _(${tier} · manchete da fonte, nao copiar)_`);
       if (it.link) L.push(`      - Link: ${it.link}`);
-      L.push(`      - Fonte: ${mdEscape(it.source)}${it.date ? ` · ${mdEscape(it.date)}` : ""}`);
+      L.push(`      - Fonte: ${mdEscape(it.source)} (${tier}${it.category ? "/" + it.category : ""})${it.date ? ` · ${mdEscape(it.date)}` : ""}`);
       L.push(`      - Secao: ${key}`);
-      L.push(`      - Fonte apurada: ______  (regulamento/pagina oficial + vigencia confirmada)`);
+      L.push(`      - Vigencia: ______`);
+      L.push(`      - Nivel de confianca: ______  (alto / medio / baixo)`);
+      L.push(`      - Fonte apurada (P0 oficial): ______  (URL do regulamento/pagina + data/hora)`);
       L.push(`      - Nota propria: ______`);
+      if (tier !== "P0") L.push(`      - > ${tier}: descoberta/rumor. Confirmar em fonte oficial P0 antes de recomendar (regra 6).`);
       L.push("");
     }
   }
+
+  // Apendice: fontes oficiais (P0) para apuracao, por categoria.
+  const p0 = (cfg.feeds || []).filter((f) => f.tier === "P0");
+  if (p0.length) {
+    L.push("---", "", "## Fontes oficiais (P0) para apuracao", "");
+    const byCat = {};
+    for (const f of p0) (byCat[f.category || "outros"] ??= []).push(f);
+    for (const cat of Object.keys(byCat)) {
+      L.push(`**${cat}**`);
+      for (const f of byCat[cat]) {
+        const urls = [f.url, ...(f.pages || [])].filter(Boolean).join(" · ");
+        L.push(`- ${mdEscape(f.name)}: ${urls}`);
+      }
+      L.push("");
+    }
+  }
+
   L.push("---", "");
   L.push(`Fontes lidas: ${meta.read} · com itens: ${meta.withItems} · com erro: ${meta.errors.length} · itens: ${meta.total} (novos: ${meta.fresh})`);
   if (meta.errors.length) {
-    L.push("", "Fontes com erro (verificar URL/feed em content/sources.json):");
-    for (const e of meta.errors) L.push(`- ${e.name}: ${e.error}`);
+    L.push("", "Feeds com erro (ajustar 'feed' em content/sources.json):");
+    for (const e of meta.errors) L.push(`- ${e.name} (${e.tier}): ${e.error}`);
   }
   if (!meta.total) {
-    L.push("", "Nenhum item coletado. Habilite fontes reais em content/sources.json (enabled: true, url do feed RSS).");
+    L.push("", "Nenhum item coletado dos feeds. Ajuste os 'feed' habilitados em content/sources.json.");
   }
   return L.join("\n") + "\n";
 }
@@ -115,15 +143,16 @@ async function main() {
   const dir = "content/pauta";
   const seen = previousLinks(dir);
 
-  const feeds = (cfg.feeds || []).filter((f) => f.enabled && f.url);
+  const feeds = (cfg.feeds || []).filter((f) => f.enabled && f.feed);
+  const generatedAt = new Date().toISOString();
   const meta = { read: feeds.length, withItems: 0, errors: [], total: 0, fresh: 0 };
   const grouped = {};
   const flat = [];
   const dedupRun = new Set();
 
   for (const f of feeds) {
-    const r = await fetchFeed(f.url);
-    if (!r.ok) { meta.errors.push({ name: f.name, error: r.error }); continue; }
+    const r = await fetchFeed(f.feed);
+    if (!r.ok) { meta.errors.push({ name: f.name, tier: f.tier, error: r.error }); continue; }
     const items = parseFeed(r.xml);
     if (items.length) meta.withItems++;
     for (const it of items) {
@@ -132,7 +161,7 @@ async function main() {
       dedupRun.add(key);
       if (it.date) { const ts = Date.parse(it.date); if (!Number.isNaN(ts) && ts < cutoff) continue; }
       const fresh = !(it.link && seen.has(it.link));
-      const rec = { section: f.section || "a-classificar", source: f.name, title: it.title, link: it.link, date: it.date, fresh };
+      const rec = { section: f.section || "a-classificar", tier: f.tier, category: f.category, source: f.name, title: it.title, link: it.link, date: it.date, fresh, consultedAt: generatedAt };
       meta.total++; if (fresh) meta.fresh++;
       (grouped[rec.section] ??= []).push(rec);
       flat.push(rec);
@@ -140,8 +169,8 @@ async function main() {
   }
 
   mkdirSync(dir, { recursive: true });
-  writeFileSync(`${dir}/${date}.json`, JSON.stringify({ date, generatedAt: new Date().toISOString(), meta: { ...meta }, items: flat }, null, 2) + "\n");
-  writeFileSync(`${dir}/${date}.md`, buildMarkdown(date, grouped, meta));
+  writeFileSync(`${dir}/${date}.json`, JSON.stringify({ date, generatedAt, meta: { ...meta }, items: flat }, null, 2) + "\n");
+  writeFileSync(`${dir}/${date}.md`, buildMarkdown(date, grouped, meta, cfg, generatedAt));
   console.log(`[pauta] ${date}: ${meta.total} item(ns) de ${meta.withItems}/${meta.read} fonte(s) → content/pauta/${date}.md`);
   if (meta.errors.length) meta.errors.forEach((e) => console.log(`  ! ${e.name}: ${e.error}`));
   if (!feeds.length) console.log("  ! nenhuma fonte habilitada — edite content/sources.json (enabled:true + url real).");

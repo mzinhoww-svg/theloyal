@@ -1,28 +1,64 @@
 {
-  "_nota": "Fontes publicas de pauta do The Loyalty. Preencha 'url' com o feed RSS/Atom real e marque 'enabled': true. O script tolera feeds ausentes, vazios ou inacessiveis. Regra de marca: a pauta capta LINK + manchete da fonte apenas como referencia; o texto publicado e sempre proprio.",
+  "_nota": "Catalogo oficial de monitoramento do The Loyalty (Brasil), v1.0. Tiers: P0 fonte oficial (prevalece; usada para APURAR/validar), P1 blog especializado (descoberta), P2 comunidade (rumor/tendencia). Regra 6: nada de P1/P2 vira 'Vale Agir' sem confirmacao oficial P0. O script 'npm run pauta' coleta itens dos feeds com 'feed' e 'enabled:true'; paginas P0 sem feed entram no apendice de apuracao. Preencha/ajuste os campos 'feed' conforme necessario (o script tolera feeds inacessiveis e lista os erros).",
   "lookbackDays": 2,
-  "sections": ["sinal", "deal-desk", "program-watch", "bank-cards", "retail-coalition", "loyalty-lab", "fecha-logo"],
+  "sections": ["sinal", "deal-desk", "program-watch", "bank-cards", "retail-coalition", "loyalty-lab", "fecha-logo", "a-classificar"],
+  "tiers": { "P0": "Fonte oficial", "P1": "Fonte especializada", "P2": "Comunidade" },
+  "regras": [
+    "P0 sempre prevalece.",
+    "P1 serve para descoberta, nunca como validacao final.",
+    "P2 serve para rumor/tendencia ainda nao oficial.",
+    "Toda promocao validada na pagina oficial antes de publicar.",
+    "Registrar: URL, data/hora da consulta, vigencia, nivel de confianca, evidencias.",
+    "Sem confirmacao oficial P0, nao gerar 'Vale Agir'."
+  ],
   "feeds": [
-    {
-      "id": "portal-milhas",
-      "name": "Portal de milhas (substituir)",
-      "url": "https://exemplo.com.br/feed",
-      "section": "program-watch",
-      "enabled": false
-    },
-    {
-      "id": "blog-cartoes",
-      "name": "Blog de cartoes (substituir)",
-      "url": "https://exemplo.com.br/cartoes/rss",
-      "section": "bank-cards",
-      "enabled": false
-    },
-    {
-      "id": "programa-oficial",
-      "name": "Sala de imprensa de um programa (substituir)",
-      "url": "https://exemplo.com.br/imprensa/feed",
-      "section": "deal-desk",
-      "enabled": false
-    }
+    { "id": "latampass", "name": "LATAM Pass", "tier": "P0", "category": "programa", "url": "https://latampass.latam.com/pt_br", "pages": ["https://latampass.latam.com/pt_br/ofertas", "https://latampass.latam.com/pt_br/promocao"], "feed": null, "section": "program-watch", "enabled": false },
+    { "id": "smiles", "name": "Smiles", "tier": "P0", "category": "programa", "url": "https://www.smiles.com.br", "pages": ["https://www.smiles.com.br/promocoes", "https://shopping.smiles.com.br"], "feed": null, "section": "program-watch", "enabled": false },
+    { "id": "azul", "name": "Azul Fidelidade", "tier": "P0", "category": "programa", "url": "https://www.voeazul.com.br/br/pt/azul-fidelidade", "pages": ["https://shopping.voeazul.com.br"], "feed": null, "section": "program-watch", "enabled": false },
+    { "id": "livelo", "name": "Livelo", "tier": "P0", "category": "programa", "url": "https://www.livelo.com.br", "pages": ["https://www.livelo.com.br/ofertas", "https://www.livelo.com.br/clube-livelo", "https://www.livelo.com.br/blog"], "feed": null, "section": "program-watch", "enabled": false },
+    { "id": "esfera", "name": "Esfera", "tier": "P0", "category": "programa", "url": "https://www.esfera.com.vc", "pages": ["https://www.esfera.com.vc/ofertas", "https://www.esfera.com.vc/viagens"], "feed": null, "section": "program-watch", "enabled": false },
+    { "id": "dotz", "name": "Dotz", "tier": "P0", "category": "programa", "url": "https://www.dotz.com.br", "feed": null, "section": "retail-coalition", "enabled": false },
+
+    { "id": "itau", "name": "Itau", "tier": "P0", "category": "banco", "url": "https://www.itau.com.br", "pages": ["https://www.itau.com.br/cartoes"], "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "santander", "name": "Santander", "tier": "P0", "category": "banco", "url": "https://www.santander.com.br", "pages": ["https://www.santander.com.br/cartoes"], "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "bradesco", "name": "Bradesco", "tier": "P0", "category": "banco", "url": "https://banco.bradesco", "pages": ["https://banco.bradesco/cartoes"], "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "bb", "name": "Banco do Brasil", "tier": "P0", "category": "banco", "url": "https://www.bb.com.br", "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "caixa", "name": "Caixa", "tier": "P0", "category": "banco", "url": "https://www.caixa.gov.br", "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "btg", "name": "BTG Pactual", "tier": "P0", "category": "banco", "url": "https://www.btgpactual.com", "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "c6", "name": "C6 Bank", "tier": "P0", "category": "banco", "url": "https://www.c6bank.com.br", "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "nubank", "name": "Nubank", "tier": "P0", "category": "banco", "url": "https://nubank.com.br", "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "inter", "name": "Banco Inter", "tier": "P0", "category": "banco", "url": "https://inter.co", "feed": null, "section": "bank-cards", "enabled": false },
+
+    { "id": "visa", "name": "Visa", "tier": "P0", "category": "bandeira", "url": "https://www.visa.com.br", "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "mastercard", "name": "Mastercard", "tier": "P0", "category": "bandeira", "url": "https://www.mastercard.com.br", "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "elo", "name": "Elo", "tier": "P0", "category": "bandeira", "url": "https://www.elo.com.br", "feed": null, "section": "bank-cards", "enabled": false },
+    { "id": "amex", "name": "American Express", "tier": "P0", "category": "bandeira", "url": "https://www.americanexpress.com/br", "feed": null, "section": "bank-cards", "enabled": false },
+
+    { "id": "meliuz", "name": "Meliuz", "tier": "P0", "category": "cashback", "url": "https://www.meliuz.com.br", "feed": null, "section": "retail-coalition", "enabled": false },
+    { "id": "mercadolivre", "name": "Mercado Livre", "tier": "P0", "category": "marketplace", "url": "https://www.mercadolivre.com.br", "feed": null, "section": "retail-coalition", "enabled": false },
+    { "id": "amazon", "name": "Amazon Brasil", "tier": "P0", "category": "marketplace", "url": "https://www.amazon.com.br", "feed": null, "section": "retail-coalition", "enabled": false },
+    { "id": "magalu", "name": "Magazine Luiza", "tier": "P0", "category": "marketplace", "url": "https://www.magazineluiza.com.br", "feed": null, "section": "retail-coalition", "enabled": false },
+    { "id": "shopee", "name": "Shopee", "tier": "P0", "category": "marketplace", "url": "https://shopee.com.br", "feed": null, "section": "retail-coalition", "enabled": false },
+
+    { "id": "bcb", "name": "Banco Central", "tier": "P0", "category": "regulador", "url": "https://www.bcb.gov.br", "feed": "https://www.bcb.gov.br/acessoinformacao/rss", "section": "sinal", "enabled": true },
+    { "id": "anac", "name": "ANAC", "tier": "P0", "category": "regulador", "url": "https://www.gov.br/anac", "feed": null, "section": "sinal", "enabled": false },
+    { "id": "receita", "name": "Receita Federal", "tier": "P0", "category": "regulador", "url": "https://www.gov.br/receitafederal", "feed": null, "section": "sinal", "enabled": false },
+    { "id": "cade", "name": "CADE", "tier": "P0", "category": "regulador", "url": "https://www.gov.br/cade", "feed": null, "section": "sinal", "enabled": false },
+    { "id": "dou", "name": "Diario Oficial", "tier": "P0", "category": "regulador", "url": "https://www.in.gov.br", "feed": null, "section": "sinal", "enabled": false },
+    { "id": "febraban", "name": "FEBRABAN", "tier": "P0", "category": "regulador", "url": "https://portal.febraban.org.br", "feed": null, "section": "sinal", "enabled": false },
+
+    { "id": "pontospravoar", "name": "Pontos pra Voar", "tier": "P1", "category": "blog", "url": "https://www.pontospravoar.com", "feed": "https://www.pontospravoar.com/feed/", "section": "a-classificar", "enabled": true },
+    { "id": "passageirodeprimeira", "name": "Passageiro de Primeira", "tier": "P1", "category": "blog", "url": "https://passageirodeprimeira.com", "feed": "https://passageirodeprimeira.com/feed/", "section": "a-classificar", "enabled": true },
+    { "id": "melhorescartoes", "name": "Melhores Cartoes", "tier": "P1", "category": "blog", "url": "https://www.melhorescartoes.com.br", "feed": "https://www.melhorescartoes.com.br/feed/", "section": "a-classificar", "enabled": true },
+    { "id": "melhoresdestinos", "name": "Melhores Destinos", "tier": "P1", "category": "blog", "url": "https://www.melhoresdestinos.com.br", "feed": "https://www.melhoresdestinos.com.br/feed", "section": "a-classificar", "enabled": true },
+    { "id": "passageirovip", "name": "Passageiro VIP", "tier": "P1", "category": "blog", "url": "https://passageirovip.com.br", "feed": "https://passageirovip.com.br/feed/", "section": "a-classificar", "enabled": true },
+    { "id": "falandodeviagem", "name": "Falando de Viagem", "tier": "P1", "category": "blog", "url": "https://falandodeviagem.com.br", "feed": "https://falandodeviagem.com.br/feed/", "section": "a-classificar", "enabled": true },
+    { "id": "mestredasmilhas", "name": "Mestre das Milhas", "tier": "P1", "category": "blog", "url": "https://mestredasmilhas.com.br", "feed": "https://mestredasmilhas.com.br/feed/", "section": "a-classificar", "enabled": true },
+    { "id": "familiamilhas", "name": "Familia Milhas", "tier": "P1", "category": "blog", "url": "https://familiamilhas.com.br", "feed": "https://familiamilhas.com.br/feed/", "section": "a-classificar", "enabled": true },
+    { "id": "acelerapontos", "name": "Acelera Pontos", "tier": "P1", "category": "blog", "url": "https://acelerapontos.app/blog", "feed": "https://acelerapontos.app/blog/feed/", "section": "a-classificar", "enabled": false, "_todo": "confirmar URL do feed RSS (o caminho /blog/feed/ retornou 404)" },
+
+    { "id": "reddit-milhas", "name": "Reddit r/Milhas", "tier": "P2", "category": "comunidade", "url": "https://www.reddit.com/r/Milhas", "feed": "https://www.reddit.com/r/Milhas/.rss", "section": "a-classificar", "enabled": false, "_todo": "Reddit .rss bloqueia bots (403); precisa de UA/auth ou old.reddit.com. Habilitar quando resolvido." },
+    { "id": "reddit-cartoeseclubes", "name": "Reddit r/CartoeseClubes", "tier": "P2", "category": "comunidade", "url": "https://www.reddit.com/r/CartoeseClubes", "feed": "https://www.reddit.com/r/CartoeseClubes/.rss", "section": "a-classificar", "enabled": false, "_todo": "idem Reddit: 403 para bots." },
+    { "id": "reddit-viagens", "name": "Reddit r/viagens", "tier": "P2", "category": "comunidade", "url": "https://www.reddit.com/r/viagens", "feed": "https://www.reddit.com/r/viagens/.rss", "section": "a-classificar", "enabled": false, "_todo": "idem Reddit: 403 para bots." }
   ]
 }

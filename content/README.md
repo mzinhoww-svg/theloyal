@@ -15,15 +15,22 @@ npm run pauta -- --days 3     # janela de dias (default: lookbackDays do sources
 npm run pauta -- --date 2026-07-09
 ```
 
-1. Configure as fontes em `content/sources.json` (`enabled: true` + `url` do feed RSS/Atom;
-   `section` sugere a secao da digest). O script tolera feeds ausentes/inacessiveis.
+O catalogo de fontes (`content/sources.json`) segue os niveis de prioridade oficiais:
+**P0** fonte oficial (prevalece; e onde se APURA), **P1** blog especializado (descoberta),
+**P2** comunidade (rumor/tendencia). O script coleta dos feeds RSS habilitados (P1 blogs,
+P2 e o RSS do Banco Central); as paginas P0 sem feed entram no apendice de apuracao.
+
+1. Configure `content/sources.json`: cada fonte tem `tier`, `category`, `url`, `feed` (RSS)
+   e `enabled`. O script coleta dos que tem `feed` + `enabled:true`; tolera feeds inacessiveis.
 2. `npm run pauta` coleta itens recentes (titulo, link, data, fonte), remove duplicados
    (inclusive contra a pauta anterior) e escreve:
-   - `content/pauta/AAAA-MM-DD.md` — **checklist**: `[ ]` para marcar o que entra,
-     campo `Secao` e campo `Fonte apurada` (URL oficial + vigencia) por item;
+   - `content/pauta/AAAA-MM-DD.md` — **checklist** por secao: `[ ]` para marcar o que entra,
+     com os campos da regra 5 por item (Secao, Vigencia, Nivel de confianca, Fonte apurada P0,
+     Nota propria) e a data/hora da consulta; itens P1/P2 vem com aviso da regra 6.
    - `content/pauta/AAAA-MM-DD.json` — espelho estruturado.
-3. Uma pessoa edita o `.md`: marca `[x]`, confirma a secao e **apura a fonte** de cada item
-   (regulamento/pagina oficial + vigencia) antes de virar edicao.
+   - Apendice **Fontes oficiais (P0) para apuracao** com os links oficiais por categoria.
+3. Uma pessoa edita o `.md`: marca `[x]`, confirma a secao e **apura em fonte oficial P0**
+   (regra 6: item P1/P2 nao vira "Vale Agir" sem confirmacao oficial).
 4. Com a pauta apurada, monte `content/editions/NNNN.json` e siga o fluxo abaixo.
 
 A pauta capta apenas **link + manchete da fonte como referencia** (marcada "nao copiar"):
