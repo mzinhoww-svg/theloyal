@@ -53,10 +53,10 @@ jobs:
     # para exigir aprovacao humana antes de qualquer envio real.
     environment: beehiiv
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
       - run: npm ci
 
@@ -98,7 +98,7 @@ jobs:
 
       - name: Publicar relatorio e ledger como artefato
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: beehiiv-${{ inputs.action }}
           path: |
