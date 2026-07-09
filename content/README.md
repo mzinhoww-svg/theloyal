@@ -7,12 +7,17 @@ Segue a estrutura e os checklists do Operating Manual v1. **Sem dependências**
 ## Fluxo
 
 ```bash
-npm run validate    # QA de cada edição → out/qa/NNNN.md (bloqueia em erro)
+npm run validate    # QA editorial de cada edição → out/qa/NNNN.md (bloqueia em erro)
 npm run render      # gera out/email/NNNN.html e out/plain/NNNN.txt
+npm run qa          # QA global: landing + JSON + e-mail gerado (rode após o render)
 npm run publish     # valida + escreve content/latest.json e content/index.json
 npm run edition     # validate → render → publish
 npm run beehiiv     # publica no Beehiiv o conteúdo já renderizado (draft por padrão)
+npm run pro         # valida e renderiza o relatório The Loyalty Pro
 ```
+
+> Fluxo único e oficial. O antigo protótipo em `renderer/` e os scripts `*-daily.mjs`
+> foram removidos por duplicidade; não use mais esses caminhos.
 
 O `publish` **não envia e-mail** — apenas escreve os índices locais. O envio ao
 Beehiiv é o passo `beehiiv`, e por padrão cria só um **rascunho**.

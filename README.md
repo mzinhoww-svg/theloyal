@@ -16,6 +16,13 @@ npm run build    # build de produção
 npm run start
 ```
 
+## Pipeline editorial
+
+O fluxo oficial (validação, render de e-mail/plain, QA e publicação das edições) vive em
+`scripts/*.mjs` e `content/`. Ver `content/README.md`. Comandos: `npm run validate`,
+`npm run render`, `npm run qa`, `npm run publish`, `npm run edition`, `npm run beehiiv`,
+`npm run pro`. A página pública de cada edição é a rota `/edicao/[numero]`.
+
 ## Estrutura
 
 ```

@@ -7,9 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "daily:validate": "node scripts/validate-daily.mjs",
-    "daily:render": "node scripts/render-daily.mjs",
-    "daily:qa": "node scripts/qa-daily.mjs"
+    "typecheck": "tsc --noEmit",
+    "validate": "node scripts/validate.mjs",
+    "render": "node scripts/render.mjs",
+    "qa": "node scripts/qa.mjs",
+    "publish": "node scripts/publish.mjs",
+    "edition": "npm run validate && npm run render && npm run publish",
+    "beehiiv": "node scripts/beehiiv-publish.mjs",
+    "pro": "node scripts/pro.mjs"
   },
   "dependencies": {
     "next": "14.2.15",
