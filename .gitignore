@@ -10,7 +10,9 @@
 /out/*
 !/out/email/
 !/out/plain/
+!/out/web/
 !/out/qa/
+!/out/manifest/
 !/out/pro-email/
 !/out/pro-pdf/
 !/out/beehiiv/

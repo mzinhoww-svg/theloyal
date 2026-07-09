@@ -6,6 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "next lint",
+    "validate": "node scripts/validate.mjs",
+    "render": "node scripts/render.mjs",
+    "render:web": "node scripts/render-web.mjs",
+    "render:system": "node scripts/render-system.mjs",
+    "publish": "node scripts/publish.mjs",
+    "qa": "node scripts/qa.mjs",
+    "pro": "node scripts/pro.mjs",
+    "edition": "node scripts/render-system.mjs && node scripts/publish.mjs"
     "lint": "next lint"
   },
   "dependencies": {

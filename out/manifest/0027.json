@@ -1,0 +1,144 @@
+{
+  "number": 27,
+  "date": "2026-07-07",
+  "slug": "0027",
+  "status": "APROVADA",
+  "generatedAt": "2026-07-09T01:55:46.872Z",
+  "input": "content/editions/0027.json",
+  "outputs": [
+    {
+      "type": "email",
+      "path": "out/email/0027.html",
+      "bytes": 6657,
+      "sha256": "810fe1a70a0e59d895b9828bad22c66f4c3ce7e80bc3ce4794b7e6b54bb743d1"
+    },
+    {
+      "type": "plain",
+      "path": "out/plain/0027.txt",
+      "bytes": 1319,
+      "sha256": "627303043c42f2d5830c1ebcf698ea1b3f8d10531bcd4616983374e08bebbb2a"
+    },
+    {
+      "type": "web",
+      "path": "out/web/0027.html",
+      "bytes": 7126,
+      "sha256": "5b141fe83173bb2af13885230efde67620a72b916bcb636ee3d37d9f762eea65"
+    },
+    {
+      "type": "qa",
+      "path": "out/qa/0027.md",
+      "bytes": 1459,
+      "sha256": "e15032d1e36422c51afeb46f680504fe04f9e1744eccbde6abe6ddc129abc296"
+    }
+  ],
+  "qa": {
+    "blocked": false,
+    "editorial": {
+      "errors": [],
+      "warnings": [],
+      "okCount": 8
+    },
+    "artifacts": {
+      "email": [
+        {
+          "ok": true,
+          "label": "Tem doctype"
+        },
+        {
+          "ok": true,
+          "label": "Coluna única de 600px"
+        },
+        {
+          "ok": true,
+          "label": "Sem <style> (CSS 100% inline)"
+        },
+        {
+          "ok": true,
+          "label": "Sem :root"
+        },
+        {
+          "ok": true,
+          "label": "Sem JavaScript"
+        },
+        {
+          "ok": true,
+          "label": "Sem Google Fonts"
+        },
+        {
+          "ok": true,
+          "label": "Sem @import"
+        },
+        {
+          "ok": true,
+          "label": "Self-contained (nenhum recurso externo carregado)"
+        },
+        {
+          "ok": true,
+          "label": "Sem imagem (nada de stock/avião)"
+        },
+        {
+          "ok": true,
+          "label": "Amarelo nunca como texto"
+        },
+        {
+          "ok": true,
+          "label": "Sem emoji no corpo"
+        },
+        {
+          "ok": true,
+          "label": "Sem urgência artificial"
+        },
+        {
+          "ok": true,
+          "label": "Sem dado interno / CMI"
+        },
+        {
+          "ok": true,
+          "label": "Disclaimer oficial íntegro"
+        }
+      ],
+      "web": [
+        {
+          "ok": true,
+          "label": "html lang=\"pt-BR\""
+        },
+        {
+          "ok": true,
+          "label": "Exatamente uma h1"
+        },
+        {
+          "ok": true,
+          "label": "Landmark main#conteudo"
+        },
+        {
+          "ok": true,
+          "label": "Fraunces + Inter + JetBrains Mono"
+        },
+        {
+          "ok": true,
+          "label": "Sem JavaScript"
+        },
+        {
+          "ok": true,
+          "label": "Sem imagem (nada de stock/avião)"
+        },
+        {
+          "ok": true,
+          "label": "Sem emoji no corpo"
+        },
+        {
+          "ok": true,
+          "label": "Sem urgência artificial"
+        },
+        {
+          "ok": true,
+          "label": "Sem dado interno / CMI"
+        },
+        {
+          "ok": true,
+          "label": "Disclaimer oficial presente"
+        }
+      ]
+    }
+  }
+}
