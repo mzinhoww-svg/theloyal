@@ -1,0 +1,104 @@
+{
+  "number": 28,
+  "date": "2026-07-08",
+  "weekday": "QUARTA-FEIRA",
+  "publishTime": "8H00",
+  "readingMinutes": 5,
+  "illustrative": true,
+  "subject": "Bônus casado com clube abre janela de emissão",
+  "preheader": "A conta fecha para quem já é do clube. Para o resto, é caro.",
+  "signal": "Dois programas abriram bônus de transferência na mesma semana em que a compra de pontos de origem entrou em promoção. Quando as duas pontas coincidem, a janela é curta e a conta importa mais que a manchete.",
+  "deals": [
+    {
+      "category": "Transferência bonificada · Esfera → Latam Pass",
+      "title": "100% de bônus com compra de origem em desconto",
+      "context": "Origem em promoção e transferência bonificada ativas ao mesmo tempo. VPM estimado de resgate em torno de R$ 33/milheiro dá spread positivo para quem já é do clube. Vigência confirmada até sexta.",
+      "conta": {
+        "rows": [
+          [
+            "custo origem",
+            "R$ 1.200,00"
+          ],
+          [
+            "pontos origem",
+            "50.000"
+          ],
+          [
+            "bônus",
+            "100%"
+          ],
+          [
+            "milhas finais",
+            "100.000"
+          ]
+        ],
+        "result": [
+          "CPM final",
+          "R$ 12,00 /milheiro"
+        ]
+      },
+      "tlScore": 88,
+      "scoreBreakdown": {
+        "valor": 92,
+        "regra": 90,
+        "vigencia": 100,
+        "friccao": 80,
+        "aplicabilidade": 85,
+        "liquidez": 80,
+        "estoque": 75,
+        "fontes": 90
+      },
+      "verdict": "vale-agir",
+      "verdictNote": "Vale agir para quem já é do clube e tem emissão planejada.",
+      "vigencia": "2026-07-10T23:59:00-03:00",
+      "source": "Regulamento oficial · vigência confirmada 08/07, 6h30",
+      "sourceUrl": "https://www.latampass.latam.com"
+    },
+    {
+      "category": "Compra de pontos · aguardando confirmação",
+      "title": "Rumor de 120% em compra direta ainda sem regulamento",
+      "context": "Sinal veio de post social sem página oficial. Sem vigência nem regra publicada, não sustenta recomendação — entra apenas como radar de monitoramento.",
+      "conta": {
+        "rows": [
+          [
+            "preço base",
+            "R$ 38,00 /mil"
+          ],
+          [
+            "bônus anunciado",
+            "120% (não confirmado)"
+          ]
+        ],
+        "result": [
+          "CPM final",
+          "aguardando confirmação"
+        ]
+      },
+      "verdict": "nao-confirmado",
+      "verdictNote": "Radar. Não agir sem regulamento oficial.",
+      "source": "Post social público, sem página oficial (nível 4)",
+      "sourceUrl": "https://www.livelo.com.br"
+    }
+  ],
+  "fechaLogo": [
+    {
+      "tag": "VENCE EM 72H",
+      "text": "Compra de pontos Esfera com 30% de desconto encerra sexta.",
+      "cpm": "CPM R$ 19,80",
+      "note": "para o público do clube",
+      "vigencia": "2026-07-11T23:59:00-03:00"
+    }
+  ],
+  "sources": [
+    {
+      "label": "Regulamento oficial Latam Pass (exemplo)",
+      "url": "https://www.latampass.latam.com"
+    },
+    {
+      "label": "Portal Esfera (exemplo)",
+      "url": "https://www.esfera.com.vc"
+    }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar.",
+  "generatedAt": "2026-07-09T01:30:32.390Z"
+}

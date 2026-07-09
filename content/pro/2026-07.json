@@ -1,0 +1,61 @@
+{
+  "periodId": "2026-07",
+  "period": "Julho de 2026",
+  "title": "Transferências bonificadas apertam a régua; janela se estreita",
+  "illustrative": true,
+  "summary": [
+    "TL Score médio do período: 71 em 3 oportunidades avaliadas — teto puxado por teses de emissão planejada, piso por compra especulativa.",
+    "Três programas moveram regra de transferência no mesmo mês: sinal de margem, não de promoção.",
+    "CPM final competitivo concentrado na faixa R$ 12–18/milheiro, e só para público de clube já elegível.",
+    "Liquidez de resgate segue como o fator que separa spread real de bônus cosmético."
+  ],
+  "tlScorePeriod": {
+    "average": 71,
+    "sampled": 3,
+    "distribution": [
+      { "verdict": "vale-agir", "count": 1 },
+      { "verdict": "vale-olhar", "count": 1 },
+      { "verdict": "nao-confirmado", "count": 1 }
+    ],
+    "note": "Distribuição sem Evitaria no período; risco migrou para Não confirmado por falta de regulamento."
+  },
+  "benchmarks": [
+    { "category": "Transferência bonificada (origem → cia aérea)", "metric": "CPM final", "unit": "R$/milheiro", "low": "12,00", "normal": "18,00", "high": "28,00", "note": "Piso exige clube ativo e compra de origem em desconto simultânea." },
+    { "category": "Compra direta de pontos", "metric": "CPM", "unit": "R$/milheiro", "low": "19,80", "normal": "26,00", "high": "38,00", "note": "Sem bônus casado, tende ao teto." },
+    { "category": "Resgate em passagem", "metric": "VPM", "unit": "R$/milheiro", "low": "22,00", "normal": "31,00", "high": "45,00", "note": "VPM só comparável com tarifa em dinheiro verificável." }
+  ],
+  "players": [
+    { "player": "Origem A", "move": "Bônus de transferência a 100% com compra de origem em desconto na mesma janela", "reading": "Abre spread positivo para elegíveis; janela curta favorece quem já tem plano de emissão", "signal": "abertura" },
+    { "player": "Origem B", "move": "Encurtamento do prazo de crédito e reforço de exigência de clube", "reading": "Aperto de mecânica reduz uso especulativo e desloca valor para o cliente recorrente", "signal": "aperto" },
+    { "player": "Destino C", "move": "Estabilidade de tabela de resgate sem alteração de disponibilidade", "reading": "Liquidez preservada sustenta VPM; sem gatilho para antecipar estoque", "signal": "estável" }
+  ],
+  "matrix": {
+    "x": "Custo de aquisição (CPM)",
+    "y": "Liquidez de resgate (VPM)",
+    "rows": [
+      { "player": "Origem A", "x": "baixo", "y": "alta", "quadrant": "Vale agir estrutural — spread real para elegíveis" },
+      { "player": "Origem B", "x": "médio", "y": "alta", "quadrant": "Vale olhar — depende de recorrência e prazo" },
+      { "player": "Compra direta", "x": "alto", "y": "média", "quadrant": "Só casos específicos — completar saldo" }
+    ]
+  },
+  "implications": [
+    "Aquisição via bônus casado tende a premiar retenção de elegíveis, não captação nova.",
+    "Com risco migrando para Não confirmado, a assimetria de informação (regulamento vs. anúncio) vira vantagem competitiva de quem valida.",
+    "Programas que preservarem liquidez de resgate seguram VPM e sustentam a tese de valor no médio prazo."
+  ],
+  "alerts": [
+    { "level": "warning", "text": "Janelas de bônus + desconto de origem simultâneos duram poucos dias; leitura tardia perde o piso de CPM." },
+    { "level": "danger", "text": "Rumor de 120% em compra direta sem regulamento: tratar como Não confirmado até página oficial." },
+    { "level": "insight", "text": "Spread positivo depende de resgate realista; sem VPM comparável, o bônus é cosmético." }
+  ],
+  "watch": [
+    "Publicação de regulamento do rumor de compra direta (confirma ou derruba a tese).",
+    "Prazo de crédito das origens após o aperto de mecânica.",
+    "Disponibilidade de resgate nos destinos — sinal antecipado de compressão de VPM."
+  ],
+  "sources": [
+    { "label": "Regulamentos oficiais dos programas citados (exemplo)", "url": "https://www.latampass.latam.com" },
+    { "label": "Portais de origem — Esfera e Livelo (exemplo)", "url": "https://www.esfera.com.vc" }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."
+}

@@ -1,0 +1,47 @@
+{
+  "number": 27,
+  "date": "2026-07-07",
+  "weekday": "TERÇA-FEIRA",
+  "publishTime": "8H00",
+  "readingMinutes": 5,
+  "illustrative": true,
+  "subject": "Três programas apertaram a regra no mesmo mês",
+  "preheader": "O recado do mercado não é promoção. É margem.",
+  "signal": "Três programas mudaram regra de transferência no mesmo mês. Quando o mercado inteiro aperta na mesma direção, o recado não é promoção. É margem.",
+  "deals": [
+    {
+      "category": "Transferência bonificada · Livelo → Smiles",
+      "title": "110% de bônus, mas a conta muda com o clube",
+      "context": "Vigência até quinta, 23h59. O bônus exige ativação prévia. Sem o clube, o milheiro final sobe 18%.",
+      "conta": {
+        "rows": [
+          ["custo origem", "R$ 1.394,00"],
+          ["pontos", "40.000"],
+          ["bônus", "110%"],
+          ["milhas finais", "84.000"]
+        ],
+        "result": ["CPM final", "R$ 16,60 /milheiro"]
+      },
+      "tlScore": 76,
+      "verdict": "vale-olhar",
+      "verdictNote": "Bom para emissão planejada. Caro para estoque.",
+      "vigencia": "2026-07-09T23:59:00-03:00",
+      "source": "Regulamento oficial · vigência confirmada 07/07, 6h40",
+      "sourceUrl": "https://www.smiles.com.br"
+    }
+  ],
+  "fechaLogo": [
+    {
+      "tag": "VENCE EM 48H",
+      "text": "Compra de pontos com 40% de desconto termina quinta.",
+      "cpm": "CPM R$ 24,90",
+      "note": "para assinantes do clube",
+      "vigencia": "2026-07-09T23:59:00-03:00"
+    }
+  ],
+  "sources": [
+    { "label": "Regulamento oficial Smiles (exemplo)", "url": "https://www.smiles.com.br" },
+    { "label": "Portal Livelo (exemplo)", "url": "https://www.livelo.com.br" }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."
+}
