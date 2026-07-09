@@ -5,7 +5,12 @@
 
 # next.js
 /.next/
-/out/
+
+# editorial pipeline output: versionar apenas os artefatos entregues
+/out/*
+!/out/email/
+!/out/plain/
+!/out/qa/
 
 # production
 /build

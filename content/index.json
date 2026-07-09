@@ -1,0 +1,15 @@
+{
+  "count": 1,
+  "editions": [
+    {
+      "number": 27,
+      "date": "2026-07-07",
+      "weekday": "TERÇA-FEIRA",
+      "subject": "Três programas apertaram a regra no mesmo mês",
+      "readingMinutes": 5,
+      "deals": 1,
+      "illustrative": true,
+      "file": "content/editions/0027.json"
+    }
+  ]
+}

@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "validate": "node scripts/validate.mjs",
+    "render": "node scripts/render.mjs",
+    "publish": "node scripts/publish.mjs",
+    "edition": "node scripts/validate.mjs && node scripts/render.mjs && node scripts/publish.mjs"
   },
   "dependencies": {
     "next": "14.2.15",
