@@ -139,9 +139,13 @@ npm install
 npm run dev      # http://localhost:3000
 npm run build    # produção (deve compilar estático, página / static)
 npm run start
+npm run edition  # validate → render → publish (índices locais)
+npm run beehiiv  # publica no Beehiiv o conteúdo já renderizado (draft por padrão)
 ```
 
 Formulário: `POST /api/subscribe` (server-only). Sem `BEEHIIV_API_KEY`/`BEEHIIV_PUBLICATION_ID` → modo mock. Chave nunca no client. Ver README.
+
+Publisher: `npm run beehiiv` publica a edição **já renderizada** no Beehiiv sem reescrever conteúdo (`POST /v2/publications/{pub_id}/posts`). Roda o QA gate antes, é idempotente (não dispara duas vezes), cria só **rascunho** por padrão, e sem credenciais opera em modo mock. Status em `content/beehiiv-status.json`. Ver `content/README.md`.
 
 ## Checklist de saída (rodar antes de entregar qualquer peça)
 

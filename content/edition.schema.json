@@ -15,6 +15,10 @@
     "illustrative": { "type": "boolean", "description": "Marca a edição como exemplo/ilustrativa" },
     "subject": { "type": "string", "description": "Assunto do e-mail" },
     "preheader": { "type": "string", "description": "Preheader do e-mail" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Slug do post no Beehiiv (web_settings.slug). Ausente ⇒ derivado de productType+número." },
+    "tags": { "type": "array", "items": { "type": "string" }, "description": "content_tags do post no Beehiiv" },
+    "productType": { "type": "string", "enum": ["daily", "pro"], "description": "Tipo de produto. Default: daily." },
+    "scheduledAt": { "type": "string", "format": "date-time", "description": "Agendamento do envio (ISO). Alimenta scheduled_at no Beehiiv." },
     "signal": { "type": "string", "minLength": 1, "description": "O sinal do dia" },
     "deals": {
       "type": "array",

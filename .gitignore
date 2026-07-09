@@ -13,6 +13,7 @@
 !/out/qa/
 !/out/pro-email/
 !/out/pro-pdf/
+!/out/beehiiv/
 
 # production
 /build
