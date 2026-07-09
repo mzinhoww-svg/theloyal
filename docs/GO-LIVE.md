@@ -48,9 +48,11 @@ Workflows em `.github/workflows/`:
 - **`ci.yml`** — roda em push e pull request. Jobs: `lint`, `typecheck`,
   `editorial-gate` (validate → render → qa → publish em passos sequenciais, porque
   compartilham o diretório `out/`) e `build`. Nenhum job toca o Beehiiv.
-- **`beehiiv.yml`** — `workflow_dispatch` (manual). Input `action` = `draft`
-  (padrão) / `publish` / `schedule`. Envio real exige `confirm=PUBLICAR`. Lê os
-  secrets `BEEHIIV_API_KEY` e `BEEHIIV_PUBLICATION_ID`; sem eles roda mock.
+- **`beehiiv.yml`** — `workflow_dispatch` (manual). Roda `validate → render → qa`
+  antes de publicar. Inputs: `action` = `draft` (padrão) / `publish` / `schedule`;
+  `dry_run` (booleano) força o modo mock mesmo com secrets presentes; `edition` e
+  `schedule_at` opcionais. Envio real exige `confirm=PUBLICAR`. Lê os secrets
+  `BEEHIIV_API_KEY` e `BEEHIIV_PUBLICATION_ID`; sem eles roda mock.
 
 ### O que falta na plataforma para os workflows executarem
 
@@ -105,6 +107,7 @@ Ordem exata. **Manual** salvo onde indicado como automático.
 - [ ] **d. Gerar o rascunho no Beehiiv** — Actions → "Beehiiv Publish (manual)" →
       Run workflow → `action = draft`. *Manual.* Isto cria/atualiza um **rascunho**
       no Beehiiv (modo live) ou grava o payload (modo mock). Não envia e-mail.
+      Para um ensaio sem tocar a API mesmo com secrets, marque `dry_run = true`.
 - [ ] **e. Validar o preview** — abrir o rascunho no Beehiiv (ou o
       `out/beehiiv/NNNN.preview.html` do artefato) e conferir assunto, preheader,
       Deal Desk, TL Score, disclaimer. Opcional: `--test voce@exemplo.com` para

@@ -18,6 +18,10 @@ on:
           - draft
           - publish
           - schedule
+      dry_run:
+        description: "Forca modo mock (nao chama a API mesmo com secrets presentes)"
+        type: boolean
+        default: false
       edition:
         description: "Caminho da edicao (vazio = ultima em content/latest.json)"
         type: string
@@ -68,10 +72,11 @@ jobs:
           echo "::error::Acao '$ACTION' exige confirmacao. Reexecute com confirm=PUBLICAR."
           exit 1
 
-      - name: Preparar artefatos (validate + render)
+      - name: Preparar artefatos (validate + render + qa)
         run: |
           npm run validate
           npm run render
+          npm run qa
 
       - name: Beehiiv
         env:
@@ -80,6 +85,7 @@ jobs:
           ACTION: ${{ inputs.action }}
           EDITION: ${{ inputs.edition }}
           SCHEDULE_AT: ${{ inputs.schedule_at }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -eu
           ARGS=""
@@ -93,6 +99,7 @@ jobs:
               fi
               ARGS="$ARGS --schedule $SCHEDULE_AT" ;;
           esac
+          if [ "$DRY_RUN" = "true" ]; then ARGS="$ARGS --dry-run"; fi
           echo "[beehiiv] node scripts/beehiiv-publish.mjs$ARGS"
           node scripts/beehiiv-publish.mjs $ARGS
 
