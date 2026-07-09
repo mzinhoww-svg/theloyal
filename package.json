@@ -10,6 +10,7 @@
     "validate": "node scripts/validate.mjs",
     "render": "node scripts/render.mjs",
     "publish": "node scripts/publish.mjs",
+    "qa": "node scripts/qa.mjs",
     "edition": "node scripts/validate.mjs && node scripts/render.mjs && node scripts/publish.mjs"
   },
   "dependencies": {

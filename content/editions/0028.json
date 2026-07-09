@@ -15,27 +15,12 @@
       "context": "Origem em promoção e transferência bonificada ativas ao mesmo tempo. VPM estimado de resgate em torno de R$ 33/milheiro dá spread positivo para quem já é do clube. Vigência confirmada até sexta.",
       "conta": {
         "rows": [
-          [
-            "custo origem",
-            "R$ 1.200,00"
-          ],
-          [
-            "pontos origem",
-            "50.000"
-          ],
-          [
-            "bônus",
-            "100%"
-          ],
-          [
-            "milhas finais",
-            "100.000"
-          ]
+          ["custo origem", "R$ 1.200,00"],
+          ["pontos origem", "50.000"],
+          ["bônus", "100%"],
+          ["milhas finais", "100.000"]
         ],
-        "result": [
-          "CPM final",
-          "R$ 12,00 /milheiro"
-        ]
+        "result": ["CPM final", "R$ 12,00 /milheiro"]
       },
       "tlScore": 88,
       "scoreBreakdown": {
@@ -60,19 +45,10 @@
       "context": "Sinal veio de post social sem página oficial. Sem vigência nem regra publicada, não sustenta recomendação — entra apenas como radar de monitoramento.",
       "conta": {
         "rows": [
-          [
-            "preço base",
-            "R$ 38,00 /mil"
-          ],
-          [
-            "bônus anunciado",
-            "120% (não confirmado)"
-          ]
+          ["preço base", "R$ 38,00 /mil"],
+          ["bônus anunciado", "120% (não confirmado)"]
         ],
-        "result": [
-          "CPM final",
-          "aguardando confirmação"
-        ]
+        "result": ["CPM final", "aguardando confirmação"]
       },
       "verdict": "nao-confirmado",
       "verdictNote": "Radar. Não agir sem regulamento oficial.",
@@ -90,15 +66,8 @@
     }
   ],
   "sources": [
-    {
-      "label": "Regulamento oficial Latam Pass (exemplo)",
-      "url": "https://www.latampass.latam.com"
-    },
-    {
-      "label": "Portal Esfera (exemplo)",
-      "url": "https://www.esfera.com.vc"
-    }
+    { "label": "Regulamento oficial Latam Pass (exemplo)", "url": "https://www.latampass.latam.com" },
+    { "label": "Portal Esfera (exemplo)", "url": "https://www.esfera.com.vc" }
   ],
-  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar.",
-  "generatedAt": "2026-07-09T01:30:32.390Z"
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."
 }
