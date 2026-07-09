@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://theloyalty/edition.schema.json",
+  "title": "The Loyalty — Edição do Daily",
+  "description": "Modelo editorial único que alimenta e-mail, plain text e página web. Ancorado no Operating Manual v1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["number", "date", "weekday", "publishTime", "readingMinutes", "signal", "deals", "sources", "disclaimer"],
+  "properties": {
+    "number": { "type": "integer", "minimum": 1, "description": "Número da edição" },
+    "date": { "type": "string", "format": "date", "description": "Data de publicação (ISO)" },
+    "weekday": { "type": "string", "description": "Dia da semana em CAPS, ex: TERÇA-FEIRA" },
+    "publishTime": { "type": "string", "description": "Horário, ex: 8H00" },
+    "readingMinutes": { "type": "integer", "minimum": 1, "maximum": 15 },
+    "illustrative": { "type": "boolean", "description": "Marca a edição como exemplo/ilustrativa" },
+    "subject": { "type": "string", "description": "Assunto do e-mail" },
+    "preheader": { "type": "string", "description": "Preheader do e-mail" },
+    "signal": { "type": "string", "minLength": 1, "description": "O sinal do dia" },
+    "deals": {
+      "type": "array",
+      "description": "Deal Desk — oportunidades com conta feita",
+      "items": { "$ref": "#/$defs/deal" }
+    },
+    "fechaLogo": {
+      "type": "array",
+      "description": "Itens que vencem em até 72h",
+      "items": { "$ref": "#/$defs/fecha" }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "disclaimer": {
+      "type": "string",
+      "const": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar.",
+      "description": "Frase oficial obrigatória, íntegra"
+    }
+  },
+  "$defs": {
+    "verdict": {
+      "type": "string",
+      "enum": ["vale-agir", "vale-olhar", "casos-especificos", "esperaria", "evitaria", "nao-confirmado"]
+    },
+    "conta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows", "result"],
+      "description": "Conta feita: pares chave/valor + resultado. Números em mono no render.",
+      "properties": {
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
+        },
+        "result": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
+      }
+    },
+    "scoreBreakdown": {
+      "type": "object",
+      "description": "Os 8 critérios do TL Score (0–100 cada). Soma ponderada (25/15/15/10/10/10/10/5) deve fechar com tlScore.",
+      "additionalProperties": false,
+      "properties": {
+        "valor": { "type": "number", "minimum": 0, "maximum": 100 },
+        "regra": { "type": "number", "minimum": 0, "maximum": 100 },
+        "vigencia": { "type": "number", "minimum": 0, "maximum": 100 },
+        "friccao": { "type": "number", "minimum": 0, "maximum": 100 },
+        "aplicabilidade": { "type": "number", "minimum": 0, "maximum": 100 },
+        "liquidez": { "type": "number", "minimum": 0, "maximum": 100 },
+        "estoque": { "type": "number", "minimum": 0, "maximum": 100 },
+        "fontes": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "deal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "title", "context", "conta", "verdict", "source"],
+      "properties": {
+        "category": { "type": "string", "description": "Ex: Transferência bonificada · Livelo → Smiles" },
+        "title": { "type": "string" },
+        "context": { "type": "string" },
+        "conta": { "$ref": "#/$defs/conta" },
+        "verdict": { "$ref": "#/$defs/verdict" },
+        "verdictNote": { "type": "string" },
+        "source": { "type": "string", "description": "Fonte + status de vigência" },
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "vigencia": { "type": "string", "format": "date-time", "description": "Fim da vigência (ISO). Ausente ⇒ verdict deve ser nao-confirmado (overrule 5.4)" },
+        "tlScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "scoreBreakdown": { "$ref": "#/$defs/scoreBreakdown" }
+      }
+    },
+    "fecha": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "text"],
+      "properties": {
+        "tag": { "type": "string", "description": "Ex: VENCE EM 48H" },
+        "text": { "type": "string" },
+        "cpm": { "type": "string", "description": "CPM em mono, ex: CPM R$ 24,90" },
+        "note": { "type": "string" },
+        "vigencia": { "type": "string", "format": "date-time" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "url"],
+      "properties": {
+        "label": { "type": "string" },
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://" }
+      }
+    }
+  }
+}
