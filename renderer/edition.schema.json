@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "The Loyal Daily edition",
+  "type": "object",
+  "required": ["sinal_do_dia", "deal_desk", "conta_feita", "o_que_evitaria", "fecha_logo"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "numero": { "type": ["integer", "string"] },
+        "data_label": { "type": "string" },
+        "hora": { "type": "string" },
+        "tempo_leitura": { "type": "string" },
+        "preheader": { "type": "string", "description": "Secao 1. Texto do preheader oculto. Nao repetir o assunto." }
+      }
+    },
+    "abertura": { "type": "string", "description": "Secao 3." },
+    "antes_da_conta": { "type": "string", "description": "Secao 4." },
+    "na_edicao_de_hoje": {
+      "type": "array", "description": "Secao 5. Indice escaneavel.", "maxItems": 6,
+      "items": { "oneOf": [ { "type": "string" }, { "$ref": "#/definitions/rowItem" } ] }
+    },
+    "sinal_do_dia": { "type": "string", "description": "Secao 6. Tese principal (obrigatoria)." },
+    "deal_desk": {
+      "type": "array", "description": "Secao 7. No maximo 3.", "maxItems": 3, "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["titulo", "texto", "veredito"],
+        "additionalProperties": false,
+        "properties": {
+          "tag": { "type": "string", "description": "Rotulo mono. Use ' -> ' para setas." },
+          "titulo": { "type": "string" },
+          "texto": { "type": "string" },
+          "veredito": {
+            "type": "string",
+            "enum": ["vale-agir","vale-olhar","depende","esperaria","nao-vale","evitaria","nao-confirmado"]
+          },
+          "veredito_nota": { "type": "string" }
+        }
+      }
+    },
+    "conta_feita": {
+      "type": "object", "description": "Secao 8. Formula em mono.",
+      "required": ["linhas"],
+      "additionalProperties": false,
+      "properties": {
+        "linhas": {
+          "type": "array", "minItems": 1,
+          "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
+          "description": "Pares [rotulo, valor]. A primeira costuma ser a formula."
+        },
+        "total": {
+          "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2,
+          "description": "Linha de total destacada em verde. Ex.: [\"CPM final\", \"R$ 17,42 / milheiro\"]."
+        },
+        "nota": { "type": "string" }
+      }
+    },
+    "program_watch":   { "$ref": "#/definitions/watch", "description": "Secao 9. Max 5." },
+    "bank_cards_watch":{ "$ref": "#/definitions/watch", "description": "Secao 10. Max 5." },
+    "retail_coalition":{ "$ref": "#/definitions/watch", "description": "Secao 11. Max 5." },
+    "loyalty_lab": {
+      "type": "object", "description": "Secao 12.",
+      "additionalProperties": false,
+      "properties": { "titulo": { "type": "string" }, "texto": { "type": "string" } }
+    },
+    "fecha_logo": { "type": "string", "description": "Secao 13. Destaque do que vence logo (obrigatoria)." },
+    "o_que_evitaria": { "type": "string", "description": "Secao 14. Obrigatoria, sempre presente." },
+    "sinais_rapidos": {
+      "type": "array", "description": "Secao 15. Max 5.", "maxItems": 5,
+      "items": { "oneOf": [ { "type": "string" }, { "$ref": "#/definitions/rowItem" } ] }
+    },
+    "sua_leitura": {
+      "type": "array", "description": "Secao 16. Leitura por perfil.",
+      "items": {
+        "type": "object",
+        "required": ["perfil", "texto"],
+        "additionalProperties": false,
+        "properties": { "perfil": { "type": "string" }, "texto": { "type": "string" } }
+      }
+    },
+    "fontes_metodologia": { "type": "string", "description": "Secao 17." },
+    "disclaimer": { "type": "string", "description": "Secao 18. Opcional; ha um padrao." },
+    "footer": {
+      "type": "object", "description": "Secao 19.",
+      "additionalProperties": false,
+      "properties": {
+        "descricao": { "type": "string" },
+        "assinatura_ponto": { "type": "string", "description": "Unico lugar, com hero e sucesso, onde Ponto pode aparecer." },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "web_url": { "type": "string" },
+            "metodologia_url": { "type": "string" },
+            "unsubscribe_url": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rowItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "destaque": { "type": "string" }, "texto": { "type": "string" } },
+      "required": ["texto"]
+    },
+    "watch": {
+      "type": "array", "maxItems": 5,
+      "items": { "oneOf": [ { "type": "string" }, { "$ref": "#/definitions/rowItem" } ] }
+    }
+  }
+}
