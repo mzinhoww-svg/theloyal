@@ -41,16 +41,32 @@ export function SubscribeForm({
 
     setStatus("loading");
     setMessage("");
-    // ===== INTEGRACAO BEEHIIV: substituir este mock =====
-    // Trocar o delay abaixo por um fetch para uma route handler propria
-    // (app/api/subscribe/route.ts) que chama a API do Beehiiv no servidor com a
-    // chave em variavel de ambiente (BEEHIIV_API_KEY). Nunca expor a chave no
-    // client. Manter o honeypot acima e adicionar rate limit na route.
-    await new Promise((r) => setTimeout(r, 900));
-    // ===== fim do trecho a substituir =====
-    setStatus("success");
-    setMessage("Pronto. A próxima edição chega às 8h. Ponto abanou o rabo, o que é raro.");
-    onSuccess?.();
+    // A chave do Beehiiv nunca vem ao client: o fetch bate na route handler
+    // (app/api/subscribe/route.ts), que valida, aplica rate limit e chama o
+    // provedor no servidor. Envia o honeypot junto para defesa em profundidade.
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, empresa: String(data.get("empresa") ?? "") }),
+      });
+      if (res.ok) {
+        setStatus("success");
+        setMessage(
+          "Pronto. A próxima edição chega às 8h. Ponto abanou o rabo, o que é raro.",
+        );
+        onSuccess?.();
+      } else if (res.status === 429) {
+        setStatus("error");
+        setMessage("Muitas tentativas. Ponto pede um minuto de paciência.");
+      } else {
+        setStatus("error");
+        setMessage("Não consegui inscrever agora. Ponto tenta de novo em instantes.");
+      }
+    } catch {
+      setStatus("error");
+      setMessage("Sem conexão agora. Ponto tenta de novo em instantes.");
+    }
   }
 
   if (status === "success") {

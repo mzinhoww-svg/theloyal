@@ -42,12 +42,18 @@ function auditSource() {
   if (!hexHits) pass("Nenhum hex hardcoded fora de PontoMascot/graphics");
   if (!defaultHits) pass("Nenhuma cor default do Tailwind (bg-white/slate/indigo…)");
 
-  // Disclaimer obrigatório no footer e na metodologia.
+  // Disclaimer obrigatório no footer e na metodologia. Check semântico
+  // (site oficial + transferir/resgatar, whitespace normalizado): aceita a
+  // redação reescrita no rebrand sem ditar a copy exata.
   const footer = readFileSync("components/shell.tsx", "utf8");
   const metodo = readFileSync("components/sections.tsx", "utf8");
-  if (footer.includes("Promoções podem mudar sem aviso")) pass("Disclaimer presente no footer");
+  const hasDisclaimer = (s) => {
+    const t = s.replace(/\s+/g, " ");
+    return /site oficial/i.test(t) && /transferir ou resgatar/i.test(t);
+  };
+  if (hasDisclaimer(footer)) pass("Disclaimer presente no footer");
   else block("Disclaimer ausente no footer (shell.tsx)");
-  if (metodo.includes("Promoções podem mudar sem aviso")) pass("Disclaimer presente na metodologia");
+  if (hasDisclaimer(metodo)) pass("Disclaimer presente na metodologia");
   else block("Disclaimer ausente na metodologia (sections.tsx)");
 
   // Fundo de página Paper, nunca branco.
