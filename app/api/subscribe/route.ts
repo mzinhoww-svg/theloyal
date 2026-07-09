@@ -57,10 +57,6 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.BEEHIIV_API_KEY?.trim();
   const publicationId = process.env.BEEHIIV_PUBLICATION_ID?.trim();
 
-  // Modo diagnostico (?debug=1): so para depurar. Nao envia welcome email e
-  // devolve o status/mensagem do provedor. Nao expoe a chave.
-  const debug = new URL(req.url).searchParams.get("debug") === "1";
-
   // Sem credenciais (dev / preview): modo mock para a demo nao quebrar.
   // Com credenciais (producao): chamada real a API do Beehiiv.
   if (!apiKey || !publicationId) {
@@ -88,27 +84,21 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           email,
           reactivate_existing: false,
-          send_welcome_email: !debug,
+          send_welcome_email: true,
           utm_source: "landing",
         }),
       },
     );
     if (!res.ok) {
+      // Loga o motivo do provedor no server (visivel em Vercel Logs) sem
+      // devolver detalhe ao client.
       const upstream = await res.text().catch(() => "");
       console.error("[subscribe] Beehiiv respondeu", res.status, upstream.slice(0, 500));
-      return NextResponse.json(
-        debug
-          ? { error: "provider_error", upstreamStatus: res.status, upstreamBody: upstream.slice(0, 500), pubIdPrefix: pubId.slice(0, 4) }
-          : { error: "provider_error" },
-        { status: 502 },
-      );
+      return NextResponse.json({ error: "provider_error" }, { status: 502 });
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[subscribe] falha ao chamar Beehiiv", err);
-    return NextResponse.json(
-      debug ? { error: "provider_error", upstreamStatus: "fetch_threw", detail: String(err).slice(0, 300) } : { error: "provider_error" },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "provider_error" }, { status: 502 });
   }
 }
