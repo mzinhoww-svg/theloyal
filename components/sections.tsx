@@ -255,9 +255,9 @@ export function ComoAnalisamos() {
         </Reveal>
         <Reveal>
           <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-paper-dark py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">
-            Promoções mudam sem aviso. Antes de comprar, transferir ou resgatar,
-            confirme as regras no site oficial. O The Loyal não faz recomendação
-            financeira individual: a decisão final é sempre sua.
+            Promoções podem mudar sem aviso. Confira sempre as regras no site
+            oficial antes de comprar, transferir ou resgatar. O The Loyal não faz
+            recomendação financeira individual: a decisão final é sempre sua.
           </p>
         </Reveal>
       </div>
