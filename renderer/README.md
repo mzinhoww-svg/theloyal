@@ -1,14 +1,21 @@
 # Sistema de renderizacao — The Loyal Daily
 
-> **Status: LEGADO / esquema alternativo.** O pipeline **canonico** de producao
-> e o de `scripts/*.mjs` sobre `content/edition.schema.json` (comandos
-> `npm run validate | render | qa | publish | beehiiv | edition`). Este modulo
-> usa um **esquema diferente** (`renderer/edition.schema.json`, secoes
-> `sinal_do_dia`/`deal_desk`/`conta_feita`…) e hoje so alimenta o preview React
-> em `app/daily/preview` via `components/daily/DailyEdition.tsx`. Os CLIs
-> `scripts/render-daily.mjs` e `scripts/validate-daily.mjs` **nao** estao ligados
-> a nenhum `npm run` e sao mantidos apenas como referencia do formato de secoes.
-> Nao adicione novas edicoes de producao aqui — use `content/editions/NNNN.json`.
+> **Status: esquema ALTERNATIVO (formato de 19 secoes).** Existem dois modelos
+> editoriais no repo, com esquemas diferentes:
+>
+> - **Canonico / producao de e-mail:** `content/edition.schema.json`
+>   (`signal`/`deals`/`conta`/`sources`), via `scripts/*.mjs` — comandos
+>   `npm run validate | render | qa | publish | beehiiv | edition`. E o que
+>   alimenta o e-mail, o plain text e a pagina web publicados.
+> - **Este modulo (19 secoes):** `renderer/edition.schema.json`
+>   (`sinal_do_dia`/`deal_desk`/`conta_feita`…), via `npm run daily:validate |
+>   daily:render | daily:qa` e o preview React em `app/daily/preview`
+>   (`components/daily/DailyEdition.tsx`).
+>
+> Os dois coexistem. Para a edicao publicada de fato, use
+> `content/editions/NNNN.json`; este formato de 19 secoes serve ao web archive
+> React e ao QA de contraste/auditoria proprios (`renderer/audit.mjs`,
+> `renderer/contrast.mjs`).
 
 Recebe um JSON editorial e gera e-mail, plain text e web archive, com validacao.
 

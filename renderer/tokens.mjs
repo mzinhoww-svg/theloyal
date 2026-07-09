@@ -45,3 +45,24 @@ export function verdict(key) {
   const k = String(key || "").toLowerCase();
   return VERDICT[k] || { label: (String(key || "").toUpperCase() || "SEM VEREDITO"), family: "gray" };
 }
+
+// Paleta aprovada para auditoria de tokens (tokens oficiais + tons de e-mail documentados).
+// Qualquer hex fora desta lista no HTML renderizado e sinalizado pelo QA.
+export const APPROVED_HEX = new Set([
+  "#111111", "#FAF7F0", "#F1ECE1", "#FFFFFF", "#E5E0D5",
+  "#3D3A34", "#555555", "#8A8578", "#B7B2A6",
+  "#007A57", "#00A878", "#00C48C", "#D9F4E9",
+  "#F2C94C", "#FCF0CE", "#7A5B00",
+  "#B53A3A", "#F9E2E2", "#EDE8DD",
+]);
+
+// Fontes seguras para e-mail (nada de webfont/Google Fonts).
+export const SAFE_FONTS = ["georgia", "times new roman", "serif", "arial", "helvetica", "sans-serif", "courier new", "courier", "monospace"];
+export const WEBFONTS = ["fraunces", "inter", "jetbrains", "roboto", "open sans", "lato", "montserrat"];
+
+// Lexico de urgencia artificial (nao inclui prazos factuais como "vence quinta").
+export const URGENCY = [
+  /\bimperdiv/i, /\bultim[ao]s?\s+(chance|horas|vagas|unidades)/i, /\bultima chance\b/i,
+  /\bso hoje\b/i, /\bagora ou nunca\b/i, /\bnao perc/i, /\bnao fique de fora\b/i,
+  /\bgaranta ja\b/i, /\burgente\b/i, /\bacaba (hoje|agora)\b/i, /\bcorre que\b/i, /!{2,}/,
+];
