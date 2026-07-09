@@ -20,6 +20,19 @@ Beehiiv é o passo `beehiiv`, e por padrão cria só um **rascunho**.
 > Ativação em produção (GitHub Actions, secrets, checklist de go-live): ver
 > [`docs/GO-LIVE.md`](../docs/GO-LIVE.md).
 
+### Fluxo canônico vs. legado
+
+Existem dois conjuntos de renderer/schema no repositório. O **canônico** é este,
+em `scripts/` + `content/edition.schema.json`, wired em todos os `npm run`
+(`validate`, `render`, `render:web`, `render:system`, `publish`, `qa`, `pro`,
+`beehiiv`, `edition`).
+
+O conjunto em `renderer/*.mjs` + `scripts/render-daily.mjs` +
+`scripts/validate-daily.mjs` + `renderer/edition.schema.json` é **legado** (protótipo
+"The Loyal Daily", com schema em snake_case incompatível com `content/editions/`).
+Não está ligado a nenhum `npm run` e não participa do build. Mantido por ora; não
+usar no fluxo atual.
+
 ### Publisher Beehiiv (`npm run beehiiv`)
 
 Publica a peça **já renderizada** (`out/email/NNNN.html`) sem reescrever nada.
