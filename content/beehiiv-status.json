@@ -1,0 +1,30 @@
+{
+  "posts": {
+    "daily-0028": {
+      "number": 28,
+      "date": "2026-07-08",
+      "productType": "daily",
+      "slug": "daily-0028",
+      "contentHash": "sha256:0ac68f90799cbdd4fecebb2c5c65881bb740e1a31433b45eba0ba44976c6bece",
+      "action": "draft",
+      "mode": "mock",
+      "postId": null,
+      "previewUrl": "out/beehiiv/daily-0028.preview.html",
+      "postUrl": null,
+      "scheduledAt": null,
+      "testRequestedFor": null,
+      "status": "draft",
+      "updatedAt": "2026-07-09T01:53:49.102Z",
+      "history": [
+        {
+          "at": "2026-07-09T01:53:49.102Z",
+          "action": "draft",
+          "mode": "mock",
+          "status": "draft",
+          "contentHash": "sha256:0ac68f90799cbdd4fecebb2c5c65881bb740e1a31433b45eba0ba44976c6bece",
+          "forced": false
+        }
+      ]
+    }
+  }
+}

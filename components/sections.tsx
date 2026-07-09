@@ -14,24 +14,29 @@ export function Problema() {
           <SectionLabel>O problema</SectionLabel>
           <div className="grid gap-10 lg:grid-cols-12">
             <h2 className="font-display text-3xl font-semibold leading-tight md:text-4xl lg:col-span-5">
-              Quase tudo parece bom no título.
+              No título, toda promoção parece ótima.
             </h2>
             <div className="space-y-5 text-lg leading-relaxed text-gray-500 lg:col-span-7">
               <p>
-                Bônus de 110%. Desconto de 40%. Milheiro &quot;imperdível&quot;. O
-                custo real depende de clube, cartão, taxa de conversão, prazo de
-                crédito e validade. Sem esses insumos, a manchete não é
-                informação. É banner.
+                &quot;Bônus de 110%&quot;. &quot;40% de desconto&quot;. &quot;Pontos
+                pela metade do preço&quot;. O anúncio mostra o número bonito. O que
+                ele esconde são as regras que mudam o preço final: se você precisa
+                assinar o clube de pontos, qual cartão entra na promoção, até quando
+                vale e o que acontece se os pontos vencerem.
               </p>
               <p className="border-l-[3px] border-ink pl-5 font-display text-xl font-semibold leading-snug text-ink">
-                O The Loyalty faz a parte chata: lê o regulamento, confirma a
-                vigência e calcula o milheiro final antes de você agir.
+                O The Loyal faz a parte chata: lê as regras, confere se a oferta
+                ainda está no ar e calcula o custo real. Tudo antes de você gastar.
               </p>
             </div>
           </div>
         </Reveal>
         <Reveal className="mt-12">
           <CompareBanner />
+          <p className="mt-4 max-w-content text-sm leading-relaxed text-gray-500">
+            Exemplo real: a mesma promoção pode sair por R$ 34, R$ 24 ou R$ 16 a cada
+            mil pontos. Depende só do caminho que você escolhe. O banner não conta isso.
+          </p>
         </Reveal>
       </div>
     </section>
@@ -40,25 +45,24 @@ export function Problema() {
 
 const METODO = [
   {
-    titulo: "Sinal",
-    texto:
-      "O que mudou de verdade no mercado hoje, filtrado do ruído de reposts e comunicados requentados.",
+    titulo: "O que mudou hoje.",
+    texto: "A novidade que importa, sem requentar notícia.",
   },
   {
-    titulo: "Conta",
+    titulo: "A conta.",
     texto:
-      "CPM efetivo, valor por milheiro, preço implícito e spread. Números públicos, fórmula aberta, resultado auditável.",
+      "Quanto custa de verdade, em reais. Mostramos o cálculo pra você conferir.",
     formula: "CPM = R$ / (milhas ÷ 1.000)",
   },
   {
-    titulo: "Contexto",
+    titulo: "O porquê.",
     texto:
-      "Por que a empresa fez esse movimento, quem mais fez igual e qual comportamento ela quer induzir.",
+      "O que a empresa ganha com a promoção e o que ela espera que você faça.",
   },
   {
-    titulo: "Ação",
+    titulo: "O veredito.",
     texto:
-      "Vale agir, Vale olhar, Esperaria ou Evitaria. Um veredito claro, com o TL Score e para quem ele vale.",
+      "Uma resposta direta: vale a pena, dá pra considerar, melhor esperar ou evite. E pra qual perfil vale.",
   },
 ] as { titulo: string; texto: string; formula?: string }[];
 
@@ -67,9 +71,9 @@ export function Metodo() {
     <section id="metodo" className="tl-section border-b border-line">
       <div className="tl-container">
         <Reveal>
-          <SectionLabel>A promessa</SectionLabel>
+          <SectionLabel>Como funciona cada edição</SectionLabel>
           <h2 className="max-w-content font-display text-3xl font-semibold leading-tight md:text-4xl">
-            Sinal, conta, contexto e ação. Nessa ordem, todos os dias.
+            Quatro passos. Todo dia. Na mesma ordem.
           </h2>
         </Reveal>
         <div className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -101,32 +105,32 @@ const PRODUTOS: {
   kind: "daily" | "weekly" | "lab" | "pro";
 }[] = [
   {
-    nome: "The Loyalty Daily",
+    nome: "De segunda a sexta, às 8h",
     kind: "daily",
     freq: "Segunda a sexta · 8h",
-    desc: "Leitura de 5 minutos: sinal do dia, Deal Desk com conta feita, bancos e cartões, programas, varejo e o que vence hoje.",
+    desc: "A novidade do dia, a promoção analisada com a conta pronta e os prazos que vencem hoje.",
     status: "Incluído",
   },
   {
-    nome: "The Loyalty Weekly",
+    nome: "No fim de semana",
     kind: "weekly",
     freq: "Fim de semana",
-    desc: "A tese da semana, ranking de oportunidades ainda vigentes e estratégia por perfil para os próximos 7 dias.",
+    desc: "O resumo da semana, as ofertas que ainda estão no ar e o que fazer nos próximos 7 dias.",
     status: "Incluído",
   },
   {
-    nome: "The Loyalty Lab",
+    nome: "Guias que não vencem",
     kind: "lab",
     freq: "2 a 4 por mês",
-    desc: "Biblioteca evergreen: como funciona CPM, transferência bonificada, pontos + dinheiro e as mecânicas do mercado.",
+    desc: "Explicações simples de como pontos, milhas e transferências funcionam. Pra você nunca mais decidir no achismo.",
     status: "Incluído",
   },
   {
-    nome: "The Loyalty Pro",
+    nome: "Versão Pro",
     kind: "pro",
     freq: "Em breve",
-    desc: "Base histórica, benchmarks de custo por categoria e radar de mercado para profissionais de loyalty, bancos e varejo.",
-    status: "Beta fechado",
+    desc: "Para quem trabalha com pontos, bancos ou varejo: histórico de preços, comparativos e monitoramento do mercado.",
+    status: "Em breve",
   },
 ];
 
@@ -168,12 +172,10 @@ export function Recebe() {
 }
 
 const PERFIS = [
-  ["Consumidor inteligente", "Quer saber se pontos, milhas e cashback valem a pena antes de mudar de hábito."],
-  ["Heavy user", "Acompanha bônus e milheiro. Quer conta, timing, vigência e risco de estoque."],
-  ["Alta renda", "Precisa decidir cartão, anuidade, sala VIP e benefício sem depender do gerente."],
-  ["Profissional de loyalty", "Lê os movimentos dos programas como sinal de estratégia, não como promoção."],
-  ["Bancos e cartões", "Observa como pontos e benefícios afetam aquisição, ativação e gasto."],
-  ["Varejo e CRM", "Acompanha coalizões, cashback e dados como alavanca de retenção."],
+  ["Você usa pontos de vez em quando.", "Quer saber se vale mudar de cartão ou assinar um cashback antes de gastar à toa."],
+  ["Você já acumula bastante.", "Quer o preço certo, a hora certa de transferir e os prazos de cada oferta em um só lugar."],
+  ["Você tem cartão premium, ou pensa em ter.", "Precisa decidir se a anuidade compensa, sem depender do gerente do banco."],
+  ["Você trabalha com o assunto.", "Acompanha bancos, companhias aéreas e varejo, e quer ler os movimentos do mercado antes dos outros."],
 ] as const;
 
 export function ParaQuem() {
@@ -183,7 +185,7 @@ export function ParaQuem() {
         <Reveal>
           <SectionLabel>Para quem é</SectionLabel>
           <h2 className="max-w-content font-display text-3xl font-semibold leading-tight md:text-4xl">
-            Uma edição, três leituras: decidir, otimizar e construir.
+            Feito pra quatro tipos de leitor. Veja se você é um deles.
           </h2>
         </Reveal>
         <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -202,12 +204,12 @@ export function ParaQuem() {
 }
 
 const PRINCIPIOS = [
-  ["Fontes públicas", "Blogs e portais descobrem sinais. Regulamentos e páginas oficiais confirmam regras. A análise é nossa."],
-  ["Vigência confirmada", "Oferta sem data e regra clara não vira recomendação. Vira, no máximo, radar de monitoramento."],
-  ["Conta aberta", "CPM, VPM, preço implícito e spread com fórmula pública. Se falta dado, o item é Não confirmado."],
-  ["TL Score", "Oito critérios com pesos declarados: valor, clareza, vigência, fricção, aplicabilidade, liquidez, risco e fontes."],
-  ["Independência", "Nenhum dado interno, nenhuma métrica proprietária, nenhum texto pautado por programa ou banco."],
-  ["Patrocínio sinalizado", "Quando existir, virá identificado antes do conteúdo. Sem exceção."],
+  ["Fontes oficiais.", "Toda análise parte das regras publicadas pela própria empresa."],
+  ["Só o que está valendo.", "Oferta sem data ou sem regra clara não vira recomendação."],
+  ["Conta à mostra.", "Mostramos como chegamos no número. Se falta informação, a gente avisa."],
+  ["Nota de 0 a 100.", "Cada oferta recebe uma nota, com os critérios explicados."],
+  ["Ninguém paga pela opinião.", "Nenhum banco ou programa influencia o que escrevemos."],
+  ["Publicidade sempre marcada.", "Se um dia tiver anúncio, ele vem sinalizado."],
 ] as const;
 
 export function ComoAnalisamos() {
@@ -215,9 +217,9 @@ export function ComoAnalisamos() {
     <section id="como-analisamos" className="tl-section border-b border-line">
       <div className="tl-container">
         <Reveal>
-          <SectionLabel>Como analisamos</SectionLabel>
+          <SectionLabel>Por que confiar</SectionLabel>
           <h2 className="max-w-content font-display text-3xl font-semibold leading-tight md:text-4xl">
-            Confiança não se pede. Se demonstra com método.
+            A conta é aberta. As fontes são públicas.
           </h2>
         </Reveal>
         <div className="mt-10 grid gap-12 lg:grid-cols-12">
@@ -253,9 +255,9 @@ export function ComoAnalisamos() {
         </Reveal>
         <Reveal>
           <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-paper-dark py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">
-            Promoções podem mudar sem aviso. Confira sempre as regras no site
-            oficial antes de comprar, transferir ou resgatar. O The Loyalty não faz
-            recomendação financeira personalizada.
+            Promoções mudam sem aviso. Antes de comprar, transferir ou resgatar,
+            confirme as regras no site oficial. O The Loyal não faz recomendação
+            financeira individual: a decisão final é sempre sua.
           </p>
         </Reveal>
       </div>
@@ -271,13 +273,13 @@ export function CTAFinal() {
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="font-display text-3xl font-bold leading-tight md:text-5xl">
-              Amanhã às 8h, a conta já vai estar feita.
+              Amanhã, às 8h, a conta chega pronta na sua caixa de entrada.
             </h2>
             <p className="mt-4 text-lg text-gray-500">
-              Leitura de 5 minutos. Cancelamento em um clique. Ceticismo incluso.
+              5 minutos de leitura. De graça. Cancela em um clique.
             </p>
             <div className="mx-auto mt-8 max-w-xl text-left">
-              <SubscribeForm onSuccess={() => setCelebrate(true)} />
+              <SubscribeForm submitLabel="Quero receber por e-mail" onSuccess={() => setCelebrate(true)} />
             </div>
             {celebrate && (
               <div className="mx-auto mt-6 w-28">

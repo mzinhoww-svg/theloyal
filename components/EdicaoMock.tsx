@@ -10,7 +10,7 @@ export function EdicaoMock() {
         <div className="flex items-baseline justify-between gap-4">
           <span className="font-display text-2xl">
             <span className="font-semibold">The </span>
-            <span className="font-bold">Loyalty</span>
+            <span className="font-bold">Loyal</span>
           </span>
           <span className="font-mono text-xs text-gray-500">Nº 27</span>
         </div>
