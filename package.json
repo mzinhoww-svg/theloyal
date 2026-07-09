@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "pauta": "node scripts/pauta.mjs",
     "validate": "node scripts/validate.mjs",
     "render": "node scripts/render.mjs",
     "qa": "node scripts/qa.mjs",

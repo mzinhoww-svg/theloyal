@@ -4,6 +4,31 @@ Pipeline de validação, renderização e publicação das edições do Daily.
 Segue a estrutura e os checklists do Operating Manual v1. **Sem dependências**
 (scripts ESM Node puros).
 
+## Pauta (intake de noticias)
+
+Etapa **anterior** ao JSON da edicao: capta candidatos das fontes publicas para
+uma pessoa selecionar e apurar.
+
+```bash
+npm run pauta                 # le content/sources.json e gera content/pauta/AAAA-MM-DD.{md,json}
+npm run pauta -- --days 3     # janela de dias (default: lookbackDays do sources.json)
+npm run pauta -- --date 2026-07-09
+```
+
+1. Configure as fontes em `content/sources.json` (`enabled: true` + `url` do feed RSS/Atom;
+   `section` sugere a secao da digest). O script tolera feeds ausentes/inacessiveis.
+2. `npm run pauta` coleta itens recentes (titulo, link, data, fonte), remove duplicados
+   (inclusive contra a pauta anterior) e escreve:
+   - `content/pauta/AAAA-MM-DD.md` — **checklist**: `[ ]` para marcar o que entra,
+     campo `Secao` e campo `Fonte apurada` (URL oficial + vigencia) por item;
+   - `content/pauta/AAAA-MM-DD.json` — espelho estruturado.
+3. Uma pessoa edita o `.md`: marca `[x]`, confirma a secao e **apura a fonte** de cada item
+   (regulamento/pagina oficial + vigencia) antes de virar edicao.
+4. Com a pauta apurada, monte `content/editions/NNNN.json` e siga o fluxo abaixo.
+
+A pauta capta apenas **link + manchete da fonte como referencia** (marcada "nao copiar"):
+o texto publicado e sempre proprio (regra de marca 2). Ver `content/pauta/EXEMPLO.md`.
+
 ## Fluxo
 
 ```bash

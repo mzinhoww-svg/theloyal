@@ -1,0 +1,28 @@
+{
+  "_nota": "Fontes publicas de pauta do The Loyalty. Preencha 'url' com o feed RSS/Atom real e marque 'enabled': true. O script tolera feeds ausentes, vazios ou inacessiveis. Regra de marca: a pauta capta LINK + manchete da fonte apenas como referencia; o texto publicado e sempre proprio.",
+  "lookbackDays": 2,
+  "sections": ["sinal", "deal-desk", "program-watch", "bank-cards", "retail-coalition", "loyalty-lab", "fecha-logo"],
+  "feeds": [
+    {
+      "id": "portal-milhas",
+      "name": "Portal de milhas (substituir)",
+      "url": "https://exemplo.com.br/feed",
+      "section": "program-watch",
+      "enabled": false
+    },
+    {
+      "id": "blog-cartoes",
+      "name": "Blog de cartoes (substituir)",
+      "url": "https://exemplo.com.br/cartoes/rss",
+      "section": "bank-cards",
+      "enabled": false
+    },
+    {
+      "id": "programa-oficial",
+      "name": "Sala de imprensa de um programa (substituir)",
+      "url": "https://exemplo.com.br/imprensa/feed",
+      "section": "deal-desk",
+      "enabled": false
+    }
+  ]
+}
