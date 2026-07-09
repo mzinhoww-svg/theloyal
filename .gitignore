@@ -11,6 +11,8 @@
 !/out/email/
 !/out/plain/
 !/out/qa/
+!/out/pro-email/
+!/out/pro-pdf/
 
 # production
 /build

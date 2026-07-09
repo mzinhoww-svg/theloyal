@@ -67,21 +67,27 @@ function auditEditions() {
   }
 }
 
-// ---------- 3. E-mail HTML gerado ----------
-function auditEmail() {
-  const dir = "out/email";
-  if (!existsSync(dir)) { warn("out/email ausente — rode `npm run render`"); return; }
+// ---------- 3. E-mail HTML gerado (edição + Pro) ----------
+function auditEmailDir(dir) {
+  if (!existsSync(dir)) return;
   for (const f of readdirSync(dir).filter((n) => n.endsWith(".html"))) {
+    const tag = `E-mail ${dir}/${f}`;
     const html = readFileSync(join(dir, f), "utf8");
     const textish = html.replace(/<[^>]+>/g, " ");
-    if (EMOJI_RE.test(textish)) block(`E-mail ${f}: emoji no corpo`);
-    if (URGENCY_RE.test(textish)) block(`E-mail ${f}: urgência artificial`);
-    if (/color:\s*#F2C94C/i.test(html)) block(`E-mail ${f}: amarelo (#F2C94C) usado como texto`);
-    if (/<script/i.test(html)) block(`E-mail ${f}: contém <script> (proibido em e-mail)`);
-    if (/(?:src|background)\s*=?\s*["']?https?:\/\//i.test(html) || /url\(\s*https?:/i.test(html)) block(`E-mail ${f}: carrega recurso externo (deve ser self-contained)`);
-    if (!html.includes(DISCLAIMER)) block(`E-mail ${f}: disclaimer oficial ausente`);
-    if (!blocks.some((m) => m.startsWith(`E-mail ${f}`))) pass(`E-mail ${f}: sem emoji/urgência, self-contained, disclaimer presente`);
+    if (EMOJI_RE.test(textish)) block(`${tag}: emoji no corpo`);
+    if (URGENCY_RE.test(textish)) block(`${tag}: urgência artificial`);
+    if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
+    if (/<script/i.test(html)) block(`${tag}: contém <script> (proibido em e-mail)`);
+    if (/(?:src|background)\s*=?\s*["']?https?:\/\//i.test(html) || /url\(\s*https?:/i.test(html)) block(`${tag}: carrega recurso externo (deve ser self-contained)`);
+    if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
+    if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: sem emoji/urgência, self-contained, disclaimer presente`);
   }
+}
+
+function auditEmail() {
+  if (!existsSync("out/email") && !existsSync("out/pro-email")) { warn("out/email ausente — rode `npm run render`"); return; }
+  auditEmailDir("out/email");
+  auditEmailDir("out/pro-email");
 }
 
 function main() {

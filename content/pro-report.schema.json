@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://theloyalty/pro-report.schema.json",
+  "title": "The Loyalty Pro — Relatório executivo do período",
+  "description": "Material analítico B2B: benchmark, comparativo e indicador. Tom executivo. Sem dado interno, sem CMI, sem linguagem corporativa de empresa específica.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["periodId", "period", "title", "summary", "tlScorePeriod", "benchmarks", "players", "matrix", "implications", "alerts", "watch", "sources", "disclaimer"],
+  "properties": {
+    "periodId": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}$", "description": "Slug do período, ex: 2026-07" },
+    "period": { "type": "string", "description": "Período por extenso, ex: Julho de 2026" },
+    "title": { "type": "string" },
+    "illustrative": { "type": "boolean" },
+    "summary": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "Sumário executivo — frases curtas, indicador antes de adjetivo" },
+    "tlScorePeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["average", "sampled", "distribution"],
+      "properties": {
+        "average": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "sampled": { "type": "integer", "minimum": 1, "description": "Nº de oportunidades avaliadas no período" },
+        "distribution": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["verdict", "count"],
+            "properties": {
+              "verdict": { "type": "string", "enum": ["vale-agir", "vale-olhar", "casos-especificos", "esperaria", "evitaria", "nao-confirmado"] },
+              "count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "benchmarks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "metric", "unit", "low", "normal", "high"],
+        "properties": {
+          "category": { "type": "string" },
+          "metric": { "type": "string", "description": "Ex: CPM final, VPM" },
+          "unit": { "type": "string", "description": "Ex: R$/milheiro" },
+          "low": { "type": "string" },
+          "normal": { "type": "string" },
+          "high": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "players": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["player", "move", "reading", "signal"],
+        "properties": {
+          "player": { "type": "string" },
+          "move": { "type": "string", "description": "Movimento observado, descrito de forma neutra" },
+          "reading": { "type": "string", "description": "Leitura analítica do The Loyalty" },
+          "signal": { "type": "string", "enum": ["abertura", "aperto", "estável"] }
+        }
+      }
+    },
+    "matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "rows"],
+      "properties": {
+        "x": { "type": "string", "description": "Eixo X, ex: Custo de aquisição" },
+        "y": { "type": "string", "description": "Eixo Y, ex: Liquidez de resgate" },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["player", "x", "y", "quadrant"],
+            "properties": {
+              "player": { "type": "string" },
+              "x": { "type": "string", "description": "baixo | médio | alto" },
+              "y": { "type": "string", "description": "baixa | média | alta" },
+              "quadrant": { "type": "string", "description": "Leitura do posicionamento" }
+            }
+          }
+        }
+      }
+    },
+    "implications": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "alerts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["level", "text"],
+        "properties": {
+          "level": { "type": "string", "enum": ["insight", "warning", "danger"] },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "watch": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "url"],
+        "properties": {
+          "label": { "type": "string" },
+          "url": { "type": "string", "pattern": "^https?://" }
+        }
+      }
+    },
+    "disclaimer": { "type": "string", "const": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar." }
+  }
+}

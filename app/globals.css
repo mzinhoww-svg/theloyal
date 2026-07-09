@@ -100,6 +100,13 @@
 }
 .ponto-head.is-tilt { transform: rotate(12deg); }
 
+/* PDF do Pro: esconder nav/footer na impressao (Salvar como PDF / page.pdf) */
+@media print {
+  .tl-noprint { display: none !important; }
+  .tl-section { padding: 0 !important; }
+  body { background: #fff; }
+}
+
 /* Fallback estatico: desliga idle, reveal, tilt e smooth scroll (guia secao 5, DESIGN.md a11y) */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
