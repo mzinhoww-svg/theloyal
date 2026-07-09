@@ -1,5 +1,15 @@
 # Sistema de renderizacao — The Loyal Daily
 
+> **Status: LEGADO / esquema alternativo.** O pipeline **canonico** de producao
+> e o de `scripts/*.mjs` sobre `content/edition.schema.json` (comandos
+> `npm run validate | render | qa | publish | beehiiv | edition`). Este modulo
+> usa um **esquema diferente** (`renderer/edition.schema.json`, secoes
+> `sinal_do_dia`/`deal_desk`/`conta_feita`…) e hoje so alimenta o preview React
+> em `app/daily/preview` via `components/daily/DailyEdition.tsx`. Os CLIs
+> `scripts/render-daily.mjs` e `scripts/validate-daily.mjs` **nao** estao ligados
+> a nenhum `npm run` e sao mantidos apenas como referencia do formato de secoes.
+> Nao adicione novas edicoes de producao aqui — use `content/editions/NNNN.json`.
+
 Recebe um JSON editorial e gera e-mail, plain text e web archive, com validacao.
 
 ## Estrutura

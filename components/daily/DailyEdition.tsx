@@ -27,8 +27,8 @@ export interface Edition {
 const VERDICT: Record<string, { label: string; cls: string }> = {
   "vale-agir": { label: "VALE AGIR", cls: "bg-green-100 text-green-700" },
   "vale-olhar": { label: "VALE OLHAR", cls: "bg-green-100 text-green-700" },
-  depende: { label: "DEPENDE", cls: "bg-yellow-100 text-[#7A5B00]" },
-  esperaria: { label: "ESPERARIA", cls: "bg-yellow-100 text-[#7A5B00]" },
+  depende: { label: "DEPENDE", cls: "bg-yellow-500 text-ink" },
+  esperaria: { label: "ESPERARIA", cls: "bg-yellow-500 text-ink" },
   "nao-vale": { label: "NAO VALE", cls: "bg-red-100 text-red-700" },
   evitaria: { label: "EVITARIA", cls: "bg-red-100 text-red-700" },
   "nao-confirmado": { label: "NAO CONFIRMADO", cls: "bg-paper-dark text-gray-500" },
@@ -43,8 +43,8 @@ function VerdictChip({ verdict }: { verdict?: string }) {
   );
 }
 
-function Eyebrow({ children, tone = "green" }: { children: ReactNode; tone?: "green" | "red" | "muted" }) {
-  const c = tone === "red" ? "text-red-700" : tone === "muted" ? "text-gray-400" : "text-green-700";
+function Eyebrow({ children, tone = "green" }: { children: ReactNode; tone?: "green" | "red" | "muted" | "ink" }) {
+  const c = tone === "red" ? "text-red-700" : tone === "muted" ? "text-gray-400" : tone === "ink" ? "text-ink" : "text-green-700";
   return <div className={`font-mono text-[11px] font-bold uppercase tracking-[0.16em] ${c}`}>{children}</div>;
 }
 
@@ -137,7 +137,7 @@ export function DailyEdition({ edition }: { edition: Edition }) {
 
       <Section>
         <div className="rounded-r border-l-4 border-yellow-500 bg-yellow-100 p-4">
-          <Eyebrow tone="muted"><span className="text-[#7A5B00]">Fecha logo</span></Eyebrow>
+          <Eyebrow tone="ink">Fecha logo</Eyebrow>
           <p className="mt-1.5 text-gray-700">{edition.fecha_logo}</p>
         </div>
       </Section>

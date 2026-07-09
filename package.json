@@ -7,15 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "validate": "node scripts/validate.mjs",
-    "render": "node scripts/render.mjs",
+    "render": "node scripts/render-system.mjs",
+    "render:email": "node scripts/render.mjs",
     "render:web": "node scripts/render-web.mjs",
-    "render:system": "node scripts/render-system.mjs",
-    "publish": "node scripts/publish.mjs",
     "qa": "node scripts/qa.mjs",
+    "publish": "node scripts/publish.mjs",
+    "beehiiv": "node scripts/beehiiv-publish.mjs",
     "pro": "node scripts/pro.mjs",
-    "edition": "node scripts/render-system.mjs && node scripts/publish.mjs"
-    "lint": "next lint"
+    "edition": "npm run validate && npm run render && npm run publish"
   },
   "dependencies": {
     "next": "14.2.15",
@@ -27,6 +28,8 @@
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
+    "eslint": "8.57.0",
+    "eslint-config-next": "14.2.15",
     "postcss": "8.4.38",
     "tailwindcss": "3.4.10",
     "typescript": "5.5.4"
