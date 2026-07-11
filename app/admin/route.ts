@@ -31,10 +31,62 @@ const STATUS: Record<string, string> = {
   "vence-hoje": "#D64545", "vence-72h": "#8A5A1F", continua: "#00A878",
   vencida: "#8A8578", nova: "#315CFF", descartada: "#8A8578",
 };
+const CONF: Record<string, string> = { alta: "#00A878", media: "#315CFF", baixa: "#8A8578", "em-formacao": "#8A8578" };
 
 function pill(t: unknown, bg: string): string {
   const fg = bg === "#F2C94C" ? "#111" : "#FAF7F0";
   return `<span style="display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;background:${bg};color:${fg}">${esc(t)}</span>`;
+}
+
+function daysBetween(a: string, b: string): number {
+  return Math.round((+new Date(b) - +new Date(a)) / 86400000);
+}
+function addDays(d: string, n: number): string {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x.toISOString().slice(0, 10);
+}
+
+function forecastRows(campaigns: any[]): { rota: string; conf: string; prediction: string; basis: string }[] {
+  const g = new Map<string, string[]>();
+  for (const r of campaigns) {
+    if (r.tipo !== "transferencia") continue;
+    const key = `${r.origem}→${r.destino}`;
+    const d = r.vigencia_inicio || r.observed_at;
+    if (!d) continue;
+    if (!g.has(key)) g.set(key, []);
+    g.get(key)!.push(String(d).slice(0, 10));
+  }
+  const out: { rota: string; conf: string; prediction: string; basis: string }[] = [];
+  for (const [rota, ds] of g) {
+    const dates = Array.from(new Set(ds)).sort();
+    if (dates.length < 3) {
+      out.push({ rota, conf: "em-formacao", prediction: "histórico insuficiente", basis: `${dates.length} janela(s)` });
+      continue;
+    }
+    const iv: number[] = [];
+    for (let i = 1; i < dates.length; i++) iv.push(daysBetween(dates[i - 1], dates[i]));
+    const avg = Math.round(iv.reduce((a, b) => a + b, 0) / iv.length);
+    const last = dates[dates.length - 1];
+    const next = addDays(last, avg);
+    const conf = dates.length >= 6 ? "alta" : dates.length >= 4 ? "media" : "baixa";
+    out.push({ rota, conf, prediction: `próxima janela ~ ${addDays(next, -3)} a ${addDays(next, 3)}`, basis: `${dates.length} janelas; recorrência ~${avg} dias; última ${last}` });
+  }
+  return out.sort((a, b) => (a.conf === "em-formacao" ? 1 : 0) - (b.conf === "em-formacao" ? 1 : 0) || a.rota.localeCompare(b.rota));
+}
+
+function calendarRows(campaigns: any[], month: string): { label: string; s: number; e: number; md: number }[] {
+  const [y, m] = month.split("-").map(Number);
+  const md = new Date(y, m, 0).getDate();
+  const inMonth = (d: any) => !!d && String(d).slice(0, 7) === month;
+  return campaigns
+    .filter((r) => inMonth(r.vigencia_inicio) || inMonth(r.vigencia_fim))
+    .map((r) => {
+      const s = r.vigencia_inicio && String(r.vigencia_inicio).slice(0, 7) === month ? +String(r.vigencia_inicio).slice(8, 10) : 1;
+      const e = r.vigencia_fim && String(r.vigencia_fim).slice(0, 7) === month ? +String(r.vigencia_fim).slice(8, 10) : md;
+      return { label: `${r.origem}→${r.destino}${r.percentual ? " " + r.percentual + "%" : ""}`, s, e: Math.max(e, s), md };
+    })
+    .sort((a, b) => a.s - b.s);
 }
 
 function deny(): Response {
@@ -63,6 +115,7 @@ export async function GET(req: Request): Promise<Response> {
   }
   if (!ok) return deny();
 
+  const month = new Date().toISOString().slice(0, 7);
   const [campaigns, editions, valuations, runs] = await Promise.all([
     sb("campaigns?select=*&order=observed_at.desc&limit=400"),
     sb("editions?select=*&order=date.desc"),
@@ -76,6 +129,8 @@ export async function GET(req: Request): Promise<Response> {
   const avgQ = editions.length
     ? Math.round(editions.reduce((a: number, e: any) => a + (e.quality_score || 0), 0) / editions.length)
     : 0;
+  const fc = forecastRows(campaigns);
+  const cal = calendarRows(campaigns, month);
 
   const rowsC = campaigns.slice(0, 60).map((c) =>
     `<tr><td>${esc(c.origem)}→${esc(c.destino)}</td><td style="color:#555">${esc(c.tipo)}</td>` +
@@ -94,12 +149,22 @@ export async function GET(req: Request): Promise<Response> {
     `<tr><td>${esc(v.program)}</td><td class="m">${esc(v.piso)}</td><td class="m">${esc(v.teto)}</td><td style="color:#555">${esc(v.confidence)}</td></tr>`
   ).join("");
 
+  const rowsF = fc.slice(0, 14).map((f) =>
+    `<tr><td>${esc(f.rota)}</td><td>${pill(f.conf, CONF[f.conf] || "#8A8578")}</td><td>${esc(f.prediction)}</td><td style="color:#555">${esc(f.basis)}</td></tr>`
+  ).join("");
+
+  const barsCal = cal.slice(0, 18).map((c) => {
+    const left = ((c.s - 1) / c.md) * 100;
+    const w = Math.max(3, ((c.e - c.s + 1) / c.md) * 100);
+    return `<div class="bar-row"><div class="bar-label">${esc(c.label)}</div><div class="bar-track"><div class="bar-fill" style="left:${left}%;width:${w}%"></div></div></div>`;
+  }).join("");
+
   const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>The Loyal · Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#111;--paper:#FAF7F0;--surface:#fff;--muted:#555;--border:#E5E0D5;--primary:#00A878}
+:root{--ink:#111;--paper:#FAF7F0;--surface:#fff;--muted:#555;--border:#E5E0D5;--primary:#00A878;--insight:#315CFF}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,Arial,sans-serif;font-size:15px}
 h1,h2{font-family:'Fraunces',Georgia,serif;margin:0}a{color:var(--primary);text-decoration:none}
 .m{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
@@ -113,6 +178,10 @@ h1,h2{font-family:'Fraunces',Georgia,serif;margin:0}a{color:var(--primary);text-
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;text-transform:uppercase;font-size:11px;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);padding:8px 10px 8px 0}
 td{padding:8px 10px 8px 0;border-bottom:1px solid var(--border);vertical-align:top}
+.bar-row{display:flex;align-items:center;gap:10px;margin:4px 0;font-size:12px}
+.bar-label{width:200px;flex:none}
+.bar-track{flex:1;height:16px;background:#f0ece3;border-radius:4px;position:relative}
+.bar-fill{position:absolute;height:16px;background:var(--insight);border-radius:4px}
 .note{font-size:12px;color:var(--muted)}
 </style></head><body><div class="wrap">
 <div class="top"><div class="badge">TL</div><div><h1 style="font-size:24px"><span style="font-weight:600">The</span> Loyal · Admin</h1>
@@ -124,6 +193,8 @@ td{padding:8px 10px 8px 0;border-bottom:1px solid var(--border);vertical-align:t
 <div class="card"><div class="k">Qualidade média</div><div class="v m">${avgQ}</div><div class="s">${editions.length} edições</div></div>
 </div>
 <div class="sec"><h2>Edições</h2><table><thead><tr><th>Produto</th><th>Título</th><th>Data</th><th>Gates</th><th>Qual.</th><th>Beehiiv</th></tr></thead><tbody>${rowsE || '<tr><td class="note" colspan="6">sem edições</td></tr>'}</tbody></table></div>
+<div class="sec"><h2>Calendário de promoções · ${month}</h2><div class="note" style="margin-bottom:8px">Cada barra é uma campanha ao longo do mês.</div>${barsCal || '<div class="note">sem campanhas no mês</div>'}</div>
+<div class="sec"><h2>Previsão de janelas</h2><div class="note" style="margin-bottom:8px">Por recorrência do histórico do ledger (transferências).</div><table><thead><tr><th>Rota</th><th>Confiança</th><th>Previsão</th><th>Base</th></tr></thead><tbody>${rowsF || '<tr><td class="note" colspan="4">histórico insuficiente</td></tr>'}</tbody></table></div>
 <div class="sec"><h2>Ledger de campanhas</h2><table><thead><tr><th>Rota</th><th>Tipo</th><th>%</th><th>Milheiro</th><th>TL</th><th>Veredito</th><th>Status</th><th>Vence</th></tr></thead><tbody>${rowsC || '<tr><td class="note" colspan="8">sem campanhas</td></tr>'}</tbody></table></div>
 <div class="sec"><h2>Valuations</h2><table><thead><tr><th>Programa</th><th>Piso</th><th>Teto</th><th>Confiança</th></tr></thead><tbody>${rowsV || '<tr><td class="note" colspan="4">sem valuations</td></tr>'}</tbody></table></div>
 <div class="sec note">The Loyal · admin · guardrail factual ativo · conferência humana no Beehiiv.</div>
