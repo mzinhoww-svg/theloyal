@@ -1,4 +1,4 @@
-// Publisher do The Loyalty no Beehiiv.
+// Publisher do The Loyal no Beehiiv.
 // Publica o conteúdo JÁ RENDERIZADO (out/email/NNNN.html + out/plain/NNNN.txt)
 // sem alterar nada editorialmente. Não reescreve conteúdo, não muda tokens.
 //

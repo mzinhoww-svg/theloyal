@@ -1,4 +1,4 @@
-// QA global do The Loyalty: audita landing, JSON editorial, e-mail HTML e página
+// QA global do The Loyal: audita landing, JSON editorial, e-mail HTML e página
 // web. Bloqueia (exit 1) qualquer regra inviolável quebrada.
 // Uso: node scripts/qa.mjs   (rode `npm run render` antes, para o e-mail existir)
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";

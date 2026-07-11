@@ -1,4 +1,4 @@
-// Pipeline editorial do The Loyalty — utilidades compartilhadas.
+// Pipeline editorial do The Loyal — utilidades compartilhadas.
 // Os renderizadores (email/plain) sao gerados por script e usam os hex
 // documentados como tokens: mesma excecao permitida ao mascote/graficos.
 import { readFileSync, readdirSync } from "node:fs";
