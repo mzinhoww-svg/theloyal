@@ -10,7 +10,7 @@ export function EditionArticle({ edition: ed }: { edition: Edition }) {
         <div className="flex items-baseline justify-between gap-4">
           <span className="font-display text-2xl">
             <span className="font-semibold">The </span>
-            <span className="font-bold">Loyalty</span>
+            <span className="font-bold">Loyal</span>
           </span>
           <span className="font-mono text-xs text-gray-500">Nº {ed.number}</span>
         </div>
@@ -23,7 +23,7 @@ export function EditionArticle({ edition: ed }: { edition: Edition }) {
       </header>
 
       <h1 className="sr-only">
-        The Loyalty Nº {ed.number} — {ed.subject ?? "Edição do Daily"}
+        The Loyal Nº {ed.number} — {ed.subject ?? "Edição do Daily"}
       </h1>
 
       <div className="mt-8 space-y-10">

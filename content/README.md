@@ -1,4 +1,4 @@
-# Conteúdo editorial — The Loyalty
+# Conteúdo editorial — The Loyal
 
 Pipeline de validação, renderização e publicação das edições do Daily.
 Segue a estrutura e os checklists do Operating Manual v1. **Sem dependências**

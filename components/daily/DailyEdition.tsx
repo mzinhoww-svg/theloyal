@@ -129,7 +129,7 @@ export function DailyEdition({ edition }: { edition: Edition }) {
       {edition.retail_coalition?.length ? <Section><Eyebrow>Retail &amp; Coalition</Eyebrow><Rows items={edition.retail_coalition} /></Section> : null}
 
       {edition.loyalty_lab && (
-        <Section><Eyebrow>Loyalty Lab</Eyebrow>
+        <Section><Eyebrow>Loyal Lab</Eyebrow>
           <h3 className="mt-2 font-display text-lg font-semibold text-ink">{edition.loyalty_lab.titulo}</h3>
           <p className="mt-1 leading-relaxed text-gray-500">{edition.loyalty_lab.texto}</p>
         </Section>

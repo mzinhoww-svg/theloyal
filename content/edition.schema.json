@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://theloyalty/edition.schema.json",
-  "title": "The Loyalty — Edição do Daily",
+  "title": "The Loyal — Edição do Daily",
   "description": "Modelo editorial único que alimenta e-mail, plain text e página web. Ancorado no Operating Manual v1.",
   "type": "object",
   "additionalProperties": false,

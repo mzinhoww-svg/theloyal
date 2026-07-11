@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import type { Verdict } from "@/components/ui";
 
-// The Loyalty Pro — relatório executivo (espelha content/pro-report.schema.json).
+// The Loyal Pro — relatório executivo (espelha content/pro-report.schema.json).
 export type Benchmark = {
   category: string;
   metric: string;

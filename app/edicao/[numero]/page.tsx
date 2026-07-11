@@ -14,9 +14,9 @@ export function generateMetadata({
   params: { numero: string };
 }): Metadata {
   const ed = getEdition(Number(params.numero));
-  if (!ed) return { title: "Edição não encontrada — The Loyalty" };
+  if (!ed) return { title: "Edição não encontrada — The Loyal" };
   return {
-    title: `The Loyalty Nº ${ed.number} — ${ed.subject ?? "Daily"}`,
+    title: `The Loyal Nº ${ed.number} — ${ed.subject ?? "Daily"}`,
     description: ed.preheader ?? ed.signal.slice(0, 150),
   };
 }

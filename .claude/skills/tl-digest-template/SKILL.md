@@ -1,6 +1,6 @@
 ---
 name: tl-digest-template
-description: Gera as três saídas de uma edição do The Loyalty Daily — e-mail HTML email-safe, plain text e página web — a partir de UM único JSON conforme content/edition.schema.json. Use ao montar, revisar ou publicar uma edição, ou quando precisar do HTML de e-mail, do texto puro ou da versão web de uma edição.
+description: Gera as três saídas de uma edição do The Loyal Daily — e-mail HTML email-safe, plain text e página web — a partir de UM único JSON conforme content/edition.schema.json. Use ao montar, revisar ou publicar uma edição, ou quando precisar do HTML de e-mail, do texto puro ou da versão web de uma edição.
 ---
 
 # tl-digest-template
