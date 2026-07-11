@@ -54,11 +54,12 @@ function forecastRows(campaigns: any[]): { rota: string; conf: string; predictio
     const key = `${r.origem}→${r.destino}`;
     const d = r.vigencia_inicio || r.observed_at;
     if (!d) continue;
-    if (!g.has(key)) g.set(key, []);
-    g.get(key)!.push(String(d).slice(0, 10));
+    const arr = g.get(key) || [];
+    arr.push(String(d).slice(0, 10));
+    g.set(key, arr);
   }
   const out: { rota: string; conf: string; prediction: string; basis: string }[] = [];
-  for (const [rota, ds] of g) {
+  for (const [rota, ds] of Array.from(g.entries())) {
     const dates = Array.from(new Set(ds)).sort();
     if (dates.length < 3) {
       out.push({ rota, conf: "em-formacao", prediction: "histórico insuficiente", basis: `${dates.length} janela(s)` });
@@ -76,14 +77,16 @@ function forecastRows(campaigns: any[]): { rota: string; conf: string; predictio
 }
 
 function calendarRows(campaigns: any[], month: string): { label: string; s: number; e: number; md: number }[] {
-  const [y, m] = month.split("-").map(Number);
-  const md = new Date(y, m, 0).getDate();
+  const parts = month.split("-");
+  const y = Number(parts[0]);
+  const mo = Number(parts[1]);
+  const md = new Date(y, mo, 0).getDate();
   const inMonth = (d: any) => !!d && String(d).slice(0, 7) === month;
   return campaigns
     .filter((r) => inMonth(r.vigencia_inicio) || inMonth(r.vigencia_fim))
     .map((r) => {
-      const s = r.vigencia_inicio && String(r.vigencia_inicio).slice(0, 7) === month ? +String(r.vigencia_inicio).slice(8, 10) : 1;
-      const e = r.vigencia_fim && String(r.vigencia_fim).slice(0, 7) === month ? +String(r.vigencia_fim).slice(8, 10) : md;
+      const s = r.vigencia_inicio && String(r.vigencia_inicio).slice(0, 7) === month ? Number(String(r.vigencia_inicio).slice(8, 10)) : 1;
+      const e = r.vigencia_fim && String(r.vigencia_fim).slice(0, 7) === month ? Number(String(r.vigencia_fim).slice(8, 10)) : md;
       return { label: `${r.origem}→${r.destino}${r.percentual ? " " + r.percentual + "%" : ""}`, s, e: Math.max(e, s), md };
     })
     .sort((a, b) => a.s - b.s);
