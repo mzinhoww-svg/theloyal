@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { patch, insert, del } from "@/lib/admin-db";
-import { loadPredict } from "@/lib/admin-predict";
+import { loadPredict } from "@/lib/admin-forecast";
 import type { ActionState } from "@/components/admin/toast";
 
 const who = () => process.env.ADMIN_USER?.trim() || "admin";
@@ -38,7 +38,7 @@ export async function saveConfigAction(
   if (Object.keys(body).length <= 2) return { ok: false, message: "nada para salvar" };
   try {
     await patch("forecast_config", "id=eq.1", body);
-    revalidatePath("/admin/predict");
+    revalidatePath("/admin/forecast");
     revalidatePath("/admin/observability");
     return { ok: true, message: "parâmetros do motor salvos" };
   } catch (e) {
@@ -74,7 +74,7 @@ export async function setOverrideAction(
   };
   try {
     await insert("forecast_overrides", rowData, { onConflict: "scope,route" });
-    revalidatePath("/admin/predict");
+    revalidatePath("/admin/forecast");
     return { ok: true, message: `override ${action} salvo para ${route}` };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "falha ao salvar override" };
@@ -89,7 +89,7 @@ export async function removeOverrideAction(
   if (!id) return { ok: false, message: "id ausente" };
   try {
     await del("forecast_overrides", `id=eq.${encodeURIComponent(id)}`);
-    revalidatePath("/admin/predict");
+    revalidatePath("/admin/forecast");
     return { ok: true, message: "override removido" };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "falha ao remover" };
@@ -112,7 +112,7 @@ export async function recalcSnapshotAction(
       payload: { routes: data.result.routes, clusters: data.result.clusters },
       created_by: who(),
     });
-    revalidatePath("/admin/predict");
+    revalidatePath("/admin/forecast");
     return {
       ok: true,
       message: `snapshot salvo — ${data.result.withPrediction} séries com previsão em ${data.generatedFor}`,

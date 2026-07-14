@@ -1,5 +1,5 @@
-import { loadPredict, type PredictView } from "@/lib/admin-predict";
-import { formatWindow, type Confidence } from "@/lib/predictions";
+import { loadPredict, type PredictView } from "@/lib/admin-forecast";
+import { formatWindow, type Confidence } from "@/lib/forecast";
 import {
   PageHeader,
   StatCard,
@@ -14,7 +14,7 @@ import {
 } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
-import { DistributionBar, WindowTimeline, Field } from "@/components/admin/predict-charts";
+import { DistributionBar, WindowTimeline, Field } from "@/components/admin/forecast-charts";
 import {
   saveConfigAction,
   setOverrideAction,
