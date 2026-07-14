@@ -83,6 +83,44 @@ export async function patch(
   }
 }
 
+// Insere linhas (INSERT), opcionalmente com upsert por chave de conflito.
+// Usado pela área de predict (overrides e snapshots). Server-only.
+export async function insert(
+  table: string,
+  rows: Record<string, unknown> | Record<string, unknown>[],
+  opts: { onConflict?: string } = {},
+): Promise<void> {
+  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  const prefer = opts.onConflict
+    ? "return=minimal,resolution=merge-duplicates"
+    : "return=minimal";
+  const qs = opts.onConflict ? `?on_conflict=${encodeURIComponent(opts.onConflict)}` : "";
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${qs}`, {
+    method: "POST",
+    headers: headers({ prefer }),
+    body: JSON.stringify(rows),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`INSERT ${table} falhou (${res.status}) ${detail.slice(0, 200)}`);
+  }
+}
+
+// Remove linhas por filtro PostgREST (ex.: "id=eq.<uuid>"). Server-only.
+export async function del(table: string, filter: string): Promise<void> {
+  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+    method: "DELETE",
+    headers: headers({ prefer: "return=minimal" }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`DELETE ${table} falhou (${res.status}) ${detail.slice(0, 200)}`);
+  }
+}
+
 // ---- Tipos das RPCs (espelham o retorno real verificado no banco) ----
 
 export type Metrics = {
