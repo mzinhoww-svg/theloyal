@@ -10,6 +10,7 @@ const LINKS: { href: string; label: string }[] = [
   { href: "/admin/campanhas", label: "Campanhas" },
   { href: "/admin/logs", label: "Logs" },
   { href: "/admin/forecast", label: "Forecast" },
+  { href: "/admin/predict", label: "Predict" },
   { href: "/admin/observability", label: "Observabilidade" },
 ];
 
