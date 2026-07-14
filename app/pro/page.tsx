@@ -5,7 +5,7 @@ import { SectionLabel } from "@/components/ui";
 import { listProReports } from "@/lib/pro";
 
 export const metadata: Metadata = {
-  title: "The Loyalty Pro — Relatórios executivos",
+  title: "The Loyal Pro — Relatórios executivos",
   description: "Benchmark, radar e matriz competitiva do mercado de loyalty.",
 };
 
@@ -16,7 +16,7 @@ export default function ProIndex() {
       <Nav />
       <main id="conteudo" className="tl-section">
         <div className="tl-container max-w-content">
-          <SectionLabel>The Loyalty Pro</SectionLabel>
+          <SectionLabel>The Loyal Pro</SectionLabel>
           <h1 className="font-display text-3xl font-semibold leading-tight md:text-4xl">
             Relatórios executivos do mercado de loyalty
           </h1>

@@ -13,7 +13,7 @@ const config: Config = {
         gray: { 700: "#3D3A34", 500: "#555555", 400: "#8A8578" },
         green: { 100: "#D9F4E9", 500: "#00C48C", 600: "#00A878", 700: "#007A57" },
         blue: { 100: "#E4EAFF", 600: "#315CFF", 700: "#2547CC" },
-        yellow: { 100: "#FCF0CE", 500: "#F2C94C", 700: "#7A5B00" },
+        yellow: { 100: "#FCF0CE", 500: "#F2C94C" },
         red: { 100: "#F9E2E2", 600: "#D64545", 700: "#B53A3A" },
         caramel: { DEFAULT: "#D9A15B", dark: "#B8813F", cream: "#F3E3C3" },
       },

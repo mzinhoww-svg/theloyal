@@ -100,7 +100,7 @@ ${chip(d.veredito)}<span style="font-family:Arial,sans-serif; font-size:13px; co
   }
   if (ed.loyalty_lab) {
     const ll = ed.loyalty_lab;
-    P.push(`<tr><td style="padding:18px 32px 8px 32px; border-top:1px solid ${HAIR};">${eyebrow("Loyalty Lab")}${sp(8)}
+    P.push(`<tr><td style="padding:18px 32px 8px 32px; border-top:1px solid ${HAIR};">${eyebrow("Loyal Lab")}${sp(8)}
 <div style="font-family:Georgia,serif; font-size:17px; font-weight:bold; color:#111111;">${esc(ll.titulo || "")}</div>${sp(6)}${para(ll.texto || "", 14, "#555555")}</td></tr>`);
   }
   P.push(`<tr><td style="padding:18px 32px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:4px solid #F2C94C; background-color:#FCF0CE;"><tr><td style="padding:14px 16px;">

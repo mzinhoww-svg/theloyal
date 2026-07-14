@@ -69,7 +69,7 @@ export function renderEmail(ed) {
     .join(" · ");
 
   return `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>The Loyalty — Nº ${ed.number}</title></head>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>The Loyal — Nº ${ed.number}</title></head>
 <body style="margin:0;background:${TOKENS.paperDark};font-family:${SANS};color:${TOKENS.ink}">
   <span style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(ed.preheader ?? "")}</span>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${TOKENS.paperDark}">
@@ -77,7 +77,7 @@ export function renderEmail(ed) {
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:${TOKENS.paper}">
         <tr><td style="border-bottom:4px double ${TOKENS.ink};padding:20px 24px">
           <table role="presentation" width="100%"><tr>
-            <td style="font-family:${SERIF};font-size:22px;font-weight:bold;color:${TOKENS.ink}">The Loyalty</td>
+            <td style="font-family:${SERIF};font-size:22px;font-weight:bold;color:${TOKENS.ink}">The Loyal</td>
             <td align="right" style="font-family:${MONO};font-size:12px;color:${TOKENS.g500}">Nº ${ed.number}</td>
           </tr><tr>
             <td style="font-family:${MONO};font-size:11px;color:${TOKENS.g400};padding-top:4px">${esc(ed.weekday)} · ${esc(ed.publishTime)}</td>

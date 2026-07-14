@@ -16,7 +16,10 @@
     "qa": "node scripts/qa.mjs",
     "pro": "node scripts/pro.mjs",
     "beehiiv": "node scripts/beehiiv-publish.mjs",
-    "edition": "node scripts/render-system.mjs && node scripts/publish.mjs"
+    "edition": "node scripts/render-system.mjs && node scripts/publish.mjs",
+    "daily:validate": "node scripts/validate-daily.mjs",
+    "daily:render": "node scripts/render-daily.mjs",
+    "daily:qa": "node scripts/qa-daily.mjs"
   },
   "dependencies": {
     "next": "14.2.15",

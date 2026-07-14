@@ -1,7 +1,7 @@
 import type { ProReport } from "@/lib/pro";
 import { SectionLabel, TLBadge, type Verdict } from "./ui";
 
-// Deck executivo do The Loyalty Pro: capa Ink, miolo Paper, tabelas comparativas
+// Deck executivo do The Loyal Pro: capa Ink, miolo Paper, tabelas comparativas
 // com números em mono, alertas com cor semântica. Tokens da marca, sem hex.
 const VERDICT_LABEL: Record<Verdict, string> = {
   "vale-agir": "Vale agir",
@@ -36,7 +36,7 @@ export function ProReport({ report: r }: { report: ProReport }) {
         <div className="flex items-baseline justify-between gap-4">
           <span className="font-display text-xl">
             <span className="font-semibold">The </span>
-            <span className="font-bold">Loyalty</span>
+            <span className="font-bold">Loyal</span>
             <span className="ml-2 rounded-sm bg-green-500 px-2 py-0.5 align-middle font-sans text-xs font-bold uppercase tracking-[0.08em] text-ink">
               Pro
             </span>
@@ -224,7 +224,7 @@ export function ProReport({ report: r }: { report: ProReport }) {
         {/* 10. Disclaimer */}
         <p className="border-t border-line pt-4 text-xs leading-relaxed text-gray-400">
           {r.illustrative && "Relatório ilustrativo. Números de exemplo. "}
-          {r.disclaimer} O The Loyalty Pro não usa dados internos de empresas nem CMI, e não é
+          {r.disclaimer} O The Loyal Pro não usa dados internos de empresas nem CMI, e não é
           recomendação financeira personalizada.
         </p>
       </div>

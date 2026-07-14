@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://theloyalty/pro-report.schema.json",
-  "title": "The Loyalty Pro — Relatório executivo do período",
+  "title": "The Loyal Pro — Relatório executivo do período",
   "description": "Material analítico B2B: benchmark, comparativo e indicador. Tom executivo. Sem dado interno, sem CMI, sem linguagem corporativa de empresa específica.",
   "type": "object",
   "additionalProperties": false,
@@ -61,7 +61,7 @@
         "properties": {
           "player": { "type": "string" },
           "move": { "type": "string", "description": "Movimento observado, descrito de forma neutra" },
-          "reading": { "type": "string", "description": "Leitura analítica do The Loyalty" },
+          "reading": { "type": "string", "description": "Leitura analítica do The Loyal" },
           "signal": { "type": "string", "enum": ["abertura", "aperto", "estável"] }
         }
       }

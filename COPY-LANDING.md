@@ -1,4 +1,4 @@
-# Copy da Landing Page — The Loyalty
+# Copy da Landing Page — The Loyal
 
 > Extração fiel do texto atual da landing page, na ordem em que aparece.
 > Use os campos **✍️ Nota** e **➡️ Sugestão** para anotar e editar manualmente.
@@ -10,7 +10,7 @@
 
 ## 🌐 Metadados (título do navegador / SEO)
 
-- **Título:** The Loyalty — O mercado de loyalty explicado com conta feita
+- **Título:** The Loyal — O mercado de loyalty explicado com conta feita
 - **Descrição:** Pontos, milhas, cartões, bancos, varejo e cashback. Todos os dias, uma leitura clara sobre onde existe valor real e onde só existe banner bonito.
 - **Link "pular":** Pular para o conteúdo
 
@@ -21,7 +21,7 @@
 
 ## 🧭 Menu (topo)
 
-- Logo: **The Loyalty**
+- Logo: **The Loyal**
 - Método
 - A edição
 - Como analisamos
@@ -45,7 +45,7 @@
 
 **Formulário de inscrição (Hero e CTA final):**
 - Placeholder: `seu@email.com`
-- Botão: **Receber o The Loyalty** (envio: *Enviando…*)
+- Botão: **Receber o The Loyal** (envio: *Enviando…*)
 - Nota: *Sem promessa de milha grátis. Só leitura útil.*
 - Erro: *Confira o e-mail. Ponto farejou um erro de digitação.*
 - Sucesso: *Pronto. A próxima edição chega às 8h. Ponto abanou o rabo, o que é raro.*
@@ -60,7 +60,7 @@
 - Rótulo: **O problema**
 - **Título:** Quase tudo parece bom no título.
 - **Parágrafo:** Bônus de 110%. Desconto de 40%. 🟡 Milheiro "imperdível". O custo real depende de clube, cartão, taxa de conversão, prazo de crédito e validade. Sem esses insumos, a manchete não é informação. É banner.
-- **Destaque:** O The Loyalty faz a parte chata: lê o regulamento, confirma a vigência e calcula o 🟡 milheiro final antes de você agir.
+- **Destaque:** O The Loyal faz a parte chata: lê o regulamento, confirma a vigência e calcula o 🟡 milheiro final antes de você agir.
 
 **Gráfico "A mesma promoção, três contas" (🟡 CPM /milheiro):**
 - compra direta — R$ 34,00
@@ -94,13 +94,13 @@
 
 - Rótulo: **O que você recebe**
 
-1. **The Loyalty Daily** — `Segunda a sexta · 8h` — *Incluído*
+1. **The Loyal Daily** — `Segunda a sexta · 8h` — *Incluído*
    Leitura de 5 minutos: sinal do dia, 🟡 Deal Desk com conta feita, bancos e cartões, programas, varejo e o que vence hoje.
-2. **The Loyalty Weekly** — `Fim de semana` — *Incluído*
+2. **The Loyal Weekly** — `Fim de semana` — *Incluído*
    A tese da semana, ranking de oportunidades ainda vigentes e estratégia por perfil para os próximos 7 dias.
-3. **The Loyalty Lab** — `2 a 4 por mês` — *Incluído*
+3. **The Loyal Lab** — `2 a 4 por mês` — *Incluído*
    Biblioteca 🟡 evergreen: como funciona 🟡 CPM, 🟡 transferência bonificada, pontos + dinheiro e as mecânicas do mercado.
-4. **The Loyalty Pro** — `Em breve` — *Beta fechado*
+4. **The Loyal Pro** — `Em breve` — *Beta fechado*
    Base histórica, 🟡 benchmarks de custo por categoria e radar de mercado para profissionais de loyalty, bancos e varejo.
 
 ✍️ Nota:
@@ -115,7 +115,7 @@
 - **Subtítulo:** Sinal do dia, 🟡 Deal Desk com a conta aberta e o veredito do 🟡 TL Score. Sem rodeio, sem caça-clique.
 
 **Mock da edição (exemplo ilustrativo):**
-- Cabeçalho: **The Loyalty** · Nº 27 · `TERÇA-FEIRA · 8H00` · `LEITURA DE 5 MIN`
+- Cabeçalho: **The Loyal** · Nº 27 · `TERÇA-FEIRA · 8H00` · `LEITURA DE 5 MIN`
 - **O sinal do dia:** Três programas mudaram regra de transferência no mesmo mês. Quando o mercado inteiro aperta na mesma direção, o recado não é promoção. É margem.
 - **🟡 Deal Desk** — `🟡 Transferência bonificada · Livelo → Smiles`
   - Título: 110% de bônus, mas a conta muda com o clube
@@ -162,7 +162,7 @@
 
 - Legenda do mascote: *Ponto confere o regulamento antes de abanar o rabo. Quando falta fonte, o veredito é um só: Não confirmado.*
 - Fórmula em destaque: `TL Score = 25·valor + 15·regra + 15·vigência + 10·fricção + 10·aplicabilidade + 10·liquidez + 10·estoque + 5·fontes` → *sem vigência confirmada → Não confirmado, sempre*
-- Aviso legal: Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar. O The Loyalty não faz recomendação financeira personalizada.
+- Aviso legal: Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar. O The Loyal não faz recomendação financeira personalizada.
 
 ✍️ Nota:
 ➡️ Sugestão:
@@ -182,11 +182,11 @@
 
 ## 🦶 Rodapé
 
-- Logo: **The Loyalty** (selo `TL`)
+- Logo: **The Loyal** (selo `TL`)
 - Descrição: Mídia independente sobre loyalty, pontos, milhas, cartões, bancos, varejo, cashback e comportamento de consumo.
 - Links: Sobre · Metodologia · Anuncie · Privacidade
-- Aviso legal: Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar. O The Loyalty não é recomendação financeira personalizada, não usa dados internos de empresas e não é comunicação oficial de nenhum programa de fidelidade.
-- Assinatura: © [ano] The Loyalty · Ponto leu até aqui.
+- Aviso legal: Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar. O The Loyal não é recomendação financeira personalizada, não usa dados internos de empresas e não é comunicação oficial de nenhum programa de fidelidade.
+- Assinatura: © [ano] The Loyal · Ponto leu até aqui.
 
 ✍️ Nota:
 ➡️ Sugestão:
@@ -205,7 +205,7 @@
 | Transferência bonificada | Passar pontos de um programa para outro ganhando um bônus (ex.: +110%). |
 | Estoque | Comprar/acumular pontos para usar depois (em vez de para uma viagem já marcada). |
 | Liquidez | Quão fácil é usar aqueles pontos de verdade, sem travas. |
-| TL Score | Nota de 0 a 100 que o The Loyalty dá para cada oferta. |
+| TL Score | Nota de 0 a 100 que o The Loyal dá para cada oferta. |
 | Deal Desk | O "quadro" da edição onde a oferta do dia é analisada com a conta feita. |
 | Evergreen | Conteúdo que não vence, sempre útil (explicações de base). |
 | Heavy user | Quem usa pontos/milhas de forma intensa e frequente. |
