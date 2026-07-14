@@ -198,17 +198,24 @@ export default async function PredictPage() {
       )}
 
       <section className="mb-8">
-        <h2 className="mb-2 font-display text-lg font-semibold">Programas (cluster → destino)</h2>
+        <h2 className="mb-1 font-display text-lg font-semibold">Programas (cluster → destino)</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Cada linha é uma série de transferência bonificada para o programa. <strong>Campanhas</strong> = quantas
+          já ocorreram no histórico; <strong>Dias desde a última</strong> = há quanto tempo foi a mais recente;{" "}
+          <strong>Cadência</strong> = intervalo mediano em dias entre elas; <strong>Prob. 30d/90d</strong> = chance
+          de nova janela nesse prazo; <strong>Bônus provável</strong> = valor mais provável e sua probabilidade.
+          Séries com menos de 3 campanhas ficam bloqueadas — sem previsão até acumular histórico.
+        </p>
         <Table>
           <thead>
             <tr>
               <Th>Série</Th>
-              <Th className="text-right">Camp.</Th>
-              <Th className="text-right">Últ. (d)</Th>
-              <Th className="text-right">Interv.</Th>
-              <Th className="text-right">P30</Th>
-              <Th className="text-right">P90</Th>
-              <Th>Bônus</Th>
+              <Th className="text-right">Campanhas</Th>
+              <Th className="text-right">Dias desde a última</Th>
+              <Th className="text-right">Cadência (dias)</Th>
+              <Th className="text-right">Prob. 30d</Th>
+              <Th className="text-right">Prob. 90d</Th>
+              <Th>Bônus provável</Th>
               <Th>Confiança</Th>
             </tr>
           </thead>
@@ -223,17 +230,22 @@ export default async function PredictPage() {
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-2 font-display text-lg font-semibold">Rotas (origem → destino)</h2>
+        <h2 className="mb-1 font-display text-lg font-semibold">Rotas (origem → destino)</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Mesma leitura das colunas, agora por rota específica (origem → destino). <strong>Cadência</strong> em
+          dias entre campanhas; <strong>Prob. 30d/90d</strong> = chance de nova janela no prazo. Rotas com menos de
+          3 campanhas ficam bloqueadas.
+        </p>
         <Table>
           <thead>
             <tr>
               <Th>Série</Th>
-              <Th className="text-right">Camp.</Th>
-              <Th className="text-right">Últ. (d)</Th>
-              <Th className="text-right">Interv.</Th>
-              <Th className="text-right">P30</Th>
-              <Th className="text-right">P90</Th>
-              <Th>Bônus</Th>
+              <Th className="text-right">Campanhas</Th>
+              <Th className="text-right">Dias desde a última</Th>
+              <Th className="text-right">Cadência (dias)</Th>
+              <Th className="text-right">Prob. 30d</Th>
+              <Th className="text-right">Prob. 90d</Th>
+              <Th>Bônus provável</Th>
               <Th>Confiança</Th>
             </tr>
           </thead>
