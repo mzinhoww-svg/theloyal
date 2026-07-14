@@ -196,6 +196,50 @@ export function buildForecast(rows, opts = {}) {
   return { generatedFor: now, routesTracked: routes.length, clustersTracked: clusters.length, withPrediction, routes, clusters };
 }
 
+const MONTHS_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+export function formatWindow(startISO, endISO) {
+  if (!startISO || !endISO) return "sem base";
+  const [sy, sm, sd] = startISO.split("-").map(Number);
+  const [ey, em, ed] = endISO.split("-").map(Number);
+  const crossYear = sy !== ey;
+  const left = sm === em && !crossYear ? `${sd}` : `${sd} ${MONTHS_PT[sm - 1]}${crossYear ? " " + sy : ""}`;
+  const right = `${ed} ${MONTHS_PT[em - 1]}${crossYear ? " " + ey : ""}`;
+  return `${left} a ${right}`;
+}
+
+const PROGRAM_LABELS = {
+  latampass: "Latam Pass",
+  smiles: "Smiles",
+  azul: "Azul Fidelidade",
+  livelo: "Livelo",
+  esfera: "Esfera",
+  connectmiles: "ConnectMiles",
+  lifemiles: "LifeMiles",
+  inter: "Inter",
+  itau: "Itaú",
+  credicard: "Credicard",
+  bb: "Banco do Brasil",
+  "bb-empresas": "BB Empresas",
+  "amex-mr": "Amex MR",
+};
+
+export function programLabel(slug) {
+  return PROGRAM_LABELS[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
+export function radarItems(forecasts) {
+  return forecasts
+    .filter((f) => f.confidence !== "em-formacao" && f.windowStart)
+    .map((f) => ({
+      label: f.scope === "cluster" ? programLabel(f.destino) : `${programLabel(f.origem)} → ${programLabel(f.destino)}`,
+      confidence: f.confidence,
+      window: formatWindow(f.windowStart, f.windowEnd),
+      basis: f.basis,
+      ...(f.typicalPercent ? { bonus: `~${f.typicalPercent}%` } : {}),
+    }));
+}
+
 export function upcomingWindows(forecast, opts = {}) {
   const now = todayISO(opts.now ?? forecast.generatedFor);
   const horizon = opts.horizonDays ?? 10;

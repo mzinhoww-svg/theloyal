@@ -8,7 +8,7 @@
 // O motor é scripts/predictions.mjs (espelho de lib/predictions.ts).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { buildForecast, upcomingWindows } from "./predictions.mjs";
+import { buildForecast, radarItems, upcomingWindows } from "./predictions.mjs";
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co").replace(/\/+$/, "");
 const SUPABASE_KEY =
@@ -82,7 +82,12 @@ async function main() {
     withPrediction: fc.withPrediction,
     clusters: fc.clusters,
     routes: fc.routes,
-    digest: { daily, weekly },
+    digest: {
+      daily,
+      weekly,
+      radarDaily: radarItems(daily),
+      radarWeekly: radarItems(weekly),
+    },
   };
 
   mkdirSync(dirname(OUT), { recursive: true });

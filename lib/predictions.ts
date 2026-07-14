@@ -277,6 +277,69 @@ export function buildForecast(rows: CampaignRow[], opts: { now?: string } = {}):
   return { generatedFor: now, routesTracked: routes.length, clustersTracked: clusters.length, withPrediction, routes, clusters };
 }
 
+// ---------------------------------------------------------------------------
+// Apresentação para os digests
+// ---------------------------------------------------------------------------
+
+const MONTHS_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+// Determinístico. "17 a 24 jul" · "28 jun a 4 jul" · "30 dez 2026 a 5 jan 2027"
+export function formatWindow(startISO: string | null, endISO: string | null): string {
+  if (!startISO || !endISO) return "sem base";
+  const [sy, sm, sd] = startISO.split("-").map(Number);
+  const [ey, em, ed] = endISO.split("-").map(Number);
+  const crossYear = sy !== ey;
+  const left = sm === em && !crossYear ? `${sd}` : `${sd} ${MONTHS_PT[sm - 1]}${crossYear ? " " + sy : ""}`;
+  const right = `${ed} ${MONTHS_PT[em - 1]}${crossYear ? " " + ey : ""}`;
+  return `${left} a ${right}`;
+}
+
+// Nomes de exibição dos programas (editorial). Sem match → capitaliza o slug.
+const PROGRAM_LABELS: Record<string, string> = {
+  latampass: "Latam Pass",
+  smiles: "Smiles",
+  azul: "Azul Fidelidade",
+  livelo: "Livelo",
+  esfera: "Esfera",
+  connectmiles: "ConnectMiles",
+  lifemiles: "LifeMiles",
+  inter: "Inter",
+  itau: "Itaú",
+  credicard: "Credicard",
+  bb: "Banco do Brasil",
+  "bb-empresas": "BB Empresas",
+  "amex-mr": "Amex MR",
+};
+
+export function programLabel(slug: string): string {
+  return PROGRAM_LABELS[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
+export interface RadarItem {
+  label: string;
+  confidence: Confidence;
+  window: string;
+  basis: string;
+  bonus?: string;
+}
+
+// Converte previsões em itens de Radar prontos para o digest (rótulos e datas
+// já em pt-BR). em-formacao é descartado (nunca vira linha de radar).
+export function radarItems(forecasts: Forecast[]): RadarItem[] {
+  return forecasts
+    .filter((f) => f.confidence !== "em-formacao" && f.windowStart)
+    .map((f) => ({
+      label:
+        f.scope === "cluster"
+          ? programLabel(f.destino)
+          : `${programLabel(f.origem as string)} → ${programLabel(f.destino)}`,
+      confidence: f.confidence,
+      window: formatWindow(f.windowStart, f.windowEnd),
+      basis: f.basis,
+      ...(f.typicalPercent ? { bonus: `~${f.typicalPercent}%` } : {}),
+    }));
+}
+
 // Janelas que se abrem dentro do horizonte [now, now+horizonDays]. Usado pelos
 // digests (daily: horizonte curto; weekly: horizonte da semana). Combina rotas
 // e clusters; para uma mesma janela sobreposta, mantém a de maior confiança.

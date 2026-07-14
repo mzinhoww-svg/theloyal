@@ -27,6 +27,16 @@ export type FechaLogo = {
   vigencia?: string;
 };
 
+export type RadarWindow = {
+  label: string;
+  confidence: "alta" | "media" | "baixa";
+  window: string;
+  basis?: string;
+  bonus?: string;
+};
+
+export type Radar = { note?: string; windows: RadarWindow[] };
+
 export type Source = { label: string; url: string };
 
 export type Edition = {
@@ -41,6 +51,7 @@ export type Edition = {
   signal: string;
   deals: Deal[];
   fechaLogo?: FechaLogo[];
+  radar?: Radar;
   sources: Source[];
   disclaimer: string;
 };

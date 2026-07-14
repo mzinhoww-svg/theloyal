@@ -2,7 +2,7 @@
 // Arial/Consolas, zero request externo) e versão em texto puro.
 // Uso: node scripts/render.mjs [caminho-da-edicao.json]
 import { mkdirSync, writeFileSync } from "node:fs";
-import { TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
+import { CONFIDENCE, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -64,6 +64,26 @@ export function renderEmail(ed) {
     )
     .join("");
 
+  const radarHtml = ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
+    ? label("Radar de janelas") +
+      `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(ed.radar.note ?? RADAR_NOTE_DEFAULT)}</div>` +
+      ed.radar.windows
+        .map((w) => {
+          const c = CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa;
+          const bonus = w.bonus ? ` <span style="font-family:${MONO};font-size:13px;color:${TOKENS.g500}">${esc(w.bonus)}</span>` : "";
+          const basis = w.basis ? `<div style="font-family:${SANS};font-size:12px;color:${TOKENS.g400};margin-top:2px">${esc(w.basis)}</div>` : "";
+          return `<div style="border-top:1px solid ${TOKENS.line};padding:10px 0">
+            <div style="display:flex;justify-content:space-between;gap:12px">
+              <span style="font-family:${SANS};font-size:15px;font-weight:bold;color:${TOKENS.ink}">${esc(w.label)}${bonus}</span>
+              <span style="font-family:${MONO};font-size:14px;color:${TOKENS.ink};white-space:nowrap">${esc(w.window)}</span>
+            </div>
+            <div style="margin-top:6px"><span style="display:inline-block;background:${c.bg};color:${c.fg};border-radius:9999px;padding:2px 10px;font-family:${SANS};font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em">${esc(c.label)}</span></div>
+            ${basis}
+          </div>`;
+        })
+        .join("")
+    : "";
+
   const sourcesHtml = ed.sources
     .map((s) => `<a href="${esc(s.url)}" style="color:${TOKENS.blue600};text-decoration:underline">${esc(s.label)}</a>`)
     .join(" · ");
@@ -89,6 +109,7 @@ export function renderEmail(ed) {
           <div style="border-left:3px solid ${TOKENS.blue600};padding-left:20px;font-family:${SANS};font-size:18px;line-height:1.55;color:${TOKENS.ink}">${esc(ed.signal)}</div>
           ${dealsHtml}
           ${fechaHtml ? label("Fecha logo") + fechaHtml : ""}
+          ${radarHtml}
           ${label("Fontes")}
           <div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.7">${sourcesHtml}</div>
           <div style="border-top:1px solid ${TOKENS.line};margin-top:24px;padding-top:16px;font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400}">
@@ -125,6 +146,16 @@ export function renderPlain(ed) {
   for (const f of ed.fechaLogo ?? []) {
     L.push("FECHA LOGO");
     L.push(`[${f.tag}] ${f.text} ${f.cpm} ${f.note ?? ""}`, "");
+  }
+  if (ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length) {
+    L.push("RADAR DE JANELAS");
+    L.push(ed.radar.note ?? RADAR_NOTE_DEFAULT, "");
+    for (const w of ed.radar.windows) {
+      const c = (CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa).label;
+      L.push(`  ${w.label}${w.bonus ? " " + w.bonus : ""}  —  ${w.window}  [${c}]`);
+      if (w.basis) L.push(`    ${w.basis}`);
+    }
+    L.push("");
   }
   L.push("FONTES");
   for (const s of ed.sources) L.push(`- ${s.label}: ${s.url}`);

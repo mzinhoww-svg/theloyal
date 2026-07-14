@@ -22,11 +22,25 @@
       "required": ["daily", "weekly"],
       "properties": {
         "daily": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Janelas no horizonte curto (media+), prontas para o daily." },
-        "weekly": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Janelas no horizonte da semana (baixa+), prontas para o weekly." }
+        "weekly": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Janelas no horizonte da semana (baixa+), prontas para o weekly." },
+        "radarDaily": { "type": "array", "items": { "$ref": "#/$defs/radarItem" }, "description": "Itens de Radar (rótulo+data pt-BR) prontos para colar no daily." },
+        "radarWeekly": { "type": "array", "items": { "$ref": "#/$defs/radarItem" }, "description": "Itens de Radar prontos para o weekly." }
       }
     }
   },
   "$defs": {
+    "radarItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "confidence", "window", "basis"],
+      "properties": {
+        "label": { "type": "string" },
+        "confidence": { "type": "string", "enum": ["alta", "media", "baixa"] },
+        "window": { "type": "string" },
+        "basis": { "type": "string" },
+        "bonus": { "type": "string" }
+      }
+    },
     "forecast": {
       "type": "object",
       "additionalProperties": false,
