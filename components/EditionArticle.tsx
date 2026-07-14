@@ -137,7 +137,6 @@ export function EditionArticle({ edition: ed }: { edition: Edition }) {
             </p>
           </section>
         )}
-
         {ed.radar && ed.radar.windows.length > 0 && (
           <section>
             <SectionLabel>Radar de janelas</SectionLabel>

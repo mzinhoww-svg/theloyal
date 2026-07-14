@@ -50,6 +50,8 @@ export interface Forecast {
   cadence: Cadence;
   typicalPercent: number | null;
   basis: string;
+  windows: string[]; // datas (ondas) históricas, ordenadas
+  intervals: number[]; // dias entre ondas consecutivas (série de cadência)
 }
 
 export interface ForecastResult {
@@ -68,7 +70,35 @@ export interface ForecastResult {
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TRAILING_DATE = /(\d{4}-\d{2}-\d{2})$/;
 const DAY_MS = 86_400_000;
-const WAVE_EPSILON_DAYS = 3; // janelas ≤ 3 dias entre si = mesma onda
+const WAVE_EPSILON_DAYS = 3; // janelas ≤ 3 dias entre si = mesma onda (default)
+
+// Parâmetros ajustáveis do motor. Defaults = constantes históricas. O admin
+// persiste overrides no Supabase (forecast_config) e passa via opts.config.
+export interface ForecastConfig {
+  waveEpsilonDays: number; // ondas ≤ N dias = mesma campanha
+  minSamples: number; // < N janelas → em-formacao (sem previsão)
+  samplesAlta: number; // mínimo de janelas p/ confiança alta
+  samplesMedia: number; // mínimo de janelas p/ confiança media
+  cvAlta: number; // coef. de variação máx. p/ alta
+  cvMedia: number; // coef. de variação máx. p/ media
+  horizonDaily: number; // horizonte (dias) do radar do daily
+  horizonWeekly: number; // horizonte (dias) do radar do weekly
+}
+
+export const DEFAULT_FORECAST_CONFIG: ForecastConfig = {
+  waveEpsilonDays: WAVE_EPSILON_DAYS,
+  minSamples: 2,
+  samplesAlta: 4,
+  samplesMedia: 3,
+  cvAlta: 0.35,
+  cvMedia: 0.6,
+  horizonDaily: 10,
+  horizonWeekly: 21,
+};
+
+export function resolveConfig(partial?: Partial<ForecastConfig> | null): ForecastConfig {
+  return { ...DEFAULT_FORECAST_CONFIG, ...(partial ?? {}) };
+}
 
 function isValidISODate(s: unknown): s is string {
   if (typeof s !== "string" || !ISO_DATE.test(s.slice(0, 10))) return false;
@@ -133,11 +163,11 @@ function stdev(xs: number[]): number {
   return Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1));
 }
 
-// Colapsa datas ≤ WAVE_EPSILON_DAYS entre si na mais antiga da onda.
-function collapseWaves(sortedDates: string[]): string[] {
+// Colapsa datas ≤ epsilon dias entre si na mais antiga da onda.
+function collapseWaves(sortedDates: string[], epsilon: number): string[] {
   const out: string[] = [];
   for (const d of sortedDates) {
-    if (!out.length || daysBetween(out[out.length - 1], d) > WAVE_EPSILON_DAYS) out.push(d);
+    if (!out.length || daysBetween(out[out.length - 1], d) > epsilon) out.push(d);
   }
   return out;
 }
@@ -147,8 +177,13 @@ function todayISO(now?: string): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function classify(samples: number, cv: number, medianDays: number): { confidence: Confidence; cadence: Cadence } {
-  if (samples < 2) return { confidence: "em-formacao", cadence: null };
+function classify(
+  samples: number,
+  cv: number,
+  medianDays: number,
+  cfg: ForecastConfig,
+): { confidence: Confidence; cadence: Cadence } {
+  if (samples < cfg.minSamples) return { confidence: "em-formacao", cadence: null };
   const cadence: Cadence =
     samples >= 3 && medianDays >= 24 && medianDays <= 37 && cv <= 0.4
       ? "mensal"
@@ -156,8 +191,8 @@ function classify(samples: number, cv: number, medianDays: number): { confidence
         ? "esparsa"
         : "irregular";
   let confidence: Confidence;
-  if (samples >= 4 && cv <= 0.35) confidence = "alta";
-  else if (samples >= 3 && cv <= 0.6) confidence = "media";
+  if (samples >= cfg.samplesAlta && cv <= cfg.cvAlta) confidence = "alta";
+  else if (samples >= cfg.samplesMedia && cv <= cfg.cvMedia) confidence = "media";
   else confidence = "baixa";
   return { confidence, cadence };
 }
@@ -172,12 +207,13 @@ function analyze(
   waves: string[],
   percents: number[],
   now: string,
+  cfg: ForecastConfig,
 ): Forecast {
   const samples = waves.length;
   const last = samples ? waves[samples - 1] : null;
   const typicalPercent = percents.length ? median(percents) : null;
 
-  if (samples < 2) {
+  if (samples < cfg.minSamples) {
     return {
       scope, route, origem, destino,
       confidence: "em-formacao",
@@ -185,6 +221,7 @@ function analyze(
       samples, medianDays: null, meanDays: null, stdevDays: null,
       lastWindow: last, cadence: null, typicalPercent,
       basis: `${samples} janela(s) — histórico insuficiente para prever`,
+      windows: waves, intervals: [],
     };
   }
 
@@ -194,7 +231,7 @@ function analyze(
   const mn = Math.round(mean(intervals));
   const sd = Math.round(stdev(intervals));
   const cv = mn > 0 ? sd / mn : 1;
-  const { confidence, cadence } = classify(samples, cv, med);
+  const { confidence, cadence } = classify(samples, cv, med, cfg);
 
   let center = addDays(last as string, med || 30);
   let guard = 0;
@@ -214,6 +251,7 @@ function analyze(
     samples, medianDays: med, meanDays: mn, stdevDays: sd,
     lastWindow: last, cadence, typicalPercent,
     basis: `${samples} janelas · ${cadenceLabel} ~${med} dias (média ${mn}, desvio ${sd}) · última ${last}`,
+    windows: waves, intervals,
   };
 }
 
@@ -229,8 +267,12 @@ function sortForecasts(a: Forecast, b: Forecast): number {
 // Motor
 // ---------------------------------------------------------------------------
 
-export function buildForecast(rows: CampaignRow[], opts: { now?: string } = {}): ForecastResult {
+export function buildForecast(
+  rows: CampaignRow[],
+  opts: { now?: string; config?: Partial<ForecastConfig> | null } = {},
+): ForecastResult {
   const now = todayISO(opts.now);
+  const cfg = resolveConfig(opts.config);
   const routeGroups = new Map<string, { origem: string; destino: string; dates: Set<string>; percents: number[] }>();
   const destGroups = new Map<string, { destino: string; dates: Set<string>; percents: number[] }>();
 
@@ -258,15 +300,15 @@ export function buildForecast(rows: CampaignRow[], opts: { now?: string } = {}):
 
   const routes: Forecast[] = [];
   for (const [route, g] of Array.from(routeGroups.entries())) {
-    const waves = collapseWaves(Array.from(g.dates).sort());
-    routes.push(analyze("route", route, g.origem, g.destino, waves, g.percents, now));
+    const waves = collapseWaves(Array.from(g.dates).sort(), cfg.waveEpsilonDays);
+    routes.push(analyze("route", route, g.origem, g.destino, waves, g.percents, now, cfg));
   }
   routes.sort(sortForecasts);
 
   const clusters: Forecast[] = [];
   for (const [destino, g] of Array.from(destGroups.entries())) {
-    const waves = collapseWaves(Array.from(g.dates).sort());
-    clusters.push(analyze("cluster", `→${destino}`, null, destino, waves, g.percents, now));
+    const waves = collapseWaves(Array.from(g.dates).sort(), cfg.waveEpsilonDays);
+    clusters.push(analyze("cluster", `→${destino}`, null, destino, waves, g.percents, now, cfg));
   }
   clusters.sort(sortForecasts);
 
