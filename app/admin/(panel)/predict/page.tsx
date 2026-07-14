@@ -22,7 +22,38 @@ const pct = (n: number | null | undefined) => (n == null ? "—" : `${Math.round
 const bonusLabel = (p: Prediction) =>
   p.bonusCandidates[0] ? `${p.bonusCandidates[0].value}% (${pct(p.bonusCandidates[0].probability)})` : "—";
 
-function SeriesRow({ p }: { p: Prediction }) {
+// dd/mm/aa a partir de ISO (sem new Date, determinístico).
+const shortDate = (iso: string) => {
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return `${d}/${m}/${y.slice(2)}`;
+};
+
+// Prova do intervalo: as datas das ondas intercaladas pelos gaps em dias.
+// Para poucas ondas mostra tudo (ex.: "12/05/23 · 943d · 11/12/25"); para
+// muitas, resume primeira…última mantendo a contagem.
+function HistoryCell({ p }: { p: Prediction }) {
+  const ev = p.events ?? [];
+  if (!ev.length) return <span className="text-gray-400">—</span>;
+  if (ev.length > 6) {
+    return (
+      <span className="font-mono text-xs text-gray-500">
+        {ev.length} ondas · {shortDate(ev[0])} … {shortDate(ev[ev.length - 1])}
+      </span>
+    );
+  }
+  return (
+    <span className="font-mono text-xs text-gray-500">
+      {ev.map((e, i) => (
+        <span key={i}>
+          {i > 0 && <span className="text-gray-400"> · {p.intervals[i - 1]}d · </span>}
+          {shortDate(e)}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: boolean }) {
   const blocked = p.blockReason != null;
   return (
     <tr className={blocked ? "bg-paper/40" : undefined}>
@@ -36,6 +67,11 @@ function SeriesRow({ p }: { p: Prediction }) {
       <Td className="text-right font-mono tabular-nums text-gray-500">
         {p.medianIntervalAll ?? "—"}
       </Td>
+      {showHistory && (
+        <Td className="max-w-[260px] align-top leading-relaxed">
+          <HistoryCell p={p} />
+        </Td>
+      )}
       {blocked ? (
         <Td colSpan={4} className="text-gray-400">
           <span className="inline-flex items-center gap-2">
@@ -233,8 +269,10 @@ export default async function PredictPage() {
         <h2 className="mb-1 font-display text-lg font-semibold">Rotas (origem → destino)</h2>
         <p className="mb-3 text-sm text-gray-500">
           Mesma leitura das colunas, agora por rota específica (origem → destino). <strong>Cadência</strong> em
-          dias entre campanhas; <strong>Prob. 30d/90d</strong> = chance de nova janela no prazo. Rotas com menos de
-          3 campanhas ficam bloqueadas.
+          dias entre campanhas; <strong>Prob. 30d/90d</strong> = chance de nova janela no prazo. A coluna{" "}
+          <strong>Ondas (datas)</strong> lista as campanhas que compõem o histórico, com o intervalo em dias entre
+          elas — é a prova da cadência (ex.: duas ondas separadas por 943 dias). Rotas com menos de 3 campanhas
+          ficam bloqueadas.
         </p>
         <Table>
           <thead>
@@ -243,6 +281,7 @@ export default async function PredictPage() {
               <Th className="text-right">Campanhas</Th>
               <Th className="text-right">Dias desde a última</Th>
               <Th className="text-right">Cadência (dias)</Th>
+              <Th>Ondas (datas)</Th>
               <Th className="text-right">Prob. 30d</Th>
               <Th className="text-right">Prob. 90d</Th>
               <Th>Bônus provável</Th>
@@ -251,9 +290,9 @@ export default async function PredictPage() {
           </thead>
           <tbody>
             {result.routes.length ? (
-              result.routes.slice(0, 60).map((p) => <SeriesRow key={p.seriesKey} p={p} />)
+              result.routes.slice(0, 60).map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
             ) : (
-              <EmptyRow cols={8} label="sem rotas" />
+              <EmptyRow cols={9} label="sem rotas" />
             )}
           </tbody>
         </Table>
