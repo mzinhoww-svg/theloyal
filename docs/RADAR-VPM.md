@@ -33,17 +33,49 @@ Sem chaves, tudo degrada em mock/leitura limitada (seguro por construção).
 - `collect.yml` precisa estar na **branch padrão** para o `workflow_dispatch` (botão
   do admin) funcionar. O cron diário roda às 09:00 UTC (~06:00 BRT).
 
-### 3. Semear o catálogo
-- `content/sku-basket.json` é a **semente**. Popular `sku_catalog` com os produtos
-  reais (marca, modelo, GTIN, categoria) e `sku_sources` com a URL pública de cada
-  player. Aprovar os SKUs no `/admin` (só `approved` entra na banda).
+### 3. Semear o catálogo — **pelo admin, em produção**
+- No `/admin`, seção **Catálogo de SKUs**, use o formulário **"adicionar SKU"**:
+  nome canônico, marca, modelo, categoria, GTIN e a **URL pública de cada player**.
+  Isso grava `sku_catalog` (status `approved`) + `sku_sources` de uma vez.
+- Alternativa one-shot: `INSERT` em `sku_catalog`/`sku_sources` via SQL (Supabase).
+- Só SKU `approved` com fonte mapeada entra na coleta. `content/sku-basket.json` é
+  só a semente do **modo mock** (a math roda sem tocar API).
+
+**Sugestão de cesta inicial** (≥3 por categoria para a banda fechar; confirmar o GTIN
+na própria listagem):
+
+| Categoria | SKUs sugeridos |
+|---|---|
+| smartphone | Galaxy S24 128GB · iPhone 15 128GB · Motorola Edge 50 256GB · Redmi Note 13 128GB |
+| tv | Samsung 50" CU8000 4K · LG 50" UR8750 · TCL 50" C645 QLED |
+| notebook | Lenovo IdeaPad 3 i5 · Acer Aspire 5 i5 · Samsung Galaxy Book3 i5 |
+| audio | JBL Tune 520BT · Sony WH-CH520 · AirPods 2ª geração |
+| eletroportatil | Air Fryer Mondial 4L · Nespresso Inissia · Aspirador Electrolux |
+
+Escolha modelos que os **três** portais carregam; o match é por GTIN (exato) ou
+marca+modelo+capacidade.
 
 ### 4. Afinar os adapters (o passo mais manual)
-- `scripts/collect/adapters/{azul,smiles,latam}.mjs` têm padrões de ponto/JSON-LD que
-  são **ponto de partida** — precisam ser ajustados contra as páginas ao vivo de cada
-  portal. O modo mock já exercita toda a matemática (VPM, mediana, MAD, promo).
-- Rodar `npm run collect -- --mock` para validar a math; depois `npm run collect`
-  (live) e conferir se pontos/preço estão sendo extraídos por player.
+`scripts/collect/adapters/{azul,smiles,latam}.mjs` trazem `pointsPatterns` e a extração
+de preço via JSON-LD como **ponto de partida**. Como afinar:
+
+1. Abra a página pública de um produto no portal do player (ex.: Azul Shopping).
+2. Veja o **fonte da página** e procure:
+   - `<script type="application/ld+json">` com `Product`/`offers.price` → é o **preço em
+     dinheiro** (já lido por `http.mjs`). Se não houver, ajuste para pegar o preço por
+     regex/seletor.
+   - onde aparecem os **pontos** ("por N pontos" / "N milhas") → ajuste `pointsPatterns`
+     para casar com o texto real.
+3. Rode `node scripts/collect-skus.mjs` (live, com `SUPABASE_SERVICE_KEY`) e confira se
+   `points`/`cash` saem por player nas `sku_observations`.
+
+**Atenção (provável realidade destes portais):** muitos catálogos de resgate renderizam
+preço/pontos via **JavaScript (SPA)** e/ou exigem **login** para exibir os pontos. Nesse
+caso o `fetch` simples de `http.mjs` não pega os números. Opções:
+- subir o adapter para um **headless browser** (Playwright/Chromium já disponível no
+  ambiente) que renderiza a página antes de extrair; ou
+- usar a **API interna** do portal (a mesma que a página chama via XHR), quando exposta.
+Enquanto isso, o `n/c` protege o indicador — nada é inventado.
 
 ### 5. Primeira coleta live e conferência
 - Disparar pelo `/admin` (botão) ou `npm run collect`. Conferir `retail_valuations`

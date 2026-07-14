@@ -142,6 +142,20 @@ export async function GET(req: Request): Promise<Response> {
       `<label class="note"><input type="checkbox" name="mock" value="true"> mock (não chama API)</label></form>`
     : `<div class="note" style="margin-bottom:10px">Escrita desabilitada: defina SUPABASE_SERVICE_KEY para gerir e disparar rodadas.</div>`;
 
+  const catField = (name: string, ph: string, req = false) =>
+    `<input name="${name}" placeholder="${ph}"${req ? " required" : ""} class="in">`;
+  const addSkuForm = writable
+    ? `<form method="post" action="/admin/sku" class="skuform">
+        <input type="hidden" name="action" value="create">
+        ${catField("canonical_name", "Nome canônico (ex: Samsung Galaxy S24 128GB)", true)}
+        ${catField("brand", "Marca")}${catField("model", "Modelo")}
+        <select name="category" class="in">${["smartphone", "tv", "notebook", "audio", "eletroportatil", "outros"].map((c) => `<option value="${c}">${c}</option>`).join("")}</select>
+        ${catField("gtin", "GTIN/EAN")}
+        ${catField("url_azul", "URL Azul")}${catField("url_smiles", "URL Smiles")}${catField("url_latam", "URL LATAM Pass")}
+        <button class="btn ok">adicionar SKU</button>
+      </form>`
+    : "";
+
   const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>The Loyal · Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -170,6 +184,8 @@ td{padding:8px 10px 8px 0;border-bottom:1px solid var(--border);vertical-align:t
 .btn.ok{background:var(--primary);color:var(--paper);border-color:var(--primary)}
 .btn.no{color:#B53A3A}
 .banner{background:#D9F4E9;border:1px solid var(--primary);color:#007A57;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px}
+.skuform{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+.in{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);min-width:150px}
 </style></head><body><div class="wrap">
 <div class="top"><div class="badge">TL</div><div><h1 style="font-size:24px"><span style="font-weight:600">The</span> Loyal · Admin</h1>
 <div class="note">Observabilidade do motor editorial · dados ao vivo do Supabase</div></div></div>
@@ -193,7 +209,8 @@ ${banner}
 ${collectForm}
 <table><thead><tr><th>Player</th><th>Categoria</th><th>Piso</th><th>Mediana</th><th>Teto</th><th>Amostra</th><th>Confiança</th></tr></thead><tbody>${rowsRetail || '<tr><td class="note" colspan="7">sem banda observada</td></tr>'}</tbody></table></div>
 
-<div class="sec"><h2>Catálogo de SKUs</h2><div class="note" style="margin-bottom:8px">Curadoria do que entra na banda. Aprovar/rejeitar controla o que a coleta considera.</div>
+<div class="sec"><h2>Catálogo de SKUs</h2><div class="note" style="margin-bottom:8px">Curadoria do que entra na banda. Adicione um SKU e mapeie a URL pública de cada player; aprovar/rejeitar controla o que a coleta considera.</div>
+${addSkuForm}
 <table><thead><tr><th>Produto</th><th>Categoria</th><th>GTIN</th><th>Status</th><th>Ação</th></tr></thead><tbody>${rowsSku || '<tr><td class="note" colspan="5">sem SKUs no catálogo</td></tr>'}</tbody></table></div>
 
 <div class="sec"><h2>Observações recentes</h2><table><thead><tr><th>Player</th><th>Produto</th><th>Pontos</th><th>Preço</th><th>VPM</th><th>Tipo</th><th>Data</th></tr></thead><tbody>${rowsObs || '<tr><td class="note" colspan="7">sem observações</td></tr>'}</tbody></table></div>
