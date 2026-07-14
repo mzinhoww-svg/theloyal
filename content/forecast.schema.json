@@ -10,6 +10,9 @@
     "generatedAt": { "type": ["string", "null"], "description": "Timestamp de geração (ISO) ou null em modo offline." },
     "generatedFor": { "type": "string", "format": "date", "description": "Data de referência (now) usada na previsão." },
     "source": { "type": "string", "enum": ["supabase", "offline"] },
+    "configSource": { "type": "string", "enum": ["supabase", "default"], "description": "De onde veio a calibração: forecast_config (admin) ou defaults." },
+    "config": { "type": "object", "description": "Parâmetros do motor efetivamente usados (resolvidos).", "additionalProperties": true },
+    "overridesApplied": { "type": "integer", "minimum": 0, "description": "Nº de overrides do admin aplicados." },
     "ledgerRows": { "type": "integer", "minimum": 0, "description": "Nº de linhas do ledger consideradas." },
     "routesTracked": { "type": "integer", "minimum": 0 },
     "clustersTracked": { "type": "integer", "minimum": 0 },
@@ -60,7 +63,9 @@
         "lastWindow": { "type": ["string", "null"] },
         "cadence": { "type": ["string", "null"], "enum": ["mensal", "irregular", "esparsa", null] },
         "typicalPercent": { "type": ["number", "null"], "description": "Bônus típico (mediana dos %)." },
-        "basis": { "type": "string", "description": "Explicação textual da base (pt-BR)." }
+        "basis": { "type": "string", "description": "Explicação textual da base (pt-BR)." },
+        "windows": { "type": "array", "items": { "type": "string" }, "description": "Datas (ondas) históricas, ordenadas." },
+        "intervals": { "type": "array", "items": { "type": "integer" }, "description": "Dias entre ondas consecutivas (série de cadência)." }
       }
     }
   }

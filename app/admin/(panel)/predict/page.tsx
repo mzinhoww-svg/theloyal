@@ -139,6 +139,12 @@ export default async function PredictPage() {
       tone: CONF_TONE[c.confidence],
     }));
 
+  // Autocomplete do override: todas as rotas e programas conhecidos.
+  const routeOptions = Array.from(new Set([...data.clusters, ...data.routes].map((f) => f.route)));
+
+  // Tendência de "com previsão" ao longo dos snapshots (cronológico).
+  const snapTrend = [...data.snapshots].reverse().map((s) => s.with_prediction ?? 0);
+
   const cfgField = (
     key: string,
     label: string,
@@ -226,7 +232,12 @@ export default async function PredictPage() {
               </select>
             </Field>
             <Field label="Rota / programa" hint="Ex.: →latampass ou itau→latampass">
-              <input name="route" className={`${INPUT} min-w-[220px]`} placeholder="→latampass" />
+              <input name="route" list="routeOptions" className={`${INPUT} min-w-[220px]`} placeholder="→latampass" autoComplete="off" />
+              <datalist id="routeOptions">
+                {routeOptions.map((r) => (
+                  <option key={r} value={r} />
+                ))}
+              </datalist>
             </Field>
             <Field label="Ação">
               <select name="action" className={INPUT} defaultValue="pin">
@@ -291,6 +302,48 @@ export default async function PredictPage() {
               ))
             ) : (
               <EmptyRow cols={6} label="nenhum override — a previsão sai direto do motor" />
+            )}
+          </tbody>
+        </Table>
+      </section>
+
+      <section className="mb-8">
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold">Histórico de snapshots</h2>
+          {snapTrend.length >= 2 && (
+            <div className="w-40">
+              <Sparkline data={snapTrend} tone="blue" height={26} />
+            </div>
+          )}
+        </div>
+        <p className="mb-3 text-sm text-gray-500">
+          Cada &ldquo;Recalcular + snapshot&rdquo; grava um ponto. Acompanhe como a base de previsão evolui com o backfill.
+        </p>
+        <Table>
+          <thead>
+            <tr>
+              <Th>Gerado para</Th>
+              <Th className="text-right">Rotas</Th>
+              <Th className="text-right">Programas</Th>
+              <Th className="text-right">Com previsão</Th>
+              <Th>Quando</Th>
+              <Th>Por</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.snapshots.length ? (
+              data.snapshots.map((s) => (
+                <tr key={s.id}>
+                  <Td className="font-mono tabular-nums">{s.generated_for}</Td>
+                  <Td className="text-right font-mono tabular-nums">{s.routes_tracked ?? "—"}</Td>
+                  <Td className="text-right font-mono tabular-nums">{s.clusters_tracked ?? "—"}</Td>
+                  <Td className="text-right font-mono tabular-nums">{s.with_prediction ?? "—"}</Td>
+                  <Td className="font-mono text-xs text-gray-500">{fmtDate(s.created_at)}</Td>
+                  <Td className="text-gray-500">{s.created_by ?? "—"}</Td>
+                </tr>
+              ))
+            ) : (
+              <EmptyRow cols={6} label="nenhum snapshot ainda — clique em “Recalcular + snapshot”" />
             )}
           </tbody>
         </Table>
