@@ -5,10 +5,10 @@
 // Sem credenciais/rede, opera em modo offline: preserva o forecast.json atual
 // (se existir) ou escreve um artefato vazio — nunca quebra o pipeline.
 //
-// O motor é scripts/predictions.mjs (espelho de lib/predictions.ts).
+// O motor é scripts/forecast-engine.mjs (espelho de lib/forecast.ts).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { buildForecast, radarItems, resolveConfig, upcomingWindows } from "./predictions.mjs";
+import { buildForecast, radarItems, resolveConfig, upcomingWindows } from "./forecast-engine.mjs";
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co").replace(/\/+$/, "");
 const SUPABASE_KEY =
@@ -107,7 +107,7 @@ async function main() {
     return;
   }
 
-  // Config e overrides do admin (mesma calibração do /admin/predict).
+  // Config e overrides do admin (mesma calibração do /admin/forecast).
   const { configPartial, overrides, source: configSource } = await fetchAdminConfig();
   const config = resolveConfig(configPartial);
 

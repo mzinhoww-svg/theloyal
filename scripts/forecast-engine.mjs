@@ -1,7 +1,7 @@
-// Motor de previsão de janelas — ESPELHO ESM de lib/predictions.ts.
+// Motor de previsão de janelas — ESPELHO ESM de lib/forecast.ts.
 //
 // Node ESM puro (o pipeline de render roda sem build de TypeScript). A lógica
-// é idêntica à de lib/predictions.ts; ao alterar o algoritmo, replique nos dois.
+// é idêntica à de lib/forecast.ts; ao alterar o algoritmo, replique nos dois.
 //
 // Regra editorial: PROJEÇÃO ESTATÍSTICA, nunca veredito nem promessa. Sem
 // histórico suficiente → "em-formacao". Nunca chuta uma data sem base. Ondas
@@ -12,7 +12,7 @@ const TRAILING_DATE = /(\d{4}-\d{2}-\d{2})$/;
 const DAY_MS = 86_400_000;
 const WAVE_EPSILON_DAYS = 3;
 
-// Parâmetros ajustáveis do motor (espelho de lib/predictions.ts). Defaults =
+// Parâmetros ajustáveis do motor (espelho de lib/forecast.ts). Defaults =
 // constantes históricas. O admin persiste em forecast_config; o CLI passa via
 // opts.config para os digests refletirem a mesma calibração.
 export const DEFAULT_FORECAST_CONFIG = {
