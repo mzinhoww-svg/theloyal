@@ -1,6 +1,6 @@
 ---
 name: tl-source-audit
-description: Auditoria de segurança editorial do The Loyalty (/source-audit). Valida hierarquia de fontes, vigência confirmada, anti-cópia, ausência de dado interno/CMI e a coerência de CPM/VPM/spread/TL Score de uma edição antes de publicar. Use ao revisar uma edição JSON, checar se uma oportunidade pode entrar no Deal Desk, ou auditar risco editorial.
+description: Auditoria de segurança editorial do The Loyal (/source-audit). Valida hierarquia de fontes, vigência confirmada, anti-cópia, ausência de dado interno/CMI e a coerência de CPM/VPM/spread/TL Score de uma edição antes de publicar. Use ao revisar uma edição JSON, checar se uma oportunidade pode entrar no Deal Desk, ou auditar risco editorial.
 ---
 
 # tl-source-audit

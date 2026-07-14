@@ -1,4 +1,4 @@
-// The Loyalty Pro — valida o relatório executivo (checklist de QA) e gera o
+// The Loyal Pro — valida o relatório executivo (checklist de QA) e gera o
 // resumo para e-mail. A página web é SSG (rota /pro/[periodo]); o PDF é opcional
 // (Salvar como PDF a partir da web, com @media print).
 // Uso: node scripts/pro.mjs [caminho.json]
@@ -67,7 +67,7 @@ export function validatePro(r) {
 
 export function proQaReport(r, result) {
   const status = result.errors.length ? "REPROVADO" : "APROVADO";
-  const L = [`# QA — The Loyalty Pro · ${r.period}`, "", `**Status:** ${status} · ${result.errors.length} bloqueio(s), ${result.warnings.length} aviso(s)`];
+  const L = [`# QA — The Loyal Pro · ${r.period}`, "", `**Status:** ${status} · ${result.errors.length} bloqueio(s), ${result.warnings.length} aviso(s)`];
   if (r.illustrative) L.push("", "> Relatório ilustrativo. Números de exemplo.");
   L.push("", "## Checklist", "");
   const checks = [
@@ -102,12 +102,12 @@ export function renderProEmail(r) {
   const dist = r.tlScorePeriod.distribution
     .map((d) => `${esc((VERDICTS[d.verdict] ?? {}).label ?? d.verdict)} ×${d.count}`)
     .join(" · ");
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>The Loyalty Pro — ${esc(r.period)}</title></head>
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>The Loyal Pro — ${esc(r.period)}</title></head>
 <body style="margin:0;background:${TOKENS.paperDark};font-family:${SANS};color:${TOKENS.ink}">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${TOKENS.paperDark}"><tr><td align="center" style="padding:24px 12px">
     <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:${TOKENS.paper}">
       <tr><td style="background:${TOKENS.ink};color:${TOKENS.paper};padding:24px">
-        <div style="font-family:${SERIF};font-size:20px;font-weight:bold">The Loyalty <span style="background:${TOKENS.green500};color:${TOKENS.ink};font-family:${SANS};font-size:11px;font-weight:bold;padding:2px 6px;border-radius:3px">PRO</span></div>
+        <div style="font-family:${SERIF};font-size:20px;font-weight:bold">The Loyal <span style="background:${TOKENS.green500};color:${TOKENS.ink};font-family:${SANS};font-size:11px;font-weight:bold;padding:2px 6px;border-radius:3px">PRO</span></div>
         <div style="font-family:${MONO};font-size:12px;color:${TOKENS.g400};margin-top:6px">${esc(r.period)} · TL médio ${r.tlScorePeriod.average} · ${r.tlScorePeriod.sampled} avaliadas</div>
         <div style="font-family:${SERIF};font-size:22px;font-weight:bold;margin-top:12px">${esc(r.title)}</div>
       </td></tr>
@@ -120,7 +120,7 @@ export function renderProEmail(r) {
         <div style="border-top:1px solid ${TOKENS.line};margin-top:22px;padding-top:12px;font-family:${SANS};font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:0.08em;color:${TOKENS.g500}">O que monitorar</div>
         <ul style="margin:10px 0 0;padding-left:18px;font-size:14px;line-height:1.6;color:${TOKENS.g500}">${r.watch.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
         <div style="margin-top:20px"><a href="/pro/${esc(r.periodId)}" style="color:${TOKENS.blue600};font-family:${SANS};font-size:14px;text-decoration:underline">Ler o relatório completo (benchmarks, players, matriz)</a></div>
-        <div style="border-top:1px solid ${TOKENS.line};margin-top:22px;padding-top:14px;font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400}">${r.illustrative ? "Relatório ilustrativo. Números de exemplo. " : ""}${esc(r.disclaimer)} O The Loyalty Pro não usa dados internos nem CMI.</div>
+        <div style="border-top:1px solid ${TOKENS.line};margin-top:22px;padding-top:14px;font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400}">${r.illustrative ? "Relatório ilustrativo. Números de exemplo. " : ""}${esc(r.disclaimer)} O The Loyal Pro não usa dados internos nem CMI.</div>
       </td></tr>
     </table>
   </td></tr></table>

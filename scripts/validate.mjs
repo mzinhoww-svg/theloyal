@@ -118,12 +118,42 @@ export function validateEdition(ed) {
   });
   if (sources.every((s) => /^https?:\/\//.test(s.url ?? "")) && sources.length) pass("Todas as fontes têm URL válida");
 
+  // Radar de janelas (quando presente): projeção, nunca veredito. Estrutura e
+  // confiança dentro do vocabulário. Nunca pode conter "em-formacao" (regra 9:
+  // sem base não vira linha de radar).
+  if (ed.radar !== undefined) {
+    const windows = Array.isArray(ed.radar.windows) ? ed.radar.windows : null;
+    if (!windows || !windows.length) err("Radar presente mas sem janelas (windows vazio)");
+    else {
+      windows.forEach((w, i) => {
+        const tag = `Radar ${i + 1} (${w.label ?? "sem rótulo"})`;
+        if (!w.label) err(`${tag}: sem rótulo (label)`);
+        if (!w.window) err(`${tag}: sem janela prevista (window)`);
+        if (!["alta", "media", "baixa"].includes(w.confidence))
+          err(`${tag}: confiança "${w.confidence}" fora de alta|media|baixa (em-formacao nunca vira radar)`);
+      });
+      if (windows.every((w) => w.label && w.window && ["alta", "media", "baixa"].includes(w.confidence)))
+        pass(`Radar de janelas coerente (${windows.length} projeção(ões), sem veredito)`);
+    }
+  }
+
   // Vigência dos itens "Fecha logo" (quando presente): não pode estar vencida.
   (Array.isArray(ed.fechaLogo) ? ed.fechaLogo : []).forEach((f, i) => {
     if (f.vigencia && ed.date && isExpired(f.vigencia, ed.date)) {
       err(`Fecha logo ${i + 1} (${f.tag ?? "sem tag"}): vigência (${f.vigencia}) já vencida na data da edição`);
     }
   });
+
+  // Shopping · VPM observado (opcional): dado público, com fonte, framing "observado".
+  const shopping = Array.isArray(ed.shoppingWatch) ? ed.shoppingWatch : [];
+  shopping.forEach((s, i) => {
+    const tag = `Shopping ${i + 1} (${s.player ?? "sem player"})`;
+    const req = ["player", "category", "vpmObservado", "source"].filter((k) => !s[k]);
+    if (req.length) err(`${tag}: campos obrigatórios ausentes: ${req.join(", ")}`);
+    if (s.sourceUrl !== undefined && !/^https?:\/\//.test(s.sourceUrl)) err(`${tag}: sourceUrl inválida (http(s) absoluta)`);
+    else if (s.sourceUrl !== undefined && !isValidLink(s.sourceUrl)) warn(`${tag}: sourceUrl não usa https`);
+  });
+  if (shopping.length) pass(`Shopping · VPM observado: ${shopping.length} leitura(s) de catálogo público`);
 
   return { errors, warnings, ok };
 }

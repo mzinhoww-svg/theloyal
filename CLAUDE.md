@@ -1,4 +1,4 @@
-# The Loyalty — CLAUDE.md
+# The Loyal — CLAUDE.md
 
 > Arquivo de contexto do projeto. Precede preferências estéticas do modelo.
 > Hierarquia de verdade: **THE-LOYALTY-LLM-SYSTEM.md > DESIGN.md > THE-LOYALTY-BRAND-GUIDELINES.md > PONTO-MASCOTE-GUIA.md > TL-GRAPHICS.md > Operating Manual v1**.
@@ -6,7 +6,7 @@
 
 ## Identidade
 
-The Loyalty é uma **mídia vertical independente** sobre loyalty, pontos, milhas, cartões, bancos, varejo, cashback, CRM e comportamento de consumo. Não é blog de cupom, não é comunicação oficial de programa, não é SaaS genérico.
+The Loyal é uma **mídia vertical independente** sobre loyalty, pontos, milhas, cartões, bancos, varejo, cashback, CRM e comportamento de consumo. Não é blog de cupom, não é comunicação oficial de programa, não é SaaS genérico.
 
 - **Personalidade:** analítico, independente, direto, premium editorial, confiável. Arquétipo **Sage** — autoridade vem do método, não do tom.
 - **Frame mental:** mídia premium tipo Morning Brew/Axios com clareza de Stripe.

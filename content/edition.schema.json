@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://theloyalty/edition.schema.json",
-  "title": "The Loyalty — Edição do Daily",
+  "title": "The Loyal — Edição do Daily",
   "description": "Modelo editorial único que alimenta e-mail, plain text e página web. Ancorado no Operating Manual v1.",
   "type": "object",
   "additionalProperties": false,
@@ -29,6 +29,24 @@
       "type": "array",
       "description": "Itens que vencem em até 72h",
       "items": { "$ref": "#/$defs/fecha" }
+    },
+    "shoppingWatch": {
+      "type": "array",
+      "description": "Radar de VPM observado no não-aéreo (Shopping): custo de fabricação de resgate por player, derivado de preço público de catálogo. Nunca CMI interno.",
+      "items": { "$ref": "#/$defs/shopping" }
+    "radar": {
+      "type": "object",
+      "description": "Radar de janelas — projeção estatística por recorrência do ledger. Não é veredito nem garantia.",
+      "additionalProperties": false,
+      "required": ["windows"],
+      "properties": {
+        "note": { "type": "string", "description": "Nota de humildade. Ausente ⇒ usa o padrão." },
+        "windows": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/radarWindow" }
+        }
+      }
     },
     "sources": {
       "type": "array",
@@ -93,6 +111,21 @@
         "scoreBreakdown": { "$ref": "#/$defs/scoreBreakdown" }
       }
     },
+    "shopping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["player", "category", "vpmObservado", "source"],
+      "description": "Uma leitura de VPM observado (R$/milheiro) por player/categoria. vpmObservado = 'n/c' quando a amostra é insuficiente.",
+      "properties": {
+        "player": { "type": "string", "description": "Ex: LATAM Pass, Azul, Smiles" },
+        "category": { "type": "string", "description": "Ex: smartphone, tv, notebook" },
+        "vpmObservado": { "type": "string", "description": "R$/milheiro observado, ou 'n/c'. Em mono no render." },
+        "sampleN": { "type": "integer", "minimum": 0, "description": "Tamanho da amostra após limpar promo/outliers" },
+        "source": { "type": "string", "description": "Fonte pública (catálogo) + status" },
+        "sourceUrl": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "observedAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "fecha": {
       "type": "object",
       "additionalProperties": false,
@@ -103,6 +136,19 @@
         "cpm": { "type": "string", "description": "CPM em mono, ex: CPM R$ 24,90" },
         "note": { "type": "string" },
         "vigencia": { "type": "string", "format": "date-time" }
+      }
+    },
+    "radarWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "confidence", "window"],
+      "description": "Uma janela prevista. label = programa ou rota; window = texto (mono no render).",
+      "properties": {
+        "label": { "type": "string", "description": "Ex: Latam Pass · Itaú → Latam Pass" },
+        "confidence": { "type": "string", "enum": ["alta", "media", "baixa"], "description": "Confiança da projeção. em-formacao nunca vira linha de radar." },
+        "window": { "type": "string", "description": "Janela prevista, ex: 17 a 24 jul" },
+        "basis": { "type": "string", "description": "Base da projeção (cadência, nº de janelas)" },
+        "bonus": { "type": "string", "description": "Bônus típico em mono, ex: ~23%" }
       }
     },
     "source": {

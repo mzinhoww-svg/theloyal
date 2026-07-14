@@ -1,6 +1,6 @@
 ---
 name: tl-qa
-description: QA global do The Loyalty — audita landing, JSON editorial, HTML de e-mail e página web de uma vez e BLOQUEIA qualquer regra inviolável quebrada. Use antes de fazer merge, publicar uma edição ou abrir PR; sempre que precisar confirmar que uma superfície (landing, e-mail, web ou JSON) está conforme o contrato de marca.
+description: QA global do The Loyal — audita landing, JSON editorial, HTML de e-mail e página web de uma vez e BLOQUEIA qualquer regra inviolável quebrada. Use antes de fazer merge, publicar uma edição ou abrir PR; sempre que precisar confirmar que uma superfície (landing, e-mail, web ou JSON) está conforme o contrato de marca.
 ---
 
 # tl-qa
