@@ -135,6 +135,9 @@ export function EditionArticle({ edition: ed }: { edition: Edition }) {
               Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com
               outliers e promo fora da banda; n/c quando a amostra é insuficiente.
             </p>
+          </section>
+        )}
+
         {ed.radar && ed.radar.windows.length > 0 && (
           <section>
             <SectionLabel>Radar de janelas</SectionLabel>

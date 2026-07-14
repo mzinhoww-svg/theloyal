@@ -72,6 +72,8 @@ export function renderEmail(ed) {
         ${shopping.map((s) => `<tr style="border-top:1px solid ${TOKENS.line}"><td style="padding:8px 12px;color:${TOKENS.ink}">${esc(s.player)}</td><td style="padding:8px 12px;color:${TOKENS.g500}">${esc(s.category)}</td><td align="right" style="padding:8px 12px;color:${TOKENS.ink}">${esc(s.vpmObservado)}</td></tr>`).join("")}
       </table>
       <div style="font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400};margin-top:6px">Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com outliers e promo fora da banda; n/c quando a amostra é insuficiente.</div>`
+    : "";
+
   const radarHtml = ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
     ? label("Radar de janelas") +
       `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(ed.radar.note ?? RADAR_NOTE_DEFAULT)}</div>` +
@@ -159,6 +161,8 @@ export function renderPlain(ed) {
   if ((ed.shoppingWatch ?? []).length) {
     L.push("SHOPPING · VPM OBSERVADO (R$/milheiro, catálogo público)");
     for (const s of ed.shoppingWatch) L.push(`  ${s.player} · ${s.category}: ${s.vpmObservado}`);
+    L.push("");
+  }
   if (ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length) {
     L.push("RADAR DE JANELAS");
     L.push(ed.radar.note ?? RADAR_NOTE_DEFAULT, "");
