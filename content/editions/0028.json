@@ -65,6 +65,40 @@
       "vigencia": "2026-07-11T23:59:00-03:00"
     }
   ],
+  "shoppingWatch": [
+    {
+      "player": "LATAM Pass",
+      "category": "smartphone",
+      "vpmObservado": "R$ 17,00 /milheiro",
+      "sampleN": 4,
+      "source": "Catálogo público Shopping LATAM Pass (exemplo)",
+      "sourceUrl": "https://www.latampass.latam.com",
+      "observedAt": "2026-07-08T06:30:00-03:00"
+    },
+    {
+      "player": "Azul",
+      "category": "smartphone",
+      "vpmObservado": "R$ 12,00 /milheiro",
+      "sampleN": 3,
+      "source": "Catálogo público Azul Shopping (exemplo)",
+      "sourceUrl": "https://www.voeazul.com.br"
+    },
+    {
+      "player": "Smiles",
+      "category": "smartphone",
+      "vpmObservado": "R$ 14,00 /milheiro",
+      "sampleN": 4,
+      "source": "Catálogo público Shopping Smiles (exemplo)",
+      "sourceUrl": "https://www.smiles.com.br"
+    },
+    {
+      "player": "LATAM Pass",
+      "category": "tv",
+      "vpmObservado": "n/c",
+      "sampleN": 1,
+      "source": "Amostra insuficiente hoje (catálogo público)"
+    }
+  ],
   "sources": [
     { "label": "Regulamento oficial Latam Pass (exemplo)", "url": "https://www.latampass.latam.com" },
     { "label": "Portal Esfera (exemplo)", "url": "https://www.esfera.com.vc" }

@@ -29,6 +29,16 @@ export type FechaLogo = {
 
 export type Source = { label: string; url: string };
 
+export type ShoppingWatch = {
+  player: string;
+  category: string;
+  vpmObservado: string;
+  sampleN?: number;
+  source: string;
+  sourceUrl?: string;
+  observedAt?: string;
+};
+
 export type Edition = {
   number: number;
   date: string;
@@ -41,6 +51,7 @@ export type Edition = {
   signal: string;
   deals: Deal[];
   fechaLogo?: FechaLogo[];
+  shoppingWatch?: ShoppingWatch[];
   sources: Source[];
   disclaimer: string;
 };

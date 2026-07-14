@@ -1,20 +1,6 @@
 export const dynamic = "force-dynamic";
 
-const SUPABASE_URL = "https://qjqnqcsdnpvvmyzkavoq.supabase.co";
-const SUPABASE_ANON = "sb_publishable_P8p6JOjLfCVwr6QqgLxjqw_NbqMHKV-";
-
-async function sb(path: string): Promise<any[]> {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-      headers: { apikey: SUPABASE_ANON, authorization: `Bearer ${SUPABASE_ANON}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return [];
-    return (await res.json()) as any[];
-  } catch {
-    return [];
-  }
-}
+import { checkBasicAuth, deny, sbSelect as sb, supabaseWritable } from "@/lib/admin";
 
 function esc(v: unknown): string {
   return String(v ?? "").replace(/[&<>"]/g, (c) => {
@@ -92,38 +78,18 @@ function calendarRows(campaigns: any[], month: string): { label: string; s: numb
     .sort((a, b) => a.s - b.s);
 }
 
-function deny(): Response {
-  return new Response("Autenticacao necessaria.", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="The Loyal Admin", charset="UTF-8"' },
-  });
-}
-
 export async function GET(req: Request): Promise<Response> {
-  const user = process.env.ADMIN_USER;
-  const pass = process.env.ADMIN_PASSWORD;
-  if (!user || !pass) return deny();
-
-  const auth = req.headers.get("authorization") || "";
-  const [scheme, encoded] = auth.split(" ");
-  let ok = false;
-  if (scheme === "Basic" && encoded) {
-    try {
-      const decoded = Buffer.from(encoded, "base64").toString("utf8");
-      const i = decoded.indexOf(":");
-      ok = decoded.slice(0, i) === user && decoded.slice(i + 1) === pass;
-    } catch {
-      ok = false;
-    }
-  }
-  if (!ok) return deny();
+  if (!checkBasicAuth(req)) return deny();
 
   const month = new Date().toISOString().slice(0, 7);
-  const [campaigns, editions, valuations, runs] = await Promise.all([
+  const [campaigns, editions, valuations, runs, retail, skuObs, skuCatalog] = await Promise.all([
     sb("campaigns?select=*&order=observed_at.desc&limit=400"),
     sb("editions?select=*&order=date.desc"),
     sb("valuations?select=*&is_current=eq.true&order=piso.desc"),
     sb("runs?select=*&order=started_at.desc&limit=10"),
+    sb("retail_valuations?select=*&is_current=eq.true&order=player.asc"),
+    sb("sku_observations?select=*&order=captured_at.desc&limit=120"),
+    sb("sku_catalog?select=*&order=created_at.desc&limit=200"),
   ]);
 
   const active = campaigns.filter((c) => ["vence-hoje", "vence-72h", "continua", "nova"].includes(c.status));
@@ -162,6 +128,48 @@ export async function GET(req: Request): Promise<Response> {
     return `<div class="bar-row"><div class="bar-label">${esc(c.label)}</div><div class="bar-track"><div class="bar-fill" style="left:${left}%;width:${w}%"></div></div></div>`;
   }).join("");
 
+  // --- Radar de VPM não-aéreo (Shopping) ---
+  const fmtVpm = (v: unknown): string =>
+    v == null || v === "" ? "n/c" : "R$ " + Number(v).toFixed(2).replace(".", ",");
+  const writable = supabaseWritable();
+  const lastCollect: any = runs.find((r: any) => r.kind === "skus");
+
+  const rowsRetail = retail.map((v: any) =>
+    `<tr><td>${esc(v.player)}</td><td style="color:#555">${esc(v.category)}</td>` +
+    `<td class="m">${fmtVpm(v.piso)}</td><td class="m">${fmtVpm(v.mediana)}</td><td class="m">${fmtVpm(v.teto)}</td>` +
+    `<td class="m">${esc(v.sample_n ?? "—")}</td><td>${pill(v.confidence, CONF[v.confidence] || "#8A8578")}</td></tr>`
+  ).join("");
+
+  const skuActions = (id: string): string =>
+    !writable ? '<span class="note">read-only</span>' :
+    `<form method="post" action="/admin/sku" style="display:inline-flex;gap:6px;margin:0">` +
+    `<input type="hidden" name="id" value="${esc(id)}">` +
+    `<button class="btn ok" name="action" value="approve">aprovar</button>` +
+    `<button class="btn no" name="action" value="reject">rejeitar</button></form>`;
+
+  const rowsSku = skuCatalog.map((s: any) =>
+    `<tr><td>${esc(s.canonical_name)}</td><td style="color:#555">${esc(s.category)}</td><td class="m">${esc(s.gtin ?? "—")}</td>` +
+    `<td>${pill(s.status, s.status === "approved" ? "#00A878" : s.status === "rejected" ? "#D64545" : "#8A8578")}</td>` +
+    `<td>${skuActions(s.id)}</td></tr>`
+  ).join("");
+
+  const rowsObs = skuObs.slice(0, 40).map((o: any) =>
+    `<tr><td style="color:#555">${esc(o.player)}</td><td>${esc(o.raw?.canonical ?? o.raw?.name ?? "—")}</td>` +
+    `<td class="m">${esc(o.points ?? "—")}</td><td class="m">${o.cash_brl != null ? "R$ " + esc(o.cash_brl) : "—"}</td>` +
+    `<td class="m">${fmtVpm(o.vpm)}</td><td>${o.is_promo ? pill("promo", "#8A5A1F") : pill("base", "#00A878")}</td>` +
+    `<td class="m">${esc(String(o.captured_at ?? "").slice(0, 10))}</td></tr>`
+  ).join("");
+
+  const msg = new URL(req.url).searchParams.get("msg");
+  const banner = msg
+    ? `<div class="banner">${esc(msg)}</div>`
+    : "";
+  const collectForm = writable
+    ? `<form method="post" action="/admin/collect" style="display:flex;gap:10px;align-items:center;margin-bottom:10px">` +
+      `<button class="btn ok">disparar rodada do coletor</button>` +
+      `<label class="note"><input type="checkbox" name="mock" value="true"> mock (não chama API)</label></form>`
+    : `<div class="note" style="margin-bottom:10px">Escrita desabilitada: defina SUPABASE_SERVICE_KEY para gerir e disparar rodadas.</div>`;
+
   const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>The Loyal · Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -186,9 +194,14 @@ td{padding:8px 10px 8px 0;border-bottom:1px solid var(--border);vertical-align:t
 .bar-track{flex:1;height:16px;background:#f0ece3;border-radius:4px;position:relative}
 .bar-fill{position:absolute;height:16px;background:var(--insight);border-radius:4px}
 .note{font-size:12px;color:var(--muted)}
+.btn{font:inherit;font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.ok{background:var(--primary);color:var(--paper);border-color:var(--primary)}
+.btn.no{color:#B53A3A}
+.banner{background:#D9F4E9;border:1px solid var(--primary);color:#007A57;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px}
 </style></head><body><div class="wrap">
 <div class="top"><div class="badge">TL</div><div><h1 style="font-size:24px"><span style="font-weight:600">The</span> Loyal · Admin</h1>
 <div class="note">Observabilidade do motor editorial · dados ao vivo do Supabase</div></div></div>
+${banner}
 <div class="cards">
 <div class="card"><div class="k">Última rodada</div><div class="v">${last ? esc(last.status === "ok" ? "OK" : last.status) : "—"}</div><div class="s">${last ? esc(new Date(last.started_at).toLocaleString("pt-BR")) : "sem rodadas"}</div></div>
 <div class="card"><div class="k">Campanhas no ledger</div><div class="v m">${campaigns.length}</div><div class="s">${active.length} ativas · ${venceHoje.length} vencem hoje</div></div>
@@ -200,7 +213,18 @@ td{padding:8px 10px 8px 0;border-bottom:1px solid var(--border);vertical-align:t
 <div class="sec"><h2>Previsão de janelas</h2><div class="note" style="margin-bottom:8px">Por recorrência do histórico do ledger (transferências).</div><table><thead><tr><th>Rota</th><th>Confiança</th><th>Previsão</th><th>Base</th></tr></thead><tbody>${rowsF || '<tr><td class="note" colspan="4">histórico insuficiente</td></tr>'}</tbody></table></div>
 <div class="sec"><h2>Ledger de campanhas</h2><table><thead><tr><th>Rota</th><th>Tipo</th><th>%</th><th>Milheiro</th><th>TL</th><th>Veredito</th><th>Status</th><th>Vence</th></tr></thead><tbody>${rowsC || '<tr><td class="note" colspan="8">sem campanhas</td></tr>'}</tbody></table></div>
 <div class="sec"><h2>Valuations</h2><table><thead><tr><th>Programa</th><th>Piso</th><th>Teto</th><th>Confiança</th></tr></thead><tbody>${rowsV || '<tr><td class="note" colspan="4">sem valuations</td></tr>'}</tbody></table></div>
-<div class="sec note">The Loyal · admin · guardrail factual ativo · conferência humana no Beehiiv.</div>
+
+<div class="sec"><h2>Shopping · VPM observado por player</h2>
+<div class="note" style="margin-bottom:8px">Custo de fabricação de resgate não-aéreo derivado de preço público de catálogo (R$/milheiro). Mediana com outliers descartados (MAD) e promo fora da banda. ${lastCollect ? "Última rodada: " + esc(new Date(lastCollect.started_at).toLocaleString("pt-BR")) + " · " + esc((lastCollect.skus_observed ?? 0) + " SKUs") : "sem rodada de coleta ainda"}.</div>
+${collectForm}
+<table><thead><tr><th>Player</th><th>Categoria</th><th>Piso</th><th>Mediana</th><th>Teto</th><th>Amostra</th><th>Confiança</th></tr></thead><tbody>${rowsRetail || '<tr><td class="note" colspan="7">sem banda observada</td></tr>'}</tbody></table></div>
+
+<div class="sec"><h2>Catálogo de SKUs</h2><div class="note" style="margin-bottom:8px">Curadoria do que entra na banda. Aprovar/rejeitar controla o que a coleta considera.</div>
+<table><thead><tr><th>Produto</th><th>Categoria</th><th>GTIN</th><th>Status</th><th>Ação</th></tr></thead><tbody>${rowsSku || '<tr><td class="note" colspan="5">sem SKUs no catálogo</td></tr>'}</tbody></table></div>
+
+<div class="sec"><h2>Observações recentes</h2><table><thead><tr><th>Player</th><th>Produto</th><th>Pontos</th><th>Preço</th><th>VPM</th><th>Tipo</th><th>Data</th></tr></thead><tbody>${rowsObs || '<tr><td class="note" colspan="7">sem observações</td></tr>'}</tbody></table></div>
+
+<div class="sec note">The Loyal · admin · guardrail factual ativo · sem dado interno/CMI · conferência humana no Beehiiv.</div>
 </div></body></html>`;
 
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } });
