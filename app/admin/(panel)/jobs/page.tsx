@@ -11,6 +11,7 @@ import {
   fmtDate,
 } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/SubmitButton";
+import { ActionForm } from "@/components/admin/toast";
 import {
   toggleJobAction,
   runNowAction,
@@ -26,12 +27,12 @@ const GROUPS: { grupo: string; label: string; runTarget: RunTarget | null }[] = 
 
 function RunNowButton({ fn }: { fn: RunTarget }) {
   return (
-    <form action={runNowAction}>
+    <ActionForm action={runNowAction}>
       <input type="hidden" name="fn" value={fn} />
       <SubmitButton variant="primary" pendingLabel="Disparando…">
         Rodar agora
       </SubmitButton>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -74,7 +75,7 @@ function GroupTable({ jobs }: { jobs: Job[] }) {
                 )}
               </Td>
               <Td className="text-right">
-                <form action={toggleJobAction} className="flex justify-end">
+                <ActionForm action={toggleJobAction} className="flex justify-end">
                   <input type="hidden" name="jobname" value={j.jobname} />
                   <input
                     type="hidden"
@@ -87,7 +88,7 @@ function GroupTable({ jobs }: { jobs: Job[] }) {
                   >
                     {j.active ? "Pausar" : "Ativar"}
                   </SubmitButton>
-                </form>
+                </ActionForm>
               </Td>
             </tr>
           ))
@@ -132,20 +133,20 @@ export default async function JobsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 {g.grupo === "backfill" && groupJobs.length > 0 && (
                   <>
-                    <form action={bulkToggleGroupAction}>
+                    <ActionForm action={bulkToggleGroupAction}>
                       <input type="hidden" name="grupo" value={g.grupo} />
                       <input type="hidden" name="active" value="false" />
                       <SubmitButton variant="danger" pendingLabel="…">
                         Pausar todos
                       </SubmitButton>
-                    </form>
-                    <form action={bulkToggleGroupAction}>
+                    </ActionForm>
+                    <ActionForm action={bulkToggleGroupAction}>
                       <input type="hidden" name="grupo" value={g.grupo} />
                       <input type="hidden" name="active" value="true" />
                       <SubmitButton variant="default" pendingLabel="…">
                         Ativar todos
                       </SubmitButton>
-                    </form>
+                    </ActionForm>
                   </>
                 )}
                 {g.runTarget && <RunNowButton fn={g.runTarget} />}

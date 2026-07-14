@@ -59,23 +59,29 @@ ao vivo pelas RPCs `admin_*` (não cria tabelas de controle — usa `cron.job` /
 `cron.job_run_details` do pg_cron). Segue os tokens da marca, sem shadcn e sem
 dependência nova (acesso ao Supabase por `fetch` puro, não `supabase-js`).
 
-Páginas: `/admin` (dashboard), `/admin/jobs` (crons: pausar/ativar/rodar), `/admin/backfill`
-(progresso + fila/tracker + reprocessar), `/admin/campanhas` (ledger com filtros e edição
-inline de veredito/TL Score), `/admin/logs` (pg_cron + pipeline unificados) e
-`/admin/observability` (calendário, previsão de janelas, valuations, edições).
+Páginas: `/admin` (cockpit: faixa "Atenção agora", stat tiles com sparklines de tendência,
+gates da última rodada), `/admin/jobs` (crons: pausar/ativar/rodar com toast de retorno),
+`/admin/backfill` (progresso + fila/tracker + reprocessar), `/admin/noticias`
+(pipeline ingest→extract: news_raw com status/erro, campanhas extraídas, reprocessar),
+`/admin/campanhas` (ledger com filtros, revisão-primeiro e edição inline de veredito/TL Score),
+`/admin/logs` (pg_cron + pipeline unificados) e `/admin/observability` (calendário com
+marcador de hoje, previsão de janelas, valuations, edições).
+
+O topo tem **cockpit ao vivo**: carimbo "atualizado às HH:MM", auto-refresh (30s, pausável)
+e botão manual. As ações mostram o retorno real da RPC num toast.
 
 Toda escrita/RPC acontece em Server Actions/Server Components com a `SERVICE_ROLE_KEY`
-(nunca no browser). Proteção via `middleware.ts` (Basic Auth):
+(nunca no browser). Acesso protegido por login (`middleware.ts` + `/admin/login`), que
+valida a senha contra `ADMIN_TOKEN` e grava um cookie httpOnly (hash SHA-256):
 
 ```bash
-ADMIN_USER=...            # usuário do Basic Auth do painel
-ADMIN_PASSWORD=...        # senha do Basic Auth
+ADMIN_TOKEN=...           # senha única do painel (login /admin/login)
 SUPABASE_URL=...          # default: projeto atual
 SUPABASE_SERVICE_ROLE_KEY=...  # server-only; sem ela o painel carrega vazio
 ```
 
-Sem `ADMIN_USER`/`ADMIN_PASSWORD`, `/admin/*` retorna 401. Sem `SUPABASE_SERVICE_ROLE_KEY`,
-as páginas renderizam mas mostram um aviso e dados vazios.
+Sem cookie de sessão válido, `/admin/*` redireciona para `/admin/login`. Sem
+`SUPABASE_SERVICE_ROLE_KEY`, as páginas renderizam mas mostram um aviso e dados vazios.
 
 > Nota: o bug dos 20 crons de backfill (URL sem `/functions/v1/`) já está corrigido no
 > banco — os comandos em `cron.job` já apontam para `/functions/v1/backfill-daily`.

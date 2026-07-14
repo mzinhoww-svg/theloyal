@@ -159,6 +159,19 @@ export type BackfillQueueRow = {
   processed_at: string | null;
 };
 
+export type NewsRow = {
+  id: string;
+  source: string;
+  title: string | null;
+  url: string;
+  published_at: string | null;
+  fetched_at: string | null;
+  processed: boolean | null;
+  campaigns_extracted: number | null;
+  model_used: string | null;
+  error: string | null;
+};
+
 export type BackfillTrackerRow = {
   id: number;
   source: string;
@@ -198,3 +211,8 @@ export function toggleJob(jobname: string, active: boolean) {
 export function runNow(fn: RunTarget) {
   return rpc<string>("admin_run_now", { p_fn: fn });
 }
+
+export const getNews = (limit = 500) =>
+  rest<NewsRow>(
+    `news_raw?select=id,source,title,url,published_at,fetched_at,processed,campaigns_extracted,model_used,error&order=fetched_at.desc.nullslast&limit=${limit}`,
+  );

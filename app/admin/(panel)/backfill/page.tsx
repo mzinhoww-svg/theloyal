@@ -15,6 +15,7 @@ import {
   fmtDate,
 } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/SubmitButton";
+import { ActionForm } from "@/components/admin/toast";
 import { reprocessAction, runBackfillAction } from "./actions";
 
 function Progress({
@@ -92,11 +93,11 @@ export default async function BackfillPage({
         title="Backfill"
         sub="Histórico via sitemaps — tracker (sub-sitemaps) e queue (URLs)."
         actions={
-          <form action={runBackfillAction}>
+          <ActionForm action={runBackfillAction}>
             <SubmitButton variant="primary" pendingLabel="Disparando…">
               Rodar backfill-daily
             </SubmitButton>
-          </form>
+          </ActionForm>
         }
       />
 
@@ -186,12 +187,12 @@ export default async function BackfillPage({
                     {fmtDate(q.processed_at)}
                   </Td>
                   <Td className="text-right">
-                    <form action={reprocessAction} className="flex justify-end">
+                    <ActionForm action={reprocessAction} className="flex justify-end">
                       <input type="hidden" name="id" value={q.id} />
                       <SubmitButton variant="default" pendingLabel="…">
                         Reprocessar
                       </SubmitButton>
-                    </form>
+                    </ActionForm>
                   </Td>
                 </tr>
               ))

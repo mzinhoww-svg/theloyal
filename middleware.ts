@@ -1,40 +1,31 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { ADMIN_COOKIE, tokenHash, safeEqual } from "@/lib/admin-auth";
 
-// Protege toda a Central de Controle (/admin/*) com Basic Auth, reaproveitando
-// ADMIN_USER/ADMIN_PASSWORD ja usados no admin anterior. Roda no Edge, entao
-// usa atob (Buffer nao existe aqui). As RPCs com SERVICE_ROLE_KEY continuam
-// so no servidor (Server Components/Actions), nunca no browser.
+// Protege /admin/* por cookie de sessão (hash do ADMIN_TOKEN). A página de
+// login é pública; sem token válido, tudo redireciona pra ela. Roda no Edge.
 
-function unauthorized(): NextResponse {
-  return new NextResponse("Autenticacao necessaria.", {
-    status: 401,
-    headers: {
-      "WWW-Authenticate": 'Basic realm="The Loyal Admin", charset="UTF-8"',
-    },
-  });
-}
+const LOGIN = "/admin/login";
 
-export function middleware(req: NextRequest): NextResponse {
-  const user = process.env.ADMIN_USER;
-  const pass = process.env.ADMIN_PASSWORD;
+export async function middleware(req: NextRequest): Promise<NextResponse> {
+  const { pathname, search } = req.nextUrl;
 
-  // Sem credenciais configuradas: nega tudo (nao expor o painel por engano).
-  if (!user || !pass) return unauthorized();
+  // Login (e sua Server Action, que faz POST na mesma rota) é sempre liberado.
+  if (pathname === LOGIN) return NextResponse.next();
 
-  const auth = req.headers.get("authorization") || "";
-  const [scheme, encoded] = auth.split(" ");
-  if (scheme === "Basic" && encoded) {
-    try {
-      const decoded = atob(encoded);
-      const i = decoded.indexOf(":");
-      const u = decoded.slice(0, i);
-      const p = decoded.slice(i + 1);
-      if (u === user && p === pass) return NextResponse.next();
-    } catch {
-      // cai no unauthorized
-    }
+  const token = process.env.ADMIN_TOKEN;
+  const cookie = req.cookies.get(ADMIN_COOKIE)?.value;
+
+  if (token && cookie) {
+    const expected = await tokenHash(token);
+    if (safeEqual(cookie, expected)) return NextResponse.next();
   }
-  return unauthorized();
+
+  const url = req.nextUrl.clone();
+  url.pathname = LOGIN;
+  // Guarda o destino pra voltar depois do login (só caminhos internos).
+  const dest = pathname + search;
+  url.search = dest.startsWith("/admin") ? `?next=${encodeURIComponent(dest)}` : "";
+  return NextResponse.redirect(url);
 }
 
 export const config = {

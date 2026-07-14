@@ -50,6 +50,20 @@ export default async function ObservabilityPage() {
   const forecast = forecastRows(campaigns);
   const calendar = calendarRows(campaigns, month);
 
+  // Marcador de "hoje" no calendário (só se o mês exibido é o corrente).
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const isCurrentMonth = todayIso.slice(0, 7) === month;
+  const daysInMonth =
+    calendar[0]?.md ??
+    new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
+  const todayLeft = isCurrentMonth
+    ? ((Number(todayIso.slice(8, 10)) - 0.5) / daysInMonth) * 100
+    : null;
+
+  // Só quem tem histórico real na tabela; "em formação" vira uma nota discreta.
+  const confident = forecast.filter((f) => f.conf !== "em-formacao");
+  const forming = forecast.filter((f) => f.conf === "em-formacao");
+
   return (
     <>
       <PageHeader
@@ -62,7 +76,7 @@ export default async function ObservabilityPage() {
           Calendário de promoções · {month}
         </h2>
         <p className="mb-3 text-sm text-gray-500">
-          Cada barra é uma campanha ao longo do mês.
+          Cada barra é uma campanha ao longo do mês. A linha vertical marca hoje.
         </p>
         <div className="rounded-lg border border-line bg-surface p-4">
           {calendar.length > 0 ? (
@@ -79,6 +93,13 @@ export default async function ObservabilityPage() {
                       className="absolute h-4 rounded bg-blue-600"
                       style={{ left: `${left}%`, width: `${w}%` }}
                     />
+                    {todayLeft != null && (
+                      <span
+                        className="absolute top-0 h-4 w-px bg-red-600"
+                        style={{ left: `${todayLeft}%` }}
+                        aria-hidden="true"
+                      />
+                    )}
                   </div>
                 </div>
               );
@@ -106,8 +127,8 @@ export default async function ObservabilityPage() {
             </tr>
           </thead>
           <tbody>
-            {forecast.length > 0 ? (
-              forecast.slice(0, 20).map((f, i) => (
+            {confident.length > 0 ? (
+              confident.slice(0, 20).map((f, i) => (
                 <tr key={i}>
                   <Td className="font-medium">{f.rota}</Td>
                   <Td>
@@ -118,10 +139,16 @@ export default async function ObservabilityPage() {
                 </tr>
               ))
             ) : (
-              <EmptyRow cols={4} label="histórico insuficiente" />
+              <EmptyRow cols={4} label="nenhuma rota com histórico suficiente ainda" />
             )}
           </tbody>
         </Table>
+        {forming.length > 0 && (
+          <p className="mt-2 text-xs text-gray-400">
+            + {forming.length} rotas ainda em formação (menos de 3 janelas
+            observadas) — sem previsão até acumular histórico.
+          </p>
+        )}
       </section>
 
       <section className="mb-8">
