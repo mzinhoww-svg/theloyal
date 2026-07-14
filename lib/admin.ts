@@ -72,6 +72,23 @@ export async function sbInsert(table: string, rows: unknown): Promise<{ ok: bool
   return { ok: res.ok, status: res.status };
 }
 
+// Insert que retorna as linhas criadas (para pegar o id gerado e encadear FKs).
+export async function sbInsertReturning(table: string, rows: unknown): Promise<{ ok: boolean; status: number; data: any[] }> {
+  if (!SERVICE_KEY) return { ok: false, status: 0, data: [] };
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: "POST",
+    headers: {
+      apikey: SERVICE_KEY,
+      authorization: `Bearer ${SERVICE_KEY}`,
+      "content-type": "application/json",
+      prefer: "return=representation",
+    },
+    body: JSON.stringify(rows),
+  });
+  const data = res.ok ? await res.json().catch(() => []) : [];
+  return { ok: res.ok, status: res.status, data };
+}
+
 export async function sbPatch(table: string, filter: string, body: unknown): Promise<{ ok: boolean; status: number }> {
   if (!SERVICE_KEY) return { ok: false, status: 0 };
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {

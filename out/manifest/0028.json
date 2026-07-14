@@ -2,43 +2,41 @@
   "number": 28,
   "date": "2026-07-08",
   "slug": "0028",
-  "status": "FALHOU",
-  "generatedAt": "2026-07-14T02:53:49.877Z",
+  "status": "APROVADA",
+  "generatedAt": "2026-07-14T11:09:38.610Z",
   "input": "content/editions/0028.json",
   "outputs": [
     {
       "type": "email",
       "path": "out/email/0028.html",
-      "bytes": 11373,
-      "sha256": "d8149b16e0a970e38b3bf3f15055d2fa3da5cb8e71858d28351939bdf9815459"
+      "bytes": 13942,
+      "sha256": "b2c29791327c7c04a0997fffc7b899a326e45d8335c92481dc83f811d1a20340"
     },
     {
       "type": "plain",
       "path": "out/plain/0028.txt",
-      "bytes": 2274,
-      "sha256": "137451b2016dc756875437567ba89f949fd6f7d559818dd8445624a68a2195dc"
+      "bytes": 2694,
+      "sha256": "df61634a8877b0d328454fff9fb43b3c338bdd3433bc55cce98ac5fd3782627e"
     },
     {
       "type": "web",
       "path": "out/web/0028.html",
-      "bytes": 9764,
-      "sha256": "7f04fa0ebbaf475d8b8bc28f9f876b40c9d499f5ae1a5dd9d5872182e1e65617"
+      "bytes": 11449,
+      "sha256": "ab409782092f341c007753eba7b95b551e9fff20c5e004fbd820ae9acbcea75a"
     },
     {
       "type": "qa",
       "path": "out/qa/0028.md",
-      "bytes": 1827,
-      "sha256": "fc2fe6d641e9a25159d830b040bf1a069477afb68c9c40859a612610092753b7"
+      "bytes": 1806,
+      "sha256": "461011ed231e8abef5c9cb8bd66d099682156fce1a548df093a37c338c8cd21a"
     }
   ],
   "qa": {
-    "blocked": true,
+    "blocked": false,
     "editorial": {
-      "errors": [
-        "Dado interno/CMI proibido no corpo editorial: \"CMI interno LATAM teto 0,0170 a 0,0190 (auditoria)\""
-      ],
+      "errors": [],
       "warnings": [],
-      "okCount": 10
+      "okCount": 12
     },
     "artifacts": {
       "email": [

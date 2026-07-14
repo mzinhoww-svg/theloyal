@@ -34,6 +34,7 @@
       "type": "array",
       "description": "Radar de VPM observado no não-aéreo (Shopping): custo de fabricação de resgate por player, derivado de preço público de catálogo. Nunca CMI interno.",
       "items": { "$ref": "#/$defs/shopping" }
+    },
     "radar": {
       "type": "object",
       "description": "Radar de janelas — projeção estatística por recorrência do ledger. Não é veredito nem garantia.",

@@ -113,7 +113,8 @@ async function collect({ mock }) {
 async function persistLive({ runId, observations, valuations, gate_validate, gate_audit }) {
   const startedAt = new Date().toISOString();
   await insert("runs", [{
-    id: runId, kind: "skus", started_at: startedAt, status: gate_validate && gate_audit ? "ok" : "erro",
+    id: runId, product: "radar-vpm", kind: "skus", started_at: startedAt, finished_at: startedAt,
+    status: gate_validate && gate_audit ? "ok" : "erro",
     gate_validate, gate_audit, searches_count: observations.length, skus_observed: observations.length,
   }]);
   await insert("sku_observations", observations.map((o) => ({

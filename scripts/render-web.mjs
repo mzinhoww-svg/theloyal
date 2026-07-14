@@ -167,6 +167,9 @@ function Article({ ed }) {
             "p",
             { className: "tl-shop-note" },
             "Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com outliers e promo fora da banda; n/c quando a amostra é insuficiente.",
+          ),
+        )
+      : null,
     ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
       ? h(
           "section",
