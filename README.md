@@ -52,6 +52,34 @@ tailwind.config.ts  Tokens da marca (nunca hardcodar hex em componente)
 - Foco visível custom, alvos de toque ≥ 44px, contraste AA nos tokens.
 - `prefers-reduced-motion` desliga idle do mascote, reveals e smooth scroll.
 
+## Central de Controle (`/admin`)
+
+Painel operacional do motor editorial, servido pelo mesmo app. Lê e opera o Supabase
+ao vivo pelas RPCs `admin_*` (não cria tabelas de controle — usa `cron.job` /
+`cron.job_run_details` do pg_cron). Segue os tokens da marca, sem shadcn e sem
+dependência nova (acesso ao Supabase por `fetch` puro, não `supabase-js`).
+
+Páginas: `/admin` (dashboard), `/admin/jobs` (crons: pausar/ativar/rodar), `/admin/backfill`
+(progresso + fila/tracker + reprocessar), `/admin/campanhas` (ledger com filtros e edição
+inline de veredito/TL Score), `/admin/logs` (pg_cron + pipeline unificados) e
+`/admin/observability` (calendário, previsão de janelas, valuations, edições).
+
+Toda escrita/RPC acontece em Server Actions/Server Components com a `SERVICE_ROLE_KEY`
+(nunca no browser). Proteção via `middleware.ts` (Basic Auth):
+
+```bash
+ADMIN_USER=...            # usuário do Basic Auth do painel
+ADMIN_PASSWORD=...        # senha do Basic Auth
+SUPABASE_URL=...          # default: projeto atual
+SUPABASE_SERVICE_ROLE_KEY=...  # server-only; sem ela o painel carrega vazio
+```
+
+Sem `ADMIN_USER`/`ADMIN_PASSWORD`, `/admin/*` retorna 401. Sem `SUPABASE_SERVICE_ROLE_KEY`,
+as páginas renderizam mas mostram um aviso e dados vazios.
+
+> Nota: o bug dos 20 crons de backfill (URL sem `/functions/v1/`) já está corrigido no
+> banco — os comandos em `cron.job` já apontam para `/functions/v1/backfill-daily`.
+
 ## Integração Beehiiv (próximo passo)
 
 O formulário é mock. Para conectar:
