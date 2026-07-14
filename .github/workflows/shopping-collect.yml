@@ -13,6 +13,10 @@ on:
         description: "Rodar em modo mock (sem navegador, sem escrita)"
         type: string
         default: "false"
+      diagnose:
+        description: "Modo diagnóstico: salva HTML + screenshot + candidatos por fonte como artefato (não escreve no banco)"
+        type: string
+        default: "false"
 
 concurrency:
   group: shopping-collect
@@ -38,8 +42,18 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           COLLECT_TRIGGER: ${{ github.event_name == 'workflow_dispatch' && 'manual' || 'scheduled' }}
         run: |
-          if [ "${{ inputs.mock }}" = "true" ]; then
+          if [ "${{ inputs.diagnose }}" = "true" ]; then
+            node scripts/shopping/collect.mjs --diagnose
+          elif [ "${{ inputs.mock }}" = "true" ]; then
             node scripts/shopping/collect.mjs --mock
           else
             node scripts/shopping/collect.mjs
           fi
+      - name: Upload diagnostics artifact
+        if: ${{ inputs.diagnose == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: shopping-diagnostics
+          path: diagnostics/
+          retention-days: 14
+          if-no-files-found: warn

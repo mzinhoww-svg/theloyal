@@ -49,8 +49,27 @@ Para sair do seed histórico e coletar de verdade:
 2. **Afinar os adapters** (`scripts/shopping/adapters.mjs`) contra as páginas ao
    vivo de cada programa — seletores JSON-LD e regex de pontos são ponto de
    partida. Azul pode exigir tratamento anti-bot; pontos podem exigir login.
+   Use o **modo diagnóstico** (abaixo) para ver o que a página realmente expõe.
 3. Rodar `workflow_dispatch` (mock primeiro, depois live), conferir observações
    e `shopping_recompute`.
 
 Enquanto não afinado, fontes ficam `pending_validation` e o indicador se protege
 com `null`/lacuna — nunca inventa número.
+
+### Modo diagnóstico (afinar seletores)
+
+Para calibrar os adapters sem escrever no banco, rode o workflow
+`Shopping VPM collect (headless)` com o input **`diagnose = true`** (ou local:
+`node scripts/shopping/collect.mjs --diagnose`, com `SUPABASE_SERVICE_KEY` para
+ler as fontes). Para cada fonte ativa ele:
+
+- renderiza a página headless e salva `diagnostics/<programa>__<id>.html`
+  (HTML já renderizado) e `.png` (screenshot full-page);
+- registra em `diagnostics/report.json` o resultado do adapter **mais** os
+  candidatos crus: blocos JSON-LD, metatags de preço (`product:price:amount`,
+  `itemprop=price`, `[data-price]`), todos os `R$ …` e todos os
+  `… pontos/milhas` achados no texto renderizado.
+
+O workflow sobe `diagnostics/` como artefato (`shopping-diagnostics`, 14 dias).
+Compare os candidatos com o que o adapter extraiu para ajustar seletor/regex por
+portal. Não cria runs/observações — é só evidência.
