@@ -2,8 +2,54 @@
 
 - **Status:** Proposto
 - **Data:** 2026-07-14
-- **Supersede:** o heurístico de intervalo em `lib/predictions.ts` + `scripts/predictions.mjs`
-- **Escopo de 1ª entrega:** MVP ponta-a-ponta num programa (Fases 0 + 4 + 5)
+- **Relação com o motor atual:** NÃO substitui. O motor de intervalo atual é
+  **renomeado e limpo como `forecast`** (radar rápido) e **convive** com o novo
+  `predict` (motor robusto). Ver §0.
+- **Escopo de 1ª entrega:** reformular o `forecast` → depois o MVP `predict` num
+  programa (Fases 0 + 4 + 5)
+
+---
+
+## 0. Forecast × Predict — dois produtos que convivem
+
+Hoje o naming está cruzado e confunde: o motor mora em `lib/predictions.ts` mas
+produz "forecast" (`buildForecast`), a config é `forecast_*`, os scripts são
+`forecast.mjs`+`predictions.mjs` e a tela é `/admin/predict`. Vamos separar em
+**dois produtos distintos, com nomes consistentes, que rodam lado a lado**:
+
+| | **Forecast** (radar rápido) | **Predict** (motor robusto) |
+|---|---|---|
+| O que é | recorrência de intervalo por rota `origem→destino` | motor por série com hazard + distribuição de bônus |
+| Pergunta | "mais ou menos quando cai a próxima janela?" | "qual a probabilidade/janela/% da próxima, com que confiança e por quê?" |
+| Custo | barato, sempre-ligado, alimenta o radar do daily/weekly | pesado, gated, backtestado, auditável |
+| Gate | projeção honesta; `em-formacao` sem base | **bloqueia** quando dados insuficientes |
+| Home | `/admin/forecast` | `/admin/predict` (reconstruído) |
+| Código | `lib/forecast.ts` + `scripts/forecast.mjs` + `forecast_*` | `lib/predict/*` + `scripts/predict.mjs` + `predict_*` |
+
+**Regra de convivência:** o `forecast` é o resumo rápido; o `predict` é a análise
+profunda e rastreável. Onde os dois falam da mesma rota, o `predict` (quando
+`ready`) é a fonte de verdade; o `forecast` nunca finge a precisão do `predict`.
+
+### Fase A — Reformular o `forecast` (clareza, sem mudar comportamento)
+Consolidar o motor atual sob um nome coeso e legível, **coexistindo**:
+- `lib/predictions.ts` → **`lib/forecast.ts`** (mantém `buildForecast`/`radarItems`);
+  atualizar imports (`lib/admin-predict.ts`→`lib/admin-forecast` plumbing,
+  `observability/page.tsx`, `predict/page.tsx`).
+- Rota atual `/admin/predict` (que hoje mostra o radar de intervalo) →
+  **`/admin/forecast`**; label do menu "Previsão" → "Forecast"; libera
+  `/admin/predict` para o motor novo.
+- Mantém `forecast_config/overrides/snapshots`, `scripts/forecast.mjs`,
+  `content/forecast.json`. Simplifica e **documenta** o algoritmo (comentários e
+  nomes claros), sem alterar a matemática.
+- Sai o espelho redundante `scripts/predictions.mjs` (vira `scripts/forecast.mjs`
+  como única fonte do pipeline do radar).
+
+### Fase B — Scaffolding do `predict` (namespace novo)
+Criar o esqueleto isolado do motor robusto: tabelas `predict_*`, `lib/predict/*`,
+`scripts/predict.mjs`, nova rota `/admin/predict`. Nada do `forecast` é tocado.
+
+### Fase C — MVP `predict` (Fases 0 + 4 + 5 num programa)
+Só depois da base pronta, o loop completo num programa-alvo (ver §11).
 
 ---
 
