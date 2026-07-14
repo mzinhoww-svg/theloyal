@@ -1,9 +1,7 @@
 import { rest } from "@/lib/admin-db";
-import {
-  forecastRows,
-  calendarRows,
-  type Campaignish,
-} from "@/lib/admin-forecast";
+import { calendarRows, type Campaignish } from "@/lib/admin-forecast";
+import { getConfig } from "@/lib/admin-predict";
+import { buildForecast, formatWindow, type CampaignRow } from "@/lib/predictions";
 import {
   PageHeader,
   Pill,
@@ -35,9 +33,10 @@ const CONF_TONE = (c: string): "green" | "blue" | "gray" =>
 
 export default async function ObservabilityPage() {
   const month = new Date().toISOString().slice(0, 7);
-  const [campaigns, valuations, editions] = await Promise.all([
-    rest<Campaignish>(
-      "campaigns?select=origem,destino,tipo,percentual,vigencia_inicio,vigencia_fim,observed_at&limit=500",
+  const [{ config }, campaigns, valuations, editions] = await Promise.all([
+    getConfig(),
+    rest<CampaignRow>(
+      "campaigns?select=id,origem,destino,tipo,percentual,vigencia_inicio,vigencia_fim,observed_at&limit=2000",
     ),
     rest<Valuation>(
       "valuations?select=program,piso,teto,confidence&is_current=eq.true&order=piso.desc",
@@ -47,8 +46,16 @@ export default async function ObservabilityPage() {
     ),
   ]);
 
-  const forecast = forecastRows(campaigns);
-  const calendar = calendarRows(campaigns, month);
+  // Previsão pelo motor único (mesma config da área de predict). Programas +
+  // rotas, mapeados para o shape compacto desta tabela.
+  const fc = buildForecast(campaigns, { config });
+  const forecast = [...fc.clusters, ...fc.routes].map((f) => ({
+    rota: f.route,
+    conf: f.confidence,
+    prediction: f.windowStart ? `próxima janela ~ ${formatWindow(f.windowStart, f.windowEnd)}` : "histórico insuficiente",
+    basis: f.basis,
+  }));
+  const calendar = calendarRows(campaigns as Campaignish[], month);
 
   // Marcador de "hoje" no calendário (só se o mês exibido é o corrente).
   const todayIso = new Date().toISOString().slice(0, 10);
