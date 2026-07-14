@@ -94,6 +94,7 @@ function auditEmail() {
   if (!existsSync("out/email") && !existsSync("out/pro-email")) { warn("out/email ausente — rode `npm run render`"); return; }
   auditEmailDir("out/email");
   auditEmailDir("out/pro-email");
+  auditEmailDir("out/weekly");
 }
 
 function main() {

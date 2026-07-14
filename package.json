@@ -16,6 +16,7 @@
     "qa": "node scripts/qa.mjs",
     "pro": "node scripts/pro.mjs",
     "forecast": "node scripts/forecast.mjs",
+    "weekly": "node scripts/render-weekly.mjs",
     "beehiiv": "node scripts/beehiiv-publish.mjs",
     "edition": "node scripts/render-system.mjs && node scripts/publish.mjs",
     "daily:validate": "node scripts/validate-daily.mjs",

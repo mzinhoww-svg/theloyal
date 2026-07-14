@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T02:40:13.305Z",
+  "generatedAt": "2026-07-14T02:49:58.608Z",
   "generatedFor": "2026-07-14",
   "source": "supabase",
   "ledgerRows": 109,
@@ -522,6 +522,23 @@
         "cadence": "irregular",
         "typicalPercent": 23,
         "basis": "4 janelas · cadência irregular ~34 dias (média 41, desvio 36) · última 2026-07-01"
+      }
+    ],
+    "radarDaily": [],
+    "radarWeekly": [
+      {
+        "label": "Latam Pass",
+        "confidence": "baixa",
+        "window": "17 jul a 10 ago",
+        "basis": "5 janelas · cadência irregular ~21 dias (média 32, desvio 34) · última 2026-07-08",
+        "bonus": "~23%"
+      },
+      {
+        "label": "Itaú → Latam Pass",
+        "confidence": "baixa",
+        "window": "23 jul a 16 ago",
+        "basis": "4 janelas · cadência irregular ~34 dias (média 41, desvio 36) · última 2026-07-01",
+        "bonus": "~23%"
       }
     ]
   }
