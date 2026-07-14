@@ -1,4 +1,4 @@
-# Conteúdo editorial — The Loyalty
+# Conteúdo editorial — The Loyal
 
 Pipeline de validação, renderização e publicação das edições do Daily.
 Segue a estrutura e os checklists do Operating Manual v1. **Sem dependências**
@@ -11,11 +11,62 @@ npm run validate    # QA de cada edição → out/qa/NNNN.md (bloqueia em erro)
 npm run render      # gera out/email/NNNN.html e out/plain/NNNN.txt
 npm run publish     # valida + escreve content/latest.json e content/index.json
 npm run edition     # validate → render → publish
+npm run forecast    # gera content/forecast.json a partir do ledger (Supabase)
+npm run weekly      # valida + renderiza o weekly digest (e-mail/plain/web)
 npm run beehiiv     # publica no Beehiiv o conteúdo já renderizado (draft por padrão)
 ```
 
+O `forecast` **não envia nada** — só gera o artefato de previsão. Sem rede/
+credenciais opera em modo offline (preserva o `forecast.json` atual).
+
 O `publish` **não envia e-mail** — apenas escreve os índices locais. O envio ao
 Beehiiv é o passo `beehiiv`, e por padrão cria só um **rascunho**.
+
+## Radar de VPM não-aéreo (Shopping) por SKU
+
+Feed de **VPM observado** (custo de fabricação de resgate não-aéreo) por concorrente,
+derivado de **preço público de catálogo** — nunca CMI interno. A fórmula
+`VPM = cash_brl / (points/1000)` roda em código determinístico (`scripts/collect/stats.mjs`);
+o LLM (OpenRouter) só faz match de SKU, promo-vs-base e extração — nunca a conta.
+
+```bash
+npm run collect            # coleta: live se houver SUPABASE_SERVICE_KEY, senão mock
+npm run collect -- --mock  # força mock (usa mockCash/mockPoints de content/sku-basket.json)
+npm run pro:vpm            # imprime VPM por player da banda mais recente (Supabase/mock)
+npm run pro:vpm -- --write content/pro/AAAA-MM.json   # injeta na matriz do Pro (revisar)
+```
+
+- **Anti-promo (a dor do não-aéreo):** promo fora da banda; mediana (não média);
+  outliers descartados por MAD; amostra mínima 3 senão `n/c`.
+- **Supabase:** `sku_catalog`, `sku_sources`, `sku_observations`, `retail_valuations`
+  (migration em `supabase/migrations/0001_retail_vpm.sql`). Escrita com SERVICE key
+  server-only; anon só lê o agregado público.
+- **Admin** (`/admin`, Basic-Auth): seção "Shopping · VPM observado", curadoria do
+  catálogo (aprovar/rejeitar) e botão de disparar a rodada (`collect.yml` via
+  workflow_dispatch). Escrita em `/admin/sku` e `/admin/collect`.
+- **Daily:** seção opcional `shoppingWatch[]` (schema `content/edition.schema.json`)
+  renderizada em e-mail/web. **Pro:** coluna `vpmObservado` na matriz competitiva.
+- **Automação:** `.github/workflows/collect.yml` (cron diário + manual). Sem secrets,
+  roda em mock e grava o payload em `out/collect/`.
+
+> Secrets do Radar (Supabase, Tavily, OpenRouter, GH dispatch): ver
+> [`docs/GO-LIVE.md`](../docs/GO-LIVE.md) §3 e `.env.example`.
+
+> Ativação em produção (GitHub Actions, secrets, checklist de go-live): ver
+> [`docs/GO-LIVE.md`](../docs/GO-LIVE.md).
+
+### Fluxo canônico vs. legado
+
+Existem dois conjuntos de renderer/schema no repositório. O **canônico** é este,
+em `scripts/` + `content/edition.schema.json`, wired em todos os `npm run`
+(`validate`, `render`, `render:web`, `render:system`, `publish`, `qa`, `pro`,
+`beehiiv`, `edition`).
+
+O conjunto em `renderer/*.mjs` + `scripts/render-daily.mjs` +
+`scripts/validate-daily.mjs` + `renderer/edition.schema.json` é **legado** (protótipo
+"The Loyal Daily", com schema em snake_case incompatível com `content/editions/`).
+Não está ligado a nenhum `npm run` e não participa do build. Mantido por ora; não
+usar no fluxo atual.
 
 ### Publisher Beehiiv (`npm run beehiiv`)
 
@@ -50,6 +101,7 @@ email_settings.preview_text`, `slug → web_settings.slug` (default
 | `signal` | sim | O sinal do dia |
 | `deals[]` | sim | Deal Desk (ver abaixo) |
 | `fechaLogo[]` | não | itens que vencem em ≤72h |
+| `radar` | não | Radar de janelas: `{ note?, windows: [{ label, confidence, window, basis?, bonus? }] }` (projeção, nunca veredito) |
 | `sources[]` | sim | `{ label, url }` — URL http obrigatória |
 | `disclaimer` | sim | frase oficial completa |
 | `illustrative` | não | marca a edição como exemplo |
@@ -58,6 +110,37 @@ email_settings.preview_text`, `slug → web_settings.slug` (default
 `category`, `title`, `context`, `conta { rows: [chave, valor][], result: [chave, valor] }`,
 `verdict`, `verdictNote`, `source`, `sourceUrl`, `vigencia` (ISO), `tlScore`,
 `scoreBreakdown?` (os 8 critérios do Operating Manual 5.2).
+
+## Camada de previsão (Radar de janelas)
+
+O motor é `lib/predictions.ts` (fonte da verdade, TS) com espelho ESM em
+`scripts/predictions.mjs` (usado pelo pipeline de render sem build). Ele prevê a
+**próxima janela** de cada transferência por recorrência do histórico do ledger,
+aproveitando o backfill:
+
+- usa a **data real** da janela (`vigencia_inicio` → data no `id` →
+  `vigencia_fim`), nunca `observed_at`/`first_seen` (artefatos de ingestão);
+- normaliza programas e produz duas visões: **por rota** (origem→destino) e
+  **por programa** (cluster do destino, consolidando campanhas program-wide);
+- colapsa "ondas" quase simultâneas antes de medir cadência;
+- confiança calibrada por **regularidade** (coef. de variação), não só contagem;
+- é **projeção estatística, nunca veredito nem garantia** — sem base suficiente
+  → `em-formacao`, que jamais vira linha de Radar.
+
+`npm run forecast` grava `content/forecast.json` (schema em
+`content/forecast.schema.json`) com `routes`, `clusters` e fatias prontas para os
+digests (`digest.radarDaily`, `digest.radarWeekly`). O admin (`/admin`) e o
+weekly consomem o motor; o **daily** pode trazer um bloco `radar` opcional na
+edição.
+
+## Weekly digest (`content/weekly/AAAA-Wnn.json`)
+
+Produto semanal centrado no Radar. Se o JSON **não** trouxer `radar`, o render
+puxa `digest.radarWeekly` de `content/forecast.json`. Seções: tese da semana,
+Radar, movimentos do ledger (`movements` — abriram/seguem/encerraram),
+destaques, o que monitorar, fontes, disclaimer. Schema em
+`content/weekly.schema.json`; saída em `out/weekly*`. Mesmas regras invioláveis
+do daily (validadas por `scripts/render-weekly.mjs` e pelo gate global `qa`).
 
 ## Regras que o validador aplica (gate de publicação)
 

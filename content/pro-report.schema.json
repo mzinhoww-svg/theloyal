@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://theloyalty/pro-report.schema.json",
-  "title": "The Loyalty Pro — Relatório executivo do período",
+  "title": "The Loyal Pro — Relatório executivo do período",
   "description": "Material analítico B2B: benchmark, comparativo e indicador. Tom executivo. Sem dado interno, sem CMI, sem linguagem corporativa de empresa específica.",
   "type": "object",
   "additionalProperties": false,
@@ -61,7 +61,7 @@
         "properties": {
           "player": { "type": "string" },
           "move": { "type": "string", "description": "Movimento observado, descrito de forma neutra" },
-          "reading": { "type": "string", "description": "Leitura analítica do The Loyalty" },
+          "reading": { "type": "string", "description": "Leitura analítica do The Loyal" },
           "signal": { "type": "string", "enum": ["abertura", "aperto", "estável"] }
         }
       }
@@ -83,7 +83,8 @@
               "player": { "type": "string" },
               "x": { "type": "string", "description": "baixo | médio | alto" },
               "y": { "type": "string", "description": "baixa | média | alta" },
-              "quadrant": { "type": "string", "description": "Leitura do posicionamento" }
+              "quadrant": { "type": "string", "description": "Leitura do posicionamento" },
+              "vpmObservado": { "type": "string", "description": "VPM observado (R$/milheiro) do não-aéreo por catálogo público. Opcional; 'n/c' quando amostra insuficiente. Nunca CMI interno." }
             }
           }
         }

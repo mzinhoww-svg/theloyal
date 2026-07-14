@@ -5,8 +5,8 @@ import { SectionLabel } from "@/components/ui";
 import { listEditions } from "@/lib/editions";
 
 export const metadata: Metadata = {
-  title: "Arquivo — The Loyalty",
-  description: "Edições do The Loyalty Daily.",
+  title: "Arquivo — The Loyal",
+  description: "Edições do The Loyal Daily.",
 };
 
 export default function ArquivoPage() {
@@ -18,7 +18,7 @@ export default function ArquivoPage() {
         <div className="tl-container max-w-content">
           <SectionLabel>Arquivo</SectionLabel>
           <h1 className="font-display text-3xl font-semibold leading-tight md:text-4xl">
-            Edições do The Loyalty Daily
+            Edições do The Loyal Daily
           </h1>
           <ul className="mt-10 divide-y divide-line border-t border-line">
             {editions.map((e) => (

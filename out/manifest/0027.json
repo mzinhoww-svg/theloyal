@@ -3,14 +3,14 @@
   "date": "2026-07-07",
   "slug": "0027",
   "status": "APROVADA",
-  "generatedAt": "2026-07-09T04:16:11.770Z",
+  "generatedAt": "2026-07-14T11:31:09.462Z",
   "input": "content/editions/0027.json",
   "outputs": [
     {
       "type": "email",
       "path": "out/email/0027.html",
-      "bytes": 6657,
-      "sha256": "810fe1a70a0e59d895b9828bad22c66f4c3ce7e80bc3ce4794b7e6b54bb743d1"
+      "bytes": 6675,
+      "sha256": "38d9227004e15efcd74230632ffc7466b1bda73e1b032c5c5e66ec0edfb2017f"
     },
     {
       "type": "plain",
@@ -21,8 +21,8 @@
     {
       "type": "web",
       "path": "out/web/0027.html",
-      "bytes": 7126,
-      "sha256": "5b141fe83173bb2af13885230efde67620a72b916bcb636ee3d37d9f762eea65"
+      "bytes": 8132,
+      "sha256": "043d9dae99d7b857553b529cbc48d13823a7754a9e46edab288f431a06ee8484"
     },
     {
       "type": "qa",

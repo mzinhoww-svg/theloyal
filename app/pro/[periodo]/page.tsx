@@ -10,9 +10,9 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { periodo: string } }): Metadata {
   const r = getProReport(params.periodo);
-  if (!r) return { title: "Relatório não encontrado — The Loyalty Pro" };
+  if (!r) return { title: "Relatório não encontrado — The Loyal Pro" };
   return {
-    title: `The Loyalty Pro — ${r.period}`,
+    title: `The Loyal Pro — ${r.period}`,
     description: r.title,
   };
 }

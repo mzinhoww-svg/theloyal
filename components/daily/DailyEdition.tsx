@@ -27,8 +27,6 @@ export interface Edition {
 const VERDICT: Record<string, { label: string; cls: string }> = {
   "vale-agir": { label: "VALE AGIR", cls: "bg-green-100 text-green-700" },
   "vale-olhar": { label: "VALE OLHAR", cls: "bg-green-100 text-green-700" },
-  depende: { label: "DEPENDE", cls: "bg-yellow-500 text-ink" },
-  esperaria: { label: "ESPERARIA", cls: "bg-yellow-500 text-ink" },
   depende: { label: "DEPENDE", cls: "bg-yellow-100 text-ink" },
   esperaria: { label: "ESPERARIA", cls: "bg-yellow-100 text-ink" },
   "nao-vale": { label: "NAO VALE", cls: "bg-red-100 text-red-700" },
@@ -131,7 +129,7 @@ export function DailyEdition({ edition }: { edition: Edition }) {
       {edition.retail_coalition?.length ? <Section><Eyebrow>Retail &amp; Coalition</Eyebrow><Rows items={edition.retail_coalition} /></Section> : null}
 
       {edition.loyalty_lab && (
-        <Section><Eyebrow>Loyalty Lab</Eyebrow>
+        <Section><Eyebrow>Loyal Lab</Eyebrow>
           <h3 className="mt-2 font-display text-lg font-semibold text-ink">{edition.loyalty_lab.titulo}</h3>
           <p className="mt-1 leading-relaxed text-gray-500">{edition.loyalty_lab.texto}</p>
         </Section>

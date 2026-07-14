@@ -3,32 +3,32 @@
   "date": "2026-07-08",
   "slug": "0028",
   "status": "APROVADA",
-  "generatedAt": "2026-07-09T04:16:11.775Z",
+  "generatedAt": "2026-07-14T11:31:09.470Z",
   "input": "content/editions/0028.json",
   "outputs": [
     {
       "type": "email",
       "path": "out/email/0028.html",
-      "bytes": 9489,
-      "sha256": "6a84179fac7e73f164a00f1b8d7c3035f51dc25061559e4e781cb2d6c127d59e"
+      "bytes": 13942,
+      "sha256": "b2c29791327c7c04a0997fffc7b899a326e45d8335c92481dc83f811d1a20340"
     },
     {
       "type": "plain",
       "path": "out/plain/0028.txt",
-      "bytes": 2058,
-      "sha256": "96ddb3f441ed1cc5427ee3776934ce536ec4321a94210e9fd53c963c122d58fb"
+      "bytes": 2693,
+      "sha256": "dce5c97006f66a4cff9da50d8199524ea487d06dee27de410c7bd48ad56a7c35"
     },
     {
       "type": "web",
       "path": "out/web/0028.html",
-      "bytes": 8563,
-      "sha256": "2adba401f973bc3d5c4cc971e70c69ad61ea5a55d1522b86484d8adbe3f0fa1b"
+      "bytes": 11449,
+      "sha256": "ab409782092f341c007753eba7b95b551e9fff20c5e004fbd820ae9acbcea75a"
     },
     {
       "type": "qa",
       "path": "out/qa/0028.md",
-      "bytes": 1671,
-      "sha256": "353a19c338aa6f250ae52251acf638ae285dd1fb84b931ce56fe11faafbf4b83"
+      "bytes": 1806,
+      "sha256": "461011ed231e8abef5c9cb8bd66d099682156fce1a548df093a37c338c8cd21a"
     }
   ],
   "qa": {
@@ -36,7 +36,7 @@
     "editorial": {
       "errors": [],
       "warnings": [],
-      "okCount": 10
+      "okCount": 12
     },
     "artifacts": {
       "email": [

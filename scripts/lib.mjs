@@ -1,4 +1,4 @@
-// Pipeline editorial do The Loyalty — utilidades compartilhadas.
+// Pipeline editorial do The Loyal — utilidades compartilhadas.
 // Os renderizadores (email/plain) sao gerados por script e usam os hex
 // documentados como tokens: mesma excecao permitida ao mascote/graficos.
 import { readFileSync, readdirSync } from "node:fs";
@@ -21,6 +21,17 @@ export const VERDICTS = {
   evitaria: { label: "EVITARIA", min: 0, max: 39, bg: TOKENS.red600, fg: TOKENS.surface },
   "nao-confirmado": { label: "NÃO CONFIRMADO", min: null, max: null, bg: TOKENS.paperDark, fg: TOKENS.g500 },
 };
+
+// Pílulas de confiança do Radar de janelas. Fill + texto escuro (nunca verde-500
+// nem amarelo como texto). Espelha o padrão dos badges de veredito.
+export const CONFIDENCE = {
+  alta: { label: "CONFIANÇA ALTA", bg: TOKENS.green100, fg: TOKENS.green700 },
+  media: { label: "CONFIANÇA MÉDIA", bg: TOKENS.blue100, fg: TOKENS.blue700 },
+  baixa: { label: "CONFIANÇA BAIXA", bg: TOKENS.paperDark, fg: TOKENS.g500 },
+};
+
+export const RADAR_NOTE_DEFAULT =
+  "Projeção por recorrência do histórico do ledger. Não é veredito nem garantia — confira sempre as regras oficiais.";
 
 export function verdictForScore(score) {
   for (const [key, v] of Object.entries(VERDICTS)) {

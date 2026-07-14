@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import type { Verdict } from "@/components/ui";
 
-// The Loyalty Pro — relatório executivo (espelha content/pro-report.schema.json).
+// The Loyal Pro — relatório executivo (espelha content/pro-report.schema.json).
 export type Benchmark = {
   category: string;
   metric: string;
@@ -18,7 +18,7 @@ export type Player = {
   reading: string;
   signal: "abertura" | "aperto" | "estável";
 };
-export type MatrixRow = { player: string; x: string; y: string; quadrant: string };
+export type MatrixRow = { player: string; x: string; y: string; quadrant: string; vpmObservado?: string };
 export type Alert = { level: "insight" | "warning" | "danger"; text: string };
 export type Source = { label: string; url: string };
 
