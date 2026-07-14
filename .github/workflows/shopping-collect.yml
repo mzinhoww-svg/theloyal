@@ -1,0 +1,45 @@
+name: Shopping VPM collect (headless)
+
+# Coleta do Radar de VPM com navegador headless (Playwright). Roda no Actions
+# porque os marketplaces de resgate renderizam preço/pontos via JS (ver prova
+# técnica). Distribui a carga em 2 janelas/dia; disparo manual via /admin.
+on:
+  schedule:
+    - cron: "0 11 * * *" # ~08:00 BRT
+    - cron: "0 23 * * *" # ~20:00 BRT
+  workflow_dispatch:
+    inputs:
+      mock:
+        description: "Rodar em modo mock (sem navegador, sem escrita)"
+        type: string
+        default: "false"
+
+concurrency:
+  group: shopping-collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install Playwright (transient — não é dep do app)
+        if: ${{ inputs.mock != 'true' }}
+        run: |
+          npm i -D playwright@1.47.0
+          npx playwright install --with-deps chromium
+      - name: Collect
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          COLLECT_TRIGGER: ${{ github.event_name == 'workflow_dispatch' && 'manual' || 'scheduled' }}
+        run: |
+          if [ "${{ inputs.mock }}" = "true" ]; then
+            node scripts/shopping/collect.mjs --mock
+          else
+            node scripts/shopping/collect.mjs
+          fi

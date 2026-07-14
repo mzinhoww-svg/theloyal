@@ -11,6 +11,7 @@ const LINKS: { href: string; label: string }[] = [
   { href: "/admin/logs", label: "Logs" },
   { href: "/admin/forecast", label: "Forecast" },
   { href: "/admin/predict", label: "Predict" },
+  { href: "/admin/shopping-vpm", label: "Radar VPM" },
   { href: "/admin/observability", label: "Observabilidade" },
 ];
 
