@@ -11,8 +11,13 @@ npm run validate    # QA de cada edição → out/qa/NNNN.md (bloqueia em erro)
 npm run render      # gera out/email/NNNN.html e out/plain/NNNN.txt
 npm run publish     # valida + escreve content/latest.json e content/index.json
 npm run edition     # validate → render → publish
+npm run forecast    # gera content/forecast.json a partir do ledger (Supabase)
+npm run weekly      # valida + renderiza o weekly digest (e-mail/plain/web)
 npm run beehiiv     # publica no Beehiiv o conteúdo já renderizado (draft por padrão)
 ```
+
+O `forecast` **não envia nada** — só gera o artefato de previsão. Sem rede/
+credenciais opera em modo offline (preserva o `forecast.json` atual).
 
 O `publish` **não envia e-mail** — apenas escreve os índices locais. O envio ao
 Beehiiv é o passo `beehiiv`, e por padrão cria só um **rascunho**.
@@ -96,6 +101,7 @@ email_settings.preview_text`, `slug → web_settings.slug` (default
 | `signal` | sim | O sinal do dia |
 | `deals[]` | sim | Deal Desk (ver abaixo) |
 | `fechaLogo[]` | não | itens que vencem em ≤72h |
+| `radar` | não | Radar de janelas: `{ note?, windows: [{ label, confidence, window, basis?, bonus? }] }` (projeção, nunca veredito) |
 | `sources[]` | sim | `{ label, url }` — URL http obrigatória |
 | `disclaimer` | sim | frase oficial completa |
 | `illustrative` | não | marca a edição como exemplo |
@@ -104,6 +110,37 @@ email_settings.preview_text`, `slug → web_settings.slug` (default
 `category`, `title`, `context`, `conta { rows: [chave, valor][], result: [chave, valor] }`,
 `verdict`, `verdictNote`, `source`, `sourceUrl`, `vigencia` (ISO), `tlScore`,
 `scoreBreakdown?` (os 8 critérios do Operating Manual 5.2).
+
+## Camada de previsão (Radar de janelas)
+
+O motor é `lib/predictions.ts` (fonte da verdade, TS) com espelho ESM em
+`scripts/predictions.mjs` (usado pelo pipeline de render sem build). Ele prevê a
+**próxima janela** de cada transferência por recorrência do histórico do ledger,
+aproveitando o backfill:
+
+- usa a **data real** da janela (`vigencia_inicio` → data no `id` →
+  `vigencia_fim`), nunca `observed_at`/`first_seen` (artefatos de ingestão);
+- normaliza programas e produz duas visões: **por rota** (origem→destino) e
+  **por programa** (cluster do destino, consolidando campanhas program-wide);
+- colapsa "ondas" quase simultâneas antes de medir cadência;
+- confiança calibrada por **regularidade** (coef. de variação), não só contagem;
+- é **projeção estatística, nunca veredito nem garantia** — sem base suficiente
+  → `em-formacao`, que jamais vira linha de Radar.
+
+`npm run forecast` grava `content/forecast.json` (schema em
+`content/forecast.schema.json`) com `routes`, `clusters` e fatias prontas para os
+digests (`digest.radarDaily`, `digest.radarWeekly`). O admin (`/admin`) e o
+weekly consomem o motor; o **daily** pode trazer um bloco `radar` opcional na
+edição.
+
+## Weekly digest (`content/weekly/AAAA-Wnn.json`)
+
+Produto semanal centrado no Radar. Se o JSON **não** trouxer `radar`, o render
+puxa `digest.radarWeekly` de `content/forecast.json`. Seções: tese da semana,
+Radar, movimentos do ledger (`movements` — abriram/seguem/encerraram),
+destaques, o que monitorar, fontes, disclaimer. Schema em
+`content/weekly.schema.json`; saída em `out/weekly*`. Mesmas regras invioláveis
+do daily (validadas por `scripts/render-weekly.mjs` e pelo gate global `qa`).
 
 ## Regras que o validador aplica (gate de publicação)
 

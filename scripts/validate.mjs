@@ -118,6 +118,25 @@ export function validateEdition(ed) {
   });
   if (sources.every((s) => /^https?:\/\//.test(s.url ?? "")) && sources.length) pass("Todas as fontes têm URL válida");
 
+  // Radar de janelas (quando presente): projeção, nunca veredito. Estrutura e
+  // confiança dentro do vocabulário. Nunca pode conter "em-formacao" (regra 9:
+  // sem base não vira linha de radar).
+  if (ed.radar !== undefined) {
+    const windows = Array.isArray(ed.radar.windows) ? ed.radar.windows : null;
+    if (!windows || !windows.length) err("Radar presente mas sem janelas (windows vazio)");
+    else {
+      windows.forEach((w, i) => {
+        const tag = `Radar ${i + 1} (${w.label ?? "sem rótulo"})`;
+        if (!w.label) err(`${tag}: sem rótulo (label)`);
+        if (!w.window) err(`${tag}: sem janela prevista (window)`);
+        if (!["alta", "media", "baixa"].includes(w.confidence))
+          err(`${tag}: confiança "${w.confidence}" fora de alta|media|baixa (em-formacao nunca vira radar)`);
+      });
+      if (windows.every((w) => w.label && w.window && ["alta", "media", "baixa"].includes(w.confidence)))
+        pass(`Radar de janelas coerente (${windows.length} projeção(ões), sem veredito)`);
+    }
+  }
+
   // Vigência dos itens "Fecha logo" (quando presente): não pode estar vencida.
   (Array.isArray(ed.fechaLogo) ? ed.fechaLogo : []).forEach((f, i) => {
     if (f.vigencia && ed.date && isExpired(f.vigencia, ed.date)) {

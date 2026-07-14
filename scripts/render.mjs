@@ -2,7 +2,7 @@
 // Arial/Consolas, zero request externo) e versão em texto puro.
 // Uso: node scripts/render.mjs [caminho-da-edicao.json]
 import { mkdirSync, writeFileSync } from "node:fs";
-import { TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
+import { CONFIDENCE, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -72,6 +72,24 @@ export function renderEmail(ed) {
         ${shopping.map((s) => `<tr style="border-top:1px solid ${TOKENS.line}"><td style="padding:8px 12px;color:${TOKENS.ink}">${esc(s.player)}</td><td style="padding:8px 12px;color:${TOKENS.g500}">${esc(s.category)}</td><td align="right" style="padding:8px 12px;color:${TOKENS.ink}">${esc(s.vpmObservado)}</td></tr>`).join("")}
       </table>
       <div style="font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400};margin-top:6px">Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com outliers e promo fora da banda; n/c quando a amostra é insuficiente.</div>`
+  const radarHtml = ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
+    ? label("Radar de janelas") +
+      `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(ed.radar.note ?? RADAR_NOTE_DEFAULT)}</div>` +
+      ed.radar.windows
+        .map((w) => {
+          const c = CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa;
+          const bonus = w.bonus ? ` <span style="font-family:${MONO};font-size:13px;color:${TOKENS.g500}">${esc(w.bonus)}</span>` : "";
+          const basis = w.basis ? `<div style="font-family:${SANS};font-size:12px;color:${TOKENS.g400};margin-top:2px">${esc(w.basis)}</div>` : "";
+          return `<div style="border-top:1px solid ${TOKENS.line};padding:10px 0">
+            <div style="display:flex;justify-content:space-between;gap:12px">
+              <span style="font-family:${SANS};font-size:15px;font-weight:bold;color:${TOKENS.ink}">${esc(w.label)}${bonus}</span>
+              <span style="font-family:${MONO};font-size:14px;color:${TOKENS.ink};white-space:nowrap">${esc(w.window)}</span>
+            </div>
+            <div style="margin-top:6px"><span style="display:inline-block;background:${c.bg};color:${c.fg};border-radius:9999px;padding:2px 10px;font-family:${SANS};font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em">${esc(c.label)}</span></div>
+            ${basis}
+          </div>`;
+        })
+        .join("")
     : "";
 
   const sourcesHtml = ed.sources
@@ -100,6 +118,7 @@ export function renderEmail(ed) {
           ${dealsHtml}
           ${fechaHtml ? label("Fecha logo") + fechaHtml : ""}
           ${shoppingHtml}
+          ${radarHtml}
           ${label("Fontes")}
           <div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.7">${sourcesHtml}</div>
           <div style="border-top:1px solid ${TOKENS.line};margin-top:24px;padding-top:16px;font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400}">
@@ -140,6 +159,14 @@ export function renderPlain(ed) {
   if ((ed.shoppingWatch ?? []).length) {
     L.push("SHOPPING · VPM OBSERVADO (R$/milheiro, catálogo público)");
     for (const s of ed.shoppingWatch) L.push(`  ${s.player} · ${s.category}: ${s.vpmObservado}`);
+  if (ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length) {
+    L.push("RADAR DE JANELAS");
+    L.push(ed.radar.note ?? RADAR_NOTE_DEFAULT, "");
+    for (const w of ed.radar.windows) {
+      const c = (CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa).label;
+      L.push(`  ${w.label}${w.bonus ? " " + w.bonus : ""}  —  ${w.window}  [${c}]`);
+      if (w.basis) L.push(`    ${w.basis}`);
+    }
     L.push("");
   }
   L.push("FONTES");

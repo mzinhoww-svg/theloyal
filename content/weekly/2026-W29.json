@@ -1,0 +1,41 @@
+{
+  "number": 29,
+  "period": "Semana de 13 a 19 de julho de 2026",
+  "dateStart": "2026-07-13",
+  "dateEnd": "2026-07-19",
+  "publishTime": "9H00",
+  "readingMinutes": 6,
+  "illustrative": true,
+  "subject": "O radar da semana: Latam Pass concentra a recorrência",
+  "preheader": "Onde a recorrência do histórico aponta a próxima janela — e o que ela não garante.",
+  "slug": "weekly-2026-w29",
+  "signal": "A recorrência do histórico segue concentrada nas transferências para Latam Pass, mas com cadência irregular: o intervalo entre janelas varia demais para tratar a projeção como agenda. Serve para preparar a conta, não para decidir por ela.",
+  "movements": {
+    "novas": [
+      "Amex MR → LifeMiles com bônus na faixa de 15% entrou no ledger.",
+      "Transferência para Azul reaparece após meses — histórico ainda esparso."
+    ],
+    "seguem": [
+      "Bônus para Latam Pass ativos em mais de uma origem na mesma janela."
+    ],
+    "venceram": [
+      "Compra de pontos de origem com desconto encerrou no fim de semana."
+    ]
+  },
+  "highlights": [
+    {
+      "title": "Latam Pass domina o radar, mas a cadência não é agenda",
+      "note": "Cinco janelas no histórico consolidado, intervalo mediano de ~21 dias e desvio alto. A projeção aponta uma abertura provável, sem confirmar data — a régua continua sendo a conta no dia."
+    }
+  ],
+  "watch": [
+    "Publicação de regulamento das próximas transferências para Latam Pass.",
+    "Se a janela para Smiles volta ao ritmo mensal ou segue esparsa.",
+    "Prazo de crédito das origens após o último aperto de mecânica."
+  ],
+  "sources": [
+    { "label": "Ledger interno do The Loyal — histórico de transferências (exemplo)", "url": "https://www.latampass.latam.com" },
+    { "label": "Regulamentos oficiais dos programas citados (exemplo)", "url": "https://www.smiles.com.br" }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."
+}

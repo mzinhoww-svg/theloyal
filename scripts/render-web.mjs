@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
+import { CONFIDENCE, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
 
 // ---------- Componentes React (mesmos blocos canônicos da marca) ----------
 
@@ -167,6 +167,35 @@ function Article({ ed }) {
             "p",
             { className: "tl-shop-note" },
             "Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com outliers e promo fora da banda; n/c quando a amostra é insuficiente.",
+    ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
+      ? h(
+          "section",
+          null,
+          h("span", { className: "tl-label" }, "Radar de janelas"),
+          h("p", { className: "tl-radar-note" }, ed.radar.note ?? RADAR_NOTE_DEFAULT),
+          h(
+            "ul",
+            { className: "tl-radar" },
+            ed.radar.windows.map((w, i) => {
+              const c = CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa;
+              return h(
+                "li",
+                { key: i, className: "tl-radar-item" },
+                h(
+                  "div",
+                  { className: "tl-radar-head" },
+                  h(
+                    "span",
+                    { className: "tl-radar-label" },
+                    w.label,
+                    w.bonus ? h("span", { className: "mono tl-radar-bonus" }, ` ${w.bonus}`) : null,
+                  ),
+                  h("span", { className: "mono tl-radar-window" }, w.window),
+                ),
+                h("span", { className: "tl-conf", style: { background: c.bg, color: c.fg } }, c.label),
+                w.basis ? h("div", { className: "tl-radar-basis" }, w.basis) : null,
+              );
+            }),
           ),
         )
       : null,
@@ -248,6 +277,16 @@ a:hover{color:var(--blue700)}
 .tl-fecha{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
 .tl-fecha-tag{display:inline-block;background:var(--yellow500);color:var(--ink);
   border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600}
+.tl-radar-note{margin:0 0 12px;font-size:13px;color:var(--g500)}
+.tl-radar{list-style:none;padding:0;margin:0}
+.tl-radar-item{border-top:1px solid var(--line);padding:12px 0}
+.tl-radar-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.tl-radar-label{font-weight:600}
+.tl-radar-bonus{font-size:13px;color:var(--g500)}
+.tl-radar-window{font-size:14px;white-space:nowrap}
+.tl-conf{display:inline-block;margin-top:6px;border-radius:9999px;padding:2px 10px;
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+.tl-radar-basis{margin-top:6px;font-size:12px;color:var(--g400)}
 .tl-sources{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;
   gap:4px 16px;font-size:14px}
 .tl-shop{width:100%;border-collapse:collapse;border:1px solid var(--line);
