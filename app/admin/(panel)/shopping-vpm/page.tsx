@@ -34,6 +34,10 @@ export default async function ShoppingVpmPage() {
               <input type="hidden" name="mock" value="0" />
               <SubmitButton variant="primary" pendingLabel="Disparando…">Coletar agora</SubmitButton>
             </ActionForm>
+            <ActionForm action={collectShoppingAction}>
+              <input type="hidden" name="diagnose" value="1" />
+              <SubmitButton variant="default" pendingLabel="Disparando…">Diagnóstico</SubmitButton>
+            </ActionForm>
           </>
         }
       />

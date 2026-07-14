@@ -6,13 +6,16 @@
 //   node scripts/shopping/collect.mjs [--mock] [--limit N]
 // Roda no GitHub Actions (não em serverless): Playwright precisa de navegador.
 // Sem SUPABASE_SERVICE_KEY → não persiste (modo mock/dry).
-import { ADAPTERS, ADAPTER_VERSION } from "./adapters.mjs";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { ADAPTERS, ADAPTER_VERSION, diagnose } from "./adapters.mjs";
 
 const SB_URL = (process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co").replace(/\/+$/, "");
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null;
 const args = process.argv.slice(2);
-const MOCK = args.includes("--mock") || !SB_KEY;
+const DIAGNOSE = args.includes("--diagnose");
+const MOCK = !DIAGNOSE && (args.includes("--mock") || !SB_KEY);
 const LIMIT = (() => { const i = args.indexOf("--limit"); return i >= 0 ? Number(args[i + 1]) : 40; })();
+const OUT_DIR = (() => { const i = args.indexOf("--out"); return i >= 0 ? args[i + 1] : "diagnostics"; })();
 const MAX_ATTEMPTS = 3;
 
 async function sb(path, { method = "GET", body, prefer } = {}) {
@@ -44,7 +47,68 @@ async function collectOne(browser, source) {
   }
 }
 
+// Fontes de PRODUTO ativas (catálogo aprovado é a fonte de verdade).
+async function fetchSources() {
+  const res = await fetch(
+    `${SB_URL}/rest/v1/shopping_product_sources?select=id,program_code,product_url,product_id,shopping_products!inner(status,approved)&source_url_type=eq.product&source_status=in.(active,pending_validation)&shopping_products.status=eq.active&limit=${LIMIT}`,
+    { headers: { apikey: SB_KEY, authorization: `Bearer ${SB_KEY}` } },
+  );
+  if (!res.ok) throw new Error(`fontes → ${res.status} ${(await res.text()).slice(0, 160)}`);
+  return res.json();
+}
+
+// Modo diagnóstico: renderiza cada fonte, salva HTML + screenshot + candidatos
+// de preço/pontos em OUT_DIR e um report.json. Não toca no banco — só evidência
+// para afinar os seletores por portal. Precisa da service key só para LER as
+// fontes; nenhuma observação/queue/run é criada.
+async function runDiagnose() {
+  if (!SB_KEY) {
+    console.error("[diagnose] SUPABASE_SERVICE_KEY ausente — necessária para ler as fontes.");
+    process.exit(1);
+  }
+  mkdirSync(OUT_DIR, { recursive: true });
+  const sources = await fetchSources();
+  console.log(`[diagnose] ${sources.length} fontes · saída em ${OUT_DIR}/`);
+
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+  const report = [];
+
+  for (const s of sources) {
+    const slug = `${s.program_code}__${String(s.id).slice(0, 8)}`;
+    const ctx = await browser.newContext({
+      locale: "pt-BR",
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+    });
+    const page = await ctx.newPage();
+    const entry = { source_id: s.id, program_code: s.program_code, url: s.product_url, slug };
+    try {
+      await page.goto(s.product_url, { waitUntil: "domcontentloaded", timeout: 45000 });
+      await page.waitForTimeout(5000);
+      const d = await diagnose(page, s.program_code);
+      writeFileSync(`${OUT_DIR}/${slug}.html`, await page.content());
+      await page.screenshot({ path: `${OUT_DIR}/${slug}.png`, fullPage: true }).catch(() => {});
+      Object.assign(entry, d);
+      const ext = d.extraction || {};
+      console.log(`[diagnose] ${slug} · preço=${ext.reference_price ?? "—"} pts=${ext.standard_points ?? "—"} · cand.preço=${d.debug?.priceCandidates?.length ?? 0} cand.pts=${d.debug?.pointsCandidates?.length ?? 0}`);
+    } catch (e) {
+      entry.error = e instanceof Error ? e.message : String(e);
+      console.error(`[diagnose] falha ${slug}: ${entry.error}`);
+    } finally {
+      await ctx.close();
+    }
+    report.push(entry);
+  }
+  await browser.close();
+  writeFileSync(`${OUT_DIR}/report.json`, JSON.stringify({ generatedAt: new Date().toISOString(), sources: report.length, report }, null, 2) + "\n");
+  const withPrice = report.filter((r) => r.extraction?.reference_price != null).length;
+  const withPts = report.filter((r) => r.extraction?.standard_points != null).length;
+  console.log(`[diagnose] OK — ${report.length} fontes · ${withPrice} c/ preço · ${withPts} c/ pontos · report em ${OUT_DIR}/report.json`);
+}
+
 async function main() {
+  if (DIAGNOSE) return runDiagnose();
+
   const startedAt = new Date().toISOString();
   console.log(`[collect] modo=${MOCK ? "mock/dry" : "live"} limit=${LIMIT}`);
 
@@ -61,13 +125,7 @@ async function main() {
   });
 
   // 2. fontes de PRODUTO ativas (catálogo aprovado é a fonte de verdade)
-  const sources = await (async () => {
-    const res = await fetch(
-      `${SB_URL}/rest/v1/shopping_product_sources?select=id,program_code,product_url,product_id,shopping_products!inner(status,approved)&source_url_type=eq.product&source_status=in.(active,pending_validation)&shopping_products.status=eq.active&limit=${LIMIT}`,
-      { headers: { apikey: SB_KEY, authorization: `Bearer ${SB_KEY}` } },
-    );
-    return res.json();
-  })();
+  const sources = await fetchSources();
   console.log(`[collect] ${sources.length} fontes de produto selecionadas`);
 
   for (const s of sources) await sb("shopping_collection_queue", { method: "POST", prefer: "return=minimal,resolution=merge-duplicates", body: { run_id: run.id, source_id: s.id, status: "pending" } }).catch(() => {});

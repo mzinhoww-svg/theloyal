@@ -73,3 +73,56 @@ export const ADAPTERS = {
 };
 
 export const ADAPTER_VERSION = "headless_v1";
+
+// Coleta de diagnóstico: além do resultado do adapter, devolve os "candidatos"
+// que a página renderizada expõe, para afinar os seletores por portal. Não
+// escreve nada — só evidência (o coletor salva HTML + screenshot ao lado).
+export async function diagnose(page, program) {
+  const extraction = await extractGeneric(page, program).catch((e) => ({
+    error: e instanceof Error ? e.message : String(e),
+  }));
+
+  const jsonLd = await page
+    .$$eval('script[type="application/ld+json"]', (els) =>
+      els.map((e) => (e.textContent || "").slice(0, 2000)),
+    )
+    .catch(() => []);
+
+  const meta = await page
+    .evaluate(() => {
+      const pick = (sel, attr) => {
+        const el = document.querySelector(sel);
+        return el ? el.getAttribute(attr) || el.textContent : null;
+      };
+      return {
+        ogPriceAmount: pick('meta[property="product:price:amount"]', "content"),
+        itempropPriceMeta: pick('meta[itemprop="price"]', "content"),
+        itempropPriceEl: pick('[itemprop="price"]', "content"),
+        dataPrice: pick("[data-price]", "data-price"),
+      };
+    })
+    .catch(() => ({}));
+
+  const body = await page.evaluate(() => document.body.innerText).catch(() => "");
+  const uniq = (arr, n) => [...new Set(arr)].slice(0, n);
+  const priceCandidates = uniq(
+    (body.match(/R\$\s*[\d.]{1,3}(?:[.,]\d{2,3})*/g) || []).map((s) => s.trim()),
+    20,
+  );
+  const pointsCandidates = uniq(
+    (body.match(/[\d.]{3,}\s*(?:pontos|milhas)/gi) || []).map((s) => s.trim()),
+    20,
+  );
+
+  return {
+    extraction,
+    debug: {
+      jsonLdCount: jsonLd.length,
+      jsonLd,
+      meta,
+      priceCandidates,
+      pointsCandidates,
+      bodyChars: body.length,
+    },
+  };
+}
