@@ -25,7 +25,7 @@ begin
   select distinct on (o.product_id, o.program_code)
     o.product_id, o.program_code, o.captured_at, m.vpm_standard, m.vpm_elite, m.is_comparable
   from public.shopping_observations o join public.shopping_metrics m on m.observation_id=o.id
-  order by o.product_id, o.program_code, o.captured_at desc;
+  order by o.product_id, o.program_code, m.is_comparable desc, o.captured_at desc;
 
   delete from public.shopping_sku_comparisons where reference_date = p_ref_date;
   insert into public.shopping_sku_comparisons (product_id, reference_date, comparison_window_start, comparison_window_end, programs_available, valid_observations, best_standard_program, best_standard_vpm, best_elite_program, best_elite_vpm, comparison_status, quality_status, details)
