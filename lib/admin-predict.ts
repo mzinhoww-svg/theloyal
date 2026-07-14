@@ -69,6 +69,23 @@ export type OverrideRow = {
 export const getOverrides = () =>
   rest<OverrideRow>("forecast_overrides?select=*&order=created_at.desc");
 
+// ---- Snapshots (forecast_snapshots) ----
+
+export type SnapshotRow = {
+  id: string;
+  generated_for: string;
+  routes_tracked: number | null;
+  clusters_tracked: number | null;
+  with_prediction: number | null;
+  created_at: string | null;
+  created_by: string | null;
+};
+
+export const getSnapshots = (limit = 20) =>
+  rest<SnapshotRow>(
+    `forecast_snapshots?select=id,generated_for,routes_tracked,clusters_tracked,with_prediction,created_at,created_by&order=created_at.desc&limit=${limit}`,
+  );
+
 // ---- View model com overrides aplicados ----
 
 export type PredictView = Forecast & {
@@ -115,6 +132,7 @@ export type PredictData = {
   distributionClusters: Distribution;
   radarDaily: RadarItem[];
   radarWeekly: RadarItem[];
+  snapshots: SnapshotRow[];
   ledgerRows: number;
   generatedFor: string;
 };
@@ -132,9 +150,10 @@ function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): Predict
 
 // Carrega tudo para a página. `now` injetável para testes determinísticos.
 export async function loadPredict(now?: string): Promise<PredictData> {
-  const [{ config, row }, overrides, campaigns] = await Promise.all([
+  const [{ config, row }, overrides, snapshots, campaigns] = await Promise.all([
     getConfig(),
     getOverrides(),
+    getSnapshots(),
     rest<CampaignRow>(
       "campaigns?select=id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim&limit=2000",
     ),
@@ -172,6 +191,7 @@ export async function loadPredict(now?: string): Promise<PredictData> {
     distributionClusters: distribution(clusters),
     radarDaily: radarItems(daily),
     radarWeekly: radarItems(weekly),
+    snapshots,
     ledgerRows: campaigns.length,
     generatedFor: result.generatedFor,
   };
