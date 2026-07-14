@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://theloyalty/forecast.schema.json",
+  "title": "The Loyal — Artefato de previsão de janelas",
+  "description": "Saída de scripts/forecast.mjs (motor lib/predictions.ts). Projeção estatística por recorrência do ledger — nunca veredito nem garantia. Alimenta o Radar do daily e o weekly digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["generatedFor", "source", "routesTracked", "clustersTracked", "withPrediction", "clusters", "routes", "digest"],
+  "properties": {
+    "generatedAt": { "type": ["string", "null"], "description": "Timestamp de geração (ISO) ou null em modo offline." },
+    "generatedFor": { "type": "string", "format": "date", "description": "Data de referência (now) usada na previsão." },
+    "source": { "type": "string", "enum": ["supabase", "offline"] },
+    "ledgerRows": { "type": "integer", "minimum": 0, "description": "Nº de linhas do ledger consideradas." },
+    "routesTracked": { "type": "integer", "minimum": 0 },
+    "clustersTracked": { "type": "integer", "minimum": 0 },
+    "withPrediction": { "type": "integer", "minimum": 0, "description": "Séries (rotas + programas) com base suficiente para prever." },
+    "clusters": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Previsão por programa (destino)." },
+    "routes": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Previsão por rota origem→destino." },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["daily", "weekly"],
+      "properties": {
+        "daily": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Janelas no horizonte curto (media+), prontas para o daily." },
+        "weekly": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Janelas no horizonte da semana (baixa+), prontas para o weekly." }
+      }
+    }
+  },
+  "$defs": {
+    "forecast": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "route", "destino", "confidence", "samples"],
+      "properties": {
+        "scope": { "type": "string", "enum": ["route", "cluster"] },
+        "route": { "type": "string", "description": "\"origem→destino\" (route) ou \"→destino\" (cluster)." },
+        "origem": { "type": ["string", "null"] },
+        "destino": { "type": "string" },
+        "confidence": { "type": "string", "enum": ["alta", "media", "baixa", "em-formacao"] },
+        "windowStart": { "type": ["string", "null"], "description": "Início da janela prevista (ISO date). null em em-formacao." },
+        "windowEnd": { "type": ["string", "null"] },
+        "samples": { "type": "integer", "minimum": 0, "description": "Janelas (ondas) históricas distintas." },
+        "medianDays": { "type": ["integer", "null"] },
+        "meanDays": { "type": ["integer", "null"] },
+        "stdevDays": { "type": ["integer", "null"] },
+        "lastWindow": { "type": ["string", "null"] },
+        "cadence": { "type": ["string", "null"], "enum": ["mensal", "irregular", "esparsa", null] },
+        "typicalPercent": { "type": ["number", "null"], "description": "Bônus típico (mediana dos %)." },
+        "basis": { "type": "string", "description": "Explicação textual da base (pt-BR)." }
+      }
+    }
+  }
+}
