@@ -39,7 +39,7 @@ export default async function DashboardPage() {
   const runList = runs ?? [];
   const last = pipeline[0];
 
-  const newsErro = news.filter((n) => n.error).length;
+  const newsErro = m?.news_erro ?? news.filter((n) => n.error).length;
   const newsPendentes =
     m?.news_pendentes ?? news.filter((n) => !n.processed && !n.error).length;
   const venceHoje = campaigns.filter((c) => c.status === "vence-hoje").length;

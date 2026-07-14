@@ -126,6 +126,8 @@ export async function del(table: string, filter: string): Promise<void> {
 export type Metrics = {
   news_hoje: number;
   news_total: number;
+  news_processadas: number;
+  news_erro: number;
   news_pendentes: number;
   campanhas_total: number;
   campanhas_ativas: number;
