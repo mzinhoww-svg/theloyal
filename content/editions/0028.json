@@ -65,6 +65,25 @@
       "vigencia": "2026-07-11T23:59:00-03:00"
     }
   ],
+  "radar": {
+    "note": "Projeção por recorrência do histórico do ledger. Não é veredito nem garantia — confira sempre as regras oficiais. Números ilustrativos.",
+    "windows": [
+      {
+        "label": "Latam Pass",
+        "confidence": "baixa",
+        "window": "17 jul a 10 ago",
+        "basis": "5 janelas · cadência irregular ~21 dias · última 08/07",
+        "bonus": "~23%"
+      },
+      {
+        "label": "Itaú → Latam Pass",
+        "confidence": "baixa",
+        "window": "23 jul a 16 ago",
+        "basis": "4 janelas · cadência irregular ~34 dias · última 01/07",
+        "bonus": "~23%"
+      }
+    ]
+  },
   "sources": [
     { "label": "Regulamento oficial Latam Pass (exemplo)", "url": "https://www.latampass.latam.com" },
     { "label": "Portal Esfera (exemplo)", "url": "https://www.esfera.com.vc" }

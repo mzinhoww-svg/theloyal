@@ -1,3 +1,5 @@
+import { buildForecast, type Forecast } from "@/lib/predictions";
+
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = "https://qjqnqcsdnpvvmyzkavoq.supabase.co";
@@ -38,42 +40,9 @@ function pill(t: unknown, bg: string): string {
   return `<span style="display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;background:${bg};color:${fg}">${esc(t)}</span>`;
 }
 
-function daysBetween(a: string, b: string): number {
-  return Math.round((+new Date(b) - +new Date(a)) / 86400000);
-}
-function addDays(d: string, n: number): string {
-  const x = new Date(d);
-  x.setDate(x.getDate() + n);
-  return x.toISOString().slice(0, 10);
-}
-
-function forecastRows(campaigns: any[]): { rota: string; conf: string; prediction: string; basis: string }[] {
-  const g = new Map<string, string[]>();
-  for (const r of campaigns) {
-    if (r.tipo !== "transferencia") continue;
-    const key = `${r.origem}→${r.destino}`;
-    const d = r.vigencia_inicio || r.observed_at;
-    if (!d) continue;
-    const arr = g.get(key) || [];
-    arr.push(String(d).slice(0, 10));
-    g.set(key, arr);
-  }
-  const out: { rota: string; conf: string; prediction: string; basis: string }[] = [];
-  for (const [rota, ds] of Array.from(g.entries())) {
-    const dates = Array.from(new Set(ds)).sort();
-    if (dates.length < 3) {
-      out.push({ rota, conf: "em-formacao", prediction: "histórico insuficiente", basis: `${dates.length} janela(s)` });
-      continue;
-    }
-    const iv: number[] = [];
-    for (let i = 1; i < dates.length; i++) iv.push(daysBetween(dates[i - 1], dates[i]));
-    const avg = Math.round(iv.reduce((a, b) => a + b, 0) / iv.length);
-    const last = dates[dates.length - 1];
-    const next = addDays(last, avg);
-    const conf = dates.length >= 6 ? "alta" : dates.length >= 4 ? "media" : "baixa";
-    out.push({ rota, conf, prediction: `próxima janela ~ ${addDays(next, -3)} a ${addDays(next, 3)}`, basis: `${dates.length} janelas; recorrência ~${avg} dias; última ${last}` });
-  }
-  return out.sort((a, b) => (a.conf === "em-formacao" ? 1 : 0) - (b.conf === "em-formacao" ? 1 : 0) || a.rota.localeCompare(b.rota));
+function forecastPrediction(f: Forecast): string {
+  if (!f.windowStart || !f.windowEnd) return "histórico insuficiente";
+  return `próxima janela ~ ${f.windowStart} a ${f.windowEnd}`;
 }
 
 function calendarRows(campaigns: any[], month: string): { label: string; s: number; e: number; md: number }[] {
@@ -132,7 +101,7 @@ export async function GET(req: Request): Promise<Response> {
   const avgQ = editions.length
     ? Math.round(editions.reduce((a: number, e: any) => a + (e.quality_score || 0), 0) / editions.length)
     : 0;
-  const fc = forecastRows(campaigns);
+  const forecast = buildForecast(campaigns, { now: new Date().toISOString().slice(0, 10) });
   const cal = calendarRows(campaigns, month);
 
   const rowsC = campaigns.slice(0, 60).map((c) =>
@@ -152,9 +121,12 @@ export async function GET(req: Request): Promise<Response> {
     `<tr><td>${esc(v.program)}</td><td class="m">${esc(v.piso)}</td><td class="m">${esc(v.teto)}</td><td style="color:#555">${esc(v.confidence)}</td></tr>`
   ).join("");
 
-  const rowsF = fc.slice(0, 14).map((f) =>
-    `<tr><td>${esc(f.rota)}</td><td>${pill(f.conf, CONF[f.conf] || "#8A8578")}</td><td>${esc(f.prediction)}</td><td style="color:#555">${esc(f.basis)}</td></tr>`
-  ).join("");
+  const fRow = (f: Forecast) =>
+    `<tr><td>${esc(f.route)}${f.typicalPercent ? ` <span class="m" style="color:#8A8578">${esc(f.typicalPercent)}%</span>` : ""}</td>` +
+    `<td>${pill(f.confidence, CONF[f.confidence] || "#8A8578")}</td>` +
+    `<td>${esc(forecastPrediction(f))}</td><td style="color:#555">${esc(f.basis)}</td></tr>`;
+  const rowsFClusters = forecast.clusters.slice(0, 10).map(fRow).join("");
+  const rowsFRoutes = forecast.routes.slice(0, 18).map(fRow).join("");
 
   const barsCal = cal.slice(0, 18).map((c) => {
     const left = ((c.s - 1) / c.md) * 100;
@@ -197,7 +169,9 @@ td{padding:8px 10px 8px 0;border-bottom:1px solid var(--border);vertical-align:t
 </div>
 <div class="sec"><h2>Edições</h2><table><thead><tr><th>Produto</th><th>Título</th><th>Data</th><th>Gates</th><th>Qual.</th><th>Beehiiv</th></tr></thead><tbody>${rowsE || '<tr><td class="note" colspan="6">sem edições</td></tr>'}</tbody></table></div>
 <div class="sec"><h2>Calendário de promoções · ${month}</h2><div class="note" style="margin-bottom:8px">Cada barra é uma campanha ao longo do mês.</div>${barsCal || '<div class="note">sem campanhas no mês</div>'}</div>
-<div class="sec"><h2>Previsão de janelas</h2><div class="note" style="margin-bottom:8px">Por recorrência do histórico do ledger (transferências).</div><table><thead><tr><th>Rota</th><th>Confiança</th><th>Previsão</th><th>Base</th></tr></thead><tbody>${rowsF || '<tr><td class="note" colspan="4">histórico insuficiente</td></tr>'}</tbody></table></div>
+<div class="sec"><h2>Previsão de janelas</h2><div class="note" style="margin-bottom:8px">Projeção estatística por recorrência do ledger (transferências) — não é veredito nem garantia. ${forecast.withPrediction} de ${forecast.routesTracked + forecast.clustersTracked} séries com base suficiente · ondas simultâneas colapsadas · janela rolada para o futuro.</div>
+<div class="note" style="text-transform:uppercase;letter-spacing:.06em;margin:6px 0 4px">Por programa (destino)</div><table><thead><tr><th>Programa</th><th>Confiança</th><th>Previsão</th><th>Base</th></tr></thead><tbody>${rowsFClusters || '<tr><td class="note" colspan="4">histórico insuficiente</td></tr>'}</tbody></table>
+<div class="note" style="text-transform:uppercase;letter-spacing:.06em;margin:16px 0 4px">Por rota (origem → destino)</div><table><thead><tr><th>Rota</th><th>Confiança</th><th>Previsão</th><th>Base</th></tr></thead><tbody>${rowsFRoutes || '<tr><td class="note" colspan="4">histórico insuficiente</td></tr>'}</tbody></table></div>
 <div class="sec"><h2>Ledger de campanhas</h2><table><thead><tr><th>Rota</th><th>Tipo</th><th>%</th><th>Milheiro</th><th>TL</th><th>Veredito</th><th>Status</th><th>Vence</th></tr></thead><tbody>${rowsC || '<tr><td class="note" colspan="8">sem campanhas</td></tr>'}</tbody></table></div>
 <div class="sec"><h2>Valuations</h2><table><thead><tr><th>Programa</th><th>Piso</th><th>Teto</th><th>Confiança</th></tr></thead><tbody>${rowsV || '<tr><td class="note" colspan="4">sem valuations</td></tr>'}</tbody></table></div>
 <div class="sec note">The Loyal · admin · guardrail factual ativo · conferência humana no Beehiiv.</div>
