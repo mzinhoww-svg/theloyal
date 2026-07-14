@@ -3,7 +3,7 @@
 // Uso: node scripts/publish.mjs
 import { mkdirSync, writeFileSync } from "node:fs";
 import { editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
-import { report, validateEdition } from "./validate.mjs";
+import { validateEdition } from "./validate.mjs";
 
 function main() {
   const files = listEditionFiles();
@@ -11,11 +11,11 @@ function main() {
 
   const editions = files.map((f) => loadEdition(`content/editions/${f}`));
 
-  // Gate: nenhuma edição pode ter erro de QA.
+  // Gate: nenhuma edição pode ter erro de QA. O relatório de QA (out/qa/NNNN.md)
+  // é produzido pelo render:system; aqui só validamos, sem sobrescrevê-lo.
   let blocked = false;
   for (const ed of editions) {
     const result = validateEdition(ed);
-    report(ed, result);
     if (result.errors.length) {
       blocked = true;
       console.error(`[publish] BLOQUEADO — Nº ${ed.number} tem ${result.errors.length} erro(s) de QA. Ver out/qa/${editionSlug(ed)}.md`);

@@ -1,0 +1,146 @@
+{
+  "number": 28,
+  "date": "2026-07-08",
+  "slug": "0028",
+  "status": "FALHOU",
+  "generatedAt": "2026-07-14T02:53:49.877Z",
+  "input": "content/editions/0028.json",
+  "outputs": [
+    {
+      "type": "email",
+      "path": "out/email/0028.html",
+      "bytes": 11373,
+      "sha256": "d8149b16e0a970e38b3bf3f15055d2fa3da5cb8e71858d28351939bdf9815459"
+    },
+    {
+      "type": "plain",
+      "path": "out/plain/0028.txt",
+      "bytes": 2274,
+      "sha256": "137451b2016dc756875437567ba89f949fd6f7d559818dd8445624a68a2195dc"
+    },
+    {
+      "type": "web",
+      "path": "out/web/0028.html",
+      "bytes": 9764,
+      "sha256": "7f04fa0ebbaf475d8b8bc28f9f876b40c9d499f5ae1a5dd9d5872182e1e65617"
+    },
+    {
+      "type": "qa",
+      "path": "out/qa/0028.md",
+      "bytes": 1827,
+      "sha256": "fc2fe6d641e9a25159d830b040bf1a069477afb68c9c40859a612610092753b7"
+    }
+  ],
+  "qa": {
+    "blocked": true,
+    "editorial": {
+      "errors": [
+        "Dado interno/CMI proibido no corpo editorial: \"CMI interno LATAM teto 0,0170 a 0,0190 (auditoria)\""
+      ],
+      "warnings": [],
+      "okCount": 10
+    },
+    "artifacts": {
+      "email": [
+        {
+          "ok": true,
+          "label": "Tem doctype"
+        },
+        {
+          "ok": true,
+          "label": "Coluna única de 600px"
+        },
+        {
+          "ok": true,
+          "label": "Sem <style> (CSS 100% inline)"
+        },
+        {
+          "ok": true,
+          "label": "Sem :root"
+        },
+        {
+          "ok": true,
+          "label": "Sem JavaScript"
+        },
+        {
+          "ok": true,
+          "label": "Sem Google Fonts"
+        },
+        {
+          "ok": true,
+          "label": "Sem @import"
+        },
+        {
+          "ok": true,
+          "label": "Self-contained (nenhum recurso externo carregado)"
+        },
+        {
+          "ok": true,
+          "label": "Sem imagem (nada de stock/avião)"
+        },
+        {
+          "ok": true,
+          "label": "Amarelo nunca como texto"
+        },
+        {
+          "ok": true,
+          "label": "Sem emoji no corpo"
+        },
+        {
+          "ok": true,
+          "label": "Sem urgência artificial"
+        },
+        {
+          "ok": true,
+          "label": "Sem dado interno / CMI"
+        },
+        {
+          "ok": true,
+          "label": "Disclaimer oficial íntegro"
+        }
+      ],
+      "web": [
+        {
+          "ok": true,
+          "label": "html lang=\"pt-BR\""
+        },
+        {
+          "ok": true,
+          "label": "Exatamente uma h1"
+        },
+        {
+          "ok": true,
+          "label": "Landmark main#conteudo"
+        },
+        {
+          "ok": true,
+          "label": "Fraunces + Inter + JetBrains Mono"
+        },
+        {
+          "ok": true,
+          "label": "Sem JavaScript"
+        },
+        {
+          "ok": true,
+          "label": "Sem imagem (nada de stock/avião)"
+        },
+        {
+          "ok": true,
+          "label": "Sem emoji no corpo"
+        },
+        {
+          "ok": true,
+          "label": "Sem urgência artificial"
+        },
+        {
+          "ok": true,
+          "label": "Sem dado interno / CMI"
+        },
+        {
+          "ok": true,
+          "label": "Disclaimer oficial presente"
+        }
+      ]
+    }
+  }
+}

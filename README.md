@@ -11,10 +11,15 @@ THE-LOYALTY-LLM-SYSTEM.md > DESIGN.md > PONTO-MASCOTE-GUIA.md > TL-GRAPHICS.md.
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
-npm run build    # build de produção
+npm run dev        # http://localhost:3000
+npm run build      # build de produção
 npm run start
+npm run lint       # ESLint (next/core-web-vitals)
+npm run typecheck  # tsc --noEmit
 ```
+
+Pipeline editorial (validate → render → qa → publish → beehiiv): ver
+`content/README.md`. Produção e go-live: ver `docs/GO-LIVE.md`.
 
 ## Estrutura
 
@@ -86,13 +91,27 @@ Sem cookie de sessão válido, `/admin/*` redireciona para `/admin/login`. Sem
 > Nota: o bug dos 20 crons de backfill (URL sem `/functions/v1/`) já está corrigido no
 > banco — os comandos em `cron.job` já apontam para `/functions/v1/backfill-daily`.
 
-## Integração Beehiiv (próximo passo)
+### Radar / coletor de SKUs
 
-O formulário é mock. Para conectar:
+O backend do Radar (coletor `scripts/collect/*`, workflow `collect.yml`, migração
+`supabase/migrations/0001_retail_vpm.sql`) segue ativo e roda pelo GitHub Actions,
+independente da UI. Os endpoints `POST /admin/sku` (aprovar/rejeitar SKU) e
+`POST /admin/collect` (disparar rodada) mantêm a Basic Auth própria (`ADMIN_USER`/
+`ADMIN_PASSWORD`) e ficam fora do gate de cookie do painel.
 
-1. Criar a publicação no Beehiiv e obter o endpoint de subscribe
-   (API v2: `POST /publications/{id}/subscriptions`) ou o embed.
-2. Em `components/SubscribeForm.tsx`, substituir o bloco marcado "Mock de integração"
-   por um `fetch` para uma route handler (`app/api/subscribe/route.ts`) que chama a API do
-   Beehiiv com a chave em variável de ambiente (`BEEHIIV_API_KEY`). Nunca expor a chave no client.
-3. Manter o honeypot e adicionar rate limit simples na route.
+## Integração Beehiiv
+
+Já implementada. O formulário faz `POST /api/subscribe` (route handler server-only,
+`app/api/subscribe/route.ts`) com honeypot e rate limit. A chave fica só no servidor
+(`process.env`), nunca no client. Sem `BEEHIIV_API_KEY`/`BEEHIIV_PUBLICATION_ID` a
+inscrição e o Publisher operam em **modo mock** (sucesso/dry-run simulado).
+
+O envio das edições é feito pelo Publisher (`npm run beehiiv`, ver `content/README.md`):
+publica a peça já renderizada no Beehiiv, por padrão só como **rascunho**, com QA gate,
+idempotência e ledger em `content/beehiiv-status.json`.
+
+## Produção / go-live
+
+Passo a passo de ativação (GitHub Actions, secrets, publicação assistida, checklist
+de virada) em **`docs/GO-LIVE.md`**. CI em `.github/workflows/ci.yml`; publicação
+manual no Beehiiv em `.github/workflows/beehiiv.yml`.

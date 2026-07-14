@@ -29,6 +29,7 @@ function num(n: string) {
 }
 
 export function ProReport({ report: r }: { report: ProReport }) {
+  const hasVpm = r.matrix.rows.some((row) => row.vpmObservado);
   return (
     <article className="mx-auto max-w-page">
       {/* Capa Ink com wordmark Paper */}
@@ -157,6 +158,7 @@ export function ProReport({ report: r }: { report: ProReport }) {
                   <th className="py-2 pr-4 font-semibold">Player</th>
                   <th className="py-2 pr-4 font-semibold">{r.matrix.x}</th>
                   <th className="py-2 pr-4 font-semibold">{r.matrix.y}</th>
+                  {hasVpm && <th className="py-2 pr-4 text-right font-semibold">VPM observado</th>}
                   <th className="py-2 font-semibold">Leitura</th>
                 </tr>
               </thead>
@@ -166,12 +168,18 @@ export function ProReport({ report: r }: { report: ProReport }) {
                     <td className="py-3 pr-4 font-semibold">{row.player}</td>
                     <td className="py-3 pr-4 font-mono text-sm">{row.x}</td>
                     <td className="py-3 pr-4 font-mono text-sm">{row.y}</td>
+                    {hasVpm && <td className="py-3 pr-4 text-right font-mono text-sm">{row.vpmObservado ?? "n/c"}</td>}
                     <td className="py-3 text-sm text-gray-500">{row.quadrant}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          {hasVpm && (
+            <p className="mt-2 font-mono text-xs text-gray-400">
+              VPM observado: custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Nunca CMI interno.
+            </p>
+          )}
         </section>
 
         {/* 6. Implicações para mercado */}

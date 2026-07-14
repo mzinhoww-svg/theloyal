@@ -7,14 +7,15 @@
       "slug": "daily-0028",
       "contentHash": "sha256:0ac68f90799cbdd4fecebb2c5c65881bb740e1a31433b45eba0ba44976c6bece",
       "action": "draft",
-      "mode": "mock",
-      "postId": null,
-      "previewUrl": "out/beehiiv/daily-0028.preview.html",
-      "postUrl": null,
+      "mode": "live",
+      "postId": "post_9d4231c4-6161-4858-834c-fd41bdda8f0b",
+      "previewUrl": "https://theloyal.beehiiv.com/p/bonus-casado-com-clube-abre-janela-de-emissao?draft=true",
+      "postUrl": "https://theloyal.beehiiv.com/p/bonus-casado-com-clube-abre-janela-de-emissao",
       "scheduledAt": null,
       "testRequestedFor": null,
       "status": "draft",
-      "updatedAt": "2026-07-09T01:53:49.102Z",
+      "provenance": "beehiiv-mcp",
+      "updatedAt": "2026-07-09T04:28:52Z",
       "history": [
         {
           "at": "2026-07-09T01:53:49.102Z",
@@ -22,6 +23,16 @@
           "mode": "mock",
           "status": "draft",
           "contentHash": "sha256:0ac68f90799cbdd4fecebb2c5c65881bb740e1a31433b45eba0ba44976c6bece",
+          "forced": false
+        },
+        {
+          "at": "2026-07-09T04:28:52Z",
+          "action": "draft",
+          "mode": "live",
+          "status": "draft",
+          "contentHash": "sha256:0ac68f90799cbdd4fecebb2c5c65881bb740e1a31433b45eba0ba44976c6bece",
+          "postId": "post_9d4231c4-6161-4858-834c-fd41bdda8f0b",
+          "provenance": "beehiiv-mcp",
           "forced": false
         }
       ]

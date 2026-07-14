@@ -83,7 +83,8 @@
               "player": { "type": "string" },
               "x": { "type": "string", "description": "baixo | médio | alto" },
               "y": { "type": "string", "description": "baixa | média | alta" },
-              "quadrant": { "type": "string", "description": "Leitura do posicionamento" }
+              "quadrant": { "type": "string", "description": "Leitura do posicionamento" },
+              "vpmObservado": { "type": "string", "description": "VPM observado (R$/milheiro) do não-aéreo por catálogo público. Opcional; 'n/c' quando amostra insuficiente. Nunca CMI interno." }
             }
           }
         }

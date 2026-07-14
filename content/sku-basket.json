@@ -1,0 +1,91 @@
+{
+  "description": "Cesta canônica de SKUs eletro/tech comparáveis entre players, para o VPM observado do não-aéreo. Curada e versionada; a aprovação fina vive no sku_catalog do Supabase. mockCash/mockPoints alimentam o modo mock do coletor (sem chamar API) para exercitar a matemática — inclusive um outlier (Motorola/azul) que o MAD deve descartar e um item promo (audio/latam) excluído da banda. gtin é a chave de match exato quando existir. A banda por categoria só fecha com amostra >= 3 (senão n/c).",
+  "categories": ["smartphone", "tv", "notebook", "audio", "eletroportatil"],
+  "players": ["azul", "smiles", "latam"],
+  "skus": [
+    {
+      "canonicalName": "Samsung Galaxy S24 128GB",
+      "brand": "Samsung",
+      "model": "Galaxy S24 128GB",
+      "category": "smartphone",
+      "gtin": "8806095299990",
+      "sources": {
+        "azul": { "url": "https://www.voeazul.com.br/br/pt/shopping", "mockCash": 3799.0, "mockPoints": 316583 },
+        "smiles": { "url": "https://www.smiles.com.br/shopping", "mockCash": 3799.0, "mockPoints": 271357 },
+        "latam": { "url": "https://www.latampass.latam.com/pt_br/shopping", "mockCash": 3799.0, "mockPoints": 223470 }
+      }
+    },
+    {
+      "canonicalName": "Apple iPhone 15 128GB",
+      "brand": "Apple",
+      "model": "iPhone 15 128GB",
+      "category": "smartphone",
+      "gtin": "0195949036194",
+      "sources": {
+        "azul": { "url": "https://www.voeazul.com.br/br/pt/shopping", "mockCash": 5199.0, "mockPoints": 433250 },
+        "smiles": { "url": "https://www.smiles.com.br/shopping", "mockCash": 5199.0, "mockPoints": 371357 },
+        "latam": { "url": "https://www.latampass.latam.com/pt_br/shopping", "mockCash": 5199.0, "mockPoints": 305823 }
+      }
+    },
+    {
+      "canonicalName": "Motorola Edge 50 256GB",
+      "brand": "Motorola",
+      "model": "Edge 50 256GB",
+      "category": "smartphone",
+      "gtin": "7892597351234",
+      "sources": {
+        "azul": { "url": "https://www.voeazul.com.br/br/pt/shopping", "mockCash": 2299.0, "mockPoints": 82107 },
+        "smiles": { "url": "https://www.smiles.com.br/shopping", "mockCash": 2299.0, "mockPoints": 164214 },
+        "latam": { "url": "https://www.latampass.latam.com/pt_br/shopping", "mockCash": 2299.0, "mockPoints": 135235 }
+      }
+    },
+    {
+      "canonicalName": "Xiaomi Redmi Note 13 128GB",
+      "brand": "Xiaomi",
+      "model": "Redmi Note 13 128GB",
+      "category": "smartphone",
+      "gtin": "6941812750001",
+      "sources": {
+        "azul": { "url": "https://www.voeazul.com.br/br/pt/shopping", "mockCash": 1599.0, "mockPoints": 133250 },
+        "smiles": { "url": "https://www.smiles.com.br/shopping", "mockCash": 1599.0, "mockPoints": 114214 },
+        "latam": { "url": "https://www.latampass.latam.com/pt_br/shopping", "mockCash": 1599.0, "mockPoints": 94059 }
+      }
+    },
+    {
+      "canonicalName": "LG TV 50 4K UHD",
+      "brand": "LG",
+      "model": "50UR7800",
+      "category": "tv",
+      "gtin": "8806096010457",
+      "sources": {
+        "azul": { "url": "https://www.voeazul.com.br/br/pt/shopping", "mockCash": 2499.0, "mockPoints": 208250 },
+        "smiles": { "url": "https://www.smiles.com.br/shopping", "mockCash": 2499.0, "mockPoints": 178500 },
+        "latam": { "url": "https://www.latampass.latam.com/pt_br/shopping", "mockCash": 2499.0, "mockPoints": 147000 }
+      }
+    },
+    {
+      "canonicalName": "Notebook Lenovo IdeaPad 3 i5",
+      "brand": "Lenovo",
+      "model": "IdeaPad 3 15 i5",
+      "category": "notebook",
+      "gtin": "0197529612345",
+      "sources": {
+        "azul": { "url": "https://www.voeazul.com.br/br/pt/shopping", "mockCash": 3299.0, "mockPoints": 274917 },
+        "smiles": { "url": "https://www.smiles.com.br/shopping", "mockCash": 3299.0, "mockPoints": 235643 },
+        "latam": { "url": "https://www.latampass.latam.com/pt_br/shopping", "mockCash": 3299.0, "mockPoints": 194059 }
+      }
+    },
+    {
+      "canonicalName": "Fone JBL Tune 520BT",
+      "brand": "JBL",
+      "model": "Tune 520BT",
+      "category": "audio",
+      "gtin": "6925281993000",
+      "sources": {
+        "azul": { "url": "https://www.voeazul.com.br/br/pt/shopping", "mockCash": 299.0, "mockPoints": 24917 },
+        "smiles": { "url": "https://www.smiles.com.br/shopping", "mockCash": 299.0, "mockPoints": 21357 },
+        "latam": { "url": "https://www.latampass.latam.com/pt_br/shopping", "mockCash": 299.0, "mockPoints": 17588, "mockPromo": true }
+      }
+    }
+  ]
+}

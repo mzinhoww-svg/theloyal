@@ -18,7 +18,7 @@ export type Player = {
   reading: string;
   signal: "abertura" | "aperto" | "estável";
 };
-export type MatrixRow = { player: string; x: string; y: string; quadrant: string };
+export type MatrixRow = { player: string; x: string; y: string; quadrant: string; vpmObservado?: string };
 export type Alert = { level: "insight" | "warning" | "danger"; text: string };
 export type Source = { label: string; url: string };
 

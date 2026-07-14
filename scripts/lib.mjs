@@ -22,6 +22,17 @@ export const VERDICTS = {
   "nao-confirmado": { label: "NÃO CONFIRMADO", min: null, max: null, bg: TOKENS.paperDark, fg: TOKENS.g500 },
 };
 
+// Pílulas de confiança do Radar de janelas. Fill + texto escuro (nunca verde-500
+// nem amarelo como texto). Espelha o padrão dos badges de veredito.
+export const CONFIDENCE = {
+  alta: { label: "CONFIANÇA ALTA", bg: TOKENS.green100, fg: TOKENS.green700 },
+  media: { label: "CONFIANÇA MÉDIA", bg: TOKENS.blue100, fg: TOKENS.blue700 },
+  baixa: { label: "CONFIANÇA BAIXA", bg: TOKENS.paperDark, fg: TOKENS.g500 },
+};
+
+export const RADAR_NOTE_DEFAULT =
+  "Projeção por recorrência do histórico do ledger. Não é veredito nem garantia — confira sempre as regras oficiais.";
+
 export function verdictForScore(score) {
   for (const [key, v] of Object.entries(VERDICTS)) {
     if (v.min == null) continue;
@@ -45,6 +56,24 @@ export const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF
 
 // Termos de urgência artificial banidos (regra inviolável 4).
 export const URGENCY_RE = /\b(imperd[ií]vel|corra|corre|garanta j[áa]|[úu]ltima chance|milhas gr[áa]tis)\b/iu;
+
+// Dado interno de empresa / CMI / métrica proprietária (regra inviolável 1).
+// Termos que só existiriam com acesso interno a um programa.
+export const INTERNAL_RE =
+  /\b(CMI|dados?\s+internos?|m[ée]trica\s+interna|base\s+interna|churn\s+interno|receita\s+interna|margem\s+de\s+contribui[çc][ãa]o\s+interna|custo\s+interno\s+do\s+programa)\b/iu;
+
+// Todo link editorial deve ser https absoluto (nada de http:// ou relativo).
+export function isValidLink(url) {
+  return typeof url === "string" && /^https:\/\/[^\s]+$/.test(url);
+}
+
+// Vigência (ISO) já vencida em relação a uma data de referência?
+export function isExpired(vigenciaIso, refIso) {
+  const v = Date.parse(vigenciaIso);
+  const ref = Date.parse(refIso);
+  if (Number.isNaN(v) || Number.isNaN(ref)) return false;
+  return v < ref;
+}
 
 export function loadEdition(path) {
   return JSON.parse(readFileSync(path, "utf8"));

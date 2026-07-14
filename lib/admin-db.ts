@@ -6,7 +6,11 @@
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL?.trim() || "https://qjqnqcsdnpvvmyzkavoq.supabase.co";
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+// Aceita os dois nomes que convivem no deploy: SUPABASE_SERVICE_ROLE_KEY (novo)
+// e SUPABASE_SERVICE_KEY (usado pelo Radar/lib/admin.ts). Mesma chave.
+const SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+  process.env.SUPABASE_SERVICE_KEY?.trim();
 
 export function adminConfigured(): boolean {
   return !!SERVICE_KEY;
