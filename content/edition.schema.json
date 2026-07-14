@@ -30,6 +30,10 @@
       "description": "Itens que vencem em até 72h",
       "items": { "$ref": "#/$defs/fecha" }
     },
+    "shoppingWatch": {
+      "type": "array",
+      "description": "Radar de VPM observado no não-aéreo (Shopping): custo de fabricação de resgate por player, derivado de preço público de catálogo. Nunca CMI interno.",
+      "items": { "$ref": "#/$defs/shopping" }
     "radar": {
       "type": "object",
       "description": "Radar de janelas — projeção estatística por recorrência do ledger. Não é veredito nem garantia.",
@@ -105,6 +109,21 @@
         "vigencia": { "type": "string", "format": "date-time", "description": "Fim da vigência (ISO). Ausente ⇒ verdict deve ser nao-confirmado (overrule 5.4)" },
         "tlScore": { "type": "integer", "minimum": 0, "maximum": 100 },
         "scoreBreakdown": { "$ref": "#/$defs/scoreBreakdown" }
+      }
+    },
+    "shopping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["player", "category", "vpmObservado", "source"],
+      "description": "Uma leitura de VPM observado (R$/milheiro) por player/categoria. vpmObservado = 'n/c' quando a amostra é insuficiente.",
+      "properties": {
+        "player": { "type": "string", "description": "Ex: LATAM Pass, Azul, Smiles" },
+        "category": { "type": "string", "description": "Ex: smartphone, tv, notebook" },
+        "vpmObservado": { "type": "string", "description": "R$/milheiro observado, ou 'n/c'. Em mono no render." },
+        "sampleN": { "type": "integer", "minimum": 0, "description": "Tamanho da amostra após limpar promo/outliers" },
+        "source": { "type": "string", "description": "Fonte pública (catálogo) + status" },
+        "sourceUrl": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "observedAt": { "type": "string", "format": "date-time" }
       }
     },
     "fecha": {

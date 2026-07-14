@@ -75,12 +75,40 @@ Os arquivos de workflow estão prontos. O que depende de configuração no GitHu
 
 ## 3. Secrets e ambiente
 
-Apenas **dois** secrets são necessários. Não há outros.
+Dois secrets bastam para o **fluxo editorial** (Beehiiv). O **Radar de VPM** (Supabase
++ coletor + admin) adiciona os seus próprios, todos server-only. Todos têm degradação
+graciosa: sem eles, a superfície correspondente cai em mock/leitura limitada.
+
+**Fluxo editorial (Beehiiv):**
 
 | Secret | Onde configurar | Usado por |
 |---|---|---|
 | `BEEHIIV_API_KEY` | GitHub → Settings → Secrets and variables → Actions; e no host de deploy (ex. Vercel → Project → Environment Variables) | `scripts/beehiiv-publish.mjs`, `app/api/subscribe/route.ts` |
 | `BEEHIIV_PUBLICATION_ID` | idem | idem |
+
+**Radar de VPM (Supabase + coletor + admin):**
+
+| Secret | Escopo | Usado por |
+|---|---|---|
+| `ADMIN_USER` / `ADMIN_PASSWORD` | Basic Auth do painel | `app/admin/route.ts` |
+| `SUPABASE_URL` | público (host + Actions) | admin, coletor |
+| `SUPABASE_ANON_KEY` | publishable (RLS protege) | leitura do agregado público |
+| `SUPABASE_SERVICE_KEY` | **server-only** | admin (lê tudo), coletor (escreve) |
+| `TAVILY_API_KEY` | server-only | `scripts/collect-skus.mjs` (descoberta) |
+| `OPENROUTER_API_KEY` | server-only | coletor (match/promo/extração via LLM) |
+| `GH_DISPATCH_TOKEN` | `actions:write` no repo | `app/api/admin/collect/route.ts` (dispara a rodada) |
+
+- **Fronteira inviolável:** só dado **público** de catálogo trafega pelo Tavily/OpenRouter.
+  Cifra interna, teto de CMI e dado de auditoria **nunca** entram no coletor, no Supabase
+  nem em qualquer edição. O gate `INTERNAL_RE` bloqueia o token "CMI" no build/QA.
+- **Escopo da chave Beehiiv:** o Create Post exige `posts:write` (beta/Enterprise).
+- **Normalização do publication id:** o script aceita o id com ou sem o prefixo
+  `pub_` — se vier sem, ele adiciona (`pub_${id}`). Basta colar o id como o Beehiiv
+  entrega.
+- **Nunca** versionar `.env` real nem expor as chaves no client. `.env.example`
+  documenta todas as variáveis (arquivo modelo, sem valores).
+- Para o deploy da landing (subscribe): as mesmas variáveis Beehiiv no host. Sem elas o
+  formulário opera em modo mock (sucesso simulado) — útil para preview.
 
 - **Escopo da chave:** o Create Post exige `posts:write` (beta/Enterprise do Beehiiv).
 - **Normalização do publication id:** o script aceita o id com ou sem o prefixo

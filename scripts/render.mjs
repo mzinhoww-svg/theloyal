@@ -64,6 +64,14 @@ export function renderEmail(ed) {
     )
     .join("");
 
+  const shopping = ed.shoppingWatch ?? [];
+  const shoppingHtml = shopping.length
+    ? label("Shopping · VPM observado") +
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${TOKENS.line};border-radius:8px;font-family:${MONO};font-size:13px;margin-top:4px">
+        <tr style="color:${TOKENS.g400}"><td style="padding:8px 12px">Player</td><td style="padding:8px 12px">Categoria</td><td align="right" style="padding:8px 12px">VPM observado</td></tr>
+        ${shopping.map((s) => `<tr style="border-top:1px solid ${TOKENS.line}"><td style="padding:8px 12px;color:${TOKENS.ink}">${esc(s.player)}</td><td style="padding:8px 12px;color:${TOKENS.g500}">${esc(s.category)}</td><td align="right" style="padding:8px 12px;color:${TOKENS.ink}">${esc(s.vpmObservado)}</td></tr>`).join("")}
+      </table>
+      <div style="font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400};margin-top:6px">Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com outliers e promo fora da banda; n/c quando a amostra é insuficiente.</div>`
   const radarHtml = ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
     ? label("Radar de janelas") +
       `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(ed.radar.note ?? RADAR_NOTE_DEFAULT)}</div>` +
@@ -109,6 +117,7 @@ export function renderEmail(ed) {
           <div style="border-left:3px solid ${TOKENS.blue600};padding-left:20px;font-family:${SANS};font-size:18px;line-height:1.55;color:${TOKENS.ink}">${esc(ed.signal)}</div>
           ${dealsHtml}
           ${fechaHtml ? label("Fecha logo") + fechaHtml : ""}
+          ${shoppingHtml}
           ${radarHtml}
           ${label("Fontes")}
           <div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.7">${sourcesHtml}</div>
@@ -147,6 +156,9 @@ export function renderPlain(ed) {
     L.push("FECHA LOGO");
     L.push(`[${f.tag}] ${f.text} ${f.cpm} ${f.note ?? ""}`, "");
   }
+  if ((ed.shoppingWatch ?? []).length) {
+    L.push("SHOPPING · VPM OBSERVADO (R$/milheiro, catálogo público)");
+    for (const s of ed.shoppingWatch) L.push(`  ${s.player} · ${s.category}: ${s.vpmObservado}`);
   if (ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length) {
     L.push("RADAR DE JANELAS");
     L.push(ed.radar.note ?? RADAR_NOTE_DEFAULT, "");

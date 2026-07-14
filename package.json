@@ -18,6 +18,8 @@
     "forecast": "node scripts/forecast.mjs",
     "weekly": "node scripts/render-weekly.mjs",
     "beehiiv": "node scripts/beehiiv-publish.mjs",
+    "collect": "node scripts/collect-skus.mjs",
+    "pro:vpm": "node scripts/pro-vpm.mjs",
     "edition": "node scripts/render-system.mjs && node scripts/publish.mjs",
     "daily:validate": "node scripts/validate-daily.mjs",
     "daily:render": "node scripts/render-daily.mjs",

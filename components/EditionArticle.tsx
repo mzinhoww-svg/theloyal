@@ -108,6 +108,33 @@ export function EditionArticle({ edition: ed }: { edition: Edition }) {
           </section>
         )}
 
+        {ed.shoppingWatch && ed.shoppingWatch.length > 0 && (
+          <section>
+            <SectionLabel>Shopping · VPM observado</SectionLabel>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] border-collapse rounded border border-line text-sm">
+                <thead>
+                  <tr className="text-xs uppercase tracking-[0.06em] text-gray-400">
+                    <th className="px-3 py-2 text-left font-semibold">Player</th>
+                    <th className="px-3 py-2 text-left font-semibold">Categoria</th>
+                    <th className="px-3 py-2 text-right font-semibold">VPM observado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ed.shoppingWatch.map((s, i) => (
+                    <tr key={i} className="border-t border-line">
+                      <td className="px-3 py-2">{s.player}</td>
+                      <td className="px-3 py-2 text-gray-500">{s.category}</td>
+                      <td className="px-3 py-2 text-right font-mono">{s.vpmObservado}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-xs text-gray-400">
+              Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com
+              outliers e promo fora da banda; n/c quando a amostra é insuficiente.
+            </p>
         {ed.radar && ed.radar.windows.length > 0 && (
           <section>
             <SectionLabel>Radar de janelas</SectionLabel>

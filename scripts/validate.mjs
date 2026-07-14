@@ -144,6 +144,17 @@ export function validateEdition(ed) {
     }
   });
 
+  // Shopping · VPM observado (opcional): dado público, com fonte, framing "observado".
+  const shopping = Array.isArray(ed.shoppingWatch) ? ed.shoppingWatch : [];
+  shopping.forEach((s, i) => {
+    const tag = `Shopping ${i + 1} (${s.player ?? "sem player"})`;
+    const req = ["player", "category", "vpmObservado", "source"].filter((k) => !s[k]);
+    if (req.length) err(`${tag}: campos obrigatórios ausentes: ${req.join(", ")}`);
+    if (s.sourceUrl !== undefined && !/^https?:\/\//.test(s.sourceUrl)) err(`${tag}: sourceUrl inválida (http(s) absoluta)`);
+    else if (s.sourceUrl !== undefined && !isValidLink(s.sourceUrl)) warn(`${tag}: sourceUrl não usa https`);
+  });
+  if (shopping.length) pass(`Shopping · VPM observado: ${shopping.length} leitura(s) de catálogo público`);
+
   return { errors, warnings, ok };
 }
 

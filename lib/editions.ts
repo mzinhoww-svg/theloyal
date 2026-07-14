@@ -39,6 +39,16 @@ export type Radar = { note?: string; windows: RadarWindow[] };
 
 export type Source = { label: string; url: string };
 
+export type ShoppingWatch = {
+  player: string;
+  category: string;
+  vpmObservado: string;
+  sampleN?: number;
+  source: string;
+  sourceUrl?: string;
+  observedAt?: string;
+};
+
 export type Edition = {
   number: number;
   date: string;
@@ -51,6 +61,7 @@ export type Edition = {
   signal: string;
   deals: Deal[];
   fechaLogo?: FechaLogo[];
+  shoppingWatch?: ShoppingWatch[];
   radar?: Radar;
   sources: Source[];
   disclaimer: string;

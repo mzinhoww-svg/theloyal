@@ -130,6 +130,43 @@ function Article({ ed }) {
           ),
         )
       : null,
+    ed.shoppingWatch && ed.shoppingWatch.length
+      ? h(
+          "section",
+          null,
+          h("span", { className: "tl-label" }, "Shopping · VPM observado"),
+          h(
+            "table",
+            { className: "tl-shop mono" },
+            h(
+              "thead",
+              null,
+              h(
+                "tr",
+                null,
+                h("th", null, "Player"),
+                h("th", null, "Categoria"),
+                h("th", { className: "tl-right" }, "VPM observado"),
+              ),
+            ),
+            h(
+              "tbody",
+              null,
+              ed.shoppingWatch.map((s, i) =>
+                h(
+                  "tr",
+                  { key: i },
+                  h("td", null, s.player),
+                  h("td", { className: "tl-shop-cat" }, s.category),
+                  h("td", { className: "tl-right" }, s.vpmObservado),
+                ),
+              ),
+            ),
+          ),
+          h(
+            "p",
+            { className: "tl-shop-note" },
+            "Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com outliers e promo fora da banda; n/c quando a amostra é insuficiente.",
     ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
       ? h(
           "section",
@@ -252,6 +289,13 @@ a:hover{color:var(--blue700)}
 .tl-radar-basis{margin-top:6px;font-size:12px;color:var(--g400)}
 .tl-sources{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;
   gap:4px 16px;font-size:14px}
+.tl-shop{width:100%;border-collapse:collapse;border:1px solid var(--line);
+  border-radius:8px;font-size:14px}
+.tl-shop th{text-align:left;color:var(--g400);font-weight:600;padding:8px 12px}
+.tl-shop td{padding:8px 12px;border-top:1px solid var(--line)}
+.tl-shop-cat{color:var(--g500)}
+.tl-right{text-align:right}
+.tl-shop-note{font-size:13px;color:var(--g400);margin:6px 0 0}
 .tl-disclaimer{border-top:1px solid var(--line);margin-top:24px;padding-top:16px;
   font-size:13px;color:var(--g400)}
 :focus-visible{outline:none;box-shadow:0 0 0 3px rgba(49,92,255,0.35);border-radius:6px}

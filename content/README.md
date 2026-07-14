@@ -22,6 +22,36 @@ credenciais opera em modo offline (preserva o `forecast.json` atual).
 O `publish` **não envia e-mail** — apenas escreve os índices locais. O envio ao
 Beehiiv é o passo `beehiiv`, e por padrão cria só um **rascunho**.
 
+## Radar de VPM não-aéreo (Shopping) por SKU
+
+Feed de **VPM observado** (custo de fabricação de resgate não-aéreo) por concorrente,
+derivado de **preço público de catálogo** — nunca CMI interno. A fórmula
+`VPM = cash_brl / (points/1000)` roda em código determinístico (`scripts/collect/stats.mjs`);
+o LLM (OpenRouter) só faz match de SKU, promo-vs-base e extração — nunca a conta.
+
+```bash
+npm run collect            # coleta: live se houver SUPABASE_SERVICE_KEY, senão mock
+npm run collect -- --mock  # força mock (usa mockCash/mockPoints de content/sku-basket.json)
+npm run pro:vpm            # imprime VPM por player da banda mais recente (Supabase/mock)
+npm run pro:vpm -- --write content/pro/AAAA-MM.json   # injeta na matriz do Pro (revisar)
+```
+
+- **Anti-promo (a dor do não-aéreo):** promo fora da banda; mediana (não média);
+  outliers descartados por MAD; amostra mínima 3 senão `n/c`.
+- **Supabase:** `sku_catalog`, `sku_sources`, `sku_observations`, `retail_valuations`
+  (migration em `supabase/migrations/0001_retail_vpm.sql`). Escrita com SERVICE key
+  server-only; anon só lê o agregado público.
+- **Admin** (`/admin`, Basic-Auth): seção "Shopping · VPM observado", curadoria do
+  catálogo (aprovar/rejeitar) e botão de disparar a rodada (`collect.yml` via
+  workflow_dispatch). Escrita em `/admin/sku` e `/admin/collect`.
+- **Daily:** seção opcional `shoppingWatch[]` (schema `content/edition.schema.json`)
+  renderizada em e-mail/web. **Pro:** coluna `vpmObservado` na matriz competitiva.
+- **Automação:** `.github/workflows/collect.yml` (cron diário + manual). Sem secrets,
+  roda em mock e grava o payload em `out/collect/`.
+
+> Secrets do Radar (Supabase, Tavily, OpenRouter, GH dispatch): ver
+> [`docs/GO-LIVE.md`](../docs/GO-LIVE.md) §3 e `.env.example`.
+
 > Ativação em produção (GitHub Actions, secrets, checklist de go-live): ver
 > [`docs/GO-LIVE.md`](../docs/GO-LIVE.md).
 
