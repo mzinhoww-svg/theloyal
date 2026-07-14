@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Loyalty Special — O 1:1 morreu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF7F0;--fg:#111111;--surface:#FFFFFF;--line:#E5E0D5;--muted:#555555;--meta:#8A8578;
+  --green:#00A878;--blue:#315CFF;--chip:#F1ECE1;--ink:#111111;--paper:#FAF7F0;--yellowfill:#FCF0CE;--redt:#D64545;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#111111;--fg:#FAF7F0;--surface:#1B1B19;--line:#2E2C28;--muted:#C4BFB3;--meta:#8A8578;--green:#00C48C;--blue:#7C97FF;--chip:#201F1C;--yellowfill:#3A3320;--redt:#E68A8A;}}
+:root[data-theme="light"]{--bg:#FAF7F0;--fg:#111111;--surface:#FFFFFF;--line:#E5E0D5;--muted:#555555;--meta:#8A8578;--green:#00A878;--blue:#315CFF;--chip:#F1ECE1;--yellowfill:#FCF0CE;--redt:#D64545;}
+:root[data-theme="dark"]{--bg:#111111;--fg:#FAF7F0;--surface:#1B1B19;--line:#2E2C28;--muted:#C4BFB3;--meta:#8A8578;--green:#00C48C;--blue:#7C97FF;--chip:#201F1C;--yellowfill:#3A3320;--redt:#E68A8A;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,Arial,sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:660px;margin:0 auto;padding:0 22px 88px;}
+.mono{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;}
+
+/* Ink hero — capa de edicao especial. Fixo, nao muda no dark. */
+.hero{background:#111111;color:#FAF7F0;border-radius:0 0 14px 14px;padding:30px 26px 34px;margin-bottom:32px;}
+.hero .wm{font-family:'Fraunces',Georgia,serif;font-size:19px;color:#FAF7F0;}
+.hero .wm .t{font-weight:600;} .hero .wm .l{font-weight:700;}
+.hero .kicker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.hero .tag{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#00C48C;}
+.hero .chip{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8A8578;border:1px solid #3D3A34;border-radius:9999px;padding:2px 9px;}
+.hero h1{font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:clamp(30px,6.2vw,44px);line-height:1.06;letter-spacing:-.015em;margin:0;color:#FAF7F0;text-wrap:balance;}
+.hero .dek{font-size:18px;line-height:1.5;color:#D8D3C7;margin:16px 0 0;max-width:52ch;}
+
+/* Tese — barra azul (Sinal do dia canonico) */
+.tese{border-left:3px solid var(--blue);background:var(--surface);border:1px solid var(--line);border-left-width:3px;border-radius:8px;padding:16px 18px;margin:0 0 34px;}
+.tese .l{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);display:block;margin-bottom:6px;}
+.tese p{margin:0;font-family:'Fraunces',Georgia,serif;font-size:20px;line-height:1.35;color:var(--fg);}
+
+section{margin-top:30px;}
+.slabel{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--meta);margin-bottom:12px;}
+.slabel::before{content:"";flex:none;width:22px;height:1px;background:var(--green);}
+h2{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:22px;line-height:1.15;margin:0 0 10px;text-wrap:balance;}
+p{margin:0 0 14px;}
+strong{font-weight:600;}
+ul{margin:0 0 14px;padding-left:0;list-style:none;}
+li{position:relative;padding-left:22px;margin:9px 0;}
+li::before{content:"";position:absolute;left:2px;top:11px;width:6px;height:6px;background:var(--green);border-radius:9999px;}
+.do li::before{border-radius:1px;}
+.nc{color:var(--redt);}
+
+/* ContaBlock */
+.conta{background:#111111;color:#FAF7F0;border-radius:10px;padding:20px 22px;margin:6px 0 4px;font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;font-size:14.5px;line-height:1.7;font-variant-numeric:tabular-nums;overflow-x:auto;}
+.conta .row{display:flex;justify-content:space-between;gap:24px;white-space:nowrap;}
+.conta .k{color:#8A8578;}.conta .v{color:#FAF7F0;}
+.conta .sep{height:1px;background:#3D3A34;margin:11px 0;}
+.conta .out{display:flex;justify-content:space-between;gap:20px;border:1px solid #3D3A34;border-radius:8px;padding:10px 12px;margin-top:12px;}
+.conta .out .v{color:#00C48C;font-weight:600;}
+.conta .cap{color:#8A8578;font-size:12px;margin-top:13px;white-space:normal;line-height:1.5;}
+.illus{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#111;background:var(--yellowfill);border-radius:9999px;padding:3px 10px;margin-bottom:8px;}
+:root[data-theme="dark"] .illus{color:var(--fg);}
+.sources{font-size:15px;color:var(--muted);}
+.sources li::before{background:var(--meta);}
+.disc{margin-top:30px;border-top:1px solid var(--line);padding-top:16px;font-size:13px;color:var(--meta);line-height:1.55;}
+</style>
+</head><body>
+<div class="hero">
+  <div class="kicker">
+    <span class="wm"><span class="t">The </span><span class="l">Loyalty</span></span>
+    <span class="tag">Edição Especial</span>
+    <span class="chip">Foco único</span>
+  </div>
+  <h1>O 1:1 morreu. Agora a régua é o CPM final.</h1>
+  <p class="dek">Transferência bonificada e clube viraram o caminho padrão das milhas. Quem ainda pensa em “ponto que vira milha um pra um” está lendo o preço errado.</p>
+</div>
+
+<div class="wrap">
+
+  <div class="tese">
+    <span class="l">Tese</span>
+    <p>A taxa de transferência não é o custo. O custo é quanto a milha final saiu depois do bônus, do clube e do prazo — o CPM final.</p>
+  </div>
+
+  <section>
+    <div class="slabel">Contexto</div>
+    <p>Por anos, transferir ponto para programa aéreo foi o gesto simples: um vira um, e pronto. A decisão cabia numa frase.</p>
+    <p>Esse mundo encolheu. Bônus de transferência, clubes de assinatura e compras bonificadas viraram a mecânica principal — e o número que a campanha grita, o bônus, deixou de ser o número que decide.</p>
+  </section>
+
+  <section>
+    <div class="slabel">O que aconteceu</div>
+    <h2>O valor saiu da taxa e foi para a promoção</h2>
+    <ul>
+      <li>Os programas passaram a empurrar <strong>bônus de transferência recorrentes</strong> em vez de valor no um-pra-um puro.</li>
+      <li>O <strong>clube de assinatura</strong> entrou na conta: parte do custo da milha virou mensalidade.</li>
+      <li><strong>Prazo de crédito e validade</strong> viraram risco, não detalhe de rodapé.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="slabel">O que muda</div>
+    <h2>Você para de comparar porcentagem e passa a comparar dinheiro</h2>
+    <p>O bônus vira ruído se você não o converte em custo por milheiro final. Duas campanhas com bônus bem diferentes podem entregar a mesma milha pelo mesmo preço — ou não. Só o <strong>CPM final</strong> mostra qual.</p>
+  </section>
+
+  <section>
+    <div class="slabel">Conta feita</div>
+    <span class="illus">Exemplo ilustrativo da fórmula · não é uma oferta real</span>
+    <div class="conta" role="img" aria-label="Cálculo ilustrativo de CPM final: R$430 por 40.000 milhas resulta em R$10,75 por milheiro">
+      <div class="row"><span class="k">custo dos pontos de origem</span><span class="v">R$ 400,00</span></div>
+      <div class="row"><span class="k">pontos transferidos</span><span class="v">20.000</span></div>
+      <div class="row"><span class="k">taxa de conversão</span><span class="v">1 : 1</span></div>
+      <div class="row"><span class="k">bônus de transferência</span><span class="v">100%</span></div>
+      <div class="sep"></div>
+      <div class="row"><span class="k">milhas finais</span><span class="v">40.000</span></div>
+      <div class="row"><span class="k">clube (1 mês só p/ a campanha)</span><span class="v">+ R$ 30,00</span></div>
+      <div class="out"><span class="k">CPM final = 430 ÷ (40.000÷1.000)</span><span class="v">R$ 10,75 / milheiro</span></div>
+      <div class="cap">O bônus derruba o custo, mas o clube volta a subir. Sem o clube seriam R$ 10,00; com ele, R$ 10,75. A taxa 1:1 aqui é suposta — no mundo real, confirme antes. E só é bom se você usa a milha acima de R$ 10,75.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="slabel">O que fazer</div>
+    <ul class="do">
+      <li>Calcule o <strong>CPM final</strong> antes de transferir. Bônus não é preço.</li>
+      <li>Confirme a <strong>taxa de conversão</strong> na fonte oficial. Nunca assuma 1:1.</li>
+      <li>Some o <strong>custo do clube</strong> no milheiro se você entrou só pela campanha.</li>
+      <li>Cheque <strong>prazo de crédito e validade</strong> contra a data do resgate.</li>
+      <li>Só transfira com <strong>uso à vista</strong>. Milha parada com bônus continua parada.</li>
+      <li>Sem taxa ou vigência confirmada, trate como <strong class="nc">Não confirmado</strong> e espere.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="slabel">Fontes</div>
+    <ul class="sources">
+      <li>Fórmulas e método: sistema editorial do The Loyalty (métricas públicas — CPM, CPM final, spread).</li>
+      <li>Qualquer promoção real: regulamento e página oficial do programa de origem e de destino — a fonte que confirma taxa, bônus e vigência.</li>
+    </ul>
+  </section>
+
+  <p class="disc">Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar. Os números deste exemplo são ilustrativos da fórmula e não representam nenhuma oferta específica.</p>
+
+</div>
+</body></html>
