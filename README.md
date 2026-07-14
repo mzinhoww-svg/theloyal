@@ -57,6 +57,48 @@ tailwind.config.ts  Tokens da marca (nunca hardcodar hex em componente)
 - Foco visível custom, alvos de toque ≥ 44px, contraste AA nos tokens.
 - `prefers-reduced-motion` desliga idle do mascote, reveals e smooth scroll.
 
+## Central de Controle (`/admin`)
+
+Painel operacional do motor editorial, servido pelo mesmo app. Lê e opera o Supabase
+ao vivo pelas RPCs `admin_*` (não cria tabelas de controle — usa `cron.job` /
+`cron.job_run_details` do pg_cron). Segue os tokens da marca, sem shadcn e sem
+dependência nova (acesso ao Supabase por `fetch` puro, não `supabase-js`).
+
+Páginas: `/admin` (cockpit: faixa "Atenção agora", stat tiles com sparklines de tendência,
+gates da última rodada), `/admin/jobs` (crons: pausar/ativar/rodar com toast de retorno),
+`/admin/backfill` (progresso + fila/tracker + reprocessar), `/admin/noticias`
+(pipeline ingest→extract: news_raw com status/erro, campanhas extraídas, reprocessar),
+`/admin/campanhas` (ledger com filtros, revisão-primeiro e edição inline de veredito/TL Score),
+`/admin/logs` (pg_cron + pipeline unificados) e `/admin/observability` (calendário com
+marcador de hoje, previsão de janelas, valuations, edições).
+
+O topo tem **cockpit ao vivo**: carimbo "atualizado às HH:MM", auto-refresh (30s, pausável)
+e botão manual. As ações mostram o retorno real da RPC num toast.
+
+Toda escrita/RPC acontece em Server Actions/Server Components com a `SERVICE_ROLE_KEY`
+(nunca no browser). Acesso protegido por login (`middleware.ts` + `/admin/login`), que
+valida a senha contra `ADMIN_TOKEN` e grava um cookie httpOnly (hash SHA-256):
+
+```bash
+ADMIN_TOKEN=...           # senha única do painel (login /admin/login)
+SUPABASE_URL=...          # default: projeto atual
+SUPABASE_SERVICE_ROLE_KEY=...  # server-only; sem ela o painel carrega vazio
+```
+
+Sem cookie de sessão válido, `/admin/*` redireciona para `/admin/login`. Sem
+`SUPABASE_SERVICE_ROLE_KEY`, as páginas renderizam mas mostram um aviso e dados vazios.
+
+> Nota: o bug dos 20 crons de backfill (URL sem `/functions/v1/`) já está corrigido no
+> banco — os comandos em `cron.job` já apontam para `/functions/v1/backfill-daily`.
+
+### Radar / coletor de SKUs
+
+O backend do Radar (coletor `scripts/collect/*`, workflow `collect.yml`, migração
+`supabase/migrations/0001_retail_vpm.sql`) segue ativo e roda pelo GitHub Actions,
+independente da UI. Os endpoints `POST /admin/sku` (aprovar/rejeitar SKU) e
+`POST /admin/collect` (disparar rodada) mantêm a Basic Auth própria (`ADMIN_USER`/
+`ADMIN_PASSWORD`) e ficam fora do gate de cookie do painel.
+
 ## Integração Beehiiv
 
 Já implementada. O formulário faz `POST /api/subscribe` (route handler server-only,
