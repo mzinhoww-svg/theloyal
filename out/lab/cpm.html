@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loyalty Lab — Custo por milheiro (CPM)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF7F0;--fg:#111111;--surface:#FFFFFF;--line:#E5E0D5;--muted:#555555;--meta:#8A8578;
+  --green:#00A878;--greent:#007A57;--blue:#315CFF;--chip:#F1ECE1;--ink:#111111;--paper:#FAF7F0;
+  --yellowfill:#FCF0CE;--redt:#D64545;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#111111;--fg:#FAF7F0;--surface:#1B1B19;--line:#2E2C28;--muted:#C4BFB3;--meta:#8A8578;
+  --green:#00C48C;--greent:#00C48C;--blue:#7C97FF;--chip:#201F1C;--yellowfill:#3A3320;--redt:#E68A8A;}
+}
+:root[data-theme="light"]{--bg:#FAF7F0;--fg:#111111;--surface:#FFFFFF;--line:#E5E0D5;--muted:#555555;--meta:#8A8578;--green:#00A878;--greent:#007A57;--blue:#315CFF;--chip:#F1ECE1;--yellowfill:#FCF0CE;--redt:#D64545;}
+:root[data-theme="dark"]{--bg:#111111;--fg:#FAF7F0;--surface:#1B1B19;--line:#2E2C28;--muted:#C4BFB3;--meta:#8A8578;--green:#00C48C;--greent:#00C48C;--blue:#7C97FF;--chip:#201F1C;--yellowfill:#3A3320;--redt:#E68A8A;}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,Arial,sans-serif;
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:680px;margin:0 auto;padding:56px 22px 96px;}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:clamp(32px,6vw,46px);line-height:1.08;
+  letter-spacing:-.015em;margin:14px 0 0;text-wrap:balance;}
+h2{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:24px;line-height:1.15;margin:0 0 12px;text-wrap:balance;}
+p{margin:0 0 16px;}
+a{color:var(--blue);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--blue) 40%,transparent);}
+.mono{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--green);}
+.lede{font-size:20px;line-height:1.5;color:var(--muted);margin:20px 0 8px;}
+.meta{font-size:13px;color:var(--meta);margin-top:14px;}
+.meta .mono{color:var(--meta);}
+section{margin-top:40px;padding-top:8px;}
+.slabel{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--meta);margin-bottom:14px;}
+.slabel::before{content:"";flex:none;width:22px;height:1px;background:var(--green);}
+strong{font-weight:600;}
+ul{margin:0 0 16px;padding-left:0;list-style:none;}
+li{position:relative;padding-left:22px;margin:10px 0;}
+li::before{content:"";position:absolute;left:2px;top:11px;width:6px;height:6px;background:var(--green);border-radius:9999px;}
+.err li::before{background:var(--redt);border-radius:1px;}
+
+/* Ponto callout */
+.ponto{display:flex;gap:14px;align-items:flex-start;background:var(--chip);border:1px solid var(--line);
+  border-radius:12px;padding:16px 18px;margin:26px 0 0;}
+.ponto svg{flex:none;width:46px;height:46px;border-radius:11px;}
+.ponto .pt{font-size:15px;line-height:1.5;color:var(--fg);margin:0;}
+.ponto .who{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--meta);display:block;margin-bottom:3px;}
+
+/* ContaBlock — Ink fixo, mono Paper. Nunca muda no dark. Ponto nunca entra aqui. */
+.conta{background:#111111;color:#FAF7F0;border-radius:10px;padding:20px 22px;margin:18px 0;
+  font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;font-size:14.5px;line-height:1.7;
+  font-variant-numeric:tabular-nums;overflow-x:auto;}
+.conta .row{display:flex;justify-content:space-between;gap:24px;white-space:nowrap;}
+.conta .k{color:#8A8578;}
+.conta .v{color:#FAF7F0;}
+.conta .sep{height:1px;background:#3D3A34;margin:12px 0;}
+.conta .out{display:flex;justify-content:space-between;gap:24px;border:1px solid #3D3A34;border-radius:8px;
+  padding:10px 12px;margin-top:12px;}
+.conta .out .v{color:#00C48C;font-weight:600;}
+.conta .cap{color:#8A8578;font-size:12px;margin-top:14px;white-space:normal;line-height:1.5;}
+.formula{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:16px 0;
+  font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;font-size:14px;color:var(--fg);overflow-x:auto;}
+.formula .c{color:var(--green);}
+
+.illus{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:#111;background:var(--yellowfill);border-radius:9999px;padding:3px 10px;margin-bottom:6px;}
+:root[data-theme="dark"] .illus,@media (prefers-color-scheme:dark){.illus{color:var(--fg);}}
+
+.check{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 20px;}
+.check li{padding-left:30px;margin:14px 0;}
+.check li::before{content:"";left:0;top:2px;width:16px;height:16px;background:transparent;border:1.5px solid var(--green);
+  border-radius:4px;}
+.sources{font-size:15px;color:var(--muted);}
+.sources li::before{background:var(--meta);}
+.disc{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;font-size:13.5px;color:var(--meta);line-height:1.55;}
+.foot{margin-top:34px;display:flex;gap:12px;align-items:center;font-size:12px;color:var(--meta);}
+.foot svg{width:30px;height:30px;border-radius:8px;flex:none;}
+hr.div{border:0;border-top:1px solid var(--line);margin:0;}
+</style>
+</head><body>
+<div class="wrap">
+
+  <span class="eyebrow">Loyalty Lab · Conceito</span>
+  <h1>Custo por milheiro: a conta que diz se comprar pontos vale a pena</h1>
+  <p class="lede">Bônus é porcentagem. Preço é reais. O CPM traduz um no outro — e é o número que separa a oferta boa do bônus grande e caro.</p>
+  <p class="meta">Leitura de <span class="mono">4 min</span> · Evergreen · Atualizado quando a metodologia muda</p>
+
+  <div class="ponto">
+    <svg viewBox="0 0 64 64" role="img" aria-label="Ponto"><rect width="64" height="64" rx="14" fill="#111111"/><path d="M18 19 Q11 29 15 42 Q21 47 26 40 Q22 30 27 21 Z" fill="#B8813F" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/><path d="M46 19 Q53 29 49 42 Q43 47 38 40 Q42 30 37 21 Z" fill="#B8813F" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/><path d="M19 40 Q32 47 45 40 L45 44 Q32 51 19 44 Z" fill="#00C48C" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/><circle cx="32" cy="47" r="4.6" fill="#111111"/><text x="32" y="49" text-anchor="middle" font-size="5" font-weight="700" fill="#FAF7F0" font-family="monospace">TL</text><circle cx="32" cy="30" r="15" fill="#D9A15B" stroke="#111111" stroke-width="1.5"/><path d="M22 22 Q27 19 31 23 Q28 27 23 27 Q21 25 22 22 Z" fill="#B8813F"/><ellipse cx="32" cy="35" rx="8.5" ry="6" fill="#F3E3C3"/><path d="M28.5 32 Q32 30.5 35.5 32 Q35.5 35 32 36.5 Q28.5 35 28.5 32 Z" fill="#111111"/><path d="M32 36.5 L32 38.5 Q34 40 36 38.5" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/><circle cx="26" cy="28" r="2" fill="#111111"/><circle cx="38" cy="28" r="2" fill="#111111"/><path d="M23 24 Q26 22.8 29 24" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/><path d="M35 22.4 Q38 21 41 22.8" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <p class="pt"><span class="who">Ponto</span>Ponto lê “bônus de 100%” e continua desconfiado. Bônus alto não é preço baixo. Ele espera a conta antes de mexer o rabo.</p>
+  </div>
+
+  <section>
+    <div class="slabel">O problema</div>
+    <h2>“100% de bônus” não te diz quanto você pagou</h2>
+    <p>As promoções falam em porcentagem de bônus e em desconto. Nenhum dos dois responde à única pergunta que importa: <strong>quanto custou cada 1.000 pontos no fim da conta?</strong></p>
+    <p>Dois anúncios podem parecer muito diferentes e custar o mesmo. Um bônus enorme sobre um preço-base caro pode sair mais caro que um bônus modesto sobre um preço bom. Sem uma régua única, você compara maçã com laranja — e decide no impulso.</p>
+  </section>
+
+  <section>
+    <div class="slabel">A definição</div>
+    <h2>CPM é o preço de mil pontos, já com o bônus</h2>
+    <p>CPM quer dizer <strong>custo por milheiro</strong>: quanto você paga, em reais, para ficar com 1.000 pontos ou milhas — <strong>contando o bônus</strong> que a promoção deu.</p>
+    <div class="formula"><span class="c">CPM</span> = valor pago ÷ (pontos finais ÷ 1.000)</div>
+    <p>“Pontos finais” são os pontos que efetivamente entram na sua conta, base mais bônus. É esse total que vai no denominador — nunca só o que você comprou antes do bônus.</p>
+  </section>
+
+  <section>
+    <div class="slabel">Como funciona</div>
+    <h2>Uma régua, três situações</h2>
+    <p>A lógica é sempre a mesma — dividir o que saiu do bolso pelo que entrou na conta. O que muda é o que você soma no numerador e no denominador:</p>
+    <ul>
+      <li><strong>Compra direta:</strong> valor pago ÷ (pontos recebidos ÷ 1.000).</li>
+      <li><strong>Compra com bônus:</strong> some base e bônus nos pontos finais antes de dividir.</li>
+      <li><strong>Transferência bonificada:</strong> use o custo dos pontos de origem e as milhas finais no destino, aplicando a taxa de conversão. A taxa precisa ser confirmada — nunca assuma 1:1.</li>
+    </ul>
+    <p>Sempre que houver um custo para acessar a oferta — clube, anuidade, cupom pago — ele entra no valor pago. É dinheiro que saiu para o milheiro existir.</p>
+  </section>
+
+  <section>
+    <div class="slabel">Por que importa</div>
+    <h2>Transforma opinião em comparação</h2>
+    <p>Com o CPM na mão, você compara compra direta, transferência e pontos mais dinheiro na mesma unidade: reais por milheiro. Deixa de perguntar “o bônus é bom?” e passa a perguntar “o custo final é melhor que a minha alternativa?”.</p>
+    <p>É também metade da conta de valor. O CPM diz quanto você <strong>paga</strong>; o valor por milheiro (VPM) diz quanto você <strong>extrai</strong> no resgate. Oferta boa é quando o segundo supera o primeiro com folga — e o uso é realista.</p>
+  </section>
+
+  <section>
+    <div class="slabel">Exemplo prático</div>
+    <h2>A mesma R$ 300, dois cenários</h2>
+    <span class="illus">Exemplo ilustrativo da fórmula · não é uma oferta real</span>
+    <div class="conta" role="img" aria-label="Cálculo ilustrativo de CPM: R$300 por 20.000 pontos resulta em R$15,00 por milheiro">
+      <div class="row"><span class="k">valor pago</span><span class="v">R$ 300,00</span></div>
+      <div class="row"><span class="k">pontos comprados</span><span class="v">10.000</span></div>
+      <div class="row"><span class="k">bônus (100%)</span><span class="v">+ 10.000</span></div>
+      <div class="sep"></div>
+      <div class="row"><span class="k">pontos finais</span><span class="v">20.000</span></div>
+      <div class="out"><span class="k">CPM = 300 ÷ (20.000÷1.000)</span><span class="v">R$ 15,00 / milheiro</span></div>
+      <div class="cap">Sem o bônus, a mesma R$ 300 compraria 10.000 pontos: CPM de R$ 30,00. O bônus derrubou o custo pela metade — mas só vira valor se você usa esses pontos por mais de R$ 15 o milheiro. CPM baixo sem uso é dinheiro parado.</div>
+    </div>
+    <p>Repare no que a conta faz: tira o holofote do “100%” e coloca num número comparável. R$ 15 o milheiro é caro ou barato só quando você tem uma alternativa — e um resgate real — para comparar.</p>
+  </section>
+
+  <section>
+    <div class="slabel">Erros comuns</div>
+    <h2>Onde a conta costuma quebrar</h2>
+    <ul class="err">
+      <li><strong>Tratar bônus como valor.</strong> Porcentagem alta sobre preço ruim continua sendo preço ruim.</li>
+      <li><strong>Usar pontos de origem como se fossem milhas finais.</strong> Numa transferência, o que conta é a milha que chega no destino, com a taxa aplicada.</li>
+      <li><strong>Esquecer o custo de elegibilidade.</strong> Se a oferta exige clube ou anuidade, esse valor entra na conta de quem ainda não é elegível.</li>
+      <li><strong>Ignorar validade e liquidez.</strong> Milheiro barato que você não consegue usar, ou que vence antes do resgate, não é economia.</li>
+      <li><strong>Não confirmar a taxa de conversão.</strong> Assumir 1:1 sem fonte oficial inventa um CPM que não existe.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="slabel">Checklist</div>
+    <h2>Antes de fechar, confira</h2>
+    <ul class="check">
+      <li>Somei <strong>todo</strong> o valor que saiu do bolso, inclusive custo de acesso à oferta.</li>
+      <li>Usei os <strong>pontos finais</strong> (base + bônus) no denominador.</li>
+      <li>Confirmei a <strong>taxa de conversão</strong> em fonte oficial, sem assumir 1:1.</li>
+      <li>Comparei o CPM com pelo menos <strong>uma alternativa</strong> pública.</li>
+      <li>Checei <strong>validade</strong> dos pontos e se tenho um <strong>resgate real</strong> em vista.</li>
+      <li>Confirmei a <strong>vigência</strong> e as regras no regulamento oficial.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="slabel">Fontes</div>
+    <ul class="sources">
+      <li>Fórmulas e método: sistema editorial do The Loyalty (metodologia pública de métricas — CPM, VPM, spread).</li>
+      <li>Para qualquer promoção real: o <strong>regulamento oficial</strong> e a página oficial do programa — a fonte que confirma a regra, a taxa e a vigência.</li>
+    </ul>
+  </section>
+
+  <p class="disc">Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar. Os números deste exemplo são ilustrativos da fórmula e não representam nenhuma oferta específica.</p>
+
+  <div class="foot">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#111111"/><path d="M18 19 Q11 29 15 42 Q21 47 26 40 Q22 30 27 21 Z" fill="#B8813F" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/><path d="M46 19 Q53 29 49 42 Q43 47 38 40 Q42 30 37 21 Z" fill="#B8813F" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/><path d="M19 40 Q32 47 45 40 L45 44 Q32 51 19 44 Z" fill="#00C48C" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/><circle cx="32" cy="47" r="4.6" fill="#111111"/><circle cx="32" cy="30" r="15" fill="#D9A15B" stroke="#111111" stroke-width="1.5"/><ellipse cx="32" cy="35" rx="8.5" ry="6" fill="#F3E3C3"/><path d="M28.5 32 Q32 30.5 35.5 32 Q35.5 35 32 36.5 Q28.5 35 28.5 32 Z" fill="#111111"/><circle cx="26" cy="28" r="2" fill="#111111"/><circle cx="38" cy="28" r="2" fill="#111111"/><path d="M23 24 Q26 22.8 29 24" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/><path d="M35 22.4 Q38 21 41 22.8" fill="none" stroke="#111111" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <span>The Loyalty Lab — conceitos de fidelidade com conta feita. Ponto aprova a régua; desconfia do resto.</span>
+  </div>
+
+</div>
+</body></html>

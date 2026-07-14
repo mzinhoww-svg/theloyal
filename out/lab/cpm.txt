@@ -1,0 +1,127 @@
+THE LOYALTY LAB · CONCEITO
+
+CUSTO POR MILHEIRO: A CONTA QUE DIZ SE COMPRAR PONTOS VALE A PENA
+
+Bônus é porcentagem. Preço é reais. O CPM traduz um no outro — e é o
+número que separa a oferta boa do bônus grande e caro.
+
+Leitura de 4 min · Evergreen
+
+--------------------------------------------------------------------
+PONTO
+Ponto lê "bônus de 100%" e continua desconfiado. Bônus alto não é preço
+baixo. Ele espera a conta antes de mexer o rabo.
+--------------------------------------------------------------------
+
+
+O PROBLEMA — "100% de bônus" não te diz quanto você pagou
+
+As promoções falam em porcentagem de bônus e em desconto. Nenhum dos
+dois responde à única pergunta que importa: quanto custou cada 1.000
+pontos no fim da conta?
+
+Dois anúncios podem parecer muito diferentes e custar o mesmo. Um bônus
+enorme sobre um preço-base caro pode sair mais caro que um bônus modesto
+sobre um preço bom. Sem uma régua única, você compara maçã com laranja.
+
+
+A DEFINIÇÃO — CPM é o preço de mil pontos, já com o bônus
+
+CPM quer dizer custo por milheiro: quanto você paga, em reais, para
+ficar com 1.000 pontos ou milhas — contando o bônus que a promoção deu.
+
+    CPM = valor pago ÷ (pontos finais ÷ 1.000)
+
+"Pontos finais" são os pontos que efetivamente entram na sua conta, base
+mais bônus. É esse total que vai no denominador — nunca só o que você
+comprou antes do bônus.
+
+
+COMO FUNCIONA — Uma régua, três situações
+
+A lógica é sempre a mesma: dividir o que saiu do bolso pelo que entrou
+na conta. O que muda é o que você soma de cada lado.
+
+- Compra direta: valor pago ÷ (pontos recebidos ÷ 1.000).
+- Compra com bônus: some base e bônus nos pontos finais antes de dividir.
+- Transferência bonificada: use o custo dos pontos de origem e as milhas
+  finais no destino, aplicando a taxa de conversão. A taxa precisa ser
+  confirmada — nunca assuma 1:1.
+
+Todo custo para acessar a oferta — clube, anuidade, cupom pago — entra
+no valor pago. É dinheiro que saiu para o milheiro existir.
+
+
+POR QUE IMPORTA — Transforma opinião em comparação
+
+Com o CPM na mão, você compara compra direta, transferência e pontos
+mais dinheiro na mesma unidade: reais por milheiro. Deixa de perguntar
+"o bônus é bom?" e passa a perguntar "o custo final é melhor que a
+minha alternativa?".
+
+É metade da conta de valor. O CPM diz quanto você paga; o valor por
+milheiro (VPM) diz quanto você extrai no resgate. Oferta boa é quando o
+segundo supera o primeiro com folga — e o uso é realista.
+
+
+EXEMPLO PRÁTICO — A mesma R$ 300, dois cenários
+[Exemplo ilustrativo da fórmula · não é uma oferta real]
+
+    valor pago .................... R$ 300,00
+    pontos comprados .............. 10.000
+    bônus (100%) .................. + 10.000
+    ------------------------------------------
+    pontos finais ................. 20.000
+    CPM = 300 ÷ (20.000÷1.000) .... R$ 15,00 / milheiro
+
+Sem o bônus, a mesma R$ 300 compraria 10.000 pontos: CPM de R$ 30,00. O
+bônus derrubou o custo pela metade — mas só vira valor se você usa esses
+pontos por mais de R$ 15 o milheiro. CPM baixo sem uso é dinheiro parado.
+
+A conta tira o holofote do "100%" e coloca num número comparável. R$ 15
+o milheiro é caro ou barato só quando você tem uma alternativa — e um
+resgate real — para comparar.
+
+
+ERROS COMUNS — Onde a conta costuma quebrar
+
+- Tratar bônus como valor. Porcentagem alta sobre preço ruim continua
+  sendo preço ruim.
+- Usar pontos de origem como se fossem milhas finais. Numa transferência,
+  o que conta é a milha que chega no destino, com a taxa aplicada.
+- Esquecer o custo de elegibilidade. Se a oferta exige clube ou anuidade,
+  esse valor entra na conta de quem ainda não é elegível.
+- Ignorar validade e liquidez. Milheiro barato que você não usa, ou que
+  vence antes do resgate, não é economia.
+- Não confirmar a taxa de conversão. Assumir 1:1 sem fonte oficial
+  inventa um CPM que não existe.
+
+
+CHECKLIST — Antes de fechar, confira
+
+[ ] Somei TODO o valor que saiu do bolso, inclusive custo de acesso.
+[ ] Usei os pontos finais (base + bônus) no denominador.
+[ ] Confirmei a taxa de conversão em fonte oficial, sem assumir 1:1.
+[ ] Comparei o CPM com pelo menos uma alternativa pública.
+[ ] Checei validade dos pontos e se tenho um resgate real em vista.
+[ ] Confirmei a vigência e as regras no regulamento oficial.
+
+
+FONTES
+
+- Fórmulas e método: sistema editorial do The Loyalty (metodologia
+  pública de métricas — CPM, VPM, spread).
+- Para qualquer promoção real: o regulamento oficial e a página oficial
+  do programa — a fonte que confirma a regra, a taxa e a vigência.
+
+
+DISCLAIMER
+
+Promoções podem mudar sem aviso. Confira sempre as regras no site
+oficial antes de comprar, transferir ou resgatar. Os números deste
+exemplo são ilustrativos da fórmula e não representam nenhuma oferta
+específica.
+
+--------------------------------------------------------------------
+The Loyalty Lab — conceitos de fidelidade com conta feita.
+Ponto aprova a régua; desconfia do resto.

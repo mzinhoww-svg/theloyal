@@ -12,9 +12,34 @@ THE-LOYALTY-LLM-SYSTEM.md > DESIGN.md > PONTO-MASCOTE-GUIA.md > TL-GRAPHICS.md.
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm run build    # build de produção
+npm run build    # build de produção (estático)
 npm run start
 ```
+
+### Qualidade
+
+```bash
+npm run lint       # next lint (eslint-config-next)
+npm run typecheck  # tsc --noEmit (TypeScript strict)
+```
+
+### Pipeline editorial (Daily)
+
+Fonte única: `content/editions/NNNN.json` (contrato em `content/edition.schema.json`).
+
+```bash
+npm run validate   # QA editorial de cada edição → out/qa/NNNN.md (bloqueia em erro)
+npm run render     # e-mail HTML + plain text + web archive + QA + manifest → out/*
+npm run qa         # QA global (landing + JSON + e-mail + web); bloqueia regra inviolável
+npm run publish     # valida + escreve content/latest.json e content/index.json (NÃO envia)
+npm run beehiiv    # publica no Beehiiv o conteúdo já renderizado (rascunho por padrão)
+npm run edition    # validate → render → publish
+npm run pro        # valida o relatório Pro e gera o resumo de e-mail
+```
+
+O CI (`.github/workflows/ci.yml`) roda lint → typecheck → validate → render → qa →
+build. O workflow `publish.yml` regenera artefatos e prepara PR/rascunho — **nunca**
+dispara envio de e-mail automaticamente.
 
 ## Estrutura
 
@@ -52,13 +77,18 @@ tailwind.config.ts  Tokens da marca (nunca hardcodar hex em componente)
 - Foco visível custom, alvos de toque ≥ 44px, contraste AA nos tokens.
 - `prefers-reduced-motion` desliga idle do mascote, reveals e smooth scroll.
 
-## Integração Beehiiv (próximo passo)
+## Integração Beehiiv
 
-O formulário é mock. Para conectar:
+A integração é **real**, com fallback mock quando as variáveis não existem.
 
-1. Criar a publicação no Beehiiv e obter o endpoint de subscribe
-   (API v2: `POST /publications/{id}/subscriptions`) ou o embed.
-2. Em `components/SubscribeForm.tsx`, substituir o bloco marcado "Mock de integração"
-   por um `fetch` para uma route handler (`app/api/subscribe/route.ts`) que chama a API do
-   Beehiiv com a chave em variável de ambiente (`BEEHIIV_API_KEY`). Nunca expor a chave no client.
-3. Manter o honeypot e adicionar rate limit simples na route.
+- **Inscrição:** `POST /api/subscribe` (`app/api/subscribe/route.ts`, server-only)
+  chama `POST /v2/publications/{pub_id}/subscriptions`. Mantém honeypot e rate limit
+  simples por IP. Sem `BEEHIIV_API_KEY`/`BEEHIIV_PUBLICATION_ID` → modo mock.
+- **Publicação da edição:** `npm run beehiiv` (`scripts/beehiiv-publish.mjs`) publica o
+  conteúdo já renderizado via `POST /v2/publications/{pub_id}/posts`. Por padrão cria
+  apenas **rascunho** (`--draft`); é idempotente (mesmo conteúdo nunca dispara duas
+  vezes) e registra tudo no ledger `content/beehiiv-status.json`.
+
+Configure as chaves em `.env` (ver `.env.example`). O `publication_id` aceita
+`pub_<uuid>` ou o UUID cru — o prefixo `pub_` é adicionado quando falta. As chaves
+ficam só no servidor, nunca no client.
