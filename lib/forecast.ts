@@ -13,7 +13,7 @@
 // "Ondas" quase simultâneas (mesma campanha em várias origens) são colapsadas
 // antes de medir cadência, para não superestimar a frequência.
 //
-// ESPELHO: scripts/predictions.mjs replica esta lógica para o pipeline de
+// ESPELHO: scripts/forecast-engine.mjs replica esta lógica para o pipeline de
 // render (Node ESM puro, sem build). Ao alterar o algoritmo aqui, replique lá.
 
 export type Confidence = "alta" | "media" | "baixa" | "em-formacao";

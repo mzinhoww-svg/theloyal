@@ -1,198 +1,81 @@
-// Camada da área de predict do admin: lê config e overrides do Supabase, roda
-// o motor (lib/predictions) e aplica os overrides do operador. Server-only
-// (usa admin-db, que carrega a SERVICE_ROLE_KEY). Funções puras onde possível.
+// Camada server-only da área /admin/predict: lê o ledger, roda o motor puro
+// (lib/predict-engine) e persiste snapshots observáveis (predict_snapshots).
+// Usa admin-db (SERVICE_ROLE_KEY) — nunca importado por Client Component.
 
-import { rest } from "./admin-db";
-import {
-  buildForecast,
-  radarItems,
-  resolveConfig,
-  upcomingWindows,
-  type CampaignRow,
-  type Confidence,
-  type Forecast,
-  type ForecastConfig,
-  type ForecastResult,
-  type RadarItem,
-} from "./predictions";
+import { rest, insert } from "./admin-db";
+import { buildPredict, type Prediction, type PredictResult } from "./predict-engine";
+import type { CampaignRow } from "./forecast";
 
-// ---- Config persistida (forecast_config, linha singleton id=1) ----
-
-export type ConfigRow = {
-  wave_epsilon_days: number;
-  min_samples: number;
-  samples_alta: number;
-  samples_media: number;
-  cv_alta: number;
-  cv_media: number;
-  horizon_daily: number;
-  horizon_weekly: number;
-  updated_at: string | null;
-  updated_by: string | null;
-};
-
-export function rowToConfig(row: ConfigRow | null | undefined): ForecastConfig {
-  if (!row) return resolveConfig();
-  return resolveConfig({
-    waveEpsilonDays: Number(row.wave_epsilon_days),
-    minSamples: Number(row.min_samples),
-    samplesAlta: Number(row.samples_alta),
-    samplesMedia: Number(row.samples_media),
-    cvAlta: Number(row.cv_alta),
-    cvMedia: Number(row.cv_media),
-    horizonDaily: Number(row.horizon_daily),
-    horizonWeekly: Number(row.horizon_weekly),
-  });
-}
-
-export async function getConfig(): Promise<{ config: ForecastConfig; row: ConfigRow | null }> {
-  const rows = await rest<ConfigRow>("forecast_config?id=eq.1&limit=1");
-  const row = rows[0] ?? null;
-  return { config: rowToConfig(row), row };
-}
-
-// ---- Overrides (forecast_overrides) ----
-
-export type OverrideAction = "pin" | "mute" | "confidence";
-
-export type OverrideRow = {
-  id: string;
-  scope: "route" | "cluster";
-  route: string;
-  action: OverrideAction;
-  confidence: Confidence | null;
-  note: string | null;
-  created_at: string | null;
-  created_by: string | null;
-};
-
-export const getOverrides = () =>
-  rest<OverrideRow>("forecast_overrides?select=*&order=created_at.desc");
-
-// ---- Snapshots (forecast_snapshots) ----
+export type { Prediction, PredictResult } from "./predict-engine";
 
 export type SnapshotRow = {
   id: string;
-  generated_for: string;
-  routes_tracked: number | null;
-  clusters_tracked: number | null;
-  with_prediction: number | null;
+  as_of_date: string;
+  scope: string;
+  series_key: string;
+  program: string | null;
+  origem: string | null;
+  destino: string;
+  confidence: string | null;
+  readiness: string | null;
+  central_date: string | null;
+  window_start: string | null;
+  window_end: string | null;
   created_at: string | null;
-  created_by: string | null;
 };
+
+export async function loadPredict(now?: string): Promise<{
+  configured: boolean;
+  ledgerRows: number;
+  result: PredictResult;
+}> {
+  const asOf = (now ?? new Date().toISOString()).slice(0, 10);
+  const campaigns = await rest<CampaignRow>(
+    "campaigns?select=id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim&limit=2000",
+  );
+  const result = buildPredict(campaigns, { asOf });
+  return { configured: campaigns.length > 0, ledgerRows: campaigns.length, result };
+}
 
 export const getSnapshots = (limit = 20) =>
   rest<SnapshotRow>(
-    `forecast_snapshots?select=id,generated_for,routes_tracked,clusters_tracked,with_prediction,created_at,created_by&order=created_at.desc&limit=${limit}`,
+    `predict_snapshots?select=id,as_of_date,scope,series_key,program,origem,destino,confidence,readiness,central_date,window_start,window_end,created_at&order=created_at.desc&limit=${limit}`,
   );
 
-// ---- View model com overrides aplicados ----
-
-export type PredictView = Forecast & {
-  key: string; // `${scope}:${route}`
-  pinned: boolean;
-  muted: boolean;
-  overriddenConfidence: Confidence | null;
-  note: string | null;
-};
-
-const keyOf = (scope: string, route: string) => `${scope}:${route}`;
-
-function decorate(f: Forecast, ov: Map<string, OverrideRow>): PredictView {
-  const o = ov.get(keyOf(f.scope, f.route));
-  const overriddenConfidence = o?.action === "confidence" ? o.confidence : null;
-  return {
-    ...f,
-    confidence: overriddenConfidence ?? f.confidence,
-    key: keyOf(f.scope, f.route),
-    pinned: o?.action === "pin",
-    muted: o?.action === "mute",
-    overriddenConfidence,
-    note: o?.note ?? null,
+// Persiste (upsert por series_key+as_of_date) o snapshot observável de uma
+// previsão. Idempotente por dia.
+export async function saveSnapshot(p: Prediction, by?: string): Promise<void> {
+  const row = {
+    as_of_date: p.asOf,
+    scope: p.scope,
+    series_key: p.seriesKey,
+    program: p.program,
+    origem: p.origem,
+    destino: p.destino,
+    records_total: p.recordsTotal,
+    records_recent: p.recordsRecent,
+    days_since_last: p.daysSinceLast,
+    median_interval_days: p.medianIntervalAll,
+    recent_median_interval_days: p.medianIntervalRecent,
+    prob_7: p.probabilities?.p7 ?? null,
+    prob_15: p.probabilities?.p15 ?? null,
+    prob_30: p.probabilities?.p30 ?? null,
+    prob_60: p.probabilities?.p60 ?? null,
+    prob_90: p.probabilities?.p90 ?? null,
+    prob_180: p.probabilities?.p180 ?? null,
+    central_date: p.centralDate,
+    window_start: p.windowStart,
+    window_end: p.windowEnd,
+    bonus_candidates: p.bonusCandidates,
+    confidence: p.confidence,
+    readiness: p.readiness,
+    block_reason: p.blockReason,
+    backtest: p.backtest,
+    features: { events: p.events, intervals: p.intervals, warnings: p.warnings },
+    explanation: p.explanation,
+    model_version: p.modelVersion,
+    backtest_version: p.backtestVersion,
+    created_by: by ?? "admin",
   };
-}
-
-export type Distribution = Record<Confidence, number>;
-
-function distribution(views: PredictView[]): Distribution {
-  const d: Distribution = { alta: 0, media: 0, baixa: 0, "em-formacao": 0 };
-  for (const v of views) d[v.confidence]++;
-  return d;
-}
-
-export type PredictData = {
-  configured: boolean;
-  config: ForecastConfig;
-  configRow: ConfigRow | null;
-  overrides: OverrideRow[];
-  result: ForecastResult;
-  routes: PredictView[];
-  clusters: PredictView[];
-  distributionRoutes: Distribution;
-  distributionClusters: Distribution;
-  radarDaily: RadarItem[];
-  radarWeekly: RadarItem[];
-  snapshots: SnapshotRow[];
-  ledgerRows: number;
-  generatedFor: string;
-};
-
-// Aplica pin/mute/confidence e ordena: fixados primeiro, depois silenciados por
-// último, mantendo a ordem do motor dentro de cada grupo.
-function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): PredictView[] {
-  const views = list.map((f) => decorate(f, ov));
-  return views.sort((a, b) => {
-    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-    if (a.muted !== b.muted) return a.muted ? 1 : -1;
-    return 0;
-  });
-}
-
-// Carrega tudo para a página. `now` injetável para testes determinísticos.
-export async function loadPredict(now?: string): Promise<PredictData> {
-  const [{ config, row }, overrides, snapshots, campaigns] = await Promise.all([
-    getConfig(),
-    getOverrides(),
-    getSnapshots(),
-    rest<CampaignRow>(
-      "campaigns?select=id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim&limit=2000",
-    ),
-  ]);
-
-  const result = buildForecast(campaigns, { now, config });
-  const ov = new Map(overrides.map((o) => [keyOf(o.scope, o.route), o]));
-
-  const routes = applyOverrides(result.routes, ov);
-  const clusters = applyOverrides(result.clusters, ov);
-
-  // Radares: excluem rotas silenciadas (mute retira dos digests).
-  const mutedKeys = new Set(overrides.filter((o) => o.action === "mute").map((o) => keyOf(o.scope, o.route)));
-  const notMuted = (f: Forecast) => !mutedKeys.has(keyOf(f.scope, f.route));
-  const daily = upcomingWindows(result, {
-    now,
-    horizonDays: config.horizonDaily,
-    minConfidence: "media",
-  }).filter(notMuted);
-  const weekly = upcomingWindows(result, {
-    now,
-    horizonDays: config.horizonWeekly,
-    minConfidence: "baixa",
-  }).filter(notMuted);
-
-  return {
-    configured: campaigns.length > 0 || row != null,
-    config,
-    configRow: row,
-    overrides,
-    result,
-    routes,
-    clusters,
-    distributionRoutes: distribution(routes),
-    distributionClusters: distribution(clusters),
-    radarDaily: radarItems(daily),
-    radarWeekly: radarItems(weekly),
-    snapshots,
-    ledgerRows: campaigns.length,
-    generatedFor: result.generatedFor,
-  };
+  await insert("predict_snapshots", row, { onConflict: "series_key,as_of_date" });
 }

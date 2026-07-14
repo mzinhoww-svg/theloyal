@@ -1,369 +1,251 @@
-import { loadPredict, type PredictView } from "@/lib/admin-predict";
-import { formatWindow, type Confidence } from "@/lib/predictions";
+import { loadPredict, type Prediction } from "@/lib/admin-predict";
 import {
-  PageHeader,
   StatCard,
+  PageHeader,
   Pill,
+  Legend,
   Table,
   Th,
   Td,
   EmptyRow,
-  Sparkline,
-  fmtDate,
   type Tone,
 } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
-import { DistributionBar, WindowTimeline, Field } from "@/components/admin/predict-charts";
-import {
-  saveConfigAction,
-  setOverrideAction,
-  removeOverrideAction,
-  recalcSnapshotAction,
-} from "./actions";
+import { snapshotAllAction } from "./actions";
+import { MODEL_VERSION } from "@/lib/predict-engine";
 
-const CONF_TONE: Record<Confidence, Tone> = {
-  alta: "green",
-  media: "blue",
-  baixa: "gray",
-  "em-formacao": "gray",
-};
-const CONF_LABEL: Record<Confidence, string> = {
-  alta: "alta",
-  media: "média",
-  baixa: "baixa",
-  "em-formacao": "em formação",
-};
+function confTone(c: string): Tone {
+  return c === "alta" ? "green" : c === "media" ? "blue" : c === "baixa" ? "yellow" : "gray";
+}
+const pct = (n: number | null | undefined) => (n == null ? "—" : `${Math.round(n * 100)}%`);
+const bonusLabel = (p: Prediction) =>
+  p.bonusCandidates[0] ? `${p.bonusCandidates[0].value}% (${pct(p.bonusCandidates[0].probability)})` : "—";
 
-const INPUT = "rounded border border-line bg-surface px-2 py-1 text-sm text-ink";
-
-function ConfCell({ v }: { v: PredictView }) {
+function SeriesRow({ p }: { p: Prediction }) {
+  const blocked = p.blockReason != null;
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <Pill tone={CONF_TONE[v.confidence]}>{CONF_LABEL[v.confidence]}</Pill>
-      {v.overriddenConfidence && (
-        <span className="text-[11px] text-gray-400" title="confiança sobrescrita pelo operador">
-          override
-        </span>
+    <tr className={blocked ? "bg-paper/40" : undefined}>
+      <Td className="whitespace-nowrap font-medium">
+        {p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`}
+      </Td>
+      <Td className="text-right font-mono tabular-nums">{p.recordsTotal}</Td>
+      <Td className="text-right font-mono tabular-nums text-gray-500">
+        {p.daysSinceLast ?? "—"}
+      </Td>
+      <Td className="text-right font-mono tabular-nums text-gray-500">
+        {p.medianIntervalAll ?? "—"}
+      </Td>
+      {blocked ? (
+        <Td colSpan={4} className="text-gray-400">
+          <span className="inline-flex items-center gap-2">
+            <Pill tone="gray">bloqueado</Pill> {p.blockReason}
+          </span>
+        </Td>
+      ) : (
+        <>
+          <Td className="text-right font-mono tabular-nums">{pct(p.probabilities?.p30)}</Td>
+          <Td className="text-right font-mono tabular-nums">{pct(p.probabilities?.p90)}</Td>
+          <Td className="font-mono tabular-nums">{bonusLabel(p)}</Td>
+          <Td>
+            <Pill tone={confTone(p.confidence)}>{p.confidence}</Pill>
+          </Td>
+        </>
       )}
-    </span>
+    </tr>
   );
 }
 
-function QuickOverride({ v, action, label }: { v: PredictView; action: "pin" | "mute"; label: string }) {
+function ProbBar({ label, v, tone }: { label: string; v: number; tone: Tone }) {
+  const bg: Record<Tone, string> = {
+    green: "bg-green-600",
+    blue: "bg-blue-600",
+    yellow: "bg-yellow-500",
+    red: "bg-red-600",
+    gray: "bg-gray-400",
+  };
   return (
-    <ActionForm action={setOverrideAction}>
-      <input type="hidden" name="scope" value={v.scope} />
-      <input type="hidden" name="route" value={v.route} />
-      <input type="hidden" name="action" value={action} />
-      <SubmitButton variant="ghost" pendingLabel="…">
-        {label}
-      </SubmitButton>
-    </ActionForm>
+    <div className="flex items-center gap-2 text-xs">
+      <span className="w-10 flex-none font-mono tabular-nums text-gray-500">{label}</span>
+      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-paper-dark">
+        <div className={`h-full rounded-full ${bg[tone]}`} style={{ width: `${Math.round(v * 100)}%` }} />
+      </div>
+      <span className="w-10 flex-none text-right font-mono tabular-nums">{pct(v)}</span>
+    </div>
   );
 }
 
-function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: PredictView[] }) {
+function DetailCard({ p }: { p: Prediction }) {
+  const t = confTone(p.confidence);
   return (
-    <section className="mb-8">
-      <h2 className="mb-1 font-display text-lg font-semibold">{title}</h2>
-      <p className="mb-3 text-sm text-gray-500">{sub}</p>
-      <Table>
-        <thead>
-          <tr>
-            <Th>{title.includes("programa") ? "Programa" : "Rota"}</Th>
-            <Th>Confiança</Th>
-            <Th>Janela prevista</Th>
-            <Th className="text-right">Cadência</Th>
-            <Th>Base</Th>
-            <Th>Ações</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length ? (
-            rows.map((v) => (
-              <tr key={v.key} className={v.muted ? "opacity-50" : undefined}>
-                <Td className="font-medium">
-                  <span className="inline-flex items-center gap-1.5">
-                    {v.pinned && <Pill tone="blue">fixado</Pill>}
-                    {v.muted && <Pill tone="gray">silenciado</Pill>}
-                    {v.route}
-                    {v.typicalPercent ? (
-                      <span className="font-mono text-xs text-gray-400">{v.typicalPercent}%</span>
-                    ) : null}
-                  </span>
-                </Td>
-                <Td>
-                  <ConfCell v={v} />
-                </Td>
-                <Td className="font-mono tabular-nums">
-                  {v.windowStart ? formatWindow(v.windowStart, v.windowEnd) : "—"}
-                </Td>
-                <Td className="w-24 text-right">
-                  {v.intervals.length >= 2 ? (
-                    <Sparkline data={v.intervals} tone={CONF_TONE[v.confidence]} height={22} />
-                  ) : (
-                    <span className="text-xs text-gray-400">—</span>
-                  )}
-                </Td>
-                <Td className="text-xs text-gray-500">{v.basis}</Td>
-                <Td>
-                  <div className="flex items-center gap-1">
-                    <QuickOverride v={v} action="pin" label={v.pinned ? "—" : "fixar"} />
-                    <QuickOverride v={v} action="mute" label={v.muted ? "—" : "silenciar"} />
-                  </div>
-                </Td>
-              </tr>
-            ))
-          ) : (
-            <EmptyRow cols={6} label="sem séries" />
-          )}
-        </tbody>
-      </Table>
-    </section>
+    <div className="rounded-lg border border-line bg-surface p-4">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-display text-base font-semibold">
+          {p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`}
+          <span className="ml-2 align-middle">
+            <Pill tone={t}>{p.confidence}</Pill>
+          </span>
+        </h3>
+        <span className="font-mono text-xs text-gray-400">
+          {p.recordsTotal} campanhas · readiness {p.readiness}
+        </span>
+      </div>
+      {p.blockReason ? (
+        <p className="text-sm text-gray-500">{p.explanation}</p>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+              Probabilidade de nova campanha
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {p.probabilities && (
+                <>
+                  <ProbBar label="7d" v={p.probabilities.p7} tone={t} />
+                  <ProbBar label="15d" v={p.probabilities.p15} tone={t} />
+                  <ProbBar label="30d" v={p.probabilities.p30} tone={t} />
+                  <ProbBar label="60d" v={p.probabilities.p60} tone={t} />
+                  <ProbBar label="90d" v={p.probabilities.p90} tone={t} />
+                  <ProbBar label="180d" v={p.probabilities.p180} tone={t} />
+                </>
+              )}
+            </div>
+            <div className="mt-2 font-mono text-xs text-gray-500">
+              janela {p.windowStart} … {p.windowEnd} · central {p.centralDate}
+            </div>
+          </div>
+          <div>
+            <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+              Bônus provável
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {p.bonusCandidates.length ? (
+                p.bonusCandidates.map((b, i) => (
+                  <Pill key={i} tone={i === 0 ? t : "gray"}>
+                    {b.value}% · {pct(b.probability)}
+                  </Pill>
+                ))
+              ) : (
+                <span className="text-sm text-gray-400">sem percentual observado</span>
+              )}
+              {p.bonusOutros > 0 && <Pill tone="gray">outros · {pct(p.bonusOutros)}</Pill>}
+            </div>
+            {p.backtest && p.backtest.observations > 0 && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+                  Backtest (walk-forward)
+                </div>
+                <div className="font-mono text-xs tabular-nums text-gray-500">
+                  {p.backtest.observations} janelas · acerto {pct(p.backtest.windowHitRate)} · erro
+                  mediano {p.backtest.medianDateErrorDays}d · bônus ±5pp{" "}
+                  {pct(p.backtest.bonusAccuracy5pp)}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      <p className="mt-3 border-t border-line pt-2 text-sm text-gray-700">{p.explanation}</p>
+    </div>
   );
 }
+
+const isReady = (p: Prediction) => p.readiness === "ready" || p.readiness === "ready_with_warnings";
 
 export default async function PredictPage() {
-  const data = await loadPredict();
-  const { config, configRow, overrides, result } = data;
-
-  // Timeline: janelas dos programas dentro do horizonte semanal, não silenciadas.
-  const timeline = data.clusters
-    .filter((c) => !c.muted && c.windowStart)
-    .slice(0, 12)
-    .map((c) => ({
-      label: c.route,
-      start: c.windowStart as string,
-      end: c.windowEnd as string,
-      tone: CONF_TONE[c.confidence],
-    }));
-
-  // Autocomplete do override: todas as rotas e programas conhecidos.
-  const routeOptions = Array.from(new Set([...data.clusters, ...data.routes].map((f) => f.route)));
-
-  // Tendência de "com previsão" ao longo dos snapshots (cronológico).
-  const snapTrend = [...data.snapshots].reverse().map((s) => s.with_prediction ?? 0);
-
-  const cfgField = (
-    key: string,
-    label: string,
-    hint: string,
-    val: number,
-    step = "1",
-  ) => (
-    <Field label={label} hint={hint}>
-      <input type="number" name={key} defaultValue={val} step={step} className={INPUT} />
-    </Field>
-  );
+  const { result, ledgerRows } = await loadPredict();
+  const series = [...result.clusters, ...result.routes];
+  const ready = series.filter(isReady).length;
+  const blocked = series.filter((p) => p.blockReason != null).length;
+  const topReadyCluster = result.clusters.find(isReady) ?? result.clusters[0];
 
   return (
     <>
       <PageHeader
-        title="Área de previsão"
-        sub="Motor de recorrência de janelas — ajuste, override e snapshots. Projeção estatística, nunca veredito nem garantia."
+        title="Predict"
+        sub={`Motor histórico & preditivo por série (${MODEL_VERSION}). ${ledgerRows} campanhas no ledger.`}
         actions={
-          <ActionForm action={recalcSnapshotAction}>
-            <SubmitButton variant="primary" pendingLabel="Recalculando…">
-              Recalcular + snapshot
+          <ActionForm action={snapshotAllAction}>
+            <SubmitButton variant="primary" pendingLabel="Salvando…">
+              Gerar snapshot
             </SubmitButton>
           </ActionForm>
         }
       />
 
-      <section className="mb-6 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
-        <StatCard label="Séries rastreadas" value={result.routesTracked + result.clustersTracked} sub={`${result.routesTracked} rotas · ${result.clustersTracked} programas`} tone="blue" />
-        <StatCard label="Com previsão" value={result.withPrediction} sub="base suficiente" tone="green" />
-        <StatCard label="Ledger" value={data.ledgerRows} sub="linhas consideradas" />
-        <StatCard label="Gerado para" value={<span className="text-lg">{data.generatedFor}</span>} sub="data de referência" />
+      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
+        <StatCard label="Séries" value={series.length} sub={`${result.clusters.length} programas · ${result.routes.length} rotas`} tone="gray" />
+        <StatCard label="Com previsão" value={ready} sub="ready / ready_with_warnings" tone={ready > 0 ? "green" : "gray"} />
+        <StatCard label="Bloqueadas" value={blocked} sub="histórico insuficiente" tone={blocked > 0 ? "yellow" : "green"} />
       </section>
 
-      <section className="mb-8 grid gap-3 md:grid-cols-2">
-        <DistributionBar title="Confiança · por rota" dist={data.distributionRoutes} />
-        <DistributionBar title="Confiança · por programa" dist={data.distributionClusters} />
-      </section>
+      <div className="mb-4 mt-4">
+        <Legend
+          items={[
+            { tone: "green", label: "alta" },
+            { tone: "blue", label: "média" },
+            { tone: "yellow", label: "baixa" },
+            { tone: "gray", label: "insuficiente / bloqueada" },
+          ]}
+        />
+      </div>
+
+      {topReadyCluster && (
+        <section className="mb-8">
+          <h2 className="mb-2 font-display text-lg font-semibold">Detalhe — programa com mais histórico</h2>
+          <DetailCard p={topReadyCluster} />
+        </section>
+      )}
 
       <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Timeline de janelas previstas</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Programas dentro do horizonte semanal ({config.horizonWeekly}d). A linha vermelha marca hoje.
-        </p>
-        <WindowTimeline from={data.generatedFor} horizon={config.horizonWeekly} items={timeline} />
-      </section>
-
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Parâmetros do motor</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Ajusta como a recorrência vira confiança e janela. Vale para o admin, o daily e o weekly.
-          {configRow?.updated_at && (
-            <span className="text-gray-400"> · última alteração {fmtDate(configRow.updated_at)} por {configRow.updated_by ?? "—"}</span>
-          )}
-        </p>
-        <ActionForm action={saveConfigAction} className="rounded-lg border border-line bg-surface p-4">
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
-            {cfgField("wave_epsilon_days", "Janela de onda (dias)", "Janelas ≤ N dias contam como a mesma campanha.", config.waveEpsilonDays)}
-            {cfgField("min_samples", "Mínimo de janelas", "Abaixo disso, fica em formação (sem previsão).", config.minSamples)}
-            {cfgField("samples_media", "Amostras p/ média", "Mín. de janelas para confiança média.", config.samplesMedia)}
-            {cfgField("samples_alta", "Amostras p/ alta", "Mín. de janelas para confiança alta.", config.samplesAlta)}
-            {cfgField("cv_media", "CV máx. média", "Coef. de variação máx. para média (menor = mais regular).", config.cvMedia, "0.05")}
-            {cfgField("cv_alta", "CV máx. alta", "Coef. de variação máx. para alta.", config.cvAlta, "0.05")}
-            {cfgField("horizon_daily", "Horizonte daily (dias)", "Janela do radar do daily.", config.horizonDaily)}
-            {cfgField("horizon_weekly", "Horizonte weekly (dias)", "Janela do radar do weekly.", config.horizonWeekly)}
-          </div>
-          <div className="mt-4">
-            <SubmitButton variant="primary" pendingLabel="Salvando…">
-              Salvar parâmetros
-            </SubmitButton>
-          </div>
-        </ActionForm>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Overrides</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Fixar (destaca), silenciar (retira dos digests) ou sobrescrever a confiança de uma série.
-        </p>
-        <ActionForm action={setOverrideAction} className="mb-4 rounded-lg border border-line bg-surface p-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <Field label="Escopo">
-              <select name="scope" className={INPUT} defaultValue="cluster">
-                <option value="cluster">programa</option>
-                <option value="route">rota</option>
-              </select>
-            </Field>
-            <Field label="Rota / programa" hint="Ex.: →latampass ou itau→latampass">
-              <input name="route" list="routeOptions" className={`${INPUT} min-w-[220px]`} placeholder="→latampass" autoComplete="off" />
-              <datalist id="routeOptions">
-                {routeOptions.map((r) => (
-                  <option key={r} value={r} />
-                ))}
-              </datalist>
-            </Field>
-            <Field label="Ação">
-              <select name="action" className={INPUT} defaultValue="pin">
-                <option value="pin">fixar</option>
-                <option value="mute">silenciar</option>
-                <option value="confidence">sobrescrever confiança</option>
-              </select>
-            </Field>
-            <Field label="Confiança" hint="só p/ sobrescrever">
-              <select name="confidence" className={INPUT} defaultValue="baixa">
-                <option value="alta">alta</option>
-                <option value="media">média</option>
-                <option value="baixa">baixa</option>
-              </select>
-            </Field>
-            <Field label="Nota">
-              <input name="note" className={`${INPUT} min-w-[180px]`} placeholder="motivo (opcional)" />
-            </Field>
-            <SubmitButton variant="primary" pendingLabel="Salvando…">
-              Aplicar
-            </SubmitButton>
-          </div>
-        </ActionForm>
-
+        <h2 className="mb-2 font-display text-lg font-semibold">Programas (cluster → destino)</h2>
         <Table>
           <thead>
             <tr>
-              <Th>Escopo</Th>
-              <Th>Rota / programa</Th>
-              <Th>Ação</Th>
-              <Th>Nota</Th>
-              <Th>Quando</Th>
-              <Th></Th>
+              <Th>Série</Th>
+              <Th className="text-right">Camp.</Th>
+              <Th className="text-right">Últ. (d)</Th>
+              <Th className="text-right">Interv.</Th>
+              <Th className="text-right">P30</Th>
+              <Th className="text-right">P90</Th>
+              <Th>Bônus</Th>
+              <Th>Confiança</Th>
             </tr>
           </thead>
           <tbody>
-            {overrides.length ? (
-              overrides.map((o) => (
-                <tr key={o.id}>
-                  <Td className="text-gray-500">{o.scope === "cluster" ? "programa" : "rota"}</Td>
-                  <Td className="font-medium">{o.route}</Td>
-                  <Td>
-                    {o.action === "confidence" ? (
-                      <span>confiança → <Pill tone={CONF_TONE[(o.confidence ?? "baixa") as Confidence]}>{o.confidence}</Pill></span>
-                    ) : o.action === "pin" ? (
-                      <Pill tone="blue">fixado</Pill>
-                    ) : (
-                      <Pill tone="gray">silenciado</Pill>
-                    )}
-                  </Td>
-                  <Td className="text-gray-500">{o.note ?? "—"}</Td>
-                  <Td className="font-mono text-xs text-gray-500">{fmtDate(o.created_at)}</Td>
-                  <Td>
-                    <ActionForm action={removeOverrideAction}>
-                      <input type="hidden" name="id" value={o.id} />
-                      <SubmitButton variant="danger" pendingLabel="…">
-                        remover
-                      </SubmitButton>
-                    </ActionForm>
-                  </Td>
-                </tr>
-              ))
+            {result.clusters.length ? (
+              result.clusters.map((p) => <SeriesRow key={p.seriesKey} p={p} />)
             ) : (
-              <EmptyRow cols={6} label="nenhum override — a previsão sai direto do motor" />
+              <EmptyRow cols={8} label="sem séries de transferência" />
             )}
           </tbody>
         </Table>
       </section>
 
       <section className="mb-8">
-        <div className="mb-1 flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">Histórico de snapshots</h2>
-          {snapTrend.length >= 2 && (
-            <div className="w-40">
-              <Sparkline data={snapTrend} tone="blue" height={26} />
-            </div>
-          )}
-        </div>
-        <p className="mb-3 text-sm text-gray-500">
-          Cada &ldquo;Recalcular + snapshot&rdquo; grava um ponto. Acompanhe como a base de previsão evolui com o backfill.
-        </p>
+        <h2 className="mb-2 font-display text-lg font-semibold">Rotas (origem → destino)</h2>
         <Table>
           <thead>
             <tr>
-              <Th>Gerado para</Th>
-              <Th className="text-right">Rotas</Th>
-              <Th className="text-right">Programas</Th>
-              <Th className="text-right">Com previsão</Th>
-              <Th>Quando</Th>
-              <Th>Por</Th>
+              <Th>Série</Th>
+              <Th className="text-right">Camp.</Th>
+              <Th className="text-right">Últ. (d)</Th>
+              <Th className="text-right">Interv.</Th>
+              <Th className="text-right">P30</Th>
+              <Th className="text-right">P90</Th>
+              <Th>Bônus</Th>
+              <Th>Confiança</Th>
             </tr>
           </thead>
           <tbody>
-            {data.snapshots.length ? (
-              data.snapshots.map((s) => (
-                <tr key={s.id}>
-                  <Td className="font-mono tabular-nums">{s.generated_for}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.routes_tracked ?? "—"}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.clusters_tracked ?? "—"}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.with_prediction ?? "—"}</Td>
-                  <Td className="font-mono text-xs text-gray-500">{fmtDate(s.created_at)}</Td>
-                  <Td className="text-gray-500">{s.created_by ?? "—"}</Td>
-                </tr>
-              ))
+            {result.routes.length ? (
+              result.routes.slice(0, 60).map((p) => <SeriesRow key={p.seriesKey} p={p} />)
             ) : (
-              <EmptyRow cols={6} label="nenhum snapshot ainda — clique em “Recalcular + snapshot”" />
+              <EmptyRow cols={8} label="sem rotas" />
             )}
           </tbody>
         </Table>
       </section>
-
-      <PredictTable
-        title="Previsão por programa"
-        sub="Cluster do destino — consolida campanhas program-wide de várias origens."
-        rows={data.clusters}
-      />
-      <PredictTable
-        title="Previsão por rota"
-        sub="Origem → destino. Cadência = série de intervalos entre janelas."
-        rows={data.routes}
-      />
-
-      <p className="mt-8 border-t border-line pt-4 text-xs text-gray-400">
-        Projeção por recorrência do histórico do ledger. Sem base suficiente → em formação; nunca chuta uma data.
-        Os radares daily/weekly usam estes mesmos números (média+ / baixa+), excluindo o que está silenciado.
-      </p>
     </>
   );
 }
