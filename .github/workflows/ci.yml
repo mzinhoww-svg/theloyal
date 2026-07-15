@@ -20,7 +20,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 22 (LTS): os testes do Radar importam .ts diretamente e dependem do
+          # type stripping nativo, default a partir de 22.18. Node 20 falha com
+          # ERR_UNKNOWN_FILE_EXTENSION. Next 14 suporta plenamente o 22.
+          node-version: 22
           cache: npm
 
       - name: Install
