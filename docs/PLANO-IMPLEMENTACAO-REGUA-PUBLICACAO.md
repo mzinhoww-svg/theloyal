@@ -19,6 +19,31 @@
 
 ---
 
+## Estado da entrega (implementado neste PR)
+
+As quatro fases foram implementadas como backend testado, sem quebrar superfícies
+existentes (suíte: **288 testes verdes**; validate/render/render:web/qa/build ok).
+
+| Fase | Entregue | Arquivos principais |
+|---|---|---|
+| **0** | `assertEditorialRules` (fonte única, superset), motor de disposição puro, incoerência sempre bloqueia, QA cobre web, `daily:*` removido | `scripts/lib.mjs`, `scripts/lib/disposition.mjs`, `scripts/qa.mjs`, `scripts/{validate,render-weekly,pro}.mjs`, `.github/workflows/ci.yml` |
+| **1** | tiers no registro de entidades + `resolveTier`, `scoreBreakdown` obrigatório p/ ação (rebaixe D), dispositions no gate, auto-publish só faixa A | `content/entity.schema.json`, `content/entities/index.json`, `scripts/validate.mjs`, `scripts/beehiiv-publish.mjs` |
+| **2** | consolidação Weekly←Daily rastreável, ledger de exceções, log de publicação + `provenance` | `scripts/lib/weekly-consolidate.mjs`, `scripts/lib/exceptions.mjs`, `content/exceptions-log.json`, `scripts/beehiiv-publish.mjs` |
+| **3** | `computeScore`/`reconcileScore`, motor de acurácia read-only, `ruler-config` com piso imutável | `scripts/lib/score.mjs`, `scripts/accuracy.mjs`, `content/ruler-config.json` |
+
+**Deferido conscientemente (follow-up, fora do escopo seguro deste PR):**
+- **1.3 chip visível de `monitoramento`**: o estado de disposição é rastreado e
+  imposto operacionalmente (gate + log); a renderização ao leitor segue reusando
+  `nao-confirmado` (honesto) até o chip dedicado ser desenhado.
+- **3.1 migração do admin** para entrada por critérios: `score.mjs` está pronto e
+  testado; a reescrita da UI (`/admin/campanhas`) é etapa à parte.
+- **3.2 backtest do Predict v2**: o motor de acurácia já cruza o log da régua +
+  vigência; a integração com `lib/predict-engine.ts` (TS) entra com outcome tracking.
+- **0.4 remoção física do `renderer/*`**: mantido (ainda usado por
+  `app/daily/preview` e `tests/taxonomy`); só os entrypoints `daily:*` foram aposentados.
+
+---
+
 ## 0. Leitura do diagnóstico: a régua ataca o "gêmeos"
 
 `ANALISE-SISTEMA.md` nomeia o maior risco estrutural do projeto: **subsistemas com
