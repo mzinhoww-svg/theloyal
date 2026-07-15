@@ -3,7 +3,7 @@
 // Uso: node scripts/qa.mjs   (rode `npm run render` antes, para o e-mail existir)
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { DISCLAIMER, EMOJI_RE, URGENCY_RE, collectStrings, listEditionFiles, loadEdition } from "./lib.mjs";
+import { DISCLAIMER, assertEditorialRules, editorialRuleMessage, listEditionFiles, loadEdition } from "./lib.mjs";
 import { validateEdition, validateRadarConsistency } from "./validate.mjs";
 
 const FORECAST_PATH = "content/forecast.json";
@@ -100,13 +100,18 @@ function auditEmailDir(dir) {
     const tag = `E-mail ${dir}/${f}`;
     const html = readFileSync(join(dir, f), "utf8");
     const textish = html.replace(/<[^>]+>/g, " ");
-    if (EMOJI_RE.test(textish)) block(`${tag}: emoji no corpo`);
-    if (URGENCY_RE.test(textish)) block(`${tag}: urgência artificial`);
+    // Emoji/urgência no HTML renderizado. O dado interno/CMI é checado na FONTE
+    // (JSON, via validate/pro/weekly); re-escanear o HTML geraria falso-positivo
+    // na metodologia, que legitimamente promete "sem dados internos / CMI".
+    for (const v of assertEditorialRules({ body: textish })) {
+      if (v.rule === "interno") continue;
+      block(`${tag}: ${editorialRuleMessage(v)}`);
+    }
     if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
     if (/<script/i.test(html)) block(`${tag}: contém <script> (proibido em e-mail)`);
     if (/(?:src|background)\s*=?\s*["']?https?:\/\//i.test(html) || /url\(\s*https?:/i.test(html)) block(`${tag}: carrega recurso externo (deve ser self-contained)`);
     if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
-    if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: sem emoji/urgência, self-contained, disclaimer presente`);
+    if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: sem emoji/urgência/CMI, self-contained, disclaimer presente`);
   }
 }
 
@@ -117,10 +122,37 @@ function auditEmail() {
   auditEmailDir("out/weekly");
 }
 
+// ---------- 4. Página web gerada (archive) — fecha o gap P2.13 ----------
+// O QA antes só auditava e-mail; a superfície web (out/web/*.html, gerada por
+// `npm run render:web`) passa pelo mesmo rigor: regras invioláveis + amarelo como
+// texto + disclaimer. Self-contained não se aplica (a web pode carregar assets).
+function auditWebDir(dir) {
+  if (!existsSync(dir)) return;
+  for (const f of readdirSync(dir).filter((n) => n.endsWith(".html"))) {
+    const tag = `Web ${dir}/${f}`;
+    const html = readFileSync(join(dir, f), "utf8");
+    const textish = html.replace(/<[^>]+>/g, " ");
+    // Ver auditEmailDir: 'interno' é checado na fonte JSON, não no HTML.
+    for (const v of assertEditorialRules({ body: textish })) {
+      if (v.rule === "interno") continue;
+      block(`${tag}: ${editorialRuleMessage(v)}`);
+    }
+    if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
+    if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
+    if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: regras invioláveis OK, disclaimer presente`);
+  }
+}
+
+function auditWeb() {
+  if (!existsSync("out/web")) { warn("out/web ausente — rode `npm run render:web` para auditar a superfície web"); return; }
+  auditWebDir("out/web");
+}
+
 function main() {
   auditSource();
   auditEditions();
   auditEmail();
+  auditWeb();
 
   console.log("== TL QA ==");
   passes.forEach((m) => console.log(`  ✓ ${m}`));

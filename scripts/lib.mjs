@@ -68,9 +68,11 @@ export const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF
 export const URGENCY_RE = /(?<![\p{L}\p{N}])(imperd[ií]vel|corra|corre|garanta j[áa]|[úu]ltima chance|milhas gr[áa]tis)(?![\p{L}\p{N}])/iu;
 
 // Dado interno de empresa / CMI / métrica proprietária (regra inviolável 1).
-// Termos que só existiriam com acesso interno a um programa.
+// Termos que só existiriam com acesso interno a um programa. Fonte ÚNICA — antes
+// o Pro carregava uma cópia mais fraca (só CMI/dado interno/nossa base); este
+// regex é superset das duas versões, para Daily/Weekly/Pro aplicarem o mesmo rigor.
 export const INTERNAL_RE =
-  /\b(CMI|dados?\s+internos?|m[ée]trica\s+interna|base\s+interna|churn\s+interno|receita\s+interna|margem\s+de\s+contribui[çc][ãa]o\s+interna|custo\s+interno\s+do\s+programa)\b/iu;
+  /\b(CMI|dados?\s+internos?|m[ée]trica\s+interna|base\s+interna|churn\s+interno|receita\s+interna|margem\s+de\s+contribui[çc][ãa]o\s+interna|custo\s+interno\s+do\s+programa|nossos\s+clientes|nossa\s+base)\b/iu;
 
 // Todo link editorial deve ser https absoluto (nada de http:// ou relativo).
 export function isValidLink(url) {
@@ -107,6 +109,39 @@ export function collectStrings(node, out = []) {
 
 export function editionSlug(edition) {
   return pad(edition.number);
+}
+
+// Fonte ÚNICA das regras invioláveis de texto (backlog P1.4). Varre todas as
+// strings do nó e devolve as violações — Daily, Weekly e Pro chamam esta função
+// em vez de reimplementar as varreduras (fim do INTERNAL_RE mais fraco no Pro).
+// Retorna [] quando limpo. Pura: sem I/O, mesma entrada → mesma saída.
+export function assertEditorialRules(node, opts = {}) {
+  const strings = collectStrings(node);
+  const violations = [];
+  const hit = (rule, re) => {
+    const samples = strings.filter((s) => re.test(s));
+    if (samples.length) violations.push({ rule, samples: samples.slice(0, 2) });
+  };
+  hit("emoji", EMOJI_RE);
+  hit("urgencia", URGENCY_RE);
+  hit("interno", INTERNAL_RE);
+  if (opts.requireDisclaimer) {
+    const ok = typeof node?.disclaimer === "string" && node.disclaimer.includes(DISCLAIMER);
+    if (!ok) violations.push({ rule: "disclaimer", samples: [] });
+  }
+  return violations;
+}
+
+// Mensagem legível por violação — para os relatórios de gate.
+export function editorialRuleMessage(v) {
+  const preview = v.samples.map((s) => JSON.stringify(String(s).slice(0, 50))).join(", ");
+  switch (v.rule) {
+    case "emoji": return `Emoji proibido no corpo editorial: ${preview}`;
+    case "urgencia": return `Urgência artificial proibida: ${preview}`;
+    case "interno": return `Dado interno/CMI proibido no corpo editorial: ${preview}`;
+    case "disclaimer": return "Disclaimer ausente ou alterado — deve conter a frase oficial completa";
+    default: return `Violação de regra inviolável (${v.rule})`;
+  }
 }
 
 export { basename };

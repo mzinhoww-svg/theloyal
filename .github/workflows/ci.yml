@@ -79,6 +79,8 @@ jobs:
         run: npm run validate
       - name: render
         run: npm run render
+      - name: render web (archive) — para o QA auditar a superfície web
+        run: npm run render:web
       - name: qa
         run: npm run qa
       - name: publish (indices locais, nao envia e-mail)

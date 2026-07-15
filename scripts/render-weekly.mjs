@@ -7,8 +7,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
-  CONFIDENCE, DISCLAIMER, EMOJI_RE, INTERNAL_RE, RADAR_NOTE_DEFAULT, TOKENS, URGENCY_RE, VERDICTS,
-  collectStrings,
+  CONFIDENCE, DISCLAIMER, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS,
+  assertEditorialRules, editorialRuleMessage,
 } from "./lib.mjs";
 import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
 
@@ -61,13 +61,12 @@ export function validateWeekly(wk) {
   if (typeof wk.disclaimer === "string" && wk.disclaimer.includes(DISCLAIMER)) ok.push("Disclaimer íntegro");
   else errors.push("Disclaimer ausente ou alterado");
 
-  const strings = collectStrings(wk);
-  if (strings.some((s) => EMOJI_RE.test(s))) errors.push("Emoji no corpo do weekly");
-  else ok.push("Zero emoji");
-  if (strings.some((s) => URGENCY_RE.test(s))) errors.push("Urgência artificial no weekly");
-  else ok.push("Sem urgência artificial");
-  if (strings.some((s) => INTERNAL_RE.test(s))) errors.push("Possível dado interno/CMI no weekly");
-  else ok.push("Sem dado interno/CMI");
+  // Regras invioláveis de texto — fonte única (assertEditorialRules), mesma que Daily/Pro.
+  const wkViolations = assertEditorialRules(wk);
+  for (const v of wkViolations) errors.push(editorialRuleMessage(v));
+  if (!wkViolations.some((v) => v.rule === "emoji")) ok.push("Zero emoji");
+  if (!wkViolations.some((v) => v.rule === "urgencia")) ok.push("Sem urgência artificial");
+  if (!wkViolations.some((v) => v.rule === "interno")) ok.push("Sem dado interno/CMI");
 
   const radar = wk.radar;
   if (radar) {
