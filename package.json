@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
     "validate": "node scripts/validate.mjs",
     "render": "node scripts/render.mjs",
     "render:web": "node scripts/render-web.mjs",

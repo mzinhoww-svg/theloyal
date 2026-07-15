@@ -35,7 +35,7 @@
           "texto": { "type": "string" },
           "veredito": {
             "type": "string",
-            "enum": ["vale-agir","vale-olhar","depende","esperaria","nao-vale","evitaria","nao-confirmado"]
+            "enum": ["vale-agir","vale-olhar","casos-especificos","esperaria","evitaria","nao-confirmado","depende","nao-vale"]
           },
           "veredito_nota": { "type": "string" }
         }

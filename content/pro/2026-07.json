@@ -26,7 +26,12 @@
         "count": 1
       }
     ],
-    "note": "Distribuição sem Evitaria no período; risco migrou para Não confirmado por falta de regulamento."
+    "note": "Distribuição sem Evitaria no período; risco migrou para Não confirmado por falta de regulamento.",
+    "derivedFrom": [
+      { "edition": 28, "deal": "Transferência bonificada · Esfera → Latam Pass", "verdict": "vale-agir", "tlScore": 88 },
+      { "edition": 27, "deal": "Transferência bonificada · Livelo → Smiles", "verdict": "vale-olhar", "tlScore": 76 },
+      { "edition": 28, "deal": "Compra de pontos · aguardando confirmação", "verdict": "nao-confirmado" }
+    ]
   },
   "benchmarks": [
     {
