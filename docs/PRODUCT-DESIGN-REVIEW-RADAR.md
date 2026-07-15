@@ -38,6 +38,11 @@ dar voz ao que já existe, sob fonte única e com o risco à vista — sem motor
 e sem segunda fonte de verdade. A cura da causa raiz (dedup e correção de data no
 banco) é estrutural e depende das decisões dos ADRs `proposed`.
 
+> **Decisões e priorização:** este review foi fechado em decisões de produto,
+> matriz de decisão, jornadas, MVP/roadmap, backlogs e métricas em
+> **`docs/DECISOES-PRODUTO-RADAR.md`**. Consulte-o para o plano executável e as
+> decisões que ainda exigem aprovação humana.
+
 ---
 
 ## 0. Regra-mãe deste review
