@@ -74,6 +74,15 @@ export function validateWeekly(wk) {
     (radar.windows ?? []).forEach((w, i) => {
       if (!w.label || !w.window) errors.push(`Radar ${i + 1}: label/window ausente`);
       if (!["alta", "media", "baixa"].includes(w.confidence)) errors.push(`Radar ${i + 1}: confiança "${w.confidence}" inválida (em-formacao nunca vira radar)`);
+      // Nota de corte da política canônica (§7.4): o leitor só recebe PREVISÃO com
+      // confiança ≥ média. Item automático (source:forecast) abaixo disso bloqueia;
+      // item editorial abaixo disso vira aviso (deveria ser monitoramento, não janela).
+      if (w.confidence === "baixa") {
+        const automatic = w.source === "forecast" || w.seriesKey != null || w.generatedAt != null;
+        const msg = `Radar ${i + 1} (${w.label ?? "sem rótulo"}): confiança "baixa" está abaixo da nota de corte (≥ média) — publique como monitoramento, não como janela`;
+        if (automatic) errors.push(msg);
+        else warnings.push(msg);
+      }
     });
     if (!errors.some((e) => e.startsWith("Radar"))) ok.push(`Radar coerente (${(radar.windows ?? []).length} janela(s), sem veredito)`);
   }

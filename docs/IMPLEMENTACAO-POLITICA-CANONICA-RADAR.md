@@ -95,18 +95,24 @@ render atual (janela é faixa; bônus é `~%`); a troca de fonte para Predict é
 
 ---
 
-### F2 — Degrade honesto em todas as superfícies (sem migration)
+### F2 — Nota de corte no gate de QA (sem migration) — **CONCLUÍDA**
 
-**Objetivo:** generalizar o comportamento honesto que hoje só a Weekly tem
-(`resolveRadar`: sem radar fresco/completo → não usa número stale) para **todas** as
-superfícies, com o vocabulário da política (§4).
+**Objetivo:** garantir, no **gate de QA**, que nenhuma superfície publique como
+**janela** algo abaixo da nota de corte — o degrade honesto que a política exige (§4).
+A honestidade de render já existia (a Weekly omite radar stale/incompleto via
+`resolveRadar`; ambos os renders omitem o bloco quando não há janelas).
 
-| Item | Problema | Comportamento esperado | Reusa | Arquivos | Risco | Aceite |
-|---|---|---|---|---|---|---|
-| **F2-01** | Só a Weekly degrada bem | `resolveRadar` compartilhado (Daily/Weekly/Pro): fresh+completo+publicável → previsão; senão texto honesto | `assessForecastArtifact`, reader decision | `scripts/render-weekly.mjs`, `scripts/render.mjs`, lib comum | médio | nenhuma superfície publica stale/baixa em silêncio | 
-| **F2-02** | Corte silencioso possível | Ausência vira **texto** ("sem janelas relevantes hoje" / "monitorando N séries"); corte total só sem base | política §4.4 | renders | baixo | ausência sempre textual |
-| **F2-03** | Weekly ≥ conservadora não garantida | `radar-consistency` valida Weekly não menos conservadora que Daily (mesma série: mesmo motor, janela compatível, confiança ≤) | `radar-consistency` | `lib/radar-consistency`/tests | médio | QA barra contradição Daily×Weekly |
-| **F2-04** | Pro pode parecer "mais otimista" | Pro adiciona profundidade (P7–P180, backtest, metodologia), **nunca** veredito/confiança maior | reader decision | `app/pro/*` | baixo | Pro nunca eleva confiança da série |
+| Item | Entregue | Arquivos | Risco |
+|---|---|---|---|
+| **F2-01** | **Nota de corte no QA**: janela de leitor com confiança "baixa" bloqueia se **automática** (source:forecast), vira **aviso** se **editorial** (deveria ser monitoramento). Vale para Daily (`validateRadarConsistency`) e Weekly (`validateWeekly`). | `scripts/validate.mjs`, `scripts/render-weekly.mjs` | baixo |
+| **F2-02** | Conteúdo existente preservado: a edição 0028 (radar editorial "baixa", ilustrativa) passa a **avisar**, não falhar. | testes | baixo |
+
+**Verificação F2:** 259 testes verdes; `radar-consistency.test.mjs` cobre automático→erro,
+editorial→aviso, média→ok; QA da 0028 = 0 erros.
+
+**Deferido para F3 (entrelaçado com a reconciliação chegando ao render):** texto
+"monitorando N séries" (exige o resultado canônico no render → F3-00) e a garantia
+**Weekly ≥ conservadora que Daily** (exige a consolidação Weekly←Daily → F3-02, premissa 5).
 
 ---
 

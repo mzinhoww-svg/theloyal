@@ -183,6 +183,15 @@ export function validateRadarConsistency(ed, forecastArtifact) {
     const isAutomatic = w.source === "forecast" || w.seriesKey != null || w.generatedAt != null;
     const match = byLabel.get(normLabel(w.label));
 
+    // Nota de corte da política canônica (§7.4): o leitor só recebe PREVISÃO com
+    // confiança ≥ média. Automático abaixo disso bloqueia; editorial abaixo disso
+    // vira aviso (deveria ser monitoramento). em-formacao já é barrado pelo schema.
+    if (w.confidence === "baixa") {
+      const msg = `${tag}: confiança "baixa" está abaixo da nota de corte (≥ média) — publique como monitoramento, não como janela`;
+      if (isAutomatic) errors.push(msg);
+      else warnings.push(msg);
+    }
+
     if (isAutomatic) {
       if (!match) {
         errors.push(`${tag}: marcado como automático (source:forecast) mas a série não está no forecast atual (bloqueada ou ausente) — não pode ser publicado como previsão automática`);
