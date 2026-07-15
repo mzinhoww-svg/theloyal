@@ -1,7 +1,7 @@
 // Operação do Radar (Fase P1-C) — abas, resumo, alertas, filas e "o que mudou".
 // Apresentação apenas; dados de lib/radar-operations (puro) sobre o RadarViewModel.
 // Server components. Nenhuma leitura/ cálculo novo.
-import { Pill, Table, Th, Td, EmptyRow, EmptyState, StatCard, type Tone } from "./ui";
+import { Pill, Table, Th, Td, EmptyRow, EmptyState, StatCard } from "./ui";
 import { productStatusLabel, type RadarSeries, type RadarViewModel } from "@/lib/radar-view-model";
 import { mainEngine } from "@/lib/radar-filters";
 import {
@@ -12,10 +12,10 @@ import {
   NO_SNAPSHOT_MESSAGE,
   type RadarQueue,
   type RadarQueueKey,
-  type AlertSeverity,
 } from "@/lib/radar-operations";
+import { ALERT_SEVERITY_TONE, PRODUCT_STATUS_TONE } from "./radar-vocab";
 
-const SEV_TONE: Record<AlertSeverity, Tone> = { critical: "red", warning: "yellow", info: "blue" };
+const SEV_TONE = ALERT_SEVERITY_TONE;
 const pct = (n: number | null, step = 5): string => (n == null ? "—" : `${Math.round((n * 100) / step) * step}%`);
 const bonus = (n: number | null): string => (n == null ? "—" : `~${n}%`);
 const engineLabel = (s: RadarSeries): string => {
@@ -129,7 +129,7 @@ export function RadarQueueList({ queue, membership }: { queue: RadarQueue; membe
                     {m > 1 && <span className="ml-1 text-xs text-gray-400">+{m - 1} fila{m - 1 > 1 ? "s" : ""}</span>}
                   </Td>
                   <Td>{engineLabel(s)}</Td>
-                  <Td><Pill tone="gray">{productStatusLabel(s.productStatus)}</Pill></Td>
+                  <Td><Pill tone={PRODUCT_STATUS_TONE[s.productStatus]}>{productStatusLabel(s.productStatus)}</Pill></Td>
                   <Td className="text-gray-700">{s.window ?? "—"}</Td>
                   <Td className="text-right font-mono tabular-nums">
                     {s.primaryProbability ? `${pct(s.primaryProbability.value)} / ${s.primaryProbability.horizonDays}d` : "—"}

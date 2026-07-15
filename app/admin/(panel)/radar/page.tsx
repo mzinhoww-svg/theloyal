@@ -20,6 +20,7 @@ import {
 } from "@/components/admin/radar-operations";
 import { loadRadar } from "@/lib/admin-radar";
 import { applyRadarFilters, RADAR_FILTER_KEYS, type RadarFilterValues } from "@/lib/radar-filters";
+import { RADAR_EMPTY } from "@/lib/radar-empty";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -55,10 +56,7 @@ export default async function RadarPage({
       <RadarTabs current={view} />
 
       {empty ? (
-        <EmptyState
-          label="Sem campanhas no ledger."
-          hint="Assim que a coleta e a extração popularem o ledger de transferências, as séries aparecem aqui."
-        />
+        <EmptyState label={RADAR_EMPTY.no_campaigns.title} hint={`${RADAR_EMPTY.no_campaigns.description} ${RADAR_EMPTY.no_campaigns.action}`} />
       ) : view === "geral" ? (
         <>
           <RadarOperationalSummary vm={vm} />

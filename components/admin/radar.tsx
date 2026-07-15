@@ -8,30 +8,16 @@ import {
   Th,
   Td,
   EmptyRow,
-  type Tone,
 } from "./ui";
 import {
   productStatusLabel,
-  type ProductStatus,
   type RadarSeries,
   type RadarViewModel,
 } from "@/lib/radar-view-model";
 import { deriveFilterFacets, CAUSE_LABEL, CLUSTER_ORIGIN } from "@/lib/radar-filters";
+import { PRODUCT_STATUS_TONE, freshnessTone } from "./radar-vocab";
 
-const STATUS_TONE: Record<ProductStatus, Tone> = {
-  dataset_incomplete: "red",
-  data_quality_blocked: "red",
-  duplicate_review: "yellow",
-  review_required: "yellow",
-  insufficient_history: "gray",
-  no_prediction: "gray",
-  opportunity: "green",
-  monitoring: "blue",
-};
-
-function freshnessTone(status: string): Tone {
-  return status === "fresh" ? "green" : status === "stale" ? "yellow" : "red";
-}
+const STATUS_TONE = PRODUCT_STATUS_TONE;
 
 const pct = (n: number | null): string => (n == null ? "—" : `${Math.round(n * 100)}%`);
 const bonusLabel = (n: number | null): string => (n == null ? "—" : `~${n}%`);
@@ -40,8 +26,6 @@ const bonusLabel = (n: number | null): string => (n == null ? "—" : `~${n}%`);
 export function RadarHealthSummary({ vm }: { vm: RadarViewModel }) {
   const { metadata: m, health: h } = vm;
   const alerting = !m.datasetComplete || m.freshnessStatus !== "fresh" || h.alertCount > 0;
-  const age = m.freshnessStatus === "fresh" || m.freshnessStatus === "stale" ? null : null;
-  void age;
   return (
     <section
       className={`mb-5 rounded-lg border p-4 ${

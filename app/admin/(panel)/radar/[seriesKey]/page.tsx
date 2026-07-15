@@ -4,6 +4,7 @@
 import { EmptyState } from "@/components/admin/ui";
 import { loadRadar } from "@/lib/admin-radar";
 import { findRadarSeries } from "@/lib/radar-detail";
+import { RADAR_EMPTY } from "@/lib/radar-empty";
 import {
   RadarSeriesDetailHeader,
   RadarSeriesSummary,
@@ -36,11 +37,12 @@ export default async function RadarSeriesPage({
   }
 
   if (!series) {
+    const e = RADAR_EMPTY.series_not_found;
     return (
       <EmptyState
-        label="Série não encontrada."
-        hint="A chave pode ter mudado após um recálculo (o Radar é derivado em runtime). Volte ao Radar e abra a série novamente."
-        action={<a href="/admin/radar" className="font-semibold text-blue-600 hover:underline">← Voltar ao Radar</a>}
+        label={e.title}
+        hint={`${e.description} ${e.impact}`}
+        action={<a href={e.diagnosticHref ?? "/admin/radar"} className="font-semibold text-blue-600 hover:underline">← Voltar ao Radar</a>}
       />
     );
   }

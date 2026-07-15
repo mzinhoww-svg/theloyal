@@ -1,8 +1,9 @@
 // Detalhe da série do Radar (Fase P1-B). Apresentação apenas — todos os dados
 // vêm do RadarViewModel/RadarSeries do P1-A. Server components; camadas técnicas
 // em <details> nativo (acessível, sem JS de cliente). Reusa QualityPanel.
-import { Pill, Table, Th, Td, EmptyRow, EmptyState, StatCard, fmtDate, type Tone } from "./ui";
+import { Pill, Table, Th, Td, EmptyRow, EmptyState, StatCard, fmtDate } from "./ui";
 import { QualityPanel } from "./QualityPanel";
+import { PRODUCT_STATUS_TONE, DIVERGENCE_TONE, TEMPORAL_SEVERITY_TONE } from "./radar-vocab";
 import type { RadarSeries, RadarViewModel } from "@/lib/radar-view-model";
 import { productStatusLabel } from "@/lib/radar-view-model";
 import {
@@ -25,13 +26,9 @@ import {
 } from "@/lib/radar-detail";
 
 const NA = "Não disponível";
-const STATUS_TONE: Record<string, Tone> = {
-  dataset_incomplete: "red", data_quality_blocked: "red", duplicate_review: "yellow",
-  review_required: "yellow", insufficient_history: "gray", no_prediction: "gray",
-  opportunity: "green", monitoring: "blue",
-};
-const DIV_TONE: Record<string, Tone> = { none: "gray", compatible: "green", warning: "yellow", review: "yellow", block: "red" };
-const SEV_TONE: Record<string, Tone> = { ok: "green", warning: "yellow", critical: "red" };
+const STATUS_TONE = PRODUCT_STATUS_TONE;
+const DIV_TONE = DIVERGENCE_TONE;
+const SEV_TONE = TEMPORAL_SEVERITY_TONE;
 
 const pctR = (p: number | null, step = 5): string => (p == null ? "—" : `${Math.round((p * 100) / step) * step}%`);
 const bonus = (n: number | null): string => (n == null ? "—" : `~${n}%`);
