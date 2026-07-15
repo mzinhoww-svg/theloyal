@@ -173,3 +173,40 @@ Onda F (growth) ── depende de C (Pro real) e E1/E2 (receita) ►
 > Cada item deste plano pode virar um pedido isolado. Para os itens **G/🔒**,
 > o próximo passo é um **design doc** dedicado (como `weekly-daily-consolidation.md`),
 > não código direto.
+
+---
+
+## 11. Log de execução
+
+Estado real conforme entregue. Atualizar a cada PR.
+
+### Feito
+
+| Item | O que saiu | Onde |
+|---|---|---|
+| **A1** | Marca "The Loyalty" → "The Loyal" (Logo.tsx, render-web h1/title) + guarda no QA | este PR |
+| **A2** | Verdict do social derivado da taxonomia (social-brand.ts, social-render.mjs); fim da cópia de rótulos | este PR |
+| **A3** | Radar do Daily auto-injetado do forecast com gate C0 (mesmo do Weekly) | este PR |
+| **A4** | Paridade `forecast.ts`↔`.mjs` — **já existia** (`tests/forecast-parity.test.mjs`) | pré-existente |
+| **B2** | Anti-contradição Daily×Weekly — **já bloqueia** no editorial-gate (`qa.mjs` trata `validateRadarConsistency` como block) | pré-existente |
+| **E8** | QA passa a auditar as superfícies WEB (out/web, out/weekly-web) | este PR |
+
+### Bloqueado / requer decisão ou acesso (não codável autonomamente)
+
+| Item | Por que não avançou | Desbloqueio |
+|---|---|---|
+| **A5** | Unificar coletor VPM Gen-1×Gen-2 é M e depende de rodar coletores/estatística sobre dado vivo | acesso a dados + revisão de amostra |
+| **B1** | Gerar forecast do ledger completo (119→2.438) | 🔒 acesso Supabase |
+| **B3** | Validação temporal na origem (edge fn `campaigns`) | 🔒 edge function + migration |
+| **B4** | `checkCalculo` falso-verde vive no pipeline **legado** (`renderer/*`) — some com F3 | fazer junto de F3 |
+| **C1–C4** | Núcleo: TL Score calculado, nota de corte, Predict nos digests, motor de acurácia | 🔒 decisões de produto (pesos, bandas, quando aposentar o Forecast) + migrations |
+| **D1–D7** | Migrations estruturais (campaign_identity, snapshots, dedup persistido…) | 🔒 ratificar ADRs 009/010 + congelar H1–H12 |
+| **E1–E7** | Env na Vercel, régua de e-mail, unificar Beehiiv CLI×MCP, schema do banco versionado, troncos git, `verify_jwt`, login | 🔒 ops/secret/migration/decisão |
+| **F1/F2/F4** | Pro pago; categorias do Radar; landing (prova social/analytics) | 🔒 decisão/dado |
+| **F3** | Aposentar o legado (`renderer/*`) **não é trivial**: a rota `app/daily/preview` e `tests/taxonomy.test.mjs` ainda dependem dele | migrar `/daily/preview` + o teste, depois remover — PR próprio |
+
+> Resumo: **Onda A entregável está feita**. O que resta é núcleo pesado
+> (C/D), infra-ops (E) e crescimento (F) — todos exigem decisão de produto,
+> acesso a Supabase/edge/secrets, ou migrations com ADRs ratificados. Esses
+> não podem ser implementados por um agente sem essas entradas; cada um deve
+> virar um design doc ou um pedido com o acesso/decisão correspondente.
