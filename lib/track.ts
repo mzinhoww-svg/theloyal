@@ -12,7 +12,10 @@ export type TrackEvent =
   | "anuncie_submit"
   | "cta_click";
 
-export function track(event: TrackEvent, data?: Record<string, string>): void {
+export function track(
+  event: TrackEvent,
+  data?: Record<string, string | undefined>,
+): void {
   if (typeof window === "undefined") return;
   try {
     const payload = JSON.stringify({

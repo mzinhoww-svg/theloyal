@@ -38,6 +38,10 @@ export async function POST(req: NextRequest) {
       path: typeof body.path === "string" ? body.path : "",
       perfil: typeof body.perfil === "string" ? body.perfil : undefined,
       source: typeof body.source === "string" ? body.source : undefined,
+      utm_source: typeof body.utm_source === "string" ? body.utm_source : undefined,
+      utm_medium: typeof body.utm_medium === "string" ? body.utm_medium : undefined,
+      utm_campaign:
+        typeof body.utm_campaign === "string" ? body.utm_campaign : undefined,
       ref: ref.slice(0, 120),
       at: new Date().toISOString(),
     }),
