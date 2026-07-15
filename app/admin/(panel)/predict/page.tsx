@@ -85,6 +85,11 @@ function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: bo
           <Td className="font-mono tabular-nums">{bonusLabel(p)}</Td>
           <Td>
             <Pill tone={confTone(p.confidence)}>{p.confidence}</Pill>
+            {p.warnings.length > 0 && (
+              <span className="mt-0.5 block text-[11px] text-gray-500" title={p.warnings.join(" · ")}>
+                {p.warnings.join(" · ")}
+              </span>
+            )}
           </Td>
         </>
       )}
@@ -189,7 +194,7 @@ function DetailCard({ p }: { p: Prediction }) {
 const isReady = (p: Prediction) => p.readiness === "ready" || p.readiness === "ready_with_warnings";
 
 export default async function PredictPage() {
-  const { result, ledgerRows } = await loadPredict();
+  const { result, ledgerRows, asOf, datasetComplete } = await loadPredict();
   const series = [...result.clusters, ...result.routes];
   const ready = series.filter(isReady).length;
   const blocked = series.filter((p) => p.blockReason != null).length;
@@ -199,7 +204,7 @@ export default async function PredictPage() {
     <>
       <PageHeader
         title="Predict"
-        sub={`Motor histórico & preditivo por série (${MODEL_VERSION}). ${ledgerRows} campanhas no ledger.`}
+        sub={`Motor histórico & preditivo por série (${MODEL_VERSION}). ${ledgerRows} campanhas no ledger · as of ${asOf}.`}
         actions={
           <ActionForm action={snapshotAllAction}>
             <SubmitButton variant="primary" pendingLabel="Salvando…">
@@ -209,10 +214,18 @@ export default async function PredictPage() {
         }
       />
 
+      {!datasetComplete && (
+        <div className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700">
+          Leitura do ledger incompleta — as séries abaixo podem estar parciais. Gere o snapshot
+          apenas após a carga completar.
+        </div>
+      )}
+
       <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
         <StatCard label="Séries" value={series.length} sub={`${result.clusters.length} programas · ${result.routes.length} rotas`} tone="gray" />
         <StatCard label="Com previsão" value={ready} sub="ready / ready_with_warnings" tone={ready > 0 ? "green" : "gray"} />
         <StatCard label="Bloqueadas" value={blocked} sub="histórico insuficiente" tone={blocked > 0 ? "yellow" : "green"} />
+        <StatCard label="As of" value={<span className="text-lg">{asOf}</span>} sub={datasetComplete ? "carga completa" : "carga PARCIAL"} tone={datasetComplete ? undefined : "red"} />
       </section>
 
       <div className="mb-4 mt-4">

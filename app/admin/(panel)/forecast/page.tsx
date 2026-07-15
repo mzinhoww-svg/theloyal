@@ -50,6 +50,29 @@ function ConfCell({ v }: { v: PredictView }) {
   );
 }
 
+function EligibilityCell({ v }: { v: PredictView }) {
+  if (v.editorialEligible) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <Pill tone="green">elegível</Pill>
+        {v.editorialOverridden && (
+          <span className="text-[11px] text-gray-400" title="liberada por override com nota">
+            override
+          </span>
+        )}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex flex-col gap-0.5">
+      <Pill tone="gray">bloqueada</Pill>
+      {v.editorialBlockReason && (
+        <span className="text-[11px] text-gray-500">{v.editorialBlockReason}</span>
+      )}
+    </span>
+  );
+}
+
 function QuickOverride({ v, action, label }: { v: PredictView; action: "pin" | "mute"; label: string }) {
   return (
     <ActionForm action={setOverrideAction}>
@@ -73,9 +96,13 @@ function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: 
           <tr>
             <Th>{title.includes("programa") ? "Programa" : "Rota"}</Th>
             <Th>Confiança</Th>
+            <Th>Editorial</Th>
+            <Th className="text-right">Ondas</Th>
+            <Th>Última</Th>
+            <Th className="text-right">Maior interv.</Th>
             <Th>Janela prevista</Th>
             <Th className="text-right">Cadência</Th>
-            <Th>Base</Th>
+            <Th>Base / alertas</Th>
             <Th>Ações</Th>
           </tr>
         </thead>
@@ -89,12 +116,33 @@ function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: 
                     {v.muted && <Pill tone="gray">silenciado</Pill>}
                     {v.route}
                     {v.typicalPercent ? (
-                      <span className="font-mono text-xs text-gray-400">{v.typicalPercent}%</span>
+                      <span className="font-mono text-xs text-gray-400" title="bônus típico observado (mediana)">
+                        bônus ~{v.typicalPercent}%
+                      </span>
                     ) : null}
                   </span>
                 </Td>
                 <Td>
                   <ConfCell v={v} />
+                </Td>
+                <Td>
+                  <EligibilityCell v={v} />
+                </Td>
+                <Td className="text-right font-mono tabular-nums">
+                  {v.samples}
+                  {v.intervals.length ? (
+                    <span className="text-gray-400"> · {v.intervals.length}i</span>
+                  ) : null}
+                </Td>
+                <Td className="font-mono text-xs tabular-nums text-gray-500">{v.lastWindow ?? "—"}</Td>
+                <Td className="text-right font-mono tabular-nums">
+                  {v.maxIntervalDays != null ? (
+                    <span className={v.maxIntervalDays >= 540 ? "text-red-600" : v.maxIntervalDays >= 365 ? "text-yellow-500" : undefined}>
+                      {v.maxIntervalDays}d
+                    </span>
+                  ) : (
+                    "—"
+                  )}
                 </Td>
                 <Td className="font-mono tabular-nums">
                   {v.windowStart ? formatWindow(v.windowStart, v.windowEnd) : "—"}
@@ -106,7 +154,12 @@ function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: 
                     <span className="text-xs text-gray-400">—</span>
                   )}
                 </Td>
-                <Td className="text-xs text-gray-500">{v.basis}</Td>
+                <Td className="text-xs text-gray-500">
+                  {v.basis}
+                  {v.warnings.length > 0 && (
+                    <span className="mt-0.5 block text-red-600">{v.warnings.join(" · ")}</span>
+                  )}
+                </Td>
                 <Td>
                   <div className="flex items-center gap-1">
                     <QuickOverride v={v} action="pin" label={v.pinned ? "—" : "fixar"} />
@@ -116,7 +169,7 @@ function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: 
               </tr>
             ))
           ) : (
-            <EmptyRow cols={6} label="sem séries" />
+            <EmptyRow cols={10} label="sem séries" />
           )}
         </tbody>
       </Table>
@@ -127,6 +180,7 @@ function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: 
 export default async function PredictPage() {
   const data = await loadPredict();
   const { config, configRow, overrides, result } = data;
+  const eligibleCount = [...data.routes, ...data.clusters].filter((v) => v.editorialEligible).length;
 
   // Timeline: janelas dos programas dentro do horizonte semanal, não silenciadas.
   const timeline = data.clusters
@@ -171,11 +225,20 @@ export default async function PredictPage() {
         }
       />
 
+      {!data.datasetComplete && (
+        <div className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700">
+          Leitura do ledger incompleta — {data.radarBlockedReason ?? "carga parcial"}. Os radares do
+          daily/weekly estão bloqueados (nenhum número editorial é gerado) até a carga completar.
+          Nenhum override ignora este bloqueio.
+        </div>
+      )}
+
       <section className="mb-6 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
         <StatCard label="Séries rastreadas" value={result.routesTracked + result.clustersTracked} sub={`${result.routesTracked} rotas · ${result.clustersTracked} programas`} tone="blue" />
-        <StatCard label="Com previsão" value={result.withPrediction} sub="base suficiente" tone="green" />
-        <StatCard label="Ledger" value={data.ledgerRows} sub="linhas consideradas" />
-        <StatCard label="Gerado para" value={<span className="text-lg">{data.generatedFor}</span>} sub="data de referência" />
+        <StatCard label="Com previsão" value={result.withPrediction} sub="base interna suficiente" tone="green" />
+        <StatCard label="Elegíveis p/ digest" value={eligibleCount} sub={`gate editorial ≥${config.minEditorialWaves} ondas`} tone={eligibleCount > 0 ? "green" : "gray"} />
+        <StatCard label="Ledger" value={data.ledgerRows} sub={data.datasetComplete ? "linhas (carga completa)" : "linhas (carga PARCIAL)"} tone={data.datasetComplete ? undefined : "red"} />
+        <StatCard label="Gerado para" value={<span className="text-lg">{data.generatedFor}</span>} sub="data de referência (recalculado ao vivo)" />
       </section>
 
       <section className="mb-8 grid gap-3 md:grid-cols-2">
