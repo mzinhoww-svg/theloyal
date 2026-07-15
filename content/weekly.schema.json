@@ -70,7 +70,10 @@
         "confidence": { "type": "string", "enum": ["alta", "media", "baixa"] },
         "window": { "type": "string" },
         "basis": { "type": "string" },
-        "bonus": { "type": "string" }
+        "bonus": { "type": "string" },
+        "source": { "type": "string", "description": "Proveniência (Fase C0): 'forecast' = automático; ausente = análise editorial." },
+        "seriesKey": { "type": "string" },
+        "generatedAt": { "type": "string" }
       }
     },
     "source": {
