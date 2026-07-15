@@ -149,3 +149,22 @@ test("isoWeekLabel: semana ISO correta", () => {
   assert.equal(isoWeekLabel("2026-07-12"), "2026-W28"); // domingo da W28
   assert.equal(isoWeekLabel("2026-07-13"), "2026-W29"); // segunda da W29
 });
+
+test("weeklySignals: exporta transição verdictStart→verdictEnd por Fio", async () => {
+  const { weeklySignals } = await import("../scripts/weekly-consolidate.mjs");
+  const eds = [
+    edition(1, "2026-07-07", [deal({ verdict: "vale-agir", tlScore: 88, firstSeen: "2026-07-07", vigencia: "2026-08-31T00:00:00-03:00" })]),
+    edition(2, "2026-07-09", [deal({ verdict: "evitaria", tlScore: 30, firstSeen: "2026-07-07", vigencia: "2026-08-31T00:00:00-03:00" })]),
+  ];
+  const s = weeklySignals({ editions: eds, windowStart: "2026-07-06", windowEnd: "2026-07-12" });
+  assert.equal(s.isoWeek, "2026-W28");
+  assert.deepEqual(s.generatedFrom, [1, 2]);
+  const sig = s.signals.find((x) => x.fio === "livelo->smiles");
+  assert.ok(sig);
+  assert.equal(sig.verdictStart, "vale-agir");
+  assert.equal(sig.verdictEnd, "evitaria");
+  assert.equal(sig.transitioned, true);
+  assert.equal(sig.tlScoreStart, 88);
+  assert.equal(sig.tlScoreEnd, 30);
+  assert.ok(Array.isArray(sig.lineage) && sig.lineage.length === 2);
+});

@@ -97,6 +97,8 @@ export function buildFios(editions) {
     fio.anchor = last.conta?.result ? last.conta.result.join(" ") : null;
     fio.anchorValue = last.conta?.result ? parseBRL(last.conta.result[1]) : null;
     fio.tlScore = typeof last.tlScore === "number" ? last.tlScore : null;
+    fio.tlScoreStart = typeof first.tlScore === "number" ? first.tlScore : null;
+    fio.tlScoreEnd = typeof last.tlScore === "number" ? last.tlScore : null;
     fio.tlScoreJump = (typeof last.tlScore === "number" && typeof first.tlScore === "number")
       ? last.tlScore - first.tlScore : 0;
     fio.appearances = chron.length;
@@ -253,6 +255,36 @@ export function consolidate({ editions, windowStart, windowEnd, number, prevWeek
   };
 }
 
+// ---------- Costura de acurácia (Fase 5) ----------
+// Exporta, por Fio, a transição verdictStart→verdictEnd da semana + lineage.
+// É a ENTRADA FUTURA do motor de medição de acurácia — puro, determinístico e
+// SEPARADO do render/publicação (premissa 4: quem publica não é quem mede).
+// Nada aqui é importado pelo caminho de publicação (beehiiv-publish/render).
+export function weeklySignals({ editions, windowStart, windowEnd, prevWeekly = null }) {
+  const priorKeys = prevWeekly?._meta?.fios ? new Set(prevWeekly._meta.fios.map((f) => f.key)) : null;
+  const fios = buildFios(editions);
+  for (const f of fios) f.state = weeklyState(f, { windowStart, windowEnd, priorKeys });
+  return {
+    isoWeek: isoWeekLabel(windowEnd),
+    window: { start: windowStart, end: windowEnd },
+    generatedFrom: editions.map((e) => e.number).sort((a, b) => a - b),
+    note: "Sinais de acurácia por Fio (verdictStart→verdictEnd). Entrada futura do motor de medição — separado da publicação. Não é veredito.",
+    signals: fios.map((f) => ({
+      fio: f.key,
+      state: f.state,
+      verdictStart: f.verdictStart,
+      verdictEnd: f.verdictEnd,
+      transitioned: f.verdictStart !== f.verdictEnd,
+      ...(f.tlScoreStart != null ? { tlScoreStart: f.tlScoreStart } : {}),
+      ...(f.tlScoreEnd != null ? { tlScoreEnd: f.tlScoreEnd } : {}),
+      vigenciaEnd: f.latestDeal.vigencia ? isoDate(f.latestDeal.vigencia) : null,
+      appearances: f.appearances,
+      datesSeen: f.datesSeen,
+      lineage: f.lineage,
+    })),
+  };
+}
+
 // ---------- Utilidades de data (pt-BR / ISO week) ----------
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 function periodPtBr(start, end) {
@@ -323,6 +355,15 @@ function main() {
   console.log(`[weekly-consolidate] ${draft._meta.isoWeek}: ${draft._meta.fios.length} Fio(s) de ${editions.length} edição(ões) → ${path}`);
   console.log(`  movements: ${draft.movements.novas.length} novas · ${draft.movements.seguem.length} seguem · ${draft.movements.venceram.length} venceram`);
   console.log(`  highlights(cand.): ${draft.highlights.length} · ranking: ${draft.ranking.length} · watch: ${draft.watch.length}`);
+
+  // Costura de acurácia (Fase 5): sinais por Fio em out/weekly-signals — separado
+  // da publicação, entrada futura do motor de medição.
+  const signals = weeklySignals({ editions, windowStart: args.start, windowEnd: args.end, prevWeekly });
+  const sigDir = "out/weekly-signals";
+  mkdirSync(sigDir, { recursive: true });
+  const sigPath = `${sigDir}/${signals.isoWeek}.json`;
+  writeFileSync(sigPath, JSON.stringify(signals, null, 2) + "\n");
+  console.log(`  sinais de acurácia: ${signals.signals.length} Fio(s) → ${sigPath}`);
 }
 
 function fioKeyKnown(key, known) {

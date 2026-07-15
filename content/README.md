@@ -170,6 +170,15 @@ npm run weekly:draft -- --start AAAA-MM-DD --end AAAA-MM-DD --number N [--prev c
 Idempotência: `weekly:draft` só escreve o `*.draft.json`; **nunca** toca no final
 curado. Rodar de novo regenera o rascunho sem destruir a curadoria.
 
+### Costura de acurácia (`out/weekly-signals/AAAA-Wnn.json`)
+
+Junto do rascunho, `weekly:draft` grava um arquivo de **sinais de acurácia**: por
+Fio, a transição `verdictStart→verdictEnd` da semana, `tlScoreStart/End`,
+`vigenciaEnd` e o lineage. É a **entrada futura do motor de medição de acurácia**
+— gerado pelo consolidador, **separado do render e da publicação** (o motor que
+publica não é o que mede; nada em `beehiiv-publish`/`render-weekly` importa o
+consolidador). Não é veredito nem vai para o e-mail.
+
 ## Regras que o validador aplica (gate de publicação)
 
 - Disclaimer oficial presente e íntegro.
