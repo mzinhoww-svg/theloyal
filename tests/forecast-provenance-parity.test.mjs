@@ -248,7 +248,7 @@ test("A1-8 · séries válidas seguem elegíveis e com previsão (sem falso posi
 
 // ==================================================== 9. regressão /admin/forecast
 test("A1-9 · /admin/forecast: caso 943 não exibe 'Maior intervalo' nem vira item", () => {
-  // Replica o transform da tela (loadPredict): buildForecast → radarItems.
+  // Replica o transform da tela (loadForecast): buildForecast → radarItems.
   const fc = buildForecast(LEDGER_COM_PROV, { now: NOW });
   const route = routeOf(fc, "livelo→connectmiles");
   // A tela imprime `${v.maxIntervalDays}d` só quando != null; corrigido = null.

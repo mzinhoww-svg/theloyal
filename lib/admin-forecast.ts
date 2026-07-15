@@ -99,7 +99,7 @@ export const getSnapshots = (limit = 20) =>
 
 // ---- View model com overrides aplicados ----
 
-export type PredictView = Forecast & {
+export type ForecastView = Forecast & {
   key: string; // `${scope}:${route}`
   pinned: boolean;
   muted: boolean;
@@ -110,7 +110,7 @@ export type PredictView = Forecast & {
 
 const keyOf = (scope: string, route: string) => `${scope}:${route}`;
 
-function decorate(f: Forecast, ov: Map<string, OverrideRow>): PredictView {
+function decorate(f: Forecast, ov: Map<string, OverrideRow>): ForecastView {
   const o = ov.get(keyOf(f.scope, f.route));
   const overriddenConfidence = o?.action === "confidence" ? o.confidence : null;
   return {
@@ -145,20 +145,20 @@ function applyEditorialOverrides(list: Forecast[], overrides: OverrideRow[]): vo
 
 export type Distribution = Record<Confidence, number>;
 
-function distribution(views: PredictView[]): Distribution {
+function distribution(views: ForecastView[]): Distribution {
   const d: Distribution = { alta: 0, media: 0, baixa: 0, "em-formacao": 0 };
   for (const v of views) d[v.confidence]++;
   return d;
 }
 
-export type PredictData = {
+export type ForecastData = {
   configured: boolean;
   config: ForecastConfig;
   configRow: ConfigRow | null;
   overrides: OverrideRow[];
   result: ForecastResult;
-  routes: PredictView[];
-  clusters: PredictView[];
+  routes: ForecastView[];
+  clusters: ForecastView[];
   distributionRoutes: Distribution;
   distributionClusters: Distribution;
   radarDaily: RadarItem[];
@@ -172,7 +172,7 @@ export type PredictData = {
 
 // Aplica pin/mute/confidence e ordena: fixados primeiro, depois silenciados por
 // último, mantendo a ordem do motor dentro de cada grupo.
-function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): PredictView[] {
+function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): ForecastView[] {
   const views = list.map((f) => decorate(f, ov));
   return views.sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
@@ -182,7 +182,7 @@ function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): Predict
 }
 
 // Carrega tudo para a página. `now` injetável para testes determinísticos.
-export async function loadPredict(now?: string): Promise<PredictData> {
+export async function loadForecast(now?: string): Promise<ForecastData> {
   const [{ config, row }, overrides, snapshots, loaded] = await Promise.all([
     getConfig(),
     getOverrides(),

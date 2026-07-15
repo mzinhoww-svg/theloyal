@@ -1,4 +1,4 @@
-import { loadPredict, type PredictView } from "@/lib/admin-forecast";
+import { loadForecast, type ForecastView } from "@/lib/admin-forecast";
 import { formatWindow, type Confidence } from "@/lib/forecast";
 import {
   PageHeader,
@@ -44,7 +44,7 @@ const INPUT = "rounded border border-line bg-surface px-2 py-1 text-sm text-ink"
 const daysBetweenISO = (a: string, b: string) =>
   Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86_400_000);
 
-function ConfCell({ v }: { v: PredictView }) {
+function ConfCell({ v }: { v: ForecastView }) {
   return (
     <span className="inline-flex items-center gap-1.5">
       <Pill tone={CONF_TONE[v.confidence]}>{CONF_LABEL[v.confidence]}</Pill>
@@ -57,7 +57,7 @@ function ConfCell({ v }: { v: PredictView }) {
   );
 }
 
-function EligibilityCell({ v }: { v: PredictView }) {
+function EligibilityCell({ v }: { v: ForecastView }) {
   if (v.editorialEligible) {
     return (
       <span className="inline-flex items-center gap-1">
@@ -80,7 +80,7 @@ function EligibilityCell({ v }: { v: PredictView }) {
   );
 }
 
-function QuickOverride({ v, action, label }: { v: PredictView; action: "pin" | "mute"; label: string }) {
+function QuickOverride({ v, action, label }: { v: ForecastView; action: "pin" | "mute"; label: string }) {
   return (
     <ActionForm action={setOverrideAction}>
       <input type="hidden" name="scope" value={v.scope} />
@@ -93,7 +93,7 @@ function QuickOverride({ v, action, label }: { v: PredictView; action: "pin" | "
   );
 }
 
-function PredictTable({ columnLabel, rows }: { columnLabel: string; rows: PredictView[] }) {
+function ForecastTable({ columnLabel, rows }: { columnLabel: string; rows: ForecastView[] }) {
   return (
     <Table>
       <thead>
@@ -180,8 +180,8 @@ function PredictTable({ columnLabel, rows }: { columnLabel: string; rows: Predic
   );
 }
 
-export default async function PredictPage() {
-  const data = await loadPredict();
+export default async function ForecastPage() {
+  const data = await loadForecast();
   const { config, configRow, overrides, result } = data;
   const eligibleCount = [...data.routes, ...data.clusters].filter((v) => v.editorialEligible).length;
 
@@ -306,7 +306,7 @@ export default async function PredictPage() {
         sub="cluster do destino — consolida campanhas program-wide de várias origens"
         open
       >
-        <PredictTable columnLabel="Programa" rows={data.clusters} />
+        <ForecastTable columnLabel="Programa" rows={data.clusters} />
       </Disclosure>
 
       <Disclosure
@@ -314,7 +314,7 @@ export default async function PredictPage() {
         count={data.routes.length}
         sub="origem → destino · cadência = série de intervalos entre janelas"
       >
-        <PredictTable columnLabel="Rota" rows={data.routes} />
+        <ForecastTable columnLabel="Rota" rows={data.routes} />
       </Disclosure>
 
       <Disclosure

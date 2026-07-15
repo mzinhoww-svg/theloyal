@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { patch, insert, del } from "@/lib/admin-db";
-import { loadPredict } from "@/lib/admin-forecast";
+import { loadForecast } from "@/lib/admin-forecast";
 import type { ActionState } from "@/components/admin/toast";
 
 const who = () => process.env.ADMIN_USER?.trim() || "admin";
@@ -102,7 +102,7 @@ export async function recalcSnapshotAction(
   _fd: FormData,
 ): Promise<ActionState> {
   try {
-    const data = await loadPredict();
+    const data = await loadForecast();
     await insert("forecast_snapshots", {
       generated_for: data.generatedFor,
       routes_tracked: data.result.routesTracked,
