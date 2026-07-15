@@ -9,6 +9,7 @@ import React from "react";
 import { ImageResponse } from "next/dist/compiled/@vercel/og/index.node.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { CANONICAL_VERDICTS } from "./taxonomy.mjs";
 
 const h = React.createElement;
 
@@ -18,14 +19,18 @@ const HEX = {
   green600: "#00A878", green700: "#007A57", blue100: "#E4EAFF", blue700: "#2547CC",
   yellow500: "#F2C94C", red600: "#D64545", surface: "#FFFFFF",
 };
-const VERDICT = {
-  "vale-agir": { label: "VALE AGIR", bg: HEX.green100, fg: HEX.green700 },
-  "vale-olhar": { label: "VALE OLHAR", bg: HEX.blue100, fg: HEX.blue700 },
-  "casos-especificos": { label: "SÓ PARA CASOS ESPECÍFICOS", bg: HEX.paperDark, fg: HEX.gray500 },
-  esperaria: { label: "ESPERARIA", bg: HEX.yellow500, fg: HEX.ink },
-  evitaria: { label: "EVITARIA", bg: HEX.red600, fg: HEX.surface },
-  "nao-confirmado": { label: "NÃO CONFIRMADO", bg: HEX.paper, fg: HEX.gray500, dashed: true },
+// Só ESTILO — os rótulos vêm da taxonomia canônica (DEBT-004), não são copiados.
+const VERDICT_STYLE = {
+  "vale-agir": { bg: HEX.green100, fg: HEX.green700 },
+  "vale-olhar": { bg: HEX.blue100, fg: HEX.blue700 },
+  "casos-especificos": { bg: HEX.paperDark, fg: HEX.gray500 },
+  esperaria: { bg: HEX.yellow500, fg: HEX.ink },
+  evitaria: { bg: HEX.red600, fg: HEX.surface },
+  "nao-confirmado": { bg: HEX.paper, fg: HEX.gray500, dashed: true },
 };
+const VERDICT = Object.fromEntries(
+  CANONICAL_VERDICTS.map((v) => [v.key, { label: v.label, ...VERDICT_STYLE[v.key] }]),
+);
 const SIZES = { square: { width: 1080, height: 1080 }, wide: { width: 1200, height: 675 }, portrait: { width: 1080, height: 1350 } };
 const CRIT = ["valor", "regra", "vigência", "fricção", "aplicab.", "liquidez", "estoque", "fontes"];
 
