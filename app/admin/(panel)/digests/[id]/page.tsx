@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { getEdition, toneForProduct, isPublished, type EditionFull } from "@/lib/admin-digests";
+import { getEdition, toneForProduct, isPublished, gatesPass, type EditionFull } from "@/lib/admin-digests";
+import { getQaReports, getStats, getEvents } from "@/lib/admin-digest-ops";
 import {
   StatCard,
   PageHeader,
@@ -11,6 +12,15 @@ import {
   toneForScore,
   type Tone,
 } from "@/components/admin/ui";
+import { QaPanel, StatsPanel, EventsTimeline } from "@/components/admin/digest-panels";
+import { SubmitButton } from "@/components/admin/SubmitButton";
+import { ActionForm } from "@/components/admin/toast";
+import {
+  beehiivDraftAction,
+  beehiivPublishAction,
+  beehiivScheduleAction,
+  refreshStatsAction,
+} from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -77,10 +87,17 @@ function Manifest({ json }: { json: Record<string, unknown> }) {
 }
 
 export default async function DigestDetailPage({ params }: { params: { id: string } }) {
-  const e: EditionFull | null = await getEdition(decodeURIComponent(params.id));
+  const id = decodeURIComponent(params.id);
+  const e: EditionFull | null = await getEdition(id);
   if (!e) notFound();
 
   const qt = toneForScore(e.quality_score);
+  const [reports, stat, events] = await Promise.all([
+    getQaReports(id),
+    getStats(id),
+    getEvents(id),
+  ]);
+  const canPublish = gatesPass(e);
 
   return (
     <>
@@ -144,6 +161,68 @@ export default async function DigestDetailPage({ params }: { params: { id: strin
         </div>
       </section>
 
+      {/* Fase 2/5 — operar no Beehiiv (dispara o workflow beehiiv.yml). */}
+      <section className="mb-8">
+        <h2 className="mb-2 font-display text-lg font-semibold">Operar</h2>
+        <div className="rounded-lg border border-line bg-surface p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <ActionForm action={beehiivDraftAction}>
+              <input type="hidden" name="edition_id" value={e.id} />
+              <SubmitButton variant="default" pendingLabel="Disparando…">Gerar rascunho no Beehiiv</SubmitButton>
+            </ActionForm>
+            <ActionForm action={beehiivPublishAction}>
+              <input type="hidden" name="edition_id" value={e.id} />
+              <SubmitButton
+                variant={canPublish ? "primary" : "default"}
+                pendingLabel="Publicando…"
+                title={canPublish ? undefined : "gates não passaram"}
+              >
+                Publicar agora
+              </SubmitButton>
+            </ActionForm>
+            <ActionForm action={beehiivScheduleAction} className="flex items-center gap-2">
+              <input type="hidden" name="edition_id" value={e.id} />
+              <input
+                type="datetime-local"
+                name="schedule_at"
+                className="rounded border border-line bg-surface px-2 py-1.5 text-sm text-ink focus:border-blue-600 focus:outline-none"
+              />
+              <SubmitButton variant="default" pendingLabel="Agendando…">Agendar</SubmitButton>
+            </ActionForm>
+          </div>
+          <p className="mt-3 text-xs text-gray-500">
+            {canPublish
+              ? "Publicar/agendar exige a trava do workflow (confirm=PUBLICAR, já aplicada). Sem GH_DISPATCH_TOKEN, o disparo retorna erro claro."
+              : "Publicar/agendar bloqueado: os gates de QA não passaram nesta edição."}
+            {e.scheduled_at && <> · agendada para <span className="font-mono">{fmtDate(e.scheduled_at)}</span></>}
+            {e.published_at && <> · publicada em <span className="font-mono">{fmtDate(e.published_at)}</span></>}
+          </p>
+        </div>
+      </section>
+
+      {/* Fase 4 — QA (compartilha id com o rascunho materializado). */}
+      {reports.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-2 font-display text-lg font-semibold">QA (guardrails de marca)</h2>
+          <QaPanel report={reports[0]} />
+        </section>
+      )}
+
+      {/* Fase 6 — desempenho no Beehiiv. */}
+      <section className="mb-8">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold">Desempenho</h2>
+          {e.beehiiv_post_id && (
+            <ActionForm action={refreshStatsAction}>
+              <input type="hidden" name="edition_id" value={e.id} />
+              <input type="hidden" name="post_id" value={e.beehiiv_post_id} />
+              <SubmitButton variant="ghost" pendingLabel="Buscando…">Atualizar métricas</SubmitButton>
+            </ActionForm>
+          )}
+        </div>
+        <StatsPanel stat={stat} />
+      </section>
+
       {e.json && <Manifest json={e.json} />}
 
       <section className="mb-8">
@@ -155,6 +234,12 @@ export default async function DigestDetailPage({ params }: { params: { id: strin
             {e.json ? JSON.stringify(e.json, null, 2) : "—"}
           </pre>
         </details>
+      </section>
+
+      {/* Fase 7 — trilha de auditoria. */}
+      <section className="mb-8">
+        <h2 className="mb-2 font-display text-lg font-semibold">Trilha de auditoria</h2>
+        <EventsTimeline events={events} />
       </section>
     </>
   );
