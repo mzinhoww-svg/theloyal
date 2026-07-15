@@ -4,9 +4,14 @@
 
 import { rest, insert, fetchAllRows } from "./admin-db";
 import { buildPredict, type Prediction, type PredictResult } from "./predict-engine";
+import { getOverrides, type OverrideRow } from "./admin-forecast";
+import { applyPredictOverrides, type WithOverrides } from "./predict-overrides";
 import type { CampaignRow } from "./forecast";
 
 export type { Prediction, PredictResult } from "./predict-engine";
+
+// Série do Predict decorada com os overrides do operador (pin/mute).
+export type PredictSeriesView = WithOverrides<Prediction>;
 
 export type SnapshotRow = {
   id: string;
@@ -28,21 +33,30 @@ export async function loadPredict(now?: string): Promise<{
   configured: boolean;
   ledgerRows: number;
   result: PredictResult;
+  clusters: PredictSeriesView[];
+  routes: PredictSeriesView[];
+  overrides: OverrideRow[];
   datasetComplete: boolean;
   asOf: string;
 }> {
   const asOf = (now ?? new Date().toISOString()).slice(0, 10);
   // Leitura COMPLETA e paginada — sem o limite silencioso de 2000. Fase C0.
-  const loaded = await fetchAllRows<CampaignRow>(
-    "campaigns",
-    "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim",
-  );
+  const [loaded, overrides] = await Promise.all([
+    fetchAllRows<CampaignRow>(
+      "campaigns",
+      "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim",
+    ),
+    getOverrides(),
+  ]);
   const campaigns = loaded.rows;
   const result = buildPredict(campaigns, { asOf });
   return {
     configured: campaigns.length > 0,
     ledgerRows: campaigns.length,
     result,
+    clusters: applyPredictOverrides(result.clusters, overrides),
+    routes: applyPredictOverrides(result.routes, overrides),
+    overrides,
     datasetComplete: loaded.complete,
     asOf,
   };

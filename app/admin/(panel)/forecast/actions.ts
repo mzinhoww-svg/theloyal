@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { patch, insert, del } from "@/lib/admin-db";
+import { patch, insert } from "@/lib/admin-db";
 import { loadForecast } from "@/lib/admin-forecast";
+import { readOverridePayload, saveOverride, removeOverrideById } from "@/lib/admin-overrides";
 import type { ActionState } from "@/components/admin/toast";
 
 const who = () => process.env.ADMIN_USER?.trim() || "admin";
@@ -47,53 +48,29 @@ export async function saveConfigAction(
 }
 
 // Cria/atualiza um override por rota ou programa (pin | mute | confidence).
+// A tabela é compartilhada com o Predict — revalida as duas áreas.
 export async function setOverrideAction(
   _prev: ActionState,
   fd: FormData,
 ): Promise<ActionState> {
-  const scope = String(fd.get("scope") || "");
-  const route = String(fd.get("route") || "").trim();
-  const action = String(fd.get("action") || "");
-  const confidence = String(fd.get("confidence") || "").trim();
-  const note = String(fd.get("note") || "").trim();
-
-  if (!["route", "cluster"].includes(scope)) return { ok: false, message: "escopo inválido" };
-  if (!route) return { ok: false, message: "rota ausente" };
-  if (!["pin", "mute", "confidence"].includes(action)) return { ok: false, message: "ação inválida" };
-  if (action === "confidence" && !["alta", "media", "baixa"].includes(confidence))
-    return { ok: false, message: "confiança inválida para override de confiança" };
-
-  const rowData = {
-    scope,
-    route,
-    action,
-    confidence: action === "confidence" ? confidence : null,
-    note: note || null,
-    created_at: new Date().toISOString(),
-    created_by: who(),
-  };
-  try {
-    await insert("forecast_overrides", rowData, { onConflict: "scope,route" });
+  const res = await saveOverride(readOverridePayload(fd), who());
+  if (res.ok) {
     revalidatePath("/admin/forecast");
-    return { ok: true, message: `override ${action} salvo para ${route}` };
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "falha ao salvar override" };
+    revalidatePath("/admin/predict");
   }
+  return res;
 }
 
 export async function removeOverrideAction(
   _prev: ActionState,
   fd: FormData,
 ): Promise<ActionState> {
-  const id = String(fd.get("id") || "");
-  if (!id) return { ok: false, message: "id ausente" };
-  try {
-    await del("forecast_overrides", `id=eq.${encodeURIComponent(id)}`);
+  const res = await removeOverrideById(String(fd.get("id") || ""));
+  if (res.ok) {
     revalidatePath("/admin/forecast");
-    return { ok: true, message: "override removido" };
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "falha ao remover" };
+    revalidatePath("/admin/predict");
   }
+  return res;
 }
 
 // Recalcula a previsão agora e grava um snapshot histórico (config + payload).

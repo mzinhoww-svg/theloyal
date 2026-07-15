@@ -1,4 +1,5 @@
-import { loadPredict, type Prediction } from "@/lib/admin-predict";
+import { loadPredict, type Prediction, type PredictSeriesView } from "@/lib/admin-predict";
+import { overrideRouteKey } from "@/lib/predict-overrides";
 import {
   StatCard,
   PageHeader,
@@ -21,7 +22,7 @@ import {
 } from "@/components/admin/dashboard";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
-import { snapshotAllAction } from "./actions";
+import { snapshotAllAction, setOverrideAction } from "./actions";
 import { MODEL_VERSION, HORIZONS } from "@/lib/predict-engine";
 import { QualityPanel } from "@/components/admin/QualityPanel";
 
@@ -64,12 +65,31 @@ function HistoryCell({ p }: { p: Prediction }) {
   );
 }
 
-function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: boolean }) {
+// Fixar/silenciar direto da linha ou do card (mesma tabela de overrides do
+// Forecast; remoção pela tabela de overrides de lá).
+function QuickOverride({ p, action, label }: { p: Prediction; action: "pin" | "mute"; label: string }) {
+  return (
+    <ActionForm action={setOverrideAction}>
+      <input type="hidden" name="scope" value={p.scope} />
+      <input type="hidden" name="route" value={overrideRouteKey(p)} />
+      <input type="hidden" name="action" value={action} />
+      <SubmitButton variant="ghost" pendingLabel="…">
+        {label}
+      </SubmitButton>
+    </ActionForm>
+  );
+}
+
+function SeriesRow({ p, showHistory = false }: { p: PredictSeriesView; showHistory?: boolean }) {
   const blocked = p.blockReason != null;
   return (
-    <tr className={blocked ? "bg-paper/40" : undefined}>
+    <tr className={blocked || p.muted ? "bg-paper/40 opacity-70" : undefined}>
       <Td label="Série" className="whitespace-nowrap font-medium">
-        {seriesLabel(p)}
+        <span className="inline-flex items-center gap-1.5">
+          {p.pinned && <Pill tone="blue">fixado</Pill>}
+          {p.muted && <Pill tone="gray">silenciado</Pill>}
+          {seriesLabel(p)}
+        </span>
       </Td>
       <Td label="Campanhas" className="text-right font-mono tabular-nums">{p.recordsTotal}</Td>
       <Td label="Dias desde a última" className="text-right font-mono tabular-nums text-gray-500">
@@ -104,6 +124,12 @@ function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: bo
           </Td>
         </>
       )}
+      <Td className="tl-cell-action">
+        <div className="flex items-center gap-1">
+          <QuickOverride p={p} action="pin" label={p.pinned ? "—" : "fixar"} />
+          <QuickOverride p={p} action="mute" label={p.muted ? "—" : "silenciar"} />
+        </div>
+      </Td>
     </tr>
   );
 }
@@ -196,7 +222,7 @@ function confSegments(list: Prediction[]): Segment[] {
   ];
 }
 
-function SeriesTable({ rows, empty }: { rows: Prediction[]; empty: string }) {
+function SeriesTable({ rows, empty }: { rows: PredictSeriesView[]; empty: string }) {
   return (
     <Table>
       <thead>
@@ -210,13 +236,14 @@ function SeriesTable({ rows, empty }: { rows: Prediction[]; empty: string }) {
           <Th className="text-right">Prob. 90d</Th>
           <Th>Bônus provável</Th>
           <Th>Confiança</Th>
+          <Th>Ações</Th>
         </tr>
       </thead>
       <tbody>
         {rows.length ? (
           rows.map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
         ) : (
-          <EmptyRow cols={9} label={empty} />
+          <EmptyRow cols={10} label={empty} />
         )}
       </tbody>
     </Table>
@@ -224,16 +251,24 @@ function SeriesTable({ rows, empty }: { rows: Prediction[]; empty: string }) {
 }
 
 export default async function PredictPage() {
-  const { result, ledgerRows, asOf, datasetComplete } = await loadPredict();
-  const series = [...result.clusters, ...result.routes];
+  const { result, clusters, routes, ledgerRows, asOf, datasetComplete } = await loadPredict();
+  const series = [...clusters, ...routes];
   const ready = series.filter(isReady).length;
   const blocked = series.filter((p) => p.blockReason != null).length;
-  const topReadyCluster = result.clusters.find(isReady) ?? result.clusters[0];
+  const topReadyCluster = clusters.find((p) => isReady(p) && !p.muted) ?? clusters[0];
 
   // Dashboard: séries prontas com probabilidade, ranqueadas pelo curto prazo.
+  // Silenciadas ficam fora do ranking e do heatmap (aparecem só nas tabelas);
+  // fixadas vêm primeiro.
   const ranked = series
-    .filter((p) => isReady(p) && p.probabilities)
-    .sort((a, b) => (b.probabilities?.p30 ?? 0) - (a.probabilities?.p30 ?? 0));
+    .filter((p) => isReady(p) && p.probabilities && !p.muted)
+    .sort((a, b) =>
+      a.pinned !== b.pinned
+        ? a.pinned
+          ? -1
+          : 1
+        : (b.probabilities?.p30 ?? 0) - (a.probabilities?.p30 ?? 0),
+    );
   const opportunities = ranked.slice(0, 6);
   const heatRows = ranked.slice(0, 10).map((p) => {
     const pr = p.probabilities;
@@ -298,12 +333,19 @@ export default async function PredictPage() {
                 label={seriesLabel(p)}
                 confidence={p.confidence}
                 tone={confTone(p.confidence)}
+                pinned={p.pinned}
                 p30={p.probabilities?.p30 ?? 0}
                 p90={p.probabilities?.p90 ?? 0}
                 bonus={p.bonusCandidates[0] ? bonusLabel(p) : null}
                 cadenceDays={p.medianIntervalAll}
                 daysSinceLast={p.daysSinceLast}
                 window={p.centralDate ? shortDate(p.centralDate) : null}
+                actions={
+                  <>
+                    <QuickOverride p={p} action="pin" label={p.pinned ? "—" : "fixar"} />
+                    <QuickOverride p={p} action="mute" label="silenciar" />
+                  </>
+                }
               />
             ))}
           </div>
@@ -361,7 +403,7 @@ export default async function PredictPage() {
           elas — a prova da cadência. Séries com menos de 3 campanhas ficam bloqueadas — sem previsão até acumular
           histórico.
         </p>
-        <SeriesTable rows={result.clusters} empty="sem séries de transferência" />
+        <SeriesTable rows={clusters} empty="sem séries de transferência" />
       </Disclosure>
 
       <Disclosure
@@ -375,7 +417,7 @@ export default async function PredictPage() {
           intervalo em dias entre elas — é a prova da cadência (ex.: duas ondas separadas por 943
           dias). Rotas com menos de 3 campanhas ficam bloqueadas.
         </p>
-        <SeriesTable rows={result.routes.slice(0, 60)} empty="sem rotas" />
+        <SeriesTable rows={routes.slice(0, 60)} empty="sem rotas" />
       </Disclosure>
 
       <p className="mt-8 border-t border-line pt-4 text-xs text-gray-400">

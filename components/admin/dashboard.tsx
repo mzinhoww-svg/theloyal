@@ -177,22 +177,26 @@ export function OpportunityCard({
   label,
   confidence,
   tone,
+  pinned = false,
   p30,
   p90,
   bonus,
   cadenceDays,
   daysSinceLast,
   window,
+  actions,
 }: {
   label: string;
   confidence: string;
   tone: Tone;
+  pinned?: boolean;
   p30: number;
   p90: number;
   bonus: string | null;
   cadenceDays: number | null;
   daysSinceLast: number | null;
   window: string | null;
+  actions?: ReactNode;
 }) {
   return (
     <div className="flex h-full flex-col rounded-lg border border-line bg-surface p-4">
@@ -200,7 +204,10 @@ export function OpportunityCard({
         <span className="min-w-0 truncate font-medium text-ink" title={label}>
           {label}
         </span>
-        <Pill tone={tone}>{confidence}</Pill>
+        <span className="flex flex-none items-center gap-1">
+          {pinned && <Pill tone="blue">fixado</Pill>}
+          <Pill tone={tone}>{confidence}</Pill>
+        </span>
       </div>
       <div className="mb-2 flex items-baseline gap-2">
         <span className="font-mono text-2xl font-semibold tabular-nums text-ink">{Math.round(p30 * 100)}%</span>
@@ -230,6 +237,9 @@ export function OpportunityCard({
           <dd className="font-mono tabular-nums text-ink">{window ?? "—"}</dd>
         </div>
       </dl>
+      {actions != null && (
+        <div className="mt-2 flex items-center gap-1 border-t border-line pt-2">{actions}</div>
+      )}
     </div>
   );
 }
