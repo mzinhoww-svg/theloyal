@@ -162,6 +162,14 @@ export function Recebe() {
                   <Sparkline kind={p.kind} />
                 </div>
                 <p className="mt-3 text-base leading-relaxed text-gray-500">{p.desc}</p>
+                {p.kind === "pro" && (
+                  <a
+                    href="/pro"
+                    className="mt-4 inline-flex min-h-11 items-center text-base font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                  >
+                    Entrar na lista do Pro
+                  </a>
+                )}
               </div>
             </Reveal>
           ))}
@@ -279,7 +287,7 @@ export function CTAFinal() {
               5 minutos de leitura. De graça. Cancela em um clique.
             </p>
             <div className="mx-auto mt-8 max-w-xl text-left">
-              <SubscribeForm submitLabel="Quero receber por e-mail" onSuccess={() => setCelebrate(true)} />
+              <SubscribeForm submitLabel="Quero receber por e-mail" source="cta-final" onSuccess={() => setCelebrate(true)} />
             </div>
             {celebrate && (
               <div className="mx-auto mt-6 w-28">

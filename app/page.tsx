@@ -7,7 +7,8 @@ import {
   Problema,
   Recebe,
 } from "@/components/sections";
-import { Footer, Hero, Nav } from "@/components/shell";
+import Link from "next/link";
+import { Footer, Hero, Nav, StickyCTA } from "@/components/shell";
 import { Reveal, SectionLabel } from "@/components/ui";
 
 export default function Home() {
@@ -33,6 +34,14 @@ export default function Home() {
             </Reveal>
             <Reveal className="mt-10">
               <EdicaoMock />
+            </Reveal>
+            <Reveal className="mt-6">
+              <Link
+                href="/edicao"
+                className="inline-flex min-h-11 items-center text-base font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+              >
+                Ver edições reais no arquivo
+              </Link>
             </Reveal>
           </div>
         </section>
@@ -67,6 +76,7 @@ export default function Home() {
         </section>
       </main>
       <Footer />
+      <StickyCTA />
     </>
   );
 }
