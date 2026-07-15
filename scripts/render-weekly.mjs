@@ -82,6 +82,13 @@ export function validateWeekly(wk) {
     if (hl.verdict && !(hl.verdict in VERDICTS)) errors.push(`Destaque ${i + 1}: veredito "${hl.verdict}" fora do vocabulário`);
   });
 
+  (wk.ranking ?? []).forEach((r, i) => {
+    if (typeof r.rank !== "number") errors.push(`Ranking ${i + 1}: sem rank numérico`);
+    if (!r.fio) errors.push(`Ranking ${i + 1}: sem fio`);
+    if (!(r.verdict in VERDICTS)) errors.push(`Ranking ${i + 1}: veredito "${r.verdict}" fora do vocabulário`);
+  });
+  if ((wk.ranking ?? []).length) ok.push(`Ranking coerente (${wk.ranking.length} Fio(s))`);
+
   (wk.sources ?? []).forEach((s, i) => {
     if (!/^https?:\/\//.test(s.url ?? "")) errors.push(`Fonte ${i + 1}: URL inválida`);
   });
@@ -109,6 +116,11 @@ function radarEmail(radar) {
   return `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(radar.note ?? RADAR_NOTE_DEFAULT)}</div>${rows}`;
 }
 
+// Referência de lineage no web (React) — pequeno mono cinza "Daily Nº X".
+function lineageWeb(lin) {
+  return lin ? h("span", { className: "mono tl-lineage" }, ` Daily Nº ${lin.edition}`) : null;
+}
+
 function labelBlock(text) {
   return `<div style="border-top:1px solid ${TOKENS.line};padding-top:12px;margin:28px 0 12px;font-family:${SANS};font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:0.08em;color:${TOKENS.g500}">${esc(text)}</div>`;
 }
@@ -117,17 +129,45 @@ function listBlock(items) {
   return `<ul style="margin:0;padding-left:20px;font-family:${SANS};font-size:15px;line-height:1.7;color:${TOKENS.ink}">${items.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`;
 }
 
+// Itens de movimento aceitam string (legado) ou objeto {text, lineage} (Fase 1).
+function movText(it) { return typeof it === "string" ? it : (it?.text ?? ""); }
+function lineageRefEmail(lin) {
+  return lin ? ` <span style="font-family:${MONO};font-size:11px;color:${TOKENS.g400}">Daily Nº ${lin.edition}</span>` : "";
+}
+function movListBlock(items) {
+  return `<ul style="margin:0;padding-left:20px;font-family:${SANS};font-size:15px;line-height:1.7;color:${TOKENS.ink}">${items.map((t) => `<li>${esc(movText(t))}${lineageRefEmail(typeof t === "object" ? t.lineage : null)}</li>`).join("")}</ul>`;
+}
+
+// Ranking (e-mail) — "Onde está o valor". Âncora e score em mono; badge de veredito.
+function rankingEmail(ranking) {
+  return ranking.map((r) => {
+    const v = VERDICTS[r.verdict] ?? VERDICTS["nao-confirmado"];
+    const sc = typeof r.score === "number" ? ` <span style="font-family:${MONO};font-size:13px">${r.score}</span>` : "";
+    const anchor = r.anchor ? `<span style="font-family:${MONO};font-size:13px;color:${TOKENS.g500}">${esc(r.anchor)}</span>` : "";
+    const badge = `<span style="display:inline-block;background:${v.bg};color:${v.fg};border-radius:9999px;padding:2px 10px;font-family:${SANS};font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em">${esc(v.label)}${sc}</span>`;
+    return `<div style="border-top:1px solid ${TOKENS.line};padding:10px 0">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline">
+        <span style="font-family:${SANS};font-size:15px;color:${TOKENS.ink}"><span style="font-family:${MONO};font-size:13px;color:${TOKENS.g400}">#${r.rank}</span> <strong>${esc(r.label ?? r.fio)}</strong></span>
+        ${anchor}
+      </div>
+      <div style="margin-top:6px">${badge}${lineageRefEmail(r.lineage)}</div>
+    </div>`;
+  }).join("");
+}
+
 export function renderWeeklyEmail(wk) {
   const radar = resolveRadar(wk);
   const mov = wk.movements ?? {};
   const movHtml = ["novas", "seguem", "venceram"]
     .filter((k) => Array.isArray(mov[k]) && mov[k].length)
-    .map((k) => `<div style="margin-top:8px"><span style="font-family:${MONO};font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:${TOKENS.g400}">${k === "novas" ? "Abriram" : k === "seguem" ? "Seguem" : "Encerraram"}</span>${listBlock(mov[k])}</div>`)
+    .map((k) => `<div style="margin-top:8px"><span style="font-family:${MONO};font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:${TOKENS.g400}">${k === "novas" ? "Abriram" : k === "seguem" ? "Seguem" : "Encerraram"}</span>${movListBlock(mov[k])}</div>`)
     .join("");
   const hlHtml = (wk.highlights ?? []).map((hl) => {
     const badge = hl.verdict ? (() => { const v = VERDICTS[hl.verdict] ?? VERDICTS["nao-confirmado"]; const sc = typeof hl.score === "number" ? ` <span style="font-family:${MONO};font-size:13px">${hl.score}</span>` : ""; return `<span style="display:inline-block;background:${v.bg};color:${v.fg};border-radius:9999px;padding:3px 10px;font-family:${SANS};font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em">${esc(v.label)}${sc}</span> `; })() : "";
-    return `<div style="border:1px solid ${TOKENS.line};border-radius:8px;padding:16px;margin-top:12px"><div style="font-family:${SERIF};font-size:18px;font-weight:bold;color:${TOKENS.ink}">${esc(hl.title)}</div><div style="font-family:${SANS};font-size:14px;line-height:1.6;color:${TOKENS.g500};margin-top:6px">${esc(hl.note)}</div><div style="margin-top:8px">${badge}</div></div>`;
+    const trans = hl.transition ? `<div style="font-family:${MONO};font-size:11px;color:${TOKENS.g400};margin-top:6px">${esc((VERDICTS[hl.transition.from]?.label ?? hl.transition.from))} → ${esc((VERDICTS[hl.transition.to]?.label ?? hl.transition.to))}</div>` : "";
+    return `<div style="border:1px solid ${TOKENS.line};border-radius:8px;padding:16px;margin-top:12px"><div style="font-family:${SERIF};font-size:18px;font-weight:bold;color:${TOKENS.ink}">${esc(hl.title)}${lineageRefEmail(hl.lineage)}</div><div style="font-family:${SANS};font-size:14px;line-height:1.6;color:${TOKENS.g500};margin-top:6px">${esc(hl.note)}</div>${trans}<div style="margin-top:8px">${badge}</div></div>`;
   }).join("");
+  const rankingHtml = Array.isArray(wk.ranking) && wk.ranking.length ? rankingEmail(wk.ranking) : "";
   const sourcesHtml = wk.sources.map((s) => `<a href="${esc(s.url)}" style="color:${TOKENS.blue600};text-decoration:underline">${esc(s.label)}</a>`).join(" · ");
 
   return `<!doctype html>
@@ -149,10 +189,11 @@ export function renderWeeklyEmail(wk) {
         <tr><td style="padding:12px 24px 32px">
           ${labelBlock("A semana em uma tese")}
           <div style="border-left:3px solid ${TOKENS.blue600};padding-left:20px;font-family:${SANS};font-size:18px;line-height:1.55;color:${TOKENS.ink}">${esc(wk.signal)}</div>
-          ${radar ? labelBlock("Radar de janelas") + radarEmail(radar) : ""}
-          ${movHtml ? labelBlock("Movimentos da semana") + movHtml : ""}
-          ${hlHtml ? labelBlock("Destaques") + hlHtml : ""}
-          ${labelBlock("O que monitorar")}
+          ${movHtml ? labelBlock("O que mudou") + movHtml : ""}
+          ${hlHtml ? labelBlock("O que pesou") + hlHtml : ""}
+          ${rankingHtml ? labelBlock("Onde está o valor") + rankingHtml : ""}
+          ${labelBlock("O que vem")}
+          ${radar ? radarEmail(radar) : ""}
           ${listBlock(wk.watch)}
           ${labelBlock("Fontes")}
           <div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.7">${sourcesHtml}</div>
@@ -175,34 +216,46 @@ export function renderWeeklyPlain(wk) {
   L.push("=".repeat(60), "");
   L.push("A SEMANA EM UMA TESE");
   L.push(wk.signal, "");
-  if (radar) {
-    L.push("RADAR DE JANELAS");
-    L.push(radar.note ?? RADAR_NOTE_DEFAULT, "");
-    for (const w of radar.windows) {
-      const c = (CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa).label;
-      L.push(`  ${w.label}${w.bonus ? " " + w.bonus : ""}  —  ${w.window}  [${c}]`);
-      if (w.basis) L.push(`    ${w.basis}`);
-    }
-    L.push("");
-  }
   const mov = wk.movements ?? {};
   if ((mov.novas || mov.seguem || mov.venceram)) {
-    L.push("MOVIMENTOS DA SEMANA");
+    L.push("O QUE MUDOU");
     for (const [k, title] of [["novas", "Abriram"], ["seguem", "Seguem"], ["venceram", "Encerraram"]]) {
       if (Array.isArray(mov[k]) && mov[k].length) {
         L.push(`  ${title}:`);
-        for (const t of mov[k]) L.push(`    - ${t}`);
+        for (const t of mov[k]) {
+          const ref = typeof t === "object" && t.lineage ? `  (Daily Nº ${t.lineage.edition})` : "";
+          L.push(`    - ${movText(t)}${ref}`);
+        }
       }
     }
     L.push("");
   }
   for (const hl of wk.highlights ?? []) {
-    L.push("DESTAQUE");
+    L.push("O QUE PESOU");
     const v = hl.verdict ? `[${(VERDICTS[hl.verdict] ?? VERDICTS["nao-confirmado"]).label}${typeof hl.score === "number" ? " " + hl.score : ""}] ` : "";
-    L.push(`${hl.title}`);
+    const ref = hl.lineage ? `  (Daily Nº ${hl.lineage.edition})` : "";
+    L.push(`${hl.title}${ref}`);
+    if (hl.transition) L.push(`  ${(VERDICTS[hl.transition.from]?.label ?? hl.transition.from)} -> ${(VERDICTS[hl.transition.to]?.label ?? hl.transition.to)}`);
     L.push(`${v}${hl.note}`, "");
   }
-  L.push("O QUE MONITORAR");
+  if (Array.isArray(wk.ranking) && wk.ranking.length) {
+    L.push("ONDE ESTÁ O VALOR");
+    for (const r of wk.ranking) {
+      const v = (VERDICTS[r.verdict] ?? VERDICTS["nao-confirmado"]).label;
+      const ref = r.lineage ? `  (Daily Nº ${r.lineage.edition})` : "";
+      L.push(`  #${r.rank} ${r.label ?? r.fio}${r.anchor ? "  " + r.anchor : ""}  [${v}${typeof r.score === "number" ? " " + r.score : ""}]${ref}`);
+    }
+    L.push("");
+  }
+  L.push("O QUE VEM");
+  if (radar) {
+    L.push(radar.note ?? RADAR_NOTE_DEFAULT);
+    for (const w of radar.windows) {
+      const c = (CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa).label;
+      L.push(`  ${w.label}${w.bonus ? " " + w.bonus : ""}  —  ${w.window}  [${c}]`);
+      if (w.basis) L.push(`    ${w.basis}`);
+    }
+  }
   for (const t of wk.watch) L.push(`  - ${t}`);
   L.push("");
   L.push("FONTES");
@@ -232,39 +285,52 @@ function WeeklyArticle({ wk, radar }) {
     h("section", null,
       h("span", { className: "tl-label" }, "A semana em uma tese"),
       h("blockquote", { className: "tl-quote" }, h("p", { className: "tl-signal" }, wk.signal))),
-    radar
-      ? h("section", null,
-          h("span", { className: "tl-label" }, "Radar de janelas"),
-          h("p", { className: "tl-radar-note" }, radar.note ?? RADAR_NOTE_DEFAULT),
-          h("ul", { className: "tl-radar" },
-            radar.windows.map((w, i) =>
-              h("li", { key: i, className: "tl-radar-item" },
-                h("div", { className: "tl-radar-head" },
-                  h("span", { className: "tl-radar-label" }, w.label, w.bonus ? h("span", { className: "mono tl-radar-bonus" }, ` ${w.bonus}`) : null),
-                  h("span", { className: "mono tl-radar-window" }, w.window)),
-                h(ConfPill, { conf: w.confidence }),
-                w.basis ? h("div", { className: "tl-radar-basis" }, w.basis) : null))))
-      : null,
     wk.movements
       ? h("section", null,
-          h("span", { className: "tl-label" }, "Movimentos da semana"),
+          h("span", { className: "tl-label" }, "O que mudou"),
           [["novas", "Abriram"], ["seguem", "Seguem"], ["venceram", "Encerraram"]]
             .filter(([k]) => Array.isArray(wk.movements[k]) && wk.movements[k].length)
             .map(([k, title], gi) =>
               h("div", { key: gi, className: "tl-mov" },
                 h("span", { className: "tl-mov-title mono" }, title),
-                h("ul", null, wk.movements[k].map((t, i) => h("li", { key: i }, t))))))
+                h("ul", null, wk.movements[k].map((t, i) =>
+                  h("li", { key: i }, movText(t), lineageWeb(typeof t === "object" ? t.lineage : null)))))))
       : null,
     (wk.highlights ?? []).length
       ? h("section", null,
-          h("span", { className: "tl-label" }, "Destaques"),
+          h("span", { className: "tl-label" }, "O que pesou"),
           wk.highlights.map((hl, i) =>
             h("div", { key: i, className: "tl-deal" },
-              h("h2", { className: "tl-title" }, hl.title),
+              h("h2", { className: "tl-title" }, hl.title, lineageWeb(hl.lineage)),
+              hl.transition ? h("div", { className: "tl-mov-title mono" }, `${VERDICTS[hl.transition.from]?.label ?? hl.transition.from} → ${VERDICTS[hl.transition.to]?.label ?? hl.transition.to}`) : null,
               h("p", { className: "tl-context" }, hl.note))))
       : null,
+    (wk.ranking ?? []).length
+      ? h("section", null,
+          h("span", { className: "tl-label" }, "Onde está o valor"),
+          h("ul", { className: "tl-radar" },
+            wk.ranking.map((r, i) =>
+              h("li", { key: i, className: "tl-radar-item" },
+                h("div", { className: "tl-radar-head" },
+                  h("span", { className: "tl-radar-label" }, h("span", { className: "mono tl-rank-n" }, `#${r.rank} `), r.label ?? r.fio),
+                  r.anchor ? h("span", { className: "mono tl-radar-window" }, r.anchor) : null),
+                h("div", { className: "mono tl-rank-verdict" }, `${VERDICTS[r.verdict]?.label ?? r.verdict}${typeof r.score === "number" ? " " + r.score : ""}`),
+                lineageWeb(r.lineage)))))
+      : null,
     h("section", null,
-      h("span", { className: "tl-label" }, "O que monitorar"),
+      h("span", { className: "tl-label" }, "O que vem"),
+      radar
+        ? h("div", null,
+            h("p", { className: "tl-radar-note" }, radar.note ?? RADAR_NOTE_DEFAULT),
+            h("ul", { className: "tl-radar" },
+              radar.windows.map((w, i) =>
+                h("li", { key: i, className: "tl-radar-item" },
+                  h("div", { className: "tl-radar-head" },
+                    h("span", { className: "tl-radar-label" }, w.label, w.bonus ? h("span", { className: "mono tl-radar-bonus" }, ` ${w.bonus}`) : null),
+                    h("span", { className: "mono tl-radar-window" }, w.window)),
+                  h(ConfPill, { conf: w.confidence }),
+                  w.basis ? h("div", { className: "tl-radar-basis" }, w.basis) : null))))
+        : null,
       h("ul", { className: "tl-watch" }, wk.watch.map((t, i) => h("li", { key: i }, t)))),
     h("section", null,
       h("span", { className: "tl-label" }, "Fontes"),
@@ -297,6 +363,8 @@ main{padding:48px 20px}
 .tl-conf{display:inline-block;margin-top:6px;border-radius:9999px;padding:2px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
 .tl-radar-basis{margin-top:6px;font-size:12px;color:var(--g400)}
 .tl-mov{margin-top:10px}.tl-mov-title{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--g400)}
+.tl-lineage{font-size:12px;color:var(--g400)}
+.tl-rank-n{color:var(--g400)}.tl-rank-verdict{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--g500);margin-top:6px}
 .tl-mov ul,.tl-watch{margin:4px 0 0;padding-left:20px}
 .tl-deal{border:1px solid var(--line);border-radius:8px;padding:20px;margin-top:12px}
 .tl-title{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:20px;margin:0}

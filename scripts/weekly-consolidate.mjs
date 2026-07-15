@@ -176,6 +176,7 @@ export function consolidate({ editions, windowStart, windowEnd, number, prevWeek
     .map((f, i) => ({
       rank: i + 1,
       fio: f.key,
+      label: labelOf(f, entityNames),
       anchor: f.anchor,
       verdict: f.verdictEnd,
       score: f.tlScore,
