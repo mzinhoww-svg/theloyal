@@ -123,8 +123,8 @@ export default async function NoticiasPage({
                 const st = statusOf(n);
                 return (
                   <tr key={n.id}>
-                    <Td className="whitespace-nowrap text-gray-500">{n.source}</Td>
-                    <Td className="max-w-[380px]">
+                    <Td className="whitespace-nowrap text-gray-500" label="Fonte">{n.source}</Td>
+                    <Td className="max-w-[380px]" label="Título">
                       <a
                         href={n.url}
                         target="_blank"
@@ -140,21 +140,21 @@ export default async function NoticiasPage({
                         </span>
                       )}
                     </Td>
-                    <Td className="font-mono tabular-nums text-gray-500">
+                    <Td className="font-mono tabular-nums text-gray-500" label="Coletada">
                       {fmtDate(n.fetched_at)}
                     </Td>
-                    <Td className="text-right font-mono tabular-nums">
+                    <Td className="text-right font-mono tabular-nums" label="Camp.">
                       {n.campaigns_extracted ?? 0}
                     </Td>
-                    <Td className="text-gray-500">{n.model_used ?? "—"}</Td>
-                    <Td>
+                    <Td className="text-gray-500" label="Modelo">{n.model_used ?? "—"}</Td>
+                    <Td label="Status">
                       <Pill
                         tone={st === "erro" ? "red" : st === "pendente" ? "yellow" : "green"}
                       >
                         {st}
                       </Pill>
                     </Td>
-                    <Td className="text-right">
+                    <Td className="text-right tl-cell-action">
                       <ActionForm
                         action={reprocessNewsAction}
                         className="flex justify-end"

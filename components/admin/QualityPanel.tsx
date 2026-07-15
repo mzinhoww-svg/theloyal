@@ -45,26 +45,26 @@ export function QualityPanel({ quality }: { quality: CampaignQualityAssessment }
           {excluded.length ? (
             excluded.map((e) => (
               <tr key={e.id}>
-                <Td className="font-mono text-xs text-gray-500"><span className="block max-w-[220px] truncate" title={e.id}>{e.id}</span></Td>
-                <Td className="font-medium">{e.route}</Td>
-                <Td className="font-mono text-xs tabular-nums">{e.temporal.eventDate ?? "—"}</Td>
-                <Td className="font-mono text-xs tabular-nums text-gray-500">{e.temporal.provenanceDate ?? "—"}</Td>
-                <Td className="text-right font-mono tabular-nums">{e.temporal.dayDifference ?? "—"}</Td>
-                <Td className="text-xs text-gray-500">{e.temporal.flags.join(", ")}</Td>
-                <Td><Pill tone={SEV_TONE[e.temporal.severity]}>{e.temporal.severity}</Pill></Td>
-                <Td>
+                <Td label="Campanha" className="font-mono text-xs text-gray-500"><span className="block max-w-[220px] truncate" title={e.id}>{e.id}</span></Td>
+                <Td label="Rota" className="font-medium">{e.route}</Td>
+                <Td label="Data candidata" className="font-mono text-xs tabular-nums">{e.temporal.eventDate ?? "—"}</Td>
+                <Td label="Proveniência" className="font-mono text-xs tabular-nums text-gray-500">{e.temporal.provenanceDate ?? "—"}</Td>
+                <Td label="Δ dias" className="text-right font-mono tabular-nums">{e.temporal.dayDifference ?? "—"}</Td>
+                <Td label="Flags" className="text-xs text-gray-500">{e.temporal.flags.join(", ")}</Td>
+                <Td label="Severidade"><Pill tone={SEV_TONE[e.temporal.severity]}>{e.temporal.severity}</Pill></Td>
+                <Td label="Duplicidade">
                   {e.duplicate.status === "unique" ? (
                     <span className="text-xs text-gray-400">—</span>
                   ) : (
                     <Pill tone={DUP_TONE(e.duplicate.status)}>{e.duplicate.status === "probable_duplicate" ? "provável" : "possível"}</Pill>
                   )}
                 </Td>
-                <Td className="font-mono text-[11px] text-gray-400">
+                <Td label="Relacionadas" className="font-mono text-[11px] text-gray-400">
                   <span className="block max-w-[200px] truncate" title={e.duplicate.relatedCampaignIds.join(" · ")}>
                     {e.duplicate.relatedCampaignIds.join(" · ") || "—"}
                   </span>
                 </Td>
-                <Td><Pill tone="red">não · {e.reason}</Pill></Td>
+                <Td label="Na previsão?"><Pill tone="red">não · {e.reason}</Pill></Td>
               </tr>
             ))
           ) : (

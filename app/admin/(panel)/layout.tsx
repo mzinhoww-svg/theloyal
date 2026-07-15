@@ -53,37 +53,58 @@ export default function PanelLayout({
           </aside>
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-surface px-5 py-2.5">
-              <div className="flex items-center gap-3">
-                <a href="/admin" className="flex items-center gap-2 md:hidden">
-                  <span className="flex h-7 w-7 items-center justify-center rounded bg-ink font-display text-xs font-bold text-paper">
-                    TL
+            <header className="sticky top-0 z-20 border-b border-line bg-surface px-4 py-2.5 md:px-5">
+              <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between md:gap-3">
+                {/* Linha 1 (mobile): logo + hamburger. Some no desktop (a sidebar
+                    já tem o logo e a navegação). */}
+                <div className="flex items-center justify-between gap-3 md:hidden">
+                  <a href="/admin" className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded bg-ink font-display text-sm font-bold text-paper">
+                      TL
+                    </span>
+                    <span className="text-sm font-semibold">Central</span>
+                  </a>
+                  <MobileNav />
+                </div>
+
+                {/* Linha 2 (mobile) / esquerda (desktop): busca em 100%. */}
+                <div className="flex items-center gap-3">
+                  <CommandPalette />
+                  <span
+                    className="hidden items-center gap-1.5 whitespace-nowrap text-xs text-gray-500 md:inline-flex"
+                    title={
+                      configured
+                        ? "Lendo e operando dados ao vivo do Supabase."
+                        : "Sem SUPABASE_SERVICE_ROLE_KEY — painel em modo mock."
+                    }
+                  >
+                    <StatusDot tone={configured ? "green" : "yellow"} />
+                    {configured ? "Supabase" : "modo mock"}
                   </span>
-                  <span className="text-sm font-semibold">Central</span>
-                </a>
-                <CommandPalette />
-                <span
-                  className="hidden items-center gap-1.5 text-xs text-gray-500 md:inline-flex"
-                  title={
-                    configured
-                      ? "Lendo e operando dados ao vivo do Supabase."
-                      : "Sem SUPABASE_SERVICE_ROLE_KEY — painel em modo mock."
-                  }
-                >
-                  <StatusDot tone={configured ? "green" : "yellow"} />
-                  {configured ? "Supabase" : "modo mock"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <LiveRefresh renderedAt={renderedAt} />
-                <form action={logout} className="md:hidden">
-                  <SubmitButton variant="default">Sair</SubmitButton>
-                </form>
+                </div>
+
+                {/* Linha 3 (mobile) / direita (desktop): atualizar + auto + status. */}
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 md:justify-end">
+                  <LiveRefresh renderedAt={renderedAt} />
+                  <span
+                    className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-gray-500 md:hidden"
+                    title={
+                      configured
+                        ? "Lendo e operando dados ao vivo do Supabase."
+                        : "Sem SUPABASE_SERVICE_ROLE_KEY — painel em modo mock."
+                    }
+                  >
+                    <StatusDot tone={configured ? "green" : "yellow"} />
+                    {configured ? "Supabase" : "modo mock"}
+                  </span>
+                </div>
               </div>
             </header>
-            <MobileNav />
 
-            <main id="conteudo" className="min-w-0 flex-1 px-5 py-6 lg:px-8">
+            <main
+              id="conteudo"
+              className="tl-safe-bottom-pad min-w-0 flex-1 px-4 py-5 sm:px-5 md:py-6 lg:px-8"
+            >
               {!configured && (
                 <div className="mb-5 rounded-lg border border-line bg-yellow-100 px-4 py-3 text-sm text-ink">
                   <strong className="font-semibold">

@@ -346,10 +346,12 @@ export function PageHeader({
   );
 }
 
-// Tabela: rola horizontalmente sem estourar o body; header sticky, zebra sutil.
+// Tabela responsiva: no mobile (<768px) cada linha vira um card com campos
+// rotulados (ver .tl-datatable em globals.css) — zero scroll horizontal. Acima
+// de md volta ao formato de tabela com header sticky e zebra sutil.
 export function Table({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-line bg-surface">
+    <div className="tl-datatable md:overflow-x-auto md:rounded-lg md:border md:border-line md:bg-surface">
       <table className="w-full border-collapse text-sm [&_tbody_tr:nth-child(even)]:bg-paper/40 [&_tbody_tr:hover]:bg-paper-dark/50">
         {children}
       </table>
@@ -371,14 +373,18 @@ export function Td({
   children,
   className = "",
   colSpan,
+  label,
 }: {
   children?: ReactNode;
   className?: string;
   colSpan?: number;
+  // Rótulo do campo no modo card (mobile). Espelha o texto do <Th> da coluna.
+  label?: string;
 }) {
   return (
     <td
       colSpan={colSpan}
+      data-label={label}
       className={`border-b border-line px-3 py-2 align-top text-ink ${className}`}
     >
       {children}
@@ -399,7 +405,7 @@ export function EmptyRow({
 }) {
   return (
     <tr>
-      <Td colSpan={cols}>
+      <Td colSpan={cols} className="tl-cell-full">
         <div className="flex flex-col gap-1 py-6 text-center">
           <span className="text-sm font-medium text-gray-700">{label}</span>
           {hint != null && (

@@ -135,7 +135,7 @@ export default async function CampanhasPage({
               const review = needsReview(c);
               return (
                 <tr key={c.id} className={review ? "!bg-yellow-100" : undefined}>
-                  <Td className="whitespace-nowrap font-medium">
+                  <Td className="whitespace-nowrap font-medium" label="Rota">
                     {c.origem}
                     <span className="text-gray-400"> → </span>
                     {c.destino}
@@ -144,17 +144,17 @@ export default async function CampanhasPage({
                       {review && <Pill tone="yellow">revisar</Pill>}
                     </span>
                   </Td>
-                  <Td className="text-gray-500">{c.tipo}</Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td className="text-gray-500" label="Tipo">{c.tipo}</Td>
+                  <Td className="text-right font-mono tabular-nums" label="%">
                     {c.percentual ?? "—"}
                   </Td>
-                  <Td className="text-right font-mono tabular-nums text-gray-500">
+                  <Td className="text-right font-mono tabular-nums text-gray-500" label="Milheiro">
                     {c.cpm ?? "—"}
                   </Td>
-                  <Td>
+                  <Td label="Status">
                     <Pill tone={toneForStatus(c.status)}>{c.status}</Pill>
                   </Td>
-                  <Td>
+                  <Td label="Atual">
                     <span className="flex flex-wrap items-center gap-1.5">
                       {c.verdict ? (
                         <Pill tone={toneForVerdict(c.verdict)}>{c.verdict}</Pill>
@@ -166,7 +166,7 @@ export default async function CampanhasPage({
                       )}
                     </span>
                   </Td>
-                  <Td>
+                  <Td className="tl-cell-action">
                     <ActionForm
                       action={updateCampaignAction}
                       className="flex flex-wrap items-center justify-end gap-2"

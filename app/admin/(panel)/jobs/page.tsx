@@ -54,12 +54,12 @@ function GroupTable({ jobs }: { jobs: Job[] }) {
         {jobs.length > 0 ? (
           jobs.map((j) => (
             <tr key={j.jobid}>
-              <Td className="font-mono">{j.jobname}</Td>
-              <Td className="font-mono tabular-nums text-gray-500">
+              <Td label="Job" className="font-mono">{j.jobname}</Td>
+              <Td label="Schedule" className="font-mono tabular-nums text-gray-500">
                 {j.schedule}
               </Td>
-              <Td className="font-mono text-gray-500">{j.fn_target}</Td>
-              <Td>
+              <Td label="Alvo" className="font-mono text-gray-500">{j.fn_target}</Td>
+              <Td label="Último">
                 <span className="inline-flex items-center gap-2">
                   <StatusDot tone={toneForStatus(j.last_status)} />
                   <span className="text-gray-500">
@@ -68,14 +68,14 @@ function GroupTable({ jobs }: { jobs: Job[] }) {
                   </span>
                 </span>
               </Td>
-              <Td>
+              <Td label="Estado">
                 {j.active ? (
                   <Pill tone="green">ativo</Pill>
                 ) : (
                   <Pill tone="gray">pausado</Pill>
                 )}
               </Td>
-              <Td className="text-right">
+              <Td className="tl-cell-action text-right">
                 <ActionForm action={toggleJobAction} className="flex justify-end">
                   <input type="hidden" name="jobname" value={j.jobname} />
                   <input
