@@ -37,7 +37,10 @@
       "verdictNote": "Vale agir para quem já é do clube e tem emissão planejada.",
       "vigencia": "2026-07-10T23:59:00-03:00",
       "source": "Regulamento oficial · vigência confirmada 08/07, 6h30",
-      "sourceUrl": "https://www.latampass.latam.com"
+      "sourceUrl": "https://www.latampass.latam.com",
+      "entityKey": "latam-pass",
+      "routeKey": "esfera->latam-pass",
+      "firstSeen": "2026-07-08"
     },
     {
       "category": "Compra de pontos · aguardando confirmação",
@@ -53,7 +56,9 @@
       "verdict": "nao-confirmado",
       "verdictNote": "Radar. Não agir sem regulamento oficial.",
       "source": "Post social público, sem página oficial (nível 4)",
-      "sourceUrl": "https://www.livelo.com.br"
+      "sourceUrl": "https://www.livelo.com.br",
+      "entityKey": "livelo",
+      "firstSeen": "2026-07-08"
     }
   ],
   "fechaLogo": [

@@ -109,7 +109,10 @@
         "sourceUrl": { "type": "string", "format": "uri" },
         "vigencia": { "type": "string", "format": "date-time", "description": "Fim da vigência (ISO). Ausente ⇒ verdict deve ser nao-confirmado (overrule 5.4)" },
         "tlScore": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "scoreBreakdown": { "$ref": "#/$defs/scoreBreakdown" }
+        "scoreBreakdown": { "$ref": "#/$defs/scoreBreakdown" },
+        "entityKey": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Chave canônica do deal em content/entities (identidade do Fio na consolidação Weekly). Ausente ⇒ não rastreável na Weekly (aviso, não erro)." },
+        "routeKey": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*->[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Rota origem->destino normalizada (entity keys), para deals de transferência. Identidade estável independente de vigencia_fim (ADR-RADAR-009)." },
+        "firstSeen": { "type": "string", "format": "date", "description": "1ª aparição do fato (ISO date). Distingue NOVO de SEGUE na consolidação Weekly sem heurística." }
       }
     },
     "shopping": {

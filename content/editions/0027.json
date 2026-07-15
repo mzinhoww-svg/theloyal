@@ -27,7 +27,10 @@
       "verdictNote": "Bom para emissão planejada. Caro para estoque.",
       "vigencia": "2026-07-09T23:59:00-03:00",
       "source": "Regulamento oficial · vigência confirmada 07/07, 6h40",
-      "sourceUrl": "https://www.smiles.com.br"
+      "sourceUrl": "https://www.smiles.com.br",
+      "entityKey": "smiles",
+      "routeKey": "livelo->smiles",
+      "firstSeen": "2026-07-07"
     }
   ],
   "fechaLogo": [

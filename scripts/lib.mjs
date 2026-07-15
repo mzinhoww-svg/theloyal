@@ -89,6 +89,30 @@ export function loadEdition(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+// Registro canônico de entidades (content/entities/index.json) — fonte da
+// reconciliação de identidade que a consolidação Weekly usa para agrupar deals
+// num mesmo Fio. Ausente/ilegível ⇒ registro vazio (nunca lança).
+export function loadEntities(path = "content/entities/index.json") {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return { schemaVersion: 1, entities: [] };
+  }
+}
+
+// Conjunto das chaves canônicas conhecidas — usado para validar entityKey/routeKey.
+export function entityKeySet(reg = loadEntities()) {
+  return new Set((reg?.entities ?? []).map((e) => e.key));
+}
+
+// routeKey canônico "origem->destino" → { origem, destino }. Retorna null se
+// fora do formato.
+export function parseRouteKey(routeKey) {
+  if (typeof routeKey !== "string") return null;
+  const m = routeKey.match(/^([a-z0-9-]+)->([a-z0-9-]+)$/);
+  return m ? { origem: m[1], destino: m[2] } : null;
+}
+
 export function listEditionFiles(dir = "content/editions") {
   return readdirSync(dir).filter((f) => f.endsWith(".json")).sort();
 }
