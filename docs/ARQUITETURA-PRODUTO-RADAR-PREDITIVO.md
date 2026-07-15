@@ -795,7 +795,8 @@ Cada métrica: fórmula acima, fonte (`prediction_snapshots`, `campaigns`,
 
 | Fase | Objetivo | Entregas | Dependências | Risco | Aceite | Reprocessar | Compat. temporária |
 |---|---|---|---|---|---|---|---|
-| **0** | corrigir compreensão dos dados | esta spec + queries de diagnóstico contínuo | auditoria | baixo | métricas de §26 medíveis hoje | nenhum | — |
+| **C0** | conter resultados incoerentes (§27c) | 10 guardrails sobre o comportamento atual | auditoria | baixo | nenhuma incoerência de §27c persiste | nenhum | roda sobre o schema atual |
+| **0** | corrigir compreensão dos dados | esta spec + queries de diagnóstico contínuo | Fase C0 | baixo | métricas de §26 medíveis hoje | nenhum | — |
 | **1** | normalização, datas, qualidade | catálogo `programs/aliases`, política de datas, `data_evento`, `data_quality_status`, `include_in_prediction` | Fase 0 | **alto** (toca todo o ledger) | 142 ativas deixam de ser invisíveis; `vigencia_fim` vira date | recomputar `data_evento` e qualidade de todo o ledger | motores leem `data_evento` com fallback ao atual |
 | **2** | séries, ondas, dedup | `series_key`, `wave_key`, `dedup_key`, hierarquia rota/cluster | Fase 1 | médio | caso 943d cai para cluster; sem intervalos artificiais | recomputar séries | manter chave antiga em paralelo p/ diff |
 | **3** | Predict/Forecast reconciliados | reconciliador, readiness completo, config persistida, contrato §18 | Fase 2 | médio | 1 resultado por série; divergências sinalizadas | recomputar previsões | Forecast só fallback |
@@ -881,11 +882,249 @@ Prioridades: **P0** integridade · **P1** fundação · **P2** modelo · **P3** 
 | R-19 | Backtest+Brier+calibração | só window-hit | acurácia medível | analista | R-12 | médio | M | baixo | métricas §26 no ar | P5 | 6 |
 | R-20 | Testes dos motores+espelho | zero cobertura | regressão travada | analista | R-06 | alto | M | baixo | windowDate/waves/gate/reconciler testados | P1 | 2 |
 
+## 27c. Fase C0 — Contenção de resultados incoerentes
+
+Fase **anterior** à migração estrutural. São guardrails sobre o comportamento
+atual — todos implementáveis **antes** do novo modelo de dados.
+
+| # | Contenção | Impacto | Risco | Mudança de comportamento | Critério de aceite | Antes do novo modelo? |
+|---|---|---|---|---|---|---|
+| C0-1 | Bloquear Forecast editorial com 2 ondas | some previsão de 1 intervalo | baixo | rota de 2 ondas → "em formação", não publica | nenhuma janela publicada abaixo do gate de publicação (§27d.1) | **Sim** |
+| C0-2 | Remover/corrigir limit 2000 silencioso | motor passa a ver todas as transferências | performance (paginação) | séries completas; recentes não somem | nº de linhas lidas = nº elegível na janela | **Sim** |
+| C0-3 | Bloquear `content/forecast.json` desatualizado | Weekly não usa snapshot de 119 linhas | Weekly sem radar até regenerar | render recusa/avisa snapshot velho | render rejeita snapshot com idade > limite | **Sim** |
+| C0-4 | Exibir `generated_at` + idade do dado | transparência de frescor | nenhum | toda superfície mostra "atualizado há X" | idade visível em admin e Digest | **Sim** |
+| C0-5 | Bloquear radar manual contraditório no Daily | fim do Daily×Weekly divergente | atrito editorial | Daily validado contra o snapshot | QA falha se Daily diverge sem override justificado | **Sim** |
+| C0-6 | Alertar intervalos anormalmente longos | 943d fica visível | nenhum | série com outlier marcada | intervalos > 365d (ou > k·MAD) sinalizados no admin | **Sim** |
+| C0-7 | Exigir revisão de previsão além do horizonte editorial | Fev/2028 não publica sozinho | baixo | janela distante → `needs_review` | previsão com centro > horizonte editorial exige aprovação | **Sim** |
+| C0-8 | Corrigir "menos de três janelas" | copy correta | nenhum | texto reflete `minSamples` real e configurável | mensagem derivada da config | **Sim** |
+| C0-9 | Testes mínimos `windowDate`/ondas/amostra | trava regressão | nenhum | suíte cobre o núcleo | `node --test` cobre windowDate, collapseWaves, gates | **Sim** |
+| C0-10 | Paridade TS ↔ MJS | `forecast-engine.mjs` não deriva de `forecast.ts` | nenhum | espelho garantido | teste compara saídas dos dois em fixtures | **Sim** |
+
+C0 estabiliza a percepção do produto sem esperar a refatoração de dados. É
+pré-requisito de credibilidade para as fases 1–6.
+
+## 27d. Revisão conceitual (resolve pontos em aberto)
+
+Esta seção **refina e supersede** recomendações preliminares das §§13–17 onde
+indicado.
+
+### 27d.1 Gates de amostra por finalidade (supersede §13/§15/§16)
+
+Ondas → intervalos = `ondas − 1`. Três ondas dão só dois intervalos —
+insuficiente para publicar. Gates **separados por finalidade**:
+
+| Finalidade | Gate (ondas / intervalos) | Requisitos extra |
+|---|---|---|
+| Exibição analítica interna (só dados observados) | ≥ 1 onda | nenhum |
+| Previsão interna exploratória (admin, não publicável) | ≥ 3 ondas (2 int.) | rotulada "exploratória" |
+| **Forecast editorial** (chega ao leitor como fallback) | **≥ 5 ondas (4 int.)** | backtest ≥ 3 obs; rótulo "cadência aproximada" |
+| **Predict editorial** (publicável) | **≥ 6 ondas (5 int.)** | readiness ready; backtest ≥ 4 obs |
+| Confiança **média** | ≥ 6 ondas | CV ≤ 0,6; backtest com obs |
+| Confiança **alta** | ≥ 10 ondas | CV ≤ 0,35; window-hit ≥ 0,5; ≥ 5 obs backtest |
+| Cálculo válido de **outlier** (MAD/IQR) | ≥ 6 ondas (5 int.) | abaixo → estado `sparse`, não afirma outlier |
+| **Backtest confiável** | ≥ 4 observações walk-forward | ⇒ ~ `minSamples + 4` ondas |
+
+Cálculo interno (não publicável) do Predict continua em ≥3 ondas; **publicar**
+exige ≥6. Isso mata a previsão de Fev/2028 de 2 ondas (nem interna exploratória
+publica). Decisão dos números exatos → §27e (pendente do usuário).
+
+### 27d.2 Modelo de vigência (supersede §5 parcial)
+
+Quatro campos, nenhum destrói o original:
+
+```
+vigencia_inicio  date, nullable
+vigencia_fim     date, nullable
+vigencia_type    enum {fixed_period, open_ended, permanent, unknown, invalid}
+vigencia_raw     text  — valor bruto original da fonte/LLM, NUNCA descartado
+```
+
+Estados: `fixed_period` (início+fim válidos), `open_ended` (início válido, fim
+indeterminado porém temporário), `permanent` (estrutural, sem término),
+`unknown` (não informado/vazio), `invalid` (data implausível/invertida).
+
+Migração **semântica** (preservando o dado original):
+
+| Valor atual de `vigencia_fim` (text) | `vigencia_raw` | `vigencia_fim` (date) | `vigencia_type` |
+|---|---|---|---|
+| data ISO válida | cópia | parseada | `fixed_period` (se há início) / `open_ended` |
+| `na`, `não informado`, `permanente`, `indeterminado`, vazio | cópia | null | `permanent` (se ativa) / `unknown` |
+| data invertida (fim<início) ou ano absurdo | cópia | null | `invalid` (+ flag revisão) |
+
+`vigencia_raw` fica para auditoria e reprocesso — a conversão nunca é destrutiva.
+
+### 27d.3 Campanhas permanentes (supersede §5.6)
+
+- **Estado, não evento.** Representam oferta estrutural ativa.
+- **Não entram em ondas** (onda é evento datado).
+- **Não entram nos intervalos** de recorrência.
+- **Não alimentam previsão** de "próxima campanha" (não há recorrência a prever).
+- **Admin:** listadas como "oferta ativa / estrutural", à parte da série de
+  recorrência; contam para cobertura, não para cadência.
+- **Digest:** aparecem como **oportunidade ativa** (Deal Desk / oferta contínua),
+  nunca no bloco de previsão.
+- **Relação com temporárias:** numa mesma rota, a permanente é o **piso**; as
+  promoções temporárias são as **ondas** por cima. Não se misturam — a permanente
+  não vira ponto da série.
+
+Resolve as 142 ativas invisíveis: entram como oferta ativa (§27d.2 `permanent`),
+sem poluir a cadência.
+
+### 27d.4 Política de data do evento — peso e incerteza por fonte (supersede §6)
+
+Início e fim **não** têm o mesmo significado estatístico (o fim desloca a
+cadência pelo comprimento da campanha).
+
+| Fonte | Entra no modelo | Peso | Incerteza | Gate editorial | Interface | Revisão humana |
+|---|---|---|---|---|---|---|
+| `exact_start` (vigencia_inicio) | sim | 1,0 | baixa | nenhum | data principal | não |
+| `announcement_date` | sim (proxy de início) | 0,8 | média | aviso | "anunciada em" | opcional |
+| `exact_end` (vigencia_fim) | **cautela** (fallback) | 0,6 | média-alta | revisão se única âncora e série mista | "até …" (marcado) | sim |
+| `source_publication_date` | **não em produção** | 0 | alta | **bloqueia** publicação | metadado de proveniência | sim |
+| `inferred` | só confiança baixa, nunca manchete | 0,4 | alta | revisão | "estimada" | obrigatória |
+
+Regra anti-mistura: cada série declara `anchor_type` predominante; se combina
+início e fim, marca `mixed_anchor` e o modelo rebaixa confiança (ou normaliza pelo
+offset médio campanha). `source_publication_date` é **só proveniência**.
+
+### 27d.5 Identidade, versão e observação (supersede §10 parcial)
+
+Quatro chaves separadas — identidade **nunca** depende de bônus ou fim (mutáveis):
+
+```
+campaign_identity_key   = hash(origem, destino, tipo, mercado, segmento, mecanica, janela_de_inicio±ε)
+campaign_version_key    = identity + (bonus_base, bonus_max, vigencia_fim, regras)   # versiona mutações
+source_observation_key  = version + source_id + observed_at                          # cada observação de cada fonte
+wave_key                = agrupador temporal por destino/mecânica (§12)
+```
+
+| Situação | Efeito |
+|---|---|
+| Extensão da campanha (fim muda) | mesma identity, **nova version** |
+| Mudança de bônus | mesma identity, nova version, `observed_history` registra |
+| Correção da fonte | mesma identity/version, log de correção |
+| Republicação | mesma identity, nova `source_observation`, `source_count++` |
+| Múltiplas fontes | várias observations → 1 identity |
+| Campanha segmentada | segmento difere → **identity diferente** (série própria) |
+| Recorrente semelhante (novo ciclo) | janela de início distinta → identity diferente, ligada por `series_key` |
+| Nova campanha realmente distinta | mecânica/estrutura difere → identity diferente |
+
+Assim, extensão e mudança de bônus **não** criam duplicata (o bug atual do
+`vigencia_fim` na chave desaparece).
+
+### 27d.6 Rota e cluster — três resultados explícitos (supersede §11)
+
+O cluster **nunca** substitui a rota silenciosamente. Três saídas rotuladas:
+
+```
+route_prediction               # rota tem histórico próprio suficiente
+destination_cluster_prediction # destino agregando parceiros — "programa-wide, não específica de {origem}"
+no_route_prediction            # nem rota nem cluster suficientes → Não confirmado
+```
+
+- **Pooling parcial real / shrinkage:** `estimativa = w·rota + (1−w)·cluster`,
+  `w = n_rota/(n_rota + k)`. Recomendado como evolução (fase 2+).
+- **Fallback simples rotulado:** primeiro passo — se a rota não atinge o gate,
+  mostra o cluster **declarado como tal**. Barato, honesto.
+- **Modelo hierárquico completo:** P5 (só com dados/tempo).
+- **Risco Livelo⇐Esfera:** o `destination_cluster_prediction` é apresentado como
+  "ConnectMiles costuma receber campanhas ~a cada X dias (via Livelo/Esfera)",
+  **nunca** como previsão da rota Livelo→ConnectMiles. O leitor entende que não é
+  garantia para aquela origem.
+
+No caso 943d: a rota Livelo→ConnectMiles cai para `destination_cluster_prediction`
+rotulado, ou para `no_route_prediction` se o cluster também não passar o gate.
+
+### 27d.7 Completude do backfill — seis camadas (supersede §8)
+
+Cobertura não é "existe campanha no mês". Camadas independentes:
+
+```
+source_coverage           # fontes relevantes do período foram identificadas/varridas?
+url_coverage              # URLs do período coletadas para news_raw?
+news_processing_coverage  # notícias extraídas (processed)?
+extraction_coverage       # extração sem erro?
+campaign_data_quality     # campanhas extraídas têm data válida?
+series_coverage           # a série tem eventos onde deveria?
+```
+
+**Provar cobertura sem campanha:** um mês só é **silêncio real** quando
+`source = url = processing = extraction = 100%` **e** nenhuma campanha foi
+encontrada. Se qualquer camada anterior < 100%, o vazio é **lacuna**
+(`backfill_incomplete`), não silêncio. `backfill_completeness` por série deriva das
+seis camadas nos meses da janela.
+
+Aplicação ao 943d: só se pode afirmar que Livelo→ConnectMiles ficou 943 dias
+parada se as camadas de coleta daquele intervalo estiverem completas. Enquanto não
+estiverem, a rota é `backfill_incomplete` → Predict bloqueia.
+
+### 27d.8 Snapshot × uso editorial (supersede §19 parcial)
+
+Separar **estado analítico** de **uso editorial**:
+
+**Estado analítico do snapshot** (não inclui "published"):
+```
+generated → needs_review → approved → rejected → expired → superseded
+```
+
+**Uso editorial** — entidade conceitual `prediction_snapshot_usages`:
+```
+snapshot_id · product · edition_id · selected_at · selected_by · published_at · presentation_version
+```
+
+Um snapshot `approved` alimenta **vários produtos e edições** sem mudar seu estado
+analítico. "Publicado" é propriedade do **uso**, não do snapshot. Isso permite
+reuso Daily+Weekly, medição de onde foi usado, e reprodução de cada edição por
+`(snapshot_id + presentation_version)`.
+
+### 27d.9 Avaliação posterior — `prediction_outcome`
+
+```
+snapshot (previsão publicada) → próxima onda observada (real) → prediction_outcome
+```
+
+`prediction_outcome` por snapshot resolvido:
+
+| Campo | Mede |
+|---|---|
+| `date_error_days` | \|central − real\| |
+| `window_hit` | real ∈ [start, end]? |
+| `brier_by_horizon` | probabilidade vs evento binário em cada H |
+| `bonus_pred_vs_obs` | bônus previsto × observado |
+| `time_to_event` | real − as_of |
+| `expired_without_event` | previsão venceu sem onda |
+| `superseded_before_resolution` | novo snapshot substituiu antes de resolver |
+
+**Backtest histórico ≠ desempenho real:**
+- **Backtest** = walk-forward retrospectivo → mede o **modelo** (antes de publicar).
+- **`prediction_outcome`** = previsões publicadas contra o futuro real → mede o
+  **produto** (a "taxa de acerto percebida" de §26). Só o outcome valida a
+  calibração de produção.
+
+## 27e. Matriz final de aprovação
+
+| Decisão | Recomendação | Evidência | Risco | Reversível | Aprovação do usuário |
+|---|---|---|---|---|---|
+| Gates de amostra (por finalidade) | Forecast pub. ≥5 ondas; Predict pub. ≥6; alta ≥10 (§27d.1) | 943d de 2 ondas; §17 auditoria | médio | sim | **Pendente** |
+| Janela histórica | adaptativa + decaimento, piso 24m (§7) | 54% >18m; sem filtro | médio | sim | **Pendente** |
+| Rota vs cluster | 3 saídas rotuladas; fallback→shrinkage (§27d.6) | 943d por fragmentação | médio | sim | **Pendente** |
+| Política de datas | `data_evento` início>anúncio>fim; pub_date só proveniência (§27d.4) | 90% ancora no fim | alto | parcial | **Pendente** |
+| Campanhas permanentes | estado/oferta ativa, fora da recorrência (§27d.3) | 142 invisíveis | baixo | sim | **Pendente** |
+| Outliers | detectar + rebaixar + segregar, nunca apagar (§14) | 943d→2028 | médio | sim | **Pendente** |
+| Campos de bônus | separar base/máx/clube/cartão (§4) | só `percentual` | médio | sim | **Pendente** |
+| Exposição de probabilidades | P30/60/90 ao leitor; resto interno (§16/§23) | — | baixo | sim | **Pendente** |
+| Expiração | curta (~7d) + freshness gate (§24b) | forecast.json 119 linhas | baixo | sim | **Pendente** |
+| Automação editorial | semi (gate); auto só pós-calibração (§26b) | zero gate hoje | médio | sim | **Pendente** |
+
+Nenhuma destas é decidida por engenharia sozinha — todas entram nos ADRs como
+`proposed` até sua aprovação.
+
 ## 28. Recomendação final
 
 1. **Motor canônico: Predict v2**, com readiness completo, config persistida e
    backtest exposto.
-2. **Forecast: baseline/fallback interno**, minSamples 3, nunca manchete sozinho.
+2. **Forecast: baseline/fallback interno**, com gates de publicação por
+   finalidade (§27d.1 — Forecast publicável ≥5 ondas), nunca manchete sozinho.
 3. **Chave de série: rota** com **pooling parcial hierárquico para o cluster de
    destino** — resolve o 943d sem misturar parceiros indevidamente.
 4. **Janela: adaptativa por série com decaimento por recência** (piso 24 meses de
