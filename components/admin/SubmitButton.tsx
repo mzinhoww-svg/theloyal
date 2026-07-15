@@ -32,7 +32,7 @@ export function SubmitButton({
       type="submit"
       disabled={pending}
       title={title}
-      className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded px-3 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT[variant]}`}
+      className={`tl-press inline-flex min-h-[36px] items-center justify-center gap-1 rounded px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT[variant]}`}
     >
       {pending && pendingLabel ? pendingLabel : children}
     </button>

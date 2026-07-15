@@ -78,18 +78,16 @@ export function Metodo() {
         </Reveal>
         <div className="mt-8 grid gap-x-8 gap-y-8 sm:grid-cols-2 md:mt-12 lg:grid-cols-4">
           {METODO.map((m, i) => (
-            <Reveal key={m.titulo}>
-              <div className="h-full border-t-2 border-ink pt-5">
-                <span className="font-mono text-sm text-gray-400">0{i + 1}</span>
-                <h3 className="mt-2 font-display text-2xl font-semibold">{m.titulo}</h3>
-                <p className="mt-3 text-base leading-relaxed text-gray-500">{m.texto}</p>
-                {m.formula && (
-                  <p className="mt-4 inline-block rounded-sm bg-paper-dark px-3 py-1.5 font-mono text-[13px] text-gray-700">
-                    {m.formula}
-                  </p>
-                )}
-              </div>
-            </Reveal>
+            <div key={m.titulo} className="h-full border-t-2 border-ink pt-5">
+              <span className="font-mono text-sm text-gray-400">0{i + 1}</span>
+              <h3 className="mt-2 font-display text-2xl font-semibold">{m.titulo}</h3>
+              <p className="mt-3 text-base leading-relaxed text-gray-500">{m.texto}</p>
+              {m.formula && (
+                <p className="mt-4 inline-block rounded-sm bg-paper-dark px-3 py-1.5 font-mono text-[13px] text-gray-700">
+                  {m.formula}
+                </p>
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -146,8 +144,7 @@ export function Recebe() {
         </Reveal>
         <div className="mt-8 grid gap-x-8 gap-y-8 sm:grid-cols-2">
           {PRODUTOS.map((p) => (
-            <Reveal key={p.nome}>
-              <div className="flex h-full flex-col border-t-2 border-ink pt-5">
+            <div key={p.nome} className="flex h-full flex-col border-t-2 border-ink pt-5">
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="font-display text-xl font-semibold">{p.nome}</h3>
                   <span
@@ -174,7 +171,6 @@ export function Recebe() {
                   </a>
                 )}
               </div>
-            </Reveal>
           ))}
         </div>
       </div>
@@ -201,12 +197,10 @@ export function ParaQuem() {
         </Reveal>
         <div className="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {PERFIS.map(([nome, desc]) => (
-            <Reveal key={nome}>
-              <div className="border-t-2 border-ink pt-4">
-                <h3 className="text-base font-semibold">{nome}</h3>
-                <p className="mt-2 text-base leading-relaxed text-gray-500">{desc}</p>
-              </div>
-            </Reveal>
+            <div key={nome} className="border-t-2 border-ink pt-4">
+              <h3 className="text-base font-semibold">{nome}</h3>
+              <p className="mt-2 text-base leading-relaxed text-gray-500">{desc}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -236,12 +230,10 @@ export function ComoAnalisamos() {
         <div className="mt-8 grid gap-8 md:mt-10 md:gap-12 lg:grid-cols-12">
           <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-8">
             {PRINCIPIOS.map(([titulo, texto]) => (
-              <Reveal key={titulo}>
-                <div>
-                  <h3 className="text-base font-semibold">{titulo}</h3>
-                  <p className="mt-2 text-base leading-relaxed text-gray-500">{texto}</p>
-                </div>
-              </Reveal>
+              <div key={titulo}>
+                <h3 className="text-base font-semibold">{titulo}</h3>
+                <p className="mt-2 text-base leading-relaxed text-gray-500">{texto}</p>
+              </div>
             ))}
           </div>
           <Reveal className="lg:col-span-4">
@@ -254,23 +246,19 @@ export function ComoAnalisamos() {
             </div>
           </Reveal>
         </div>
-        <Reveal>
-          <div className="mt-8 rounded bg-ink px-5 py-4 font-mono text-[13px] leading-7 text-paper sm:px-6 sm:text-sm md:mt-12">
-            <span className="text-gray-400">TL Score = </span>
-            25·valor + 15·regra + 15·vigência + 10·fricção + 10·aplicabilidade +
-            10·liquidez + 10·estoque + 5·fontes
-            <span className="block text-green-500">
-              sem vigência confirmada → Não confirmado, sempre
-            </span>
-          </div>
-        </Reveal>
-        <Reveal>
-          <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-surface py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">
-            Promoções podem mudar sem aviso. Confira sempre as regras no site
-            oficial antes de comprar, transferir ou resgatar. O The Loyal não faz
-            recomendação financeira individual: a decisão final é sempre sua.
-          </p>
-        </Reveal>
+        <div className="mt-8 rounded bg-ink px-5 py-4 font-mono text-[13px] leading-7 text-paper sm:px-6 sm:text-sm md:mt-12">
+          <span className="text-gray-400">TL Score = </span>
+          25·valor + 15·regra + 15·vigência + 10·fricção + 10·aplicabilidade +
+          10·liquidez + 10·estoque + 5·fontes
+          <span className="block text-green-500">
+            sem vigência confirmada → Não confirmado, sempre
+          </span>
+        </div>
+        <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-surface py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">
+          Promoções podem mudar sem aviso. Confira sempre as regras no site
+          oficial antes de comprar, transferir ou resgatar. O The Loyal não faz
+          recomendação financeira individual: a decisão final é sempre sua.
+        </p>
       </div>
     </section>
   );

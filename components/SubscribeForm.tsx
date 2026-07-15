@@ -58,7 +58,7 @@ export function SubscribeForm({
       <p
         role="status"
         aria-live="polite"
-        className="rounded border border-green-600 bg-green-100 px-4 py-3 text-sm font-medium text-green-700"
+        className="tl-fade-in rounded border border-green-600 bg-green-100 px-4 py-3 text-sm font-medium text-green-700"
       >
         {message}
       </p>
@@ -100,7 +100,7 @@ export function SubscribeForm({
         <button
           type="submit"
           disabled={status === "loading"}
-          className="h-12 shrink-0 rounded bg-green-600 px-6 text-base font-semibold text-paper transition-colors duration-150 ease-standard hover:bg-green-700 active:translate-y-px disabled:bg-gray-400/40 disabled:text-gray-500"
+          className="tl-press h-12 shrink-0 rounded bg-green-600 px-6 text-base font-semibold text-paper hover:bg-green-700 disabled:bg-gray-400/40 disabled:text-gray-500"
         >
           {status === "loading" ? "Enviando…" : submitLabel}
         </button>
