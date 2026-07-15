@@ -184,7 +184,7 @@ export function editorialGate(samples, intervals, daysToCenter, cfg) {
 
   if (maxIntervalDays != null) {
     if (maxIntervalDays > 900)
-      warnings.push(`intervalo extremo de ${maxIntervalDays} dias (>900) — possível lacuna de cobertura do backfill; revisar antes de publicar`);
+      warnings.push(`intervalo extremo de ${maxIntervalDays} dias (>900) — possível anomalia de dado (data suspeita, duplicidade ou lacuna de cobertura); revisar antes de publicar`);
     else if (maxIntervalDays >= cfg.extremeIntervalDays)
       warnings.push(`intervalo extremo de ${maxIntervalDays} dias (≥${cfg.extremeIntervalDays})`);
     else if (maxIntervalDays >= cfg.longIntervalWarningDays)
