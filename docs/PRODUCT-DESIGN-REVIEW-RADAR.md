@@ -13,6 +13,33 @@
 
 ---
 
+## Tese central
+
+A fundação técnica está pronta e é boa; o produto ainda não existe porque a
+capacidade calculada não vira decisão nem valor. Quatro fatos verificados no
+código sustentam todo o review:
+
+1. **O Predict é invisível ao leitor.** Curva P7–P180, janela central,
+   distribuição de bônus, backtest walk-forward e `explanation` existem só em
+   `/admin/predict`; não há `predict.json` nem integração com Digest; os
+   `predict_snapshots` são write-only.
+2. **A saída ao leitor descarta a honestidade que o C0 calculou.** `radarItems`
+   emite só `{label, confidence, window, basis, bonus}` — `warnings`,
+   `maxIntervalDays`, "quantas campanhas sustentam", motivo e faixa são jogados
+   fora antes do Weekly.
+3. **Três telas mostram três recortes do mesmo motor** (Forecast, Predict,
+   metade da Observabilidade), podendo divergir para a mesma rota, sem decisão
+   editorial entre eles.
+4. **O artefato que o leitor recebe é pré-C0 e no limite do stale**
+   (`forecast.json` com 119 linhas, sem campos do C0, 3 overrides ignorados).
+
+Logo, o redesign é sobretudo de **integração e experiência**: ativar, integrar e
+dar voz ao que já existe, sob fonte única e com o risco à vista — sem motor novo
+e sem segunda fonte de verdade. A cura da causa raiz (dedup e correção de data no
+banco) é estrutural e depende das decisões dos ADRs `proposed`.
+
+---
+
 ## 0. Regra-mãe deste review
 
 **Tudo que foi construído até aqui é preservado e passa a ser *usado*.** Este
@@ -104,6 +131,48 @@ Cobre **toda** a C0 e C0.2. Nada aqui é substituído; tudo é **promovido a uso
 | `.quality.counters` | resultado dos motores | totais elegíveis/bloqueadas | StatCards soltos | **cabeçalho de saúde** do produto |
 | Snapshots (forecast/predict) | `forecast_snapshots`/`predict_snapshots` | histórico | predict grava e não lê | **histórico de série** (evolução da confiança) |
 | Testes / contratos / ADRs | `tests/*`, schemas, ADR-001..010 | fundação | — | base das decisões pendentes (§8) |
+
+### 2.1 Substituições propostas — justificativa de 7 pontos (briefing §2)
+
+Nenhuma capacidade é removida. Há **duas** substituições, ambas de
+**superfície/saída**, nenhuma de motor. O briefing exige, para cada uma, os 7
+pontos abaixo.
+
+**Substituição A — saída `radarItems` empobrecida → payload enriquecido (contrato §18 da arquitetura).**
+1. **O que muda:** a *forma da saída* de `radarItems` (`{label, confidence,
+   window, basis, bonus}`), não a função nem o gate.
+2. **Por que é insuficiente hoje:** descarta `warnings`, `maxIntervalDays`,
+   "quantas campanhas sustentam", motivo e faixa — a honestidade que o C0
+   calcula; o leitor recebe data precisa sem ressalva.
+3. **Ganho ao usuário:** faixa honesta, chance, "N campanhas", "o que pode
+   invalidar" e frescor — decisão calibrada em vez de falsa precisão.
+4. **Risco:** payload maior; o schema do digest precisa acomodar campos novos.
+5. **Compatibilidade:** campos **aditivos**; os atuais permanecem; consumidores
+   antigos ignoram o excedente; `radar-consistency` segue válido.
+6. **Migração sem perder histórico:** edições legadas seguem com radar manual
+   marcado "análise editorial" (comportamento atual do QA); nada é reescrito.
+7. **Sem segunda fonte:** o payload sai do **mesmo** resultado reconciliado — é
+   enriquecimento do contrato único, não um artefato paralelo.
+
+**Substituição B — três telas de motor → um "Radar" com abas (uma fonte).**
+1. **O que muda:** a *navegação* (`/admin/forecast` + `/admin/predict` +
+   metade da Observabilidade como destinos separados), não as visualizações nem
+   os dados.
+2. **Por que é insuficiente hoje:** três recortes do mesmo motor podem divergir
+   para a mesma rota; o editor não tem lugar de decisão; o operador, de saúde.
+3. **Ganho ao usuário:** uma fonte, três profundidades; divergência eliminada
+   por construção; a decisão editorial passa a existir.
+4. **Risco:** re-arranjo de IA pode confundir quem já conhece as telas.
+5. **Compatibilidade:** tabelas, `QualityPanel`, `DetailCard`, timeline e
+   overrides são **reaproveitados** como componentes das abas.
+6. **Migração sem perder histórico:** rotas atuais redirecionam para as abas;
+   snapshots e overrides existentes seguem válidos.
+7. **Sem segunda fonte:** as abas leem o **mesmo** resultado reconciliado — o
+   oposto de criar nova fonte.
+
+Levar o **Predict ao leitor** (P6 do roadmap) usa a mesma saída da Substituição A
+via reconciliação (ADR-008): não cria `predict.json` paralelo, apenas escolhe
+qual resultado — Predict `ready` ou Forecast fallback — preenche o contrato único.
 
 ---
 
