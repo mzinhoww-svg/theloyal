@@ -7,6 +7,7 @@ import {
   editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, loadEntities, loadRulerConfig, verdictForScore,
 } from "./lib.mjs";
 import { computeDisposition } from "./lib/disposition.mjs";
+import { schemaErrors } from "./lib/schema.mjs";
 
 const REQUIRED = ["number", "date", "weekday", "publishTime", "readingMinutes", "signal", "deals", "sources", "disclaimer"];
 // Blocos obrigatórios da estrutura editorial (não só campos escalares).
@@ -20,6 +21,12 @@ export function validateEdition(ed, opts = {}) {
   const err = (m) => errors.push(m);
   const warn = (m) => warnings.push(m);
   const pass = (m) => ok.push(m);
+
+  // 0. Contrato de schema em runtime (P2.13b) — additionalProperties/tipos.
+  // Roda antes dos checks semânticos: um campo fora do contrato bloqueia.
+  const schemaErrs = schemaErrors("edition", ed);
+  for (const m of schemaErrs) err(m);
+  if (!schemaErrs.length) pass("Contrato de schema (edition.schema.json) satisfeito");
 
   // 1. Campos obrigatórios da estrutura do Daily.
   const missing = REQUIRED.filter((k) => ed[k] === undefined || ed[k] === null || ed[k] === "");

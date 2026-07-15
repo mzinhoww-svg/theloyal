@@ -68,7 +68,7 @@ function Article({ ed }) {
         h("span", null, `LEITURA DE ${ed.readingMinutes} MIN`),
       ),
     ),
-    h("h1", { className: "tl-sr" }, `The Loyalty Nº ${ed.number} — ${ed.subject ?? "Edição do Daily"}`),
+    h("h1", { className: "tl-sr" }, `The Loyal Nº ${ed.number} — ${ed.subject ?? "Edição do Daily"}`),
     h(
       "section",
       { "aria-labelledby": "sinal" },
@@ -318,7 +318,7 @@ export function renderWebArchive(ed) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Loyalty Nº ${ed.number} — ${escAttr(ed.subject ?? "Daily")}</title>
+<title>The Loyal Nº ${ed.number} — ${escAttr(ed.subject ?? "Daily")}</title>
 <meta name="description" content="${escAttr(desc)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
