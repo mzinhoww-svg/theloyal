@@ -2,10 +2,10 @@
 // o motor (lib/forecast) e aplica os overrides do operador. Server-only
 // (usa admin-db, que carrega a SERVICE_ROLE_KEY). Funções puras onde possível.
 
-import { rest, fetchAllRows } from "./admin-db";
+import { restResult, fetchAllRows } from "./admin-db";
 import { LEDGER_QUALITY_SELECT } from "./ledger-select";
 import { proposeDateCorrections, type DateCorrectionProposal } from "./date-review";
-import { getDateReviews } from "./admin-date-reviews";
+import { getDateReviewsResult } from "./admin-date-reviews";
 import {
   buildForecast,
   radarItems,
@@ -48,10 +48,14 @@ export function rowToConfig(row: ConfigRow | null | undefined): ForecastConfig {
   });
 }
 
-export async function getConfig(): Promise<{ config: ForecastConfig; row: ConfigRow | null }> {
-  const rows = await rest<ConfigRow>("forecast_config?id=eq.1&limit=1");
-  const row = rows[0] ?? null;
-  return { config: rowToConfig(row), row };
+export async function getConfig(): Promise<{
+  config: ForecastConfig;
+  row: ConfigRow | null;
+  error: string | null;
+}> {
+  const res = await restResult<ConfigRow>("forecast_config?id=eq.1&limit=1");
+  const row = res.rows[0] ?? null;
+  return { config: rowToConfig(row), row, error: res.error };
 }
 
 // ---- Overrides (forecast_overrides) ----
@@ -69,8 +73,9 @@ export type OverrideRow = {
   created_by: string | null;
 };
 
-export const getOverrides = () =>
-  rest<OverrideRow>("forecast_overrides?select=*&order=created_at.desc");
+export const getOverridesResult = () =>
+  restResult<OverrideRow>("forecast_overrides?select=*&order=created_at.desc");
+export const getOverrides = async () => (await getOverridesResult()).rows;
 
 // Colunas lidas do ledger para o Forecast legado. Inclui as datas de
 // PROVENIÊNCIA (first_seen/last_seen/observed_at/created_at) e o source_url —
@@ -94,10 +99,11 @@ export type SnapshotRow = {
   created_by: string | null;
 };
 
-export const getSnapshots = (limit = 20) =>
-  rest<SnapshotRow>(
+export const getSnapshotsResult = (limit = 20) =>
+  restResult<SnapshotRow>(
     `forecast_snapshots?select=id,generated_for,routes_tracked,clusters_tracked,with_prediction,created_at,created_by&order=created_at.desc&limit=${limit}`,
   );
+export const getSnapshots = async (limit = 20) => (await getSnapshotsResult(limit)).rows;
 
 // ---- View model com overrides aplicados ----
 
@@ -171,6 +177,7 @@ export type ForecastData = {
   datasetComplete: boolean; // leitura paginada completa? se false, radar é bloqueado
   radarBlockedReason: string | null; // por que os radares saíram vazios (se saíram)
   dateProposals: DateCorrectionProposal[]; // Trilha D — correções pendentes de decisão
+  loadWarnings: string[]; // BKL-07 — leituras que FALHARAM (≠ vazio legítimo)
 };
 
 // Aplica pin/mute/confidence e ordena: fixados primeiro, depois silenciados por
@@ -186,15 +193,27 @@ function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): Forecas
 
 // Carrega tudo para a página. `now` injetável para testes determinísticos.
 export async function loadForecast(now?: string): Promise<ForecastData> {
-  const [{ config, row }, overrides, snapshots, loaded, dateReviews] = await Promise.all([
+  const [cfgRes, overridesRes, snapshotsRes, loaded, dateReviewsRes] = await Promise.all([
     getConfig(),
-    getOverrides(),
-    getSnapshots(),
+    getOverridesResult(),
+    getSnapshotsResult(),
     // Leitura COMPLETA e paginada — sem o limite silencioso de 2000. Fase C0.
     // Colunas COM proveniência (Fase A1) — mesma amostra elegível do Radar.
     fetchAllRows<CampaignRow>("campaigns", FORECAST_LEDGER_SELECT),
-    getDateReviews(),
+    getDateReviewsResult(),
   ]);
+  const { config, row } = cfgRes;
+  const overrides = overridesRes.rows;
+  const snapshots = snapshotsRes.rows;
+  const dateReviews = dateReviewsRes.rows;
+
+  // BKL-07: falha de leitura NÃO é vazio — a página avisa o operador.
+  const loadWarnings = [
+    cfgRes.error && `config do motor (${cfgRes.error})`,
+    overridesRes.error && `overrides (${overridesRes.error})`,
+    snapshotsRes.error && `snapshots (${snapshotsRes.error})`,
+    dateReviewsRes.error && `revisões de data (${dateReviewsRes.error})`,
+  ].filter((w): w is string => !!w);
   const campaigns = loaded.rows;
   const datasetComplete = loaded.complete;
 
@@ -247,5 +266,6 @@ export async function loadForecast(now?: string): Promise<ForecastData> {
     dateProposals: proposeDateCorrections(campaigns, result.quality).filter(
       (p) => !dateReviews.some((r) => r.campaign_id === p.campaignId),
     ),
+    loadWarnings,
   };
 }

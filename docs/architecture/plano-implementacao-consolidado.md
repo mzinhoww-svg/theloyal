@@ -77,6 +77,10 @@ Itens das auditorias que não dependem de H1–H12 nem de migração estrutural.
     ponderada por recência) atrás de comparação de backtest
     (`bonusAccuracy5pp` antes/depois nas fixtures reais); adotar apenas se o
     backtest melhorar — senão registrar e manter.
+    **✅ DECIDIDO (2026-07-15, dados reais do ledger):** walk-forward com 213
+    observações em 62 séries — proxy MAX: 41,3% exato / 52,6% ±5pp; proxy
+    MEDIANA: 40,8% / 52,6%. A mediana **não melhora** → comportamento atual
+    mantido. Reavaliar só depois da série rica (base×máximo×clube, Fase 3.4).
 
 **Aceite.** Suite verde; nenhuma mudança de número editorial sem teste de
 caracterização acompanhando.

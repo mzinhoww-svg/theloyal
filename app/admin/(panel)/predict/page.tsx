@@ -278,6 +278,17 @@ const PATH = "/admin/predict";
 const PAGE_SIZE = 30;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
+// BKL-07: leitura que FALHOU não é vazio — o operador precisa saber.
+function LoadWarningsBanner({ warnings }: { warnings: string[] }) {
+  if (!warnings.length) return null;
+  return (
+    <div className="mb-4 rounded-lg border border-yellow-500 bg-yellow-100 p-3 text-sm text-ink">
+      Falha ao ler: {warnings.join(" · ")}. Os blocos afetados podem aparecer vazios sem estar —
+      recarregue a página.
+    </div>
+  );
+}
+
 export default async function PredictPage({
   searchParams,
 }: {
@@ -297,7 +308,8 @@ export default async function PredictPage({
     return true;
   };
 
-  const { result, clusters, routes, ledgerRows, asOf, datasetComplete } = await loadPredict();
+  const { result, clusters, routes, ledgerRows, asOf, datasetComplete, loadWarnings } =
+    await loadPredict();
   const series = [...clusters, ...routes];
   const ready = series.filter(isReady).length;
   const blocked = series.filter((p) => p.blockReason != null).length;
@@ -366,6 +378,7 @@ export default async function PredictPage({
           apenas após a carga completar.
         </div>
       )}
+      <LoadWarningsBanner warnings={loadWarnings} />
 
       <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
         <StatCard label="Séries" value={series.length} sub={`${result.clusters.length} programas · ${result.routes.length} rotas`} tone="gray" />

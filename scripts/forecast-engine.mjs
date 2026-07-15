@@ -179,6 +179,36 @@ function analyze(scope, route, origem, destino, waves, percents, now, cfg) {
   };
 }
 
+// Outlier de intervalo (MAD) — ESPELHO de lib/series-builder.ts.
+const MAD_Z_THRESHOLD = 3.5;
+const MAD_MIN_INTERVALS = 4;
+
+function medianOf(xs) {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+export function intervalOutlierFlags(intervals) {
+  if (intervals.length < MAD_MIN_INTERVALS) return intervals.map(() => false);
+  const med = medianOf(intervals);
+  const mad = medianOf(intervals.map((x) => Math.abs(x - med)));
+  if (mad === 0) {
+    return intervals.map((x) => x !== med && Math.abs(x - med) > Math.max(7, med));
+  }
+  return intervals.map((x) => (0.6745 * Math.abs(x - med)) / mad > MAD_Z_THRESHOLD);
+}
+
+export function intervalOutlierWarning(intervals) {
+  const flags = intervalOutlierFlags(intervals);
+  const hits = intervals.filter((_, i) => flags[i]);
+  if (!hits.length) return null;
+  const med = Math.round(medianOf(intervals));
+  return `intervalo(s) atípico(s) para a cadência da série: ${hits
+    .map((d) => `${d}d`)
+    .join(", ")} (mediana ${med}d) — possível erro de dado ou lacuna de cobertura`;
+}
+
 // Gate de contenção Fase C0 — ESPELHO de lib/forecast.ts editorialGate().
 export function editorialGate(samples, intervals, daysToCenter, cfg) {
   const warnings = [];
@@ -192,6 +222,9 @@ export function editorialGate(samples, intervals, daysToCenter, cfg) {
     else if (maxIntervalDays >= cfg.longIntervalWarningDays)
       warnings.push(`intervalo longo de ${maxIntervalDays} dias (≥${cfg.longIntervalWarningDays})`);
   }
+
+  const outlier = intervalOutlierWarning(intervals);
+  if (outlier) warnings.push(outlier);
 
   const beyondHorizon = daysToCenter > cfg.maxEditorialHorizonDays;
   if (beyondHorizon)

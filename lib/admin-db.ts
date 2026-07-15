@@ -25,22 +25,33 @@ function headers(extra?: Record<string, string>): Record<string, string> {
   };
 }
 
-// Leitura direta de tabela via PostgREST. Retorna [] em qualquer falha para
-// nunca derrubar a pagina — a UI trata lista vazia como estado valido.
-export async function rest<T = Record<string, unknown>>(
+// Leitura com status: distingue "vazio de verdade" de "leitura falhou" —
+// BKL-07: a UI não pode tratar falha de rede/permissão como lista vazia.
+export type RestResult<T> = { rows: T[]; error: string | null };
+
+export async function restResult<T = Record<string, unknown>>(
   path: string,
-): Promise<T[]> {
-  if (!SERVICE_KEY) return [];
+): Promise<RestResult<T>> {
+  if (!SERVICE_KEY) return { rows: [], error: "SERVICE_KEY ausente (modo mock)" };
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       headers: headers(),
       cache: "no-store",
     });
-    if (!res.ok) return [];
-    return (await res.json()) as T[];
-  } catch {
-    return [];
+    if (!res.ok) return { rows: [], error: `HTTP ${res.status}` };
+    return { rows: (await res.json()) as T[], error: null };
+  } catch (e) {
+    return { rows: [], error: e instanceof Error ? e.message : "falha de rede" };
   }
+}
+
+// Leitura direta de tabela via PostgREST. Retorna [] em qualquer falha para
+// nunca derrubar a pagina — chamadores que precisam distinguir falha de vazio
+// usam restResult (acima).
+export async function rest<T = Record<string, unknown>>(
+  path: string,
+): Promise<T[]> {
+  return (await restResult<T>(path)).rows;
 }
 
 // Carrega TODAS as linhas de uma tabela via paginacao DETERMINISTICA (ordem

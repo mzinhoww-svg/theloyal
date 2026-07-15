@@ -285,6 +285,12 @@ export default async function ForecastPage({
           Nenhum override ignora este bloqueio.
         </div>
       )}
+      {data.loadWarnings.length > 0 && (
+        <div className="mb-4 rounded-lg border border-yellow-500 bg-yellow-100 p-3 text-sm text-ink">
+          Falha ao ler: {data.loadWarnings.join(" · ")}. Os blocos afetados podem aparecer vazios
+          sem estar — recarregue a página.
+        </div>
+      )}
 
       <section className="mb-6 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
         <StatCard label="Séries rastreadas" value={result.routesTracked + result.clustersTracked} sub={`${result.routesTracked} rotas · ${result.clustersTracked} programas`} tone="blue" />

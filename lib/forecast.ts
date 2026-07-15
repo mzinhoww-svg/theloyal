@@ -26,6 +26,7 @@ import {
   isValidISODate,
   groupTransferSeries,
   groupWaveInputs,
+  intervalOutlierWarning,
   type CampaignRow,
 } from "./series-builder.ts";
 
@@ -263,6 +264,11 @@ export function editorialGate(
     else if (maxIntervalDays >= cfg.longIntervalWarningDays)
       warnings.push(`intervalo longo de ${maxIntervalDays} dias (≥${cfg.longIntervalWarningDays})`);
   }
+
+  // Outlier relativo à cadência da própria série (MAD) — sinaliza, não altera
+  // cálculo nem elegibilidade (integração ao gate é decisão H4).
+  const outlier = intervalOutlierWarning(intervals);
+  if (outlier) warnings.push(outlier);
 
   const beyondHorizon = daysToCenter > cfg.maxEditorialHorizonDays;
   if (beyondHorizon)

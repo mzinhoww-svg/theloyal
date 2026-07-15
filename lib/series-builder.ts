@@ -85,6 +85,47 @@ export function collapseWaves(dates: string[], epsilon: number): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// Outlier de intervalo (MAD) — detecção genérica que faltava nos dois motores:
+// a contenção C0.2 segura o caso extremo (>900d), mas um 629d numa série de
+// cadência ~30d entrava cru na mediana/hazard. Detecta intervalos atípicos
+// RELATIVOS à própria série. Só SINALIZA (warning) — não altera cálculo nem
+// apaga dado; integrar ao gate/confiança é decisão H4 (fase 4 do plano).
+// ---------------------------------------------------------------------------
+
+const MAD_Z_THRESHOLD = 3.5; // limiar clássico de Iglewicz-Hoaglin
+const MAD_MIN_INTERVALS = 4; // abaixo disso não há base robusta para MAD
+
+function medianOf(xs: number[]): number {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+// Flag por intervalo: true = atípico para a cadência da série. Séries com
+// menos de 4 intervalos não têm base robusta → nenhum flag (nunca chutar).
+export function intervalOutlierFlags(intervals: number[]): boolean[] {
+  if (intervals.length < MAD_MIN_INTERVALS) return intervals.map(() => false);
+  const med = medianOf(intervals);
+  const mad = medianOf(intervals.map((x) => Math.abs(x - med)));
+  if (mad === 0) {
+    // Série perfeitamente regular: qualquer desvio grande é atípico.
+    return intervals.map((x) => x !== med && Math.abs(x - med) > Math.max(7, med));
+  }
+  return intervals.map((x) => (0.6745 * Math.abs(x - med)) / mad > MAD_Z_THRESHOLD);
+}
+
+// Warning legível para o operador (vazio quando não há outlier).
+export function intervalOutlierWarning(intervals: number[]): string | null {
+  const flags = intervalOutlierFlags(intervals);
+  const hits = intervals.filter((_, i) => flags[i]);
+  if (!hits.length) return null;
+  const med = Math.round(medianOf(intervals));
+  return `intervalo(s) atípico(s) para a cadência da série: ${hits
+    .map((d) => `${d}d`)
+    .join(", ")} (mediana ${med}d) — possível erro de dado ou lacuna de cobertura`;
+}
+
+// ---------------------------------------------------------------------------
 // Agrupamento rota/cluster — o particionamento que os dois motores repetiam.
 // Pré-condição dos chamadores: `rows` já passou pelo gate C0.2
 // (assessCampaignQuality), então não há placeholder de origem/destino nem

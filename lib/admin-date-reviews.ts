@@ -4,7 +4,7 @@
 // decisão em campaign_date_reviews. Rejeitar = só gravar a decisão (a proposta
 // some da fila, a campanha continua bloqueada pelo C0.2).
 
-import { rest, insert, patch } from "./admin-db";
+import { restResult, insert, patch } from "./admin-db";
 import type { DateCorrectionProposal } from "./date-review";
 
 export type DateReviewRow = {
@@ -18,10 +18,11 @@ export type DateReviewRow = {
   created_at: string | null;
 };
 
-export const getDateReviews = (limit = 200) =>
-  rest<DateReviewRow>(
+export const getDateReviewsResult = (limit = 200) =>
+  restResult<DateReviewRow>(
     `campaign_date_reviews?select=id,campaign_id,route,old_event_date,proposed_date,action,decided_by,created_at&order=created_at.desc&limit=${limit}`,
   );
+export const getDateReviews = async (limit = 200) => (await getDateReviewsResult(limit)).rows;
 
 async function recordReview(
   p: DateCorrectionProposal,
