@@ -26,28 +26,41 @@ export function intensityForVerdict(verdict) {
   return INTENSITY[verdict] ?? null;
 }
 
+// Marcadores textuais de força da fonte. O marcador FRACO vence (segurança da
+// política §3.6: conteúdo forte de fonte fraca é rebaixado, não promovido — uma
+// URL de home oficial não legitima um "post social" citado no corpo da fonte).
+const WEAK_SOURCE = /\b(post social|rede social|f[óo]rum|grupo de whats|telegram|rumor|boato|n[íi]vel 4|sem p[áa]gina oficial|sem regulamento|n[ãa]o oficial)\b/iu;
+const STRONG_SOURCE = /\b(regulamento oficial|comunicado oficial|site oficial|p[áa]gina oficial|termos e condi[çc][õo]es|regulamento|t&c)\b/iu;
+
 // Resolve o tier de uma fonte contra o registro canônico de entidades
 // (content/entities, RFC-001) estendido com sourceTier/domains (Fase 1.2).
 //   entities: array de { aliases?, sourceTier?, domains?, name } | undefined
-// Retorna 'T1'|'T2'|'T3' quando há match; 'T0' quando há registro mas sem match
-// (fonte desconhecida → humano); null quando NÃO há registro (tier não aplicável
-// — a régua não aplica teto de fonte, comportamento da Fase 0).
+// Ordem: marcador fraco → registro (domínio, depois menção) → marcador forte →
+// URL de host desconhecido (só se há registro) → null (não classificável, sem
+// teto — comportamento seguro da Fase 0).
 export function resolveTier(source, sourceUrl, entities) {
-  if (!Array.isArray(entities) || entities.length === 0) return null;
+  const hasRegistry = Array.isArray(entities) && entities.length > 0;
   const host = hostOf(sourceUrl);
   const label = String(source ?? "").toLowerCase();
-  for (const e of entities) {
-    if (!e || !e.sourceTier) continue;
-    const domains = Array.isArray(e.domains) ? e.domains : [];
-    if (host && domains.some((d) => host === d.toLowerCase() || host.endsWith("." + d.toLowerCase()))) return e.sourceTier;
+
+  if (WEAK_SOURCE.test(label)) return "T3";
+
+  if (hasRegistry) {
+    for (const e of entities) {
+      if (!e || !e.sourceTier) continue;
+      const domains = Array.isArray(e.domains) ? e.domains : [];
+      if (host && domains.some((d) => host === d.toLowerCase() || host.endsWith("." + d.toLowerCase()))) return e.sourceTier;
+    }
+    for (const e of entities) {
+      if (!e || !e.sourceTier) continue;
+      const names = [e.name, ...(Array.isArray(e.aliases) ? e.aliases : [])].filter(Boolean).map((s) => String(s).toLowerCase());
+      if (names.some((n) => n && label.includes(n))) return e.sourceTier;
+    }
   }
-  // fallback por menção textual (alias/nome) quando não há URL casável
-  for (const e of entities) {
-    if (!e || !e.sourceTier) continue;
-    const names = [e.name, ...(Array.isArray(e.aliases) ? e.aliases : [])].filter(Boolean).map((s) => String(s).toLowerCase());
-    if (names.some((n) => n && label.includes(n))) return e.sourceTier;
-  }
-  return "T0";
+
+  if (STRONG_SOURCE.test(label)) return "T1";
+  if (hasRegistry && host) return "T0";
+  return null;
 }
 
 function hostOf(url) {

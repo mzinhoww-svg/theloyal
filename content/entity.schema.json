@@ -20,6 +20,8 @@
           "name": { "type": "string", "description": "Nome de exibição." },
           "type": { "type": "string", "enum": ["programa-origem", "programa-cia", "banco", "varejo", "canal"] },
           "aliases": { "type": "array", "items": { "type": "string" }, "description": "Grafias/menções que resolvem para esta entidade." },
+          "sourceTier": { "type": "string", "enum": ["T1", "T2", "T3"], "description": "Tier de confiabilidade da fonte quando esta entidade é a origem do dado (régua de publicação). T1 primária oficial, T2 secundária estabelecida, T3 fraca. Ausência ⇒ não classificada (a régua trata como T0/sem teto conforme contexto)." },
+          "domains": { "type": "array", "items": { "type": "string" }, "description": "Hostnames oficiais que resolvem para esta entidade (sem protocolo/www), ex: 'livelo.com.br'. Usado por resolveTier para casar sourceUrl → tier." },
           "note": { "type": "string" }
         }
       }

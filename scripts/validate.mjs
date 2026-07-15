@@ -4,15 +4,16 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import {
   DISCLAIMER, VERDICTS, TL_WEIGHTS, assertEditorialRules, editorialRuleMessage,
-  editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, verdictForScore,
+  editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, loadEntities, verdictForScore,
 } from "./lib.mjs";
+import { computeDisposition } from "./lib/disposition.mjs";
 
 const REQUIRED = ["number", "date", "weekday", "publishTime", "readingMinutes", "signal", "deals", "sources", "disclaimer"];
 // Blocos obrigatórios da estrutura editorial (não só campos escalares).
 const REQUIRED_BLOCKS = ["signal", "deals", "sources", "disclaimer"];
 const DEAL_REQUIRED = ["category", "title", "context", "conta", "verdict", "source"];
 
-export function validateEdition(ed) {
+export function validateEdition(ed, opts = {}) {
   const errors = [];
   const warnings = [];
   const ok = [];
@@ -100,6 +101,26 @@ export function validateEdition(ed) {
     }
   });
 
+  // 5b. Régua de publicação: disposição por deal (faixa A–E). Não substitui os
+  // checks de integridade acima (que já emitem os erros); adiciona os sinais NOVOS
+  // da régua como AVISOS — verdicto de ação sem breakdown (rebaixa p/
+  // monitoramento) e ação de fonte fraca — e expõe as disposições ao publisher.
+  const entities = opts.entities ?? loadEntities();
+  const dispositions = deals.map((d, i) => {
+    const disposition = computeDisposition(d, { now: ed.date, entities });
+    const tag = `Deal ${i + 1} (${d.title ?? "sem título"})`;
+    if (disposition.faixa === "D" && disposition.reasons.some((r) => /sem scoreBreakdown/.test(r))) {
+      warn(`${tag}: verdicto de ação sem scoreBreakdown completo — a régua rebaixa para monitoramento (faixa D)`);
+    } else if (disposition.faixa === "D" && disposition.downgradeTo === "monitoramento") {
+      warn(`${tag}: fonte fraca (${disposition.tier}) com pedido de ação — a régua rebaixa para monitoramento (faixa D)`);
+    } else if (disposition.faixa === "C") {
+      warn(`${tag}: verdicto de ação — exige revisão e assinatura de score (faixa C) antes de auto-publicar`);
+    } else if (disposition.faixa === "B") {
+      warn(`${tag}: ação baixa — revisão leve (faixa B) antes de auto-publicar`);
+    }
+    return { index: i, title: d.title ?? null, disposition };
+  });
+
   // 6. Fontes com URL.
   const sources = Array.isArray(ed.sources) ? ed.sources : [];
   if (!sources.length) err("Nenhuma fonte listada na edição");
@@ -147,7 +168,7 @@ export function validateEdition(ed) {
   });
   if (shopping.length) pass(`Shopping · VPM observado: ${shopping.length} leitura(s) de catálogo público`);
 
-  return { errors, warnings, ok };
+  return { errors, warnings, ok, dispositions };
 }
 
 // Contenção Fase C0 — impede que o Radar manual do Daily contradiga a fonte

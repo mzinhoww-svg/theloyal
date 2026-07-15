@@ -95,6 +95,17 @@ export function listEditionFiles(dir = "content/editions") {
   return readdirSync(dir).filter((f) => f.endsWith(".json")).sort();
 }
 
+// Registro canônico de entidades (content/entities) — fonte dos tiers de fonte da
+// régua de publicação. Best-effort: ausência/parsing inválido ⇒ [] (sem teto).
+export function loadEntities(path = "content/entities/index.json") {
+  try {
+    const reg = JSON.parse(readFileSync(path, "utf8"));
+    return Array.isArray(reg.entities) ? reg.entities : [];
+  } catch {
+    return [];
+  }
+}
+
 export function pad(n) {
   return String(n).padStart(4, "0");
 }

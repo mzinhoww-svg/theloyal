@@ -57,3 +57,26 @@ test("assertEditorialRules pega os termos que só existiam no Pro (nossa base / 
   assert.ok(assertEditorialRules({ x: "vantagem para nossa base de clientes" }).some((v) => v.rule === "interno"));
   assert.ok(assertEditorialRules({ x: "oferta para nossos clientes" }).some((v) => v.rule === "interno"));
 });
+
+// ---- Fase 1: régua exposta no gate ----
+const ENTITIES = [{ name: "Livelo", aliases: ["Livelo"], sourceTier: "T1", domains: ["livelo.com.br"] }];
+
+test("validateEdition expõe dispositions por deal", () => {
+  const r = validateEdition(edition(), { entities: ENTITIES });
+  assert.ok(Array.isArray(r.dispositions));
+  assert.equal(r.dispositions.length, 1);
+  assert.ok(["A", "B", "C", "D", "E"].includes(r.dispositions[0].disposition.faixa));
+});
+
+test("verdicto de ação sem scoreBreakdown → aviso de rebaixe (faixa D), sem erro", () => {
+  const r = validateEdition(edition({ verdict: "vale-agir", tlScore: 90, scoreBreakdown: null }), { entities: ENTITIES });
+  assert.equal(r.dispositions[0].disposition.faixa, "D");
+  assert.ok(r.warnings.some((m) => /scoreBreakdown|monitoramento/.test(m)));
+  assert.equal(r.errors.filter((m) => /scoreBreakdown/.test(m)).length, 0);
+});
+
+test("verdicto de ação com breakdown + fonte T1 → faixa C (exige assinatura)", () => {
+  const r = validateEdition(edition({ verdict: "vale-agir", tlScore: 90 }), { entities: ENTITIES });
+  assert.equal(r.dispositions[0].disposition.faixa, "C");
+  assert.ok(r.warnings.some((m) => /assinatura de score|faixa C/.test(m)));
+});

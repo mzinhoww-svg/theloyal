@@ -148,9 +148,19 @@ test("resolveTier: casa domínio → tier da entidade", () => {
   assert.equal(resolveTier("Livelo (oficial)", "https://www.livelo.com.br/promo", entities), "T1");
 });
 
-test("resolveTier: domínio desconhecido com registro presente → T0", () => {
+test("resolveTier: host desconhecido (registro presente, sem marcador) → T0", () => {
   const entities = [{ name: "Livelo", sourceTier: "T1", domains: ["livelo.com.br"] }];
-  assert.equal(resolveTier("Fórum X", "https://forum-desconhecido.com/t/123", entities), "T0");
+  assert.equal(resolveTier("Site desconhecido", "https://algum-site-qualquer.com/t/123", entities), "T0");
+});
+
+test("resolveTier: marcador fraco vence a URL de home oficial", () => {
+  const entities = [{ name: "Livelo", sourceTier: "T1", domains: ["livelo.com.br"] }];
+  // sourceUrl aponta para a home oficial, mas a fonte é um post social sem regulamento
+  assert.equal(resolveTier("Post social público, sem página oficial (nível 4)", "https://www.livelo.com.br", entities), "T3");
+});
+
+test("resolveTier: marcador forte sem registro → T1", () => {
+  assert.equal(resolveTier("Regulamento oficial · vigência confirmada", "https://x.com/promo", undefined), "T1");
 });
 
 test("resolveTier: casa por menção textual quando não há URL", () => {

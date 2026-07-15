@@ -172,6 +172,21 @@ async function main() {
   }
   console.log(`[beehiiv] QA OK — ${qa.warnings.length} aviso(s).`);
 
+  // Régua de publicação (Fase 1.4): só a FAIXA A auto-publica. Verdicto de ação
+  // (faixa B/C) ou item rebaixado pela régua (faixa D) exige revisão/assinatura —
+  // o dispatch (publish/schedule) bloqueia sem --force. Draft/preview seguem livres.
+  if (DISPATCH_ACTIONS.has(opts.action) && !opts.force) {
+    const pending = (qa.dispositions ?? []).filter((x) => x.disposition.faixa !== "A");
+    if (pending.length) {
+      pending.forEach((x) => console.error(`  ⚠ Deal ${x.index + 1} (${x.title ?? "sem título"}): faixa ${x.disposition.faixa} — ${x.disposition.reasons[0] ?? ""}`));
+      fail(
+        `régua: ${pending.length} item(ns) fora da faixa A (auto-publicação). Verdicto de ação exige ` +
+          `revisão/assinatura de score; rebaixe para monitoramento/nao-confirmado, revise, ou use --force conscientemente.`,
+      );
+    }
+    console.log("[beehiiv] Régua OK — todos os itens em faixa A (auto-publicação liberada).");
+  }
+
   // 2. Conteúdo já renderizado (não reescreve).
   const email = readRendered(ed, "email");
   const plain = readRendered(ed, "plain");
