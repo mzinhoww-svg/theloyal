@@ -26,7 +26,7 @@ export function Nav() {
           </a>
           <a
             href="#assinar"
-            className="hidden min-h-11 items-center rounded bg-green-600 px-4 text-sm font-semibold text-paper transition-colors duration-150 ease-standard hover:bg-green-700 md:inline-flex"
+            className="tl-press hidden min-h-11 items-center rounded bg-green-600 px-4 text-sm font-semibold text-paper hover:bg-green-700 md:inline-flex"
           >
             Assinar
           </a>

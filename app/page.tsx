@@ -66,12 +66,10 @@ export default function Home() {
                 ["Acumular (fazer estoque)", "Juntar pontos pra usar no futuro, sem uma viagem marcada."],
                 ["Nota (score)", "De 0 a 100. Quanto maior, mais a oferta vale a pena na nossa análise."],
               ].map(([termo, def]) => (
-                <Reveal key={termo}>
-                  <div className="border-t-2 border-ink pt-4">
-                    <dt className="text-base font-semibold">{termo}</dt>
-                    <dd className="mt-2 text-base leading-relaxed text-gray-500">{def}</dd>
-                  </div>
-                </Reveal>
+                <div key={termo} className="border-t-2 border-ink pt-4">
+                  <dt className="text-base font-semibold">{termo}</dt>
+                  <dd className="mt-2 text-base leading-relaxed text-gray-500">{def}</dd>
+                </div>
               ))}
             </dl>
           </div>

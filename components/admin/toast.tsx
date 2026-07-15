@@ -16,7 +16,7 @@ import { useFormState } from "react-dom";
 export type ActionState = { ok: boolean | null; message: string };
 export const IDLE: ActionState = { ok: null, message: "" };
 
-type Toast = { id: number; message: string; ok: boolean | null };
+type Toast = { id: number; message: string; ok: boolean | null; leaving?: boolean };
 type Ctx = { push: (message: string, ok: boolean | null) => void };
 
 const ToastCtx = createContext<Ctx | null>(null);
@@ -35,7 +35,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     if (!message) return;
     const id = ++seq.current;
     setToasts((t) => [...t, { id, message, ok }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 6000);
+    setTimeout(() => {
+      // Marca saída (transição) e só então remove — entrada/saída interrompíveis.
+      setToasts((t) => t.map((x) => (x.id === id ? { ...x, leaving: true } : x)));
+      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 200);
+    }, 6000);
   }, []);
 
   return (
@@ -49,7 +53,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto rounded-lg border bg-surface px-4 py-3 text-sm shadow-sm ${
+            data-leaving={t.leaving ? "" : undefined}
+            className={`tl-toast pointer-events-auto rounded-lg border bg-surface px-4 py-3 text-sm shadow-sm ${
               t.ok === false
                 ? "border-red-600 text-red-700"
                 : t.ok === true
