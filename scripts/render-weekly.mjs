@@ -7,8 +7,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
-  CONFIDENCE, DISCLAIMER, EMOJI_RE, INTERNAL_RE, RADAR_NOTE_DEFAULT, TOKENS, URGENCY_RE, VERDICTS,
-  collectStrings,
+  CONFIDENCE, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS,
+  assertEditorialRules, collectStrings,
 } from "./lib.mjs";
 import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
 
@@ -58,16 +58,10 @@ export function validateWeekly(wk) {
   if (missing.length) errors.push(`Campos obrigatórios ausentes: ${missing.join(", ")}`);
   else ok.push("Estrutura do weekly completa");
 
-  if (typeof wk.disclaimer === "string" && wk.disclaimer.includes(DISCLAIMER)) ok.push("Disclaimer íntegro");
-  else errors.push("Disclaimer ausente ou alterado");
-
-  const strings = collectStrings(wk);
-  if (strings.some((s) => EMOJI_RE.test(s))) errors.push("Emoji no corpo do weekly");
-  else ok.push("Zero emoji");
-  if (strings.some((s) => URGENCY_RE.test(s))) errors.push("Urgência artificial no weekly");
-  else ok.push("Sem urgência artificial");
-  if (strings.some((s) => INTERNAL_RE.test(s))) errors.push("Possível dado interno/CMI no weekly");
-  else ok.push("Sem dado interno/CMI");
+  // Regras invioláveis de string — fonte única partilhada com Daily e Pro.
+  const gate = assertEditorialRules(wk, { label: "weekly", disclaimer: wk.disclaimer, disclaimerMode: "includes" });
+  errors.push(...gate.errors);
+  ok.push(...gate.ok);
 
   const radar = wk.radar;
   if (radar) {

@@ -170,6 +170,18 @@ npm run weekly:draft -- --start AAAA-MM-DD --end AAAA-MM-DD --number N [--prev c
 Idempotência: `weekly:draft` só escreve o `*.draft.json`; **nunca** toca no final
 curado. Rodar de novo regenera o rascunho sem destruir a curadoria.
 
+### Publicação no Beehiiv (`weekly:beehiiv`)
+
+```
+npm run weekly:beehiiv -- content/weekly/AAAA-Wnn.json [--draft|--publish|--schedule <ISO>|--test <email>|--force|--dry-run]
+```
+
+Publica a Weekly **já renderizada** (`out/weekly/<slug>.html`) no Beehiiv sem
+reescrever conteúdo. Usa o **mesmo núcleo do Daily** (`scripts/beehiiv-core.mjs`)
+— uma trilha só, idempotente por hash, rascunho por padrão, mock sem credencial,
+status em `content/beehiiv-status.json`. Exige `subject` no JSON (vira o title).
+Roda o QA (`validateWeekly`) antes; bloqueia em erro.
+
 ### Costura de acurácia (`out/weekly-signals/AAAA-Wnn.json`)
 
 Junto do rascunho, `weekly:draft` grava um arquivo de **sinais de acurácia**: por

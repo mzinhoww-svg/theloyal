@@ -35,6 +35,22 @@ function slugify(s) {
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+// Sanity-check de data (Passo 4). A ingestão grava vigencia_fim cru do LLM e
+// ~77% das transferências têm erro de ~1 ano (docs/auditoria/predict-forecast-
+// lineage.md). A Weekly herda esse erro em silêncio. Marca como implausível uma
+// data > 1 ano antes do início da janela ou > 2 anos após o fim. Retorna motivo
+// ou null. Determinístico (compara strings ISO; não usa relógio).
+export function implausibleDate(iso, { windowStart, windowEnd }) {
+  const d = String(iso ?? "").slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null; // não-data não é problema deste check
+  const yStart = Number(windowStart.slice(0, 4));
+  const yEnd = Number(windowEnd.slice(0, 4));
+  const y = Number(d.slice(0, 4));
+  if (y < yStart - 1) return `data ${d} anterior à janela em mais de 1 ano (erro de ano provável)`;
+  if (y > yEnd + 2) return `data ${d} mais de 2 anos após a janela (erro de extração provável)`;
+  return null;
+}
+
 // R$ de um resultado de conta ("CPM final" / "R$ 12,00 /milheiro") → número.
 export function parseBRL(text) {
   const m = String(text ?? "").match(/([\d.]+),(\d{2})/);
@@ -117,14 +133,43 @@ function isoDate(iso) {
   return String(iso ?? "").slice(0, 10);
 }
 
+// Chaves de Fio presentes na Weekly anterior — para distinguir NOVO de REABRIU.
+// Funciona tanto no rascunho (`_meta.fios`) quanto no FINAL curado (que perde o
+// `_meta`): nesse caso deriva dos blocos (movements/ranking/highlights), onde os
+// `fio` continuam presentes. Sem sinal ⇒ null (cai no critério por firstSeen).
+export function priorFioKeys(prevWeekly) {
+  if (!prevWeekly) return null;
+  if (Array.isArray(prevWeekly._meta?.fios) && prevWeekly._meta.fios.length) {
+    return new Set(prevWeekly._meta.fios.map((f) => f.key));
+  }
+  const keys = new Set();
+  const mov = prevWeekly.movements ?? {};
+  for (const k of ["novas", "seguem", "venceram"]) {
+    for (const it of mov[k] ?? []) if (it && typeof it === "object" && it.fio) keys.add(it.fio);
+  }
+  for (const r of prevWeekly.ranking ?? []) if (r.fio) keys.add(r.fio);
+  for (const h of prevWeekly.highlights ?? []) if (h.fio) keys.add(h.fio);
+  return keys.size ? keys : null;
+}
+
 // ---------- Consolidação (pura) ----------
 export function consolidate({ editions, windowStart, windowEnd, number, prevWeekly = null, forecast = null, entityReg = null }) {
   const reg = entityReg ?? loadEntities();
   const entityNames = new Map((reg.entities ?? []).map((e) => [e.key, e.name]));
-  const priorKeys = prevWeekly?._meta?.fios ? new Set(prevWeekly._meta.fios.map((f) => f.key)) : null;
+  const priorKeys = priorFioKeys(prevWeekly);
 
   const fios = buildFios(editions);
   for (const fio of fios) fio.state = weeklyState(fio, { windowStart, windowEnd, priorKeys });
+
+  // Sanity-check de data (Passo 4): avisa datas implausíveis herdadas da
+  // ingestão, por Fio. Não bloqueia (curadoria decide), mas não passa em silêncio.
+  const dateWarnings = [];
+  for (const fio of fios) {
+    for (const [field, iso] of [["firstSeen", fio.firstSeen], ["vigencia", fio.latestDeal.vigencia]]) {
+      const why = implausibleDate(iso, { windowStart, windowEnd });
+      if (why) dateWarnings.push(`Fio ${fio.key} · ${field}: ${why}`);
+    }
+  }
 
   // highlights (candidatos) — SÓ Fios que mudaram de fato (transição de veredito
   // ou salto de score). "Ter âncora" não qualifica: senão todo Fio vira destaque.
@@ -245,6 +290,7 @@ export function consolidate({ editions, windowStart, windowEnd, number, prevWeek
     _meta: {
       generatedFrom: editions.map((e) => e.number).sort((a, b) => a - b),
       note: "Rascunho automático (weekly-consolidate). Curadoria: escrever tese, notas de highlight, aprovar ranking, confirmar watch. Remover _meta ao finalizar.",
+      ...(dateWarnings.length ? { warnings: dateWarnings } : {}),
       isoWeek,
       fios: fios.map((f) => ({
         key: f.key, state: f.state, verdict: f.verdictEnd,
@@ -261,7 +307,7 @@ export function consolidate({ editions, windowStart, windowEnd, number, prevWeek
 // SEPARADO do render/publicação (premissa 4: quem publica não é quem mede).
 // Nada aqui é importado pelo caminho de publicação (beehiiv-publish/render).
 export function weeklySignals({ editions, windowStart, windowEnd, prevWeekly = null }) {
-  const priorKeys = prevWeekly?._meta?.fios ? new Set(prevWeekly._meta.fios.map((f) => f.key)) : null;
+  const priorKeys = priorFioKeys(prevWeekly);
   const fios = buildFios(editions);
   for (const f of fios) f.state = weeklyState(f, { windowStart, windowEnd, priorKeys });
   return {
@@ -355,6 +401,10 @@ function main() {
   console.log(`[weekly-consolidate] ${draft._meta.isoWeek}: ${draft._meta.fios.length} Fio(s) de ${editions.length} edição(ões) → ${path}`);
   console.log(`  movements: ${draft.movements.novas.length} novas · ${draft.movements.seguem.length} seguem · ${draft.movements.venceram.length} venceram`);
   console.log(`  highlights(cand.): ${draft.highlights.length} · ranking: ${draft.ranking.length} · watch: ${draft.watch.length}`);
+  if (draft._meta.warnings?.length) {
+    console.error(`  ⚠ ${draft._meta.warnings.length} aviso(s) de data implausível (erro de ano da ingestão):`);
+    draft._meta.warnings.forEach((w) => console.error(`    - ${w}`));
+  }
 
   // Costura de acurácia (Fase 5): sinais por Fio em out/weekly-signals — separado
   // da publicação, entrada futura do motor de medição.

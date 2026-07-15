@@ -68,9 +68,12 @@ export const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF
 export const URGENCY_RE = /(?<![\p{L}\p{N}])(imperd[ií]vel|corra|corre|garanta j[áa]|[úu]ltima chance|milhas gr[áa]tis)(?![\p{L}\p{N}])/iu;
 
 // Dado interno de empresa / CMI / métrica proprietária (regra inviolável 1).
-// Termos que só existiriam com acesso interno a um programa.
+// Termos que só existiriam com acesso interno a um programa, mais linguagem
+// corporativa em 1ª pessoa ("nossos clientes", "nossa base") que trai voz de
+// empresa — imprópria para mídia independente. Superset das versões antigas
+// (Daily + Pro) para ser a fonte única sem regressão.
 export const INTERNAL_RE =
-  /\b(CMI|dados?\s+internos?|m[ée]trica\s+interna|base\s+interna|churn\s+interno|receita\s+interna|margem\s+de\s+contribui[çc][ãa]o\s+interna|custo\s+interno\s+do\s+programa)\b/iu;
+  /\b(CMI|dados?\s+internos?|m[ée]trica\s+interna|base\s+interna|churn\s+interno|receita\s+interna|margem\s+de\s+contribui[çc][ãa]o\s+interna|custo\s+interno\s+do\s+programa|nossos?\s+clientes|nossa\s+base)\b/iu;
 
 // Todo link editorial deve ser https absoluto (nada de http:// ou relativo).
 export function isValidLink(url) {
@@ -127,6 +130,42 @@ export function collectStrings(node, out = []) {
   else if (Array.isArray(node)) node.forEach((n) => collectStrings(n, out));
   else if (node && typeof node === "object") Object.values(node).forEach((n) => collectStrings(n, out));
   return out;
+}
+
+// Fonte ÚNICA das regras invioláveis de string — disclaimer, emoji (regra 5),
+// urgência artificial (regra 4) e dado interno/CMI (regra 1). Reusada por Daily
+// (validate.mjs), Weekly (render-weekly.mjs) e Pro (pro.mjs). Elimina a
+// triplicação e o INTERNAL_RE mais fraco do Pro (débito P1 do diagnóstico):
+// agora as três superfícies partilham o mesmo INTERNAL_RE forte.
+// `label` mantém o sabor da mensagem por superfície; `disclaimer` + `disclaimerMode`
+// ("includes" no Daily/Weekly, "equals" no Pro) checam a integridade da frase.
+export function assertEditorialRules(node, { label = "corpo editorial", disclaimer, disclaimerMode = "includes" } = {}) {
+  const errors = [];
+  const ok = [];
+  const strings = collectStrings(node);
+
+  if (disclaimer !== undefined) {
+    const present = disclaimerMode === "equals"
+      ? disclaimer === DISCLAIMER
+      : (typeof disclaimer === "string" && disclaimer.includes(DISCLAIMER));
+    if (present) ok.push("Disclaimer oficial presente e íntegro");
+    else errors.push("Disclaimer ausente ou alterado — deve conter a frase oficial completa");
+  }
+
+  const sample = (arr, n) => arr.slice(0, 2).map((s) => JSON.stringify(s.slice(0, n))).join(", ");
+  const emoji = strings.filter((s) => EMOJI_RE.test(s));
+  if (emoji.length) errors.push(`Emoji proibido no ${label}: ${sample(emoji, 40)}`);
+  else ok.push(`Zero emoji no ${label}`);
+
+  const urgency = strings.filter((s) => URGENCY_RE.test(s));
+  if (urgency.length) errors.push(`Urgência artificial proibida no ${label}: ${sample(urgency, 50)}`);
+  else ok.push(`Sem urgência artificial no ${label}`);
+
+  const internal = strings.filter((s) => INTERNAL_RE.test(s));
+  if (internal.length) errors.push(`Dado interno/CMI proibido no ${label}: ${sample(internal, 50)}`);
+  else ok.push(`Sem dado interno / CMI / métrica proprietária no ${label}`);
+
+  return { errors, ok };
 }
 
 export function editionSlug(edition) {

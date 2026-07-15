@@ -101,3 +101,34 @@ test("pad/editionSlug: número da edição em 4 dígitos", () => {
   assert.equal(pad(1), "0001");
   assert.equal(editionSlug({ number: 28 }), "0028");
 });
+
+// --- assertEditorialRules: fonte única das regras invioláveis (Passo 1) ---
+import { assertEditorialRules } from "../scripts/lib.mjs";
+
+test("INTERNAL_RE: superset pega linguagem corporativa 1ª pessoa (Pro)", () => {
+  assert.ok(INTERNAL_RE.test("nossos clientes preferem"));
+  assert.ok(INTERNAL_RE.test("cresceu na nossa base"));
+  assert.ok(INTERNAL_RE.test("segundo o CMI"));
+  assert.ok(!INTERNAL_RE.test("os clientes do programa"));
+});
+
+test("assertEditorialRules: conteúdo limpo passa; disclaimer includes/equals", () => {
+  const clean = { a: "texto limpo", disclaimer: "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar." };
+  const inc = assertEditorialRules(clean, { label: "x", disclaimer: clean.disclaimer, disclaimerMode: "includes" });
+  assert.equal(inc.errors.length, 0, inc.errors.join("; "));
+  const eq = assertEditorialRules(clean, { label: "x", disclaimer: clean.disclaimer, disclaimerMode: "equals" });
+  assert.equal(eq.errors.length, 0);
+});
+
+test("assertEditorialRules: pega emoji, urgência e dado interno com o label", () => {
+  const dirty = { a: "bônus 🚀", b: "oferta imperdível", c: "segundo o CMI do programa" };
+  const g = assertEditorialRules(dirty, { label: "weekly" });
+  assert.ok(g.errors.some((e) => /Emoji proibido no weekly/.test(e)));
+  assert.ok(g.errors.some((e) => /Urgência artificial proibida no weekly/.test(e)));
+  assert.ok(g.errors.some((e) => /Dado interno\/CMI proibido no weekly/.test(e)));
+});
+
+test("assertEditorialRules: disclaimer alterado → erro", () => {
+  const g = assertEditorialRules({}, { label: "x", disclaimer: "frase errada", disclaimerMode: "includes" });
+  assert.ok(g.errors.some((e) => /Disclaimer ausente ou alterado/.test(e)));
+});
