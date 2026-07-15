@@ -8,6 +8,7 @@ const LINKS: { href: string; label: string }[] = [
   { href: "/admin/backfill", label: "Backfill" },
   { href: "/admin/noticias", label: "Notícias" },
   { href: "/admin/campanhas", label: "Campanhas" },
+  { href: "/admin/digests", label: "Digests" },
   { href: "/admin/logs", label: "Logs" },
   { href: "/admin/forecast", label: "Forecast" },
   { href: "/admin/predict", label: "Predict" },
