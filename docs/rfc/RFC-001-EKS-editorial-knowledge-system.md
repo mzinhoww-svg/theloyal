@@ -968,6 +968,24 @@ Deprecados (migram, ver §12.2): `depende` → `esperaria`/`casos-especificos`; 
 | Lineage/Audit | — | **a criar** incremental |
 | Rendition | `out/email`, `out/plain`, `/edicao`, Beehiiv | existe |
 
+## Apêndice E — Status de implementação (vivo)
+
+Registro do que já saiu do papel. Atualizar a cada entrega. Não altera as decisões acima — só marca o progresso.
+
+| Item | Estado | Onde |
+|---|---|---|
+| **Fase 1.1** — CI gate (validate/render/qa/build) | ✅ já existia | `.github/workflows/ci.yml` |
+| **Fase 1.2** — Testes das funções puras (R-1) | ✅ entregue | `tests/stats.test.mjs`, `tests/lib.test.mjs`, job `test` no CI |
+| Achado: `URGENCY_RE` não pegava "última chance" (acento) | ✅ corrigido | `scripts/lib.mjs` (fronteiras Unicode) |
+| **M-1** — Taxonomia de Verdict única (D-2) | ✅ entregue | `scripts/taxonomy.mjs` (fonte única), `tests/taxonomy.test.mjs` (trava) |
+| **M-2** — Convergência (núcleo de taxonomia) | ✅ núcleo entregue | ambos os pipelines derivam de `taxonomy.mjs`; parity test |
+| **M-2** — Convergência total da serialização (D-3) | ⏳ deferido | requer RFC-002 (RES) + revisão humana |
+| **M-3** — Hierarquia-fantasma (D-1) | ⏳ pendente | decisão humana (Q1): reapontar vs criar docs |
+| **M-4** — Entities + lineage (D-4) | ✅ base entregue | `content/entities/`, `content/entity.schema.json`, `tlScorePeriod.derivedFrom` |
+| ADRs 001–010 | 🟡 Proposed | aguardam ratificação humana (§16 Q1) |
+
+Deprecações em janela de compatibilidade (RFC §12.2): `depende → esperaria`, `nao-vale → evitaria` — ainda resolvem, remover na v2 da taxonomia.
+
 ---
 
 *Fim do RFC-001 — The Loyalty Editorial Knowledge System v1.0.*
