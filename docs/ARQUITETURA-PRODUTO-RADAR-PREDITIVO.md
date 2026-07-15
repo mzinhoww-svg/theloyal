@@ -1058,6 +1058,24 @@ de proveniência, plausibilidade e validação.
 | **P4** motores, reconciliação e snapshots | Janela adaptativa+decay (R-05); outlier detectar+rebaixar sobre série válida (R-09, ADR-005); reconciliador+contrato (R-12, ADR-008); snapshot canônico+estados (R-14, ADR-006); `predict_config` (R-11); backfill completeness (R-13, ADR-007) |
 | **P5** experiência, outcomes e automação | Admin Radar unificado (R-15); ações+override auditado (R-16); Digest lê snapshot único (R-17); backtest+Brier+calibração (R-19); `prediction_outcome` (§27d.9); publicação automática só após acurácia comprovada |
 
+### 27f.8 Implementado (Fase C0) — estado real
+
+A Fase C0 (§27f.5) foi **implementada em runtime, sem migration**. Detalhe em
+`docs/IMPLEMENTACAO-FASE-C0-RADAR.md`. Resumo do que já existe em código:
+- Módulos puros `scripts/radar-quality.mjs` + `lib/radar-quality.ts` (validação temporal,
+  duplicidade provável, placeholders, gate editorial, frescor) e `scripts/radar-dataset.mjs`
+  + `restPaged` (dataset completo por paginação).
+- Wiring: `scripts/forecast.mjs` (paginação + contenção + radares só elegíveis +
+  metadados C0), `scripts/render-weekly.mjs` (gate de frescor), `lib/admin-forecast.ts` e
+  `lib/admin-predict.ts` (contenção + paginação), telas `/admin/forecast` e `/admin/predict`
+  (painel de contenção).
+- Testes: `tests/radar-quality|dataset|parity.test.mjs` (inclui paridade comportamental
+  TS↔MJS). O caso `livelo→connectmiles` é bloqueado; o intervalo de 943 dias não alimenta
+  os motores; nenhuma data é corrigida automaticamente.
+- **Não** implementado (exige migration/estrutura): identidade/versão/observação
+  persistidas, `data_evento` persistida, catálogo de aliases, merge, snapshot canônico,
+  reconciliador completo, `prediction_outcome`. ADRs permanecem `proposed`.
+
 ## 27d. Revisão conceitual (resolve pontos em aberto)
 
 Esta seção **refina e supersede** recomendações preliminares das §§13–17 onde
