@@ -50,6 +50,144 @@ const BAR: Record<Tone, string> = {
   gray: "bg-gray-400",
 };
 
+// ---- Filtros por URL (searchParams) — links e form GET, zero JS ----
+
+export type FilterParams = Record<string, string>;
+
+// Monta o href preservando os demais parâmetros; trocar filtro volta à pág. 1.
+function filterHref(path: string, params: FilterParams, overrides: Record<string, string | null>): string {
+  const next: Record<string, string | null> = { ...params, ...overrides, pagina: null };
+  if (overrides.pagina != null) next.pagina = overrides.pagina;
+  const qs = Object.entries(next)
+    .filter(([, v]) => v != null && v !== "")
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v as string)}`)
+    .join("&");
+  return qs ? `${path}?${qs}` : path;
+}
+
+export type ChipOption = { label: string; value: string };
+
+// Grupo de chips de um parâmetro. Clicar no chip ativo remove o filtro.
+export function FilterChips({
+  path,
+  params,
+  param,
+  label,
+  options,
+}: {
+  path: string;
+  params: FilterParams;
+  param: string;
+  label: string;
+  options: ChipOption[];
+}) {
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <span className="text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">{label}</span>
+      {options.map((o) => {
+        const active = (params[param] ?? "") === o.value;
+        return (
+          <a
+            key={o.value}
+            href={filterHref(path, params, { [param]: active ? null : o.value })}
+            aria-pressed={active}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+              active
+                ? "bg-ink text-paper"
+                : "border border-line bg-surface text-gray-700 hover:border-gray-400"
+            }`}
+          >
+            {o.label}
+          </a>
+        );
+      })}
+    </span>
+  );
+}
+
+// Busca textual via form GET nativo — preserva os demais filtros em hidden.
+export function SearchForm({
+  path,
+  params,
+  param = "q",
+  placeholder,
+}: {
+  path: string;
+  params: FilterParams;
+  param?: string;
+  placeholder: string;
+}) {
+  return (
+    <form action={path} method="get" className="inline-flex items-center gap-2">
+      {Object.entries(params)
+        .filter(([k, v]) => k !== param && k !== "pagina" && v)
+        .map(([k, v]) => (
+          <input key={k} type="hidden" name={k} value={v} />
+        ))}
+      <input
+        name={param}
+        defaultValue={params[param] ?? ""}
+        placeholder={placeholder}
+        autoComplete="off"
+        className="rounded border border-line bg-surface px-2 py-1.5 text-sm text-ink placeholder:text-gray-400"
+      />
+      <button
+        type="submit"
+        className="rounded border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400"
+      >
+        filtrar
+      </button>
+    </form>
+  );
+}
+
+// Link "limpar filtros" — só aparece quando algum filtro está ativo.
+export function ClearFilters({ path, active }: { path: string; active: boolean }) {
+  if (!active) return null;
+  return (
+    <a href={path} className="text-xs font-semibold text-blue-600 hover:text-blue-700">
+      limpar filtros
+    </a>
+  );
+}
+
+// Paginação por link (anterior/próxima + posição em mono).
+export function Pagination({
+  path,
+  params,
+  page,
+  pageCount,
+}: {
+  path: string;
+  params: FilterParams;
+  page: number;
+  pageCount: number;
+}) {
+  if (pageCount <= 1) return null;
+  const link = (p: number, label: string, enabled: boolean) =>
+    enabled ? (
+      <a
+        href={filterHref(path, params, { pagina: String(p) })}
+        className="rounded border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-400"
+      >
+        {label}
+      </a>
+    ) : (
+      <span className="rounded border border-line bg-paper-dark px-3 py-1.5 text-xs font-semibold text-gray-400">
+        {label}
+      </span>
+    );
+  return (
+    <div className="mt-3 flex items-center justify-between gap-3">
+      {link(page - 1, "← anterior", page > 1)}
+      <span className="font-mono text-xs tabular-nums text-gray-500">
+        pág. {page} / {pageCount}
+      </span>
+      {link(page + 1, "próxima →", page < pageCount)}
+    </div>
+  );
+}
+
 export type Segment = { label: string; value: number; tone: Tone };
 
 // Barra empilhada genérica (identidade por rótulo + valor no legend, nunca só

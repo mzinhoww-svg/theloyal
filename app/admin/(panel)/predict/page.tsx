@@ -26,7 +26,12 @@ import {
   HorizonHeatmap,
   OpportunityCard,
   ProbBar,
+  FilterChips,
+  SearchForm,
+  ClearFilters,
+  Pagination,
   type Segment,
+  type FilterParams,
 } from "@/components/admin/dashboard";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
@@ -269,7 +274,29 @@ function SeriesTable({ rows, empty }: { rows: PredictSeriesView[]; empty: string
   );
 }
 
-export default async function PredictPage() {
+const PATH = "/admin/predict";
+const PAGE_SIZE = 30;
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+
+export default async function PredictPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  // Filtros por URL (compartilháveis): conf, q, bloqueadas=0, pagina.
+  const params: FilterParams = {};
+  for (const k of ["conf", "q", "bloqueadas", "pagina"]) {
+    const v = first(searchParams?.[k]).trim();
+    if (v) params[k] = v;
+  }
+  const hasFilters = !!(params.conf || params.q || params.bloqueadas);
+  const matches = (p: PredictSeriesView) => {
+    if (params.conf && p.confidence !== params.conf) return false;
+    if (params.bloqueadas === "0" && p.blockReason != null) return false;
+    if (params.q && !seriesLabel(p).toLowerCase().includes(params.q.toLowerCase())) return false;
+    return true;
+  };
+
   const { result, clusters, routes, ledgerRows, asOf, datasetComplete } = await loadPredict();
   const series = [...clusters, ...routes];
   const ready = series.filter(isReady).length;
@@ -306,6 +333,13 @@ export default async function PredictPage() {
       ...(topReadyCluster ? [topReadyCluster.seriesKey] : []),
     ]),
   );
+  // Tabelas: filtro + paginação das rotas.
+  const clustersF = clusters.filter(matches);
+  const routesF = routes.filter(matches);
+  const pageCount = Math.max(1, Math.ceil(routesF.length / PAGE_SIZE));
+  const page = Math.min(Math.max(1, Number(params.pagina) || 1), pageCount);
+  const routesPage = routesF.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const trends = await getSeriesTrends(trendKeys);
   const calibrations = trendKeys
     .map((k) => ({ key: k, cal: calibrationFromTrend(trends.get(k)) }))
@@ -468,10 +502,33 @@ export default async function PredictPage() {
         <QualityPanel quality={result.quality} embedded />
       </Disclosure>
 
+      <section className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <FilterChips
+          path={PATH}
+          params={params}
+          param="conf"
+          label="Confiança"
+          options={[
+            { label: "alta", value: "alta" },
+            { label: "média", value: "media" },
+            { label: "baixa", value: "baixa" },
+          ]}
+        />
+        <FilterChips
+          path={PATH}
+          params={params}
+          param="bloqueadas"
+          label="Bloqueadas"
+          options={[{ label: "ocultar", value: "0" }]}
+        />
+        <SearchForm path={PATH} params={params} placeholder="buscar série (ex.: smiles)" />
+        <ClearFilters path={PATH} active={hasFilters} />
+      </section>
+
       <Disclosure
         title="Programas (cluster → destino)"
-        count={result.clusters.length}
-        sub="todas as séries por programa"
+        count={clustersF.length}
+        sub={hasFilters ? `filtrado de ${clusters.length} séries` : "todas as séries por programa"}
         open
       >
         <p className="mb-3 text-sm text-gray-500">
@@ -483,13 +540,17 @@ export default async function PredictPage() {
           elas — a prova da cadência. Séries com menos de 3 campanhas ficam bloqueadas — sem previsão até acumular
           histórico.
         </p>
-        <SeriesTable rows={clusters} empty="sem séries de transferência" />
+        <SeriesTable
+          rows={clustersF}
+          empty={hasFilters ? "nenhum programa passa nos filtros" : "sem séries de transferência"}
+        />
       </Disclosure>
 
       <Disclosure
         title="Rotas (origem → destino)"
-        count={result.routes.length}
-        sub="todas as séries por rota específica"
+        count={routesF.length}
+        sub={hasFilters ? `filtrado de ${routes.length} rotas` : "todas as séries por rota específica"}
+        open={hasFilters}
       >
         <p className="mb-3 text-sm text-gray-500">
           Mesma leitura das colunas dos programas, agora por rota específica (origem → destino).
@@ -497,7 +558,11 @@ export default async function PredictPage() {
           intervalo em dias entre elas — é a prova da cadência (ex.: duas ondas separadas por 943
           dias). Rotas com menos de 3 campanhas ficam bloqueadas.
         </p>
-        <SeriesTable rows={routes.slice(0, 60)} empty="sem rotas" />
+        <SeriesTable
+          rows={routesPage}
+          empty={hasFilters ? "nenhuma rota passa nos filtros" : "sem rotas"}
+        />
+        <Pagination path={PATH} params={params} page={page} pageCount={pageCount} />
       </Disclosure>
 
       <p className="mt-8 border-t border-line pt-4 text-xs text-gray-400">

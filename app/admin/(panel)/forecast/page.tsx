@@ -13,7 +13,15 @@ import {
   fmtDate,
   type Tone,
 } from "@/components/admin/ui";
-import { Disclosure, NextWindowCard } from "@/components/admin/dashboard";
+import {
+  Disclosure,
+  NextWindowCard,
+  FilterChips,
+  SearchForm,
+  ClearFilters,
+  Pagination,
+  type FilterParams,
+} from "@/components/admin/dashboard";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
 import { DistributionBar, WindowTimeline, Field } from "@/components/admin/forecast-charts";
@@ -180,9 +188,35 @@ function ForecastTable({ columnLabel, rows }: { columnLabel: string; rows: Forec
   );
 }
 
-export default async function ForecastPage() {
+const PATH = "/admin/forecast";
+const PAGE_SIZE = 30;
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+
+export default async function ForecastPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  // Filtros por URL (compartilháveis): conf, q, pagina — valem para as tabelas.
+  const params: FilterParams = {};
+  for (const k of ["conf", "q", "pagina"]) {
+    const v = first(searchParams?.[k]).trim();
+    if (v) params[k] = v;
+  }
+  const hasFilters = !!(params.conf || params.q);
+  const matches = (v: ForecastView) => {
+    if (params.conf && v.confidence !== params.conf) return false;
+    if (params.q && !v.route.toLowerCase().includes(params.q.toLowerCase())) return false;
+    return true;
+  };
+
   const data = await loadForecast();
   const { config, configRow, overrides, result } = data;
+  const clustersF = data.clusters.filter(matches);
+  const routesF = data.routes.filter(matches);
+  const pageCount = Math.max(1, Math.ceil(routesF.length / PAGE_SIZE));
+  const page = Math.min(Math.max(1, Number(params.pagina) || 1), pageCount);
+  const routesPage = routesF.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const eligibleCount = [...data.routes, ...data.clusters].filter((v) => v.editorialEligible).length;
 
   // Próximas janelas: rotas e programas não silenciados cuja janela toca o
@@ -300,21 +334,48 @@ export default async function ForecastPage() {
         <WindowTimeline from={data.generatedFor} horizon={config.horizonWeekly} items={timeline} />
       </section>
 
+      <section className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <FilterChips
+          path={PATH}
+          params={params}
+          param="conf"
+          label="Confiança"
+          options={[
+            { label: "alta", value: "alta" },
+            { label: "média", value: "media" },
+            { label: "baixa", value: "baixa" },
+            { label: "em formação", value: "em-formacao" },
+          ]}
+        />
+        <SearchForm path={PATH} params={params} placeholder="buscar rota (ex.: →smiles)" />
+        <ClearFilters path={PATH} active={hasFilters} />
+      </section>
+
       <Disclosure
         title="Previsão por programa"
-        count={data.clusters.length}
-        sub="cluster do destino — consolida campanhas program-wide de várias origens"
+        count={clustersF.length}
+        sub={
+          hasFilters
+            ? `filtrado de ${data.clusters.length} programas`
+            : "cluster do destino — consolida campanhas program-wide de várias origens"
+        }
         open
       >
-        <ForecastTable columnLabel="Programa" rows={data.clusters} />
+        <ForecastTable columnLabel="Programa" rows={clustersF} />
       </Disclosure>
 
       <Disclosure
         title="Previsão por rota"
-        count={data.routes.length}
-        sub="origem → destino · cadência = série de intervalos entre janelas"
+        count={routesF.length}
+        sub={
+          hasFilters
+            ? `filtrado de ${data.routes.length} rotas`
+            : "origem → destino · cadência = série de intervalos entre janelas"
+        }
+        open={hasFilters}
       >
-        <ForecastTable columnLabel="Rota" rows={data.routes} />
+        <ForecastTable columnLabel="Rota" rows={routesPage} />
+        <Pagination path={PATH} params={params} page={page} pageCount={pageCount} />
       </Disclosure>
 
       <Disclosure
