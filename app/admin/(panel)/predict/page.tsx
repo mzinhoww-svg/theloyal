@@ -189,7 +189,7 @@ function DetailCard({ p }: { p: Prediction }) {
 const isReady = (p: Prediction) => p.readiness === "ready" || p.readiness === "ready_with_warnings";
 
 export default async function PredictPage() {
-  const { result, ledgerRows } = await loadPredict();
+  const { result, ledgerRows, datasetComplete, containment, blockedCount } = await loadPredict();
   const series = [...result.clusters, ...result.routes];
   const ready = series.filter(isReady).length;
   const blocked = series.filter((p) => p.blockReason != null).length;
@@ -209,10 +209,18 @@ export default async function PredictPage() {
         }
       />
 
-      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
+      {!datasetComplete && (
+        <div className="mb-4 rounded border border-red-600 bg-red-100 px-3 py-2 text-sm text-red-700">
+          <strong>Dataset incompleto</strong> — distribuição bloqueada (Fase C0).
+        </div>
+      )}
+
+      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
         <StatCard label="Séries" value={series.length} sub={`${result.clusters.length} programas · ${result.routes.length} rotas`} tone="gray" />
         <StatCard label="Com previsão" value={ready} sub="ready / ready_with_warnings" tone={ready > 0 ? "green" : "gray"} />
-        <StatCard label="Bloqueadas" value={blocked} sub="histórico insuficiente" tone={blocked > 0 ? "yellow" : "green"} />
+        <StatCard label="Bloqueadas (motor)" value={blocked} sub="histórico insuficiente" tone={blocked > 0 ? "yellow" : "green"} />
+        <StatCard label="Contido C0" value={blockedCount} sub={`temporal ${containment.temporalBlocked ?? 0} · dup ${containment.probableDuplicates ?? 0} · placeholder ${containment.placeholders ?? 0}`} tone={blockedCount > 0 ? "yellow" : "green"} />
+        <StatCard label="Dataset" value={datasetComplete ? "completo" : "incompleto"} sub={`${ledgerRows} linhas`} tone={datasetComplete ? "green" : "red"} />
       </section>
 
       <div className="mb-4 mt-4">

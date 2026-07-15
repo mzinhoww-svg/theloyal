@@ -171,10 +171,25 @@ export default async function PredictPage() {
         }
       />
 
+      {!data.datasetComplete && (
+        <div className="mb-4 rounded border border-red-600 bg-red-100 px-3 py-2 text-sm text-red-700">
+          <strong>Dataset incompleto</strong> ({data.pagesRead} páginas lidas) — distribuição bloqueada.
+          Nenhum número deve ser publicado até o carregamento completo. (Fase C0)
+        </div>
+      )}
+
+      <section className="mb-4 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(160px,1fr))]">
+        <StatCard label="Dataset" value={data.datasetComplete ? "completo" : "incompleto"} sub={`${data.ledgerRows} linhas · ${data.pagesRead} págs`} tone={data.datasetComplete ? "green" : "red"} />
+        <StatCard label="Bloqueio temporal" value={data.containment.temporalBlocked ?? 0} sub="data suspeita/crítica" tone={(data.containment.temporalBlocked ?? 0) > 0 ? "yellow" : "green"} />
+        <StatCard label="Placeholders" value={data.containment.placeholders ?? 0} sub="origem/destino inválido" tone={(data.containment.placeholders ?? 0) > 0 ? "yellow" : "green"} />
+        <StatCard label="Dup. prováveis" value={data.containment.probableDuplicates ?? 0} sub={`${data.containment.possibleDuplicates ?? 0} possíveis`} tone={(data.containment.probableDuplicates ?? 0) > 0 ? "yellow" : "green"} />
+        <StatCard label="Sem data" value={data.containment.missingDate ?? 0} sub="fora dos motores" tone="gray" />
+      </section>
+
       <section className="mb-6 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
         <StatCard label="Séries rastreadas" value={result.routesTracked + result.clustersTracked} sub={`${result.routesTracked} rotas · ${result.clustersTracked} programas`} tone="blue" />
         <StatCard label="Com previsão" value={result.withPrediction} sub="base suficiente" tone="green" />
-        <StatCard label="Ledger" value={data.ledgerRows} sub="linhas consideradas" />
+        <StatCard label="Ledger" value={data.ledgerRows} sub="linhas (dataset completo)" />
         <StatCard label="Gerado para" value={<span className="text-lg">{data.generatedFor}</span>} sub="data de referência" />
       </section>
 

@@ -2,9 +2,9 @@
 // (lib/predict-engine) e persiste snapshots observáveis (predict_snapshots).
 // Usa admin-db (SERVICE_ROLE_KEY) — nunca importado por Client Component.
 
-import { rest, insert } from "./admin-db";
+import { rest, insert, restPaged } from "./admin-db";
 import { buildPredict, type Prediction, type PredictResult } from "./predict-engine";
-import type { CampaignRow } from "./forecast";
+import { assessCampaigns, type CampaignLike } from "./radar-quality";
 
 export type { Prediction, PredictResult } from "./predict-engine";
 
@@ -28,13 +28,26 @@ export async function loadPredict(now?: string): Promise<{
   configured: boolean;
   ledgerRows: number;
   result: PredictResult;
+  datasetComplete: boolean;
+  containment: Record<string, number>;
+  blockedCount: number;
 }> {
   const asOf = (now ?? new Date().toISOString()).slice(0, 10);
-  const campaigns = await rest<CampaignRow>(
-    "campaigns?select=id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim&limit=2000",
-  );
-  const result = buildPredict(campaigns, { asOf });
-  return { configured: campaigns.length > 0, ledgerRows: campaigns.length, result };
+  const { rows: campaigns, totalRows, datasetComplete } = await restPaged<CampaignLike>("campaigns", {
+    select: "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim,first_seen,observed_at,created_at,source_url,notes,origin",
+  });
+  // Fase C0: só linhas elegíveis alimentam o motor (bloqueia data suspeita,
+  // duplicidade provável e placeholders antes de formar série).
+  const assessment = assessCampaigns(campaigns, { now: asOf });
+  const result = buildPredict(assessment.eligible, { asOf });
+  return {
+    configured: campaigns.length > 0,
+    ledgerRows: totalRows,
+    result,
+    datasetComplete,
+    containment: assessment.counts,
+    blockedCount: assessment.blocked.length,
+  };
 }
 
 export const getSnapshots = (limit = 20) =>

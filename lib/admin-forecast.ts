@@ -2,19 +2,18 @@
 // o motor (lib/forecast) e aplica os overrides do operador. Server-only
 // (usa admin-db, que carrega a SERVICE_ROLE_KEY). Funções puras onde possível.
 
-import { rest } from "./admin-db";
+import { rest, restPaged } from "./admin-db";
 import {
-  buildForecast,
   radarItems,
   resolveConfig,
   upcomingWindows,
-  type CampaignRow,
   type Confidence,
   type Forecast,
   type ForecastConfig,
   type ForecastResult,
   type RadarItem,
 } from "./forecast";
+import { containForecast, type CampaignLike, type EditorialGate } from "./radar-quality";
 
 // ---- Config persistida (forecast_config, linha singleton id=1) ----
 
@@ -94,11 +93,13 @@ export type PredictView = Forecast & {
   muted: boolean;
   overriddenConfidence: Confidence | null;
   note: string | null;
+  // Fase C0 (contenção)
+  c0: EditorialGate | null;
 };
 
 const keyOf = (scope: string, route: string) => `${scope}:${route}`;
 
-function decorate(f: Forecast, ov: Map<string, OverrideRow>): PredictView {
+function decorate(f: Forecast, ov: Map<string, OverrideRow>, byKey: Map<string, EditorialGate>): PredictView {
   const o = ov.get(keyOf(f.scope, f.route));
   const overriddenConfidence = o?.action === "confidence" ? o.confidence : null;
   return {
@@ -109,6 +110,7 @@ function decorate(f: Forecast, ov: Map<string, OverrideRow>): PredictView {
     muted: o?.action === "mute",
     overriddenConfidence,
     note: o?.note ?? null,
+    c0: byKey.get(keyOf(f.scope, f.route)) ?? null,
   };
 }
 
@@ -135,12 +137,16 @@ export type PredictData = {
   snapshots: SnapshotRow[];
   ledgerRows: number;
   generatedFor: string;
+  // Fase C0 (contenção)
+  datasetComplete: boolean;
+  pagesRead: number;
+  containment: Record<string, number>;
 };
 
 // Aplica pin/mute/confidence e ordena: fixados primeiro, depois silenciados por
 // último, mantendo a ordem do motor dentro de cada grupo.
-function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): PredictView[] {
-  const views = list.map((f) => decorate(f, ov));
+function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>, byKey: Map<string, EditorialGate>): PredictView[] {
+  const views = list.map((f) => decorate(f, ov, byKey));
   return views.sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
     if (a.muted !== b.muted) return a.muted ? 1 : -1;
@@ -150,34 +156,30 @@ function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): Predict
 
 // Carrega tudo para a página. `now` injetável para testes determinísticos.
 export async function loadPredict(now?: string): Promise<PredictData> {
-  const [{ config, row }, overrides, snapshots, campaigns] = await Promise.all([
+  const [{ config, row }, overrides, snapshots, dataset] = await Promise.all([
     getConfig(),
     getOverrides(),
     getSnapshots(),
-    rest<CampaignRow>(
-      "campaigns?select=id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim&limit=2000",
-    ),
+    restPaged<CampaignLike>("campaigns", {
+      select: "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim,first_seen,observed_at,created_at,source_url,notes,origin",
+    }),
   ]);
+  const { rows: campaigns, totalRows, datasetComplete } = dataset;
 
-  const result = buildForecast(campaigns, { now, config });
+  // Fase C0: contenção a montante + gate editorial por série.
+  const contained = containForecast(campaigns, { now, config, datasetComplete });
+  const result = contained.result;
+  const byKey = contained.byKey as unknown as Map<string, EditorialGate>;
   const ov = new Map(overrides.map((o) => [keyOf(o.scope, o.route), o]));
 
-  const routes = applyOverrides(result.routes, ov);
-  const clusters = applyOverrides(result.clusters, ov);
+  const routes = applyOverrides(result.routes, ov, byKey);
+  const clusters = applyOverrides(result.clusters, ov, byKey);
 
-  // Radares: excluem rotas silenciadas (mute retira dos digests).
+  // Radares: só séries editorialmente elegíveis (gate C0) e não silenciadas.
   const mutedKeys = new Set(overrides.filter((o) => o.action === "mute").map((o) => keyOf(o.scope, o.route)));
-  const notMuted = (f: Forecast) => !mutedKeys.has(keyOf(f.scope, f.route));
-  const daily = upcomingWindows(result, {
-    now,
-    horizonDays: config.horizonDaily,
-    minConfidence: "media",
-  }).filter(notMuted);
-  const weekly = upcomingWindows(result, {
-    now,
-    horizonDays: config.horizonWeekly,
-    minConfidence: "baixa",
-  }).filter(notMuted);
+  const eligible = (f: Forecast) => !mutedKeys.has(keyOf(f.scope, f.route)) && byKey.get(keyOf(f.scope, f.route))?.editorialEligible === true;
+  const daily = upcomingWindows(result, { now, horizonDays: config.horizonDaily, minConfidence: "media" }).filter(eligible);
+  const weekly = upcomingWindows(result, { now, horizonDays: config.horizonWeekly, minConfidence: "baixa" }).filter(eligible);
 
   return {
     configured: campaigns.length > 0 || row != null,
@@ -189,10 +191,13 @@ export async function loadPredict(now?: string): Promise<PredictData> {
     clusters,
     distributionRoutes: distribution(routes),
     distributionClusters: distribution(clusters),
-    radarDaily: radarItems(daily),
-    radarWeekly: radarItems(weekly),
+    radarDaily: datasetComplete ? radarItems(daily) : [],
+    radarWeekly: datasetComplete ? radarItems(weekly) : [],
     snapshots,
-    ledgerRows: campaigns.length,
+    ledgerRows: totalRows,
     generatedFor: result.generatedFor,
+    datasetComplete,
+    pagesRead: dataset.pagesRead,
+    containment: contained.counts,
   };
 }

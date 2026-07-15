@@ -10,6 +10,7 @@ import {
   CONFIDENCE, DISCLAIMER, EMOJI_RE, INTERNAL_RE, RADAR_NOTE_DEFAULT, TOKENS, URGENCY_RE, VERDICTS,
   collectStrings,
 } from "./lib.mjs";
+import { evaluateForecastFreshness } from "./radar-quality.mjs";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -21,18 +22,27 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
-// Se o weekly não trouxer radar, usa digest.radarWeekly do forecast (se houver).
+// Se o weekly não trouxer radar, usa digest.radarWeekly do forecast — MAS só se
+// o artefato estiver FRESCO e COMPLETO (Fase C0). Nunca usa arquivo stale,
+// inválido ou incompleto silenciosamente.
 function resolveRadar(wk) {
   if (wk.radar && Array.isArray(wk.radar.windows) && wk.radar.windows.length) return wk.radar;
   if (!existsSync(FORECAST_PATH)) return null;
+  let fc;
   try {
-    const fc = JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
-    const windows = fc?.digest?.radarWeekly ?? [];
-    if (!windows.length) return null;
-    return { note: RADAR_NOTE_DEFAULT, windows };
+    fc = JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
   } catch {
+    console.error("[weekly] forecast.json ilegível — Radar automático indisponível.");
     return null;
   }
+  const fresh = evaluateForecastFreshness(fc, Date.now());
+  if (fresh.status !== "fresh") {
+    console.error(`[weekly] forecast.json ${fresh.status} (${fresh.reasons.join("; ")}) — Radar automático BLOQUEADO; use radar manual na edição.`);
+    return null;
+  }
+  const windows = fc?.digest?.radarWeekly ?? [];
+  if (!windows.length) return null;
+  return { note: RADAR_NOTE_DEFAULT, windows };
 }
 
 // ---------- Validação editorial ----------

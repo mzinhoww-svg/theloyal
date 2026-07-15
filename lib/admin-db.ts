@@ -43,6 +43,30 @@ export async function rest<T = Record<string, unknown>>(
   }
 }
 
+// Fase C0: leitura COMPLETA por paginação (sem limite silencioso de 2.000).
+// Ordenação determinística por id para paginação estável. Best-effort: rest()
+// engole erros, então uma página que falha parece "fim do dataset" — a
+// completude aqui é indicativa (o CLI forecast.mjs tem detecção estrita).
+export async function restPaged<T = Record<string, unknown>>(
+  table: string,
+  { select = "*", order = "id.asc", pageSize = 1000, maxPages = 200 }: { select?: string; order?: string; pageSize?: number; maxPages?: number } = {},
+): Promise<{ rows: T[]; totalRows: number; datasetComplete: boolean; pagesRead: number }> {
+  const rows: T[] = [];
+  let pagesRead = 0;
+  let datasetComplete = false;
+  for (let page = 0; page < maxPages; page++) {
+    const offset = page * pageSize;
+    const batch = await rest<T>(`${table}?select=${select}&order=${order}&offset=${offset}&limit=${pageSize}`);
+    pagesRead++;
+    rows.push(...batch);
+    if (batch.length < pageSize) {
+      datasetComplete = true;
+      break;
+    }
+  }
+  return { rows, totalRows: rows.length, datasetComplete, pagesRead };
+}
+
 // Chamada de RPC (funcoes admin_*). Retorna o JSON cru; o chamador tipa.
 export async function rpc<T = unknown>(
   fn: string,

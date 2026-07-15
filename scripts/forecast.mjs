@@ -8,7 +8,9 @@
 // O motor é scripts/forecast-engine.mjs (espelho de lib/forecast.ts).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { buildForecast, radarItems, resolveConfig, upcomingWindows } from "./forecast-engine.mjs";
+import { radarItems, resolveConfig, upcomingWindows } from "./forecast-engine.mjs";
+import { containForecast, QUALITY_VERSION, THRESHOLDS } from "./radar-quality.mjs";
+import { loadCampaignsPaged, makeSupabasePageFetcher } from "./radar-dataset.mjs";
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co").replace(/\/+$/, "");
 const SUPABASE_KEY =
@@ -65,15 +67,10 @@ function flag(name, def) {
 const NOW = flag("now", new Date().toISOString().slice(0, 10));
 const OUT = flag("out", "content/forecast.json");
 
+// Fase C0: dataset COMPLETO por paginação determinística (sem limite de 2.000).
 async function fetchCampaigns() {
-  const url = `${SUPABASE_URL}/rest/v1/campaigns?select=*&order=observed_at.desc&limit=2000`;
-  const res = await fetch(url, {
-    headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${SUPABASE_KEY}` },
-  });
-  if (!res.ok) throw new Error(`Supabase ${res.status} ${res.statusText}`);
-  const rows = await res.json();
-  if (!Array.isArray(rows)) throw new Error("Resposta inesperada do Supabase");
-  return rows;
+  const fetchPage = makeSupabasePageFetcher({ baseUrl: SUPABASE_URL, apikey: SUPABASE_KEY, select: "*" });
+  return loadCampaignsPaged({ fetchPage });
 }
 
 function writeOffline(reason) {
@@ -99,22 +96,26 @@ function writeOffline(reason) {
 }
 
 async function main() {
-  let rows;
+  let dataset;
   try {
-    rows = await fetchCampaigns();
+    dataset = await fetchCampaigns();
   } catch (err) {
     writeOffline(err instanceof Error ? err.message : String(err));
     return;
   }
+  const { rows, totalRows, datasetComplete, pagesRead } = dataset;
 
   // Config e overrides do admin (mesma calibração do /admin/forecast).
   const { configPartial, overrides, source: configSource } = await fetchAdminConfig();
   const config = resolveConfig(configPartial);
 
-  const fc = buildForecast(rows, { now: NOW, config });
+  // Fase C0: contenção a montante (validação temporal, duplicidade provável,
+  // placeholders, gate editorial). datasetComplete=false bloqueia a distribuição.
+  const contained = containForecast(rows, { now: NOW, config, datasetComplete });
+  const fc = contained.result;
+  const metaOf = (f) => contained.byKey.get(`${f.scope}:${f.route}`) ?? {};
 
-  // Aplica overrides do operador: confiança sobrescrita e silenciamento (mute
-  // retira dos radares dos digests), como no admin.
+  // Overrides do operador (confiança/mute), como no admin.
   const keyOf = (f) => `${f.scope}:${f.route}`;
   const ovMap = new Map(overrides.map((o) => [`${o.scope}:${o.route}`, o]));
   for (const f of [...fc.routes, ...fc.clusters]) {
@@ -122,11 +123,14 @@ async function main() {
     if (o?.action === "confidence" && o.confidence) f.confidence = o.confidence;
   }
   const mutedKeys = new Set(overrides.filter((o) => o.action === "mute").map((o) => `${o.scope}:${o.route}`));
-  const notMuted = (f) => !mutedKeys.has(keyOf(f));
+  // Só entra no digest o que é editorialmente elegível (gate C0) E não silenciado.
+  const eligibleForDigest = (f) => !mutedKeys.has(keyOf(f)) && metaOf(f).editorialEligible === true;
 
-  // Fatias prontas para os digests (horizontes vêm da config).
-  const daily = upcomingWindows(fc, { now: NOW, horizonDays: config.horizonDaily, minConfidence: "media" }).filter(notMuted);
-  const weekly = upcomingWindows(fc, { now: NOW, horizonDays: config.horizonWeekly, minConfidence: "baixa" }).filter(notMuted);
+  const daily = upcomingWindows(fc, { now: NOW, horizonDays: config.horizonDaily, minConfidence: "media" }).filter(eligibleForDigest);
+  const weekly = upcomingWindows(fc, { now: NOW, horizonDays: config.horizonWeekly, minConfidence: "baixa" }).filter(eligibleForDigest);
+
+  // Anexa metadados de contenção a cada série (transitórios, sem migration).
+  const withMeta = (f) => ({ ...f, c0: metaOf(f) });
 
   const artifact = {
     generatedAt: new Date().toISOString(),
@@ -135,26 +139,35 @@ async function main() {
     configSource,
     config,
     overridesApplied: overrides.length,
-    ledgerRows: rows.length,
+    ledgerRows: totalRows,
+    // Fase C0 — frescor/completude e contenção
+    qualityVersion: QUALITY_VERSION,
+    thresholds: THRESHOLDS,
+    datasetComplete,
+    pagesRead,
+    containment: contained.counts,
+    distributionBlocked: !datasetComplete,
     routesTracked: fc.routesTracked,
     clustersTracked: fc.clustersTracked,
     withPrediction: fc.withPrediction,
-    clusters: fc.clusters,
-    routes: fc.routes,
+    clusters: fc.clusters.map(withMeta),
+    routes: fc.routes.map(withMeta),
     digest: {
       daily,
       weekly,
-      radarDaily: radarItems(daily),
-      radarWeekly: radarItems(weekly),
+      radarDaily: datasetComplete ? radarItems(daily) : [],
+      radarWeekly: datasetComplete ? radarItems(weekly) : [],
     },
   };
 
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(artifact, null, 2) + "\n");
+  const c = contained.counts;
   console.log(
-    `[forecast] OK — ${rows.length} linhas · ${fc.routesTracked} rotas · ${fc.clustersTracked} programas · ` +
-      `${fc.withPrediction} com previsão · daily ${daily.length} · weekly ${weekly.length} · ` +
-      `config=${configSource} · overrides=${overrides.length}. Artefato: ${OUT}`,
+    `[forecast] OK — ${totalRows} linhas (${pagesRead} páginas, completo=${datasetComplete}) · ` +
+      `${fc.routesTracked} rotas · ${fc.clustersTracked} programas · ${fc.withPrediction} com previsão · ` +
+      `bloqueadas: temporal=${c.temporalBlocked} placeholder=${c.placeholders} dup-provável=${c.probableDuplicates} · ` +
+      `daily ${daily.length} · weekly ${weekly.length} · config=${configSource} · overrides=${overrides.length}. Artefato: ${OUT}`,
   );
 }
 
