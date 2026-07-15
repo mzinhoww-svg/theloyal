@@ -124,26 +124,12 @@ export function consolidate({ editions, windowStart, windowEnd, number, prevWeek
   const fios = buildFios(editions);
   for (const fio of fios) fio.state = weeklyState(fio, { windowStart, windowEnd, priorKeys });
 
-  // movements — integral e determinístico. Fios não-confirmados (rumores) NÃO
-  // são movimento de ledger: ficam só no watch (§10 caso-limite).
-  const movements = { novas: [], seguem: [], venceram: [] };
-  for (const fio of fios) {
-    if (fio.verdictEnd === "nao-confirmado") continue;
-    const label = labelOf(fio, entityNames);
-    const item = { fio: fio.key, lineage: fio.latestLineage };
-    if (fio.state === "NOVO") movements.novas.push({ ...item, text: `${label} — abriu ${isoDate(fio.firstSeen) || "na semana"}.` });
-    else if (fio.state === "REABRIU") movements.novas.push({ ...item, text: `${label} — reapareceu após ausência.` });
-    else if (fio.state === "SEGUE") movements.seguem.push({ ...item, text: `${label} — segue vigente.` });
-    else if (fio.state === "ENCERROU") movements.venceram.push({ ...item, text: `${label} — encerrou (vigência ${isoDate(fio.latestDeal.vigencia)}).` });
-    else if (fio.state === "VIROU") movements.venceram.push({ ...item, text: `${label} — mudou de status para Evitaria na semana.` });
-  }
-
-  // highlights (candidatos) — ordenados por relevância de mudança.
+  // highlights (candidatos) — SÓ Fios que mudaram de fato (transição de veredito
+  // ou salto de score). "Ter âncora" não qualifica: senão todo Fio vira destaque.
   const highlightScore = (fio) => {
     let s = 0;
-    if (fio.verdictStart !== fio.verdictEnd) s += 100; // transição de veredito pesa mais
+    if (fio.verdictStart !== fio.verdictEnd) s += 100; // transição pesa mais
     s += Math.abs(fio.tlScoreJump);
-    if (fio.anchorValue != null) s += 1;
     return s;
   };
   const highlights = fios
@@ -153,6 +139,7 @@ export function consolidate({ editions, windowStart, windowEnd, number, prevWeek
     .sort((a, b) => b.s - a.s || a.f.key.localeCompare(b.f.key))
     .slice(0, 3)
     .map(({ f }) => ({
+      fio: f.key,
       title: `(rascunho) ${labelOf(f, entityNames)}`,
       note: f.verdictStart !== f.verdictEnd
         ? `(rascunho) veredito passou de ${VERDICTS[f.verdictStart]?.label ?? f.verdictStart} para ${VERDICTS[f.verdictEnd]?.label ?? f.verdictEnd} na semana. Escrever o porquê.`
@@ -162,12 +149,15 @@ export function consolidate({ editions, windowStart, windowEnd, number, prevWeek
       ...(f.verdictStart !== f.verdictEnd ? { transition: { from: f.verdictStart, to: f.verdictEnd } } : {}),
       lineage: f.latestLineage,
     }));
+  const highlightFios = new Set(highlights.map((h) => h.fio));
 
   // ranking — só Fios elegíveis: vigência não vencida + conta.result numérico +
-  // veredito confirmado. Ordena por TL Score desc (chave auditável enquanto o
+  // veredito confirmado. Precedência: Fios já em highlights saem do ranking
+  // (um Fio, um bloco). Ordena por TL Score desc (chave auditável enquanto o
   // score é digitado), desempate por valor-âncora e por chave.
   const eligible = fios.filter((f) =>
-    f.verdictEnd !== "nao-confirmado"
+    !highlightFios.has(f.key)
+    && f.verdictEnd !== "nao-confirmado"
     && f.latestDeal.vigencia && !isExpired(f.latestDeal.vigencia, `${windowEnd}T23:59:59`)
     && f.anchorValue != null
     && typeof f.tlScore === "number");
@@ -182,6 +172,23 @@ export function consolidate({ editions, windowStart, windowEnd, number, prevWeek
       score: f.tlScore,
       lineage: f.latestLineage,
     }));
+  const rankingFios = new Set(ranking.map((r) => r.fio));
+
+  // movements — integral, determinístico. Fios não-confirmados (rumores) ficam
+  // só no watch (§10). Precedência: Fios já em highlights/ranking saem de
+  // movements (um Fio, um bloco — §4.2). Legado por string não é afetado.
+  const movements = { novas: [], seguem: [], venceram: [] };
+  for (const fio of fios) {
+    if (fio.verdictEnd === "nao-confirmado") continue;
+    if (highlightFios.has(fio.key) || rankingFios.has(fio.key)) continue;
+    const label = labelOf(fio, entityNames);
+    const item = { fio: fio.key, lineage: fio.latestLineage };
+    if (fio.state === "NOVO") movements.novas.push({ ...item, text: `${label} — abriu ${isoDate(fio.firstSeen) || "na semana"}.` });
+    else if (fio.state === "REABRIU") movements.novas.push({ ...item, text: `${label} — reapareceu após ausência.` });
+    else if (fio.state === "SEGUE") movements.seguem.push({ ...item, text: `${label} — segue vigente.` });
+    else if (fio.state === "ENCERROU") movements.venceram.push({ ...item, text: `${label} — encerrou (vigência ${isoDate(fio.latestDeal.vigencia)}).` });
+    else if (fio.state === "VIROU") movements.venceram.push({ ...item, text: `${label} — mudou de status para Evitaria na semana.` });
+  }
 
   // watch — (a) radar do forecast (confiança >= baixa); (b) rumores em aberto
   // (nao-confirmado); (c) vigências que caem na próxima semana.

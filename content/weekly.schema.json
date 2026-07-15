@@ -64,6 +64,7 @@
         "additionalProperties": false,
         "required": ["title", "note"],
         "properties": {
+          "fio": { "type": "string", "description": "Chave do Fio — usada na dedup de saída (um Fio, um bloco)." },
           "title": { "type": "string" },
           "note": { "type": "string" },
           "verdict": { "type": "string", "enum": ["vale-agir", "vale-olhar", "casos-especificos", "esperaria", "evitaria", "nao-confirmado"] },

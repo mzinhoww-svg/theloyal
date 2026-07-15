@@ -15,14 +15,12 @@ function weekly(over = {}) {
     dateStart: "2026-07-06", dateEnd: "2026-07-12", publishTime: "9H00", readingMinutes: 6,
     signal: "A semana consolidou o aperto de regra nas transferências para aéreo.",
     movements: {
-      novas: [{ text: "Esfera → Latam Pass abriu.", fio: "esfera->latam-pass", lineage: { edition: 28, deal: 0 } }],
+      novas: [{ text: "Amex → LifeMiles abriu.", fio: "amex->lifemiles", lineage: { edition: 28, deal: 1 } }],
       seguem: ["Bônus para Latam Pass segue ativo em mais de uma origem."],
-      venceram: [{ text: "Livelo → Smiles encerrou.", fio: "livelo->smiles", lineage: { edition: 27, deal: 0 } }],
+      venceram: [],
     },
     highlights: [
-      { title: "Esfera → Latam Pass", note: "A melhor conta da semana para quem é do clube.",
-        verdict: "vale-agir", score: 88, lineage: { edition: 28, deal: 0 } },
-      { title: "Livelo → Smiles perdeu força", note: "Virou caro sem o clube.",
+      { fio: "livelo->smiles", title: "Livelo → Smiles perdeu força", note: "Virou caro sem o clube.",
         verdict: "evitaria", score: 30, transition: { from: "vale-olhar", to: "evitaria" }, lineage: { edition: 27, deal: 0 } },
     ],
     ranking: [
@@ -72,10 +70,55 @@ test("movements aceitam string (retrocompat) e objeto na mesma edição", () => 
   const wk = weekly();
   const txt = renderWeeklyPlain(wk);
   assert.match(txt, /Bônus para Latam Pass segue ativo/); // string
-  assert.match(txt, /Esfera → Latam Pass abriu/); // objeto
+  assert.match(txt, /Amex → LifeMiles abriu/); // objeto
 });
 
 test("email: sem emoji e disclaimer íntegro", () => {
   const html = renderWeeklyEmail(weekly());
   assert.match(html, /Confira sempre as regras no site oficial/);
+});
+
+// --- Fase 3: dedup de saída + gates de honestidade ---
+
+test("gate: mesmo Fio em ranking e movements → erro", () => {
+  const wk = weekly({
+    ranking: [{ rank: 1, fio: "x->y", verdict: "vale-agir", score: 88 }],
+    movements: { novas: [{ text: "x abriu", fio: "x->y", lineage: { edition: 1, deal: 0 } }], seguem: [], venceram: [] },
+    highlights: [],
+  });
+  const { errors } = validateWeekly(wk);
+  assert.ok(errors.some((e) => /aparece em dois blocos/.test(e)), errors.join("; "));
+});
+
+test("gate: rumor (nao-confirmado) no ranking → erro", () => {
+  const wk = weekly({ ranking: [{ rank: 1, fio: "z", verdict: "nao-confirmado" }], movements: { novas: [], seguem: [], venceram: [] }, highlights: [] });
+  const { errors } = validateWeekly(wk);
+  assert.ok(errors.some((e) => /não pode ranquear/.test(e)), errors.join("; "));
+});
+
+test("gate: placeholder (rascunho) em final → erro", () => {
+  const wk = weekly({ signal: "(rascunho) tese da semana. Escrever." });
+  const { errors } = validateWeekly(wk);
+  assert.ok(errors.some((e) => /rascunho/.test(e)), errors.join("; "));
+});
+
+test("consolidate: precedência aplicada — nenhum Fio em dois blocos", async () => {
+  const { consolidate } = await import("../scripts/weekly-consolidate.mjs");
+  const reg = { entities: [{ key: "livelo", name: "Livelo" }, { key: "smiles", name: "Smiles" }] };
+  const deal = (o) => ({ category: "Transferência · Livelo → Smiles", title: "t", context: "c",
+    conta: { rows: [["a", "b"]], result: ["CPM", "R$ 12,00"] }, verdict: "vale-agir", tlScore: 88,
+    vigencia: "2026-08-31T00:00:00-03:00", source: "of", sourceUrl: "https://www.smiles.com.br",
+    entityKey: "smiles", routeKey: "livelo->smiles", firstSeen: "2026-06-30", ...o });
+  const eds = [
+    { number: 1, date: "2026-07-07", deals: [deal({ verdict: "vale-olhar", tlScore: 76 })], sources: [] },
+    { number: 2, date: "2026-07-09", deals: [deal({ verdict: "evitaria", tlScore: 30 })], sources: [] },
+  ];
+  const d = consolidate({ editions: eds, windowStart: "2026-07-06", windowEnd: "2026-07-12", number: 1, entityReg: reg });
+  const seen = new Map();
+  const claim = (fio, b) => { if (fio) { assert.ok(!seen.has(fio) || seen.get(fio) === b, `${fio} em dois blocos`); seen.set(fio, b); } };
+  d.highlights.forEach((h) => claim(h.fio, "h"));
+  d.ranking.forEach((r) => claim(r.fio, "r"));
+  ["novas", "seguem", "venceram"].forEach((k) => d.movements[k].forEach((it) => claim(it.fio, "m")));
+  // transição vale-olhar→evitaria ⇒ é highlight; não pode estar em movements/ranking
+  assert.equal(seen.get("livelo->smiles"), "h");
 });

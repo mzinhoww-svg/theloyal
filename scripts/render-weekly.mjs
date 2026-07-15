@@ -86,8 +86,33 @@ export function validateWeekly(wk) {
     if (typeof r.rank !== "number") errors.push(`Ranking ${i + 1}: sem rank numérico`);
     if (!r.fio) errors.push(`Ranking ${i + 1}: sem fio`);
     if (!(r.verdict in VERDICTS)) errors.push(`Ranking ${i + 1}: veredito "${r.verdict}" fora do vocabulário`);
+    // Honestidade: rumor não ranqueia (regra inviolável 9).
+    if (r.verdict === "nao-confirmado") errors.push(`Ranking ${i + 1} (${r.fio}): "nao-confirmado" não pode ranquear — rumor não ocupa o ranking`);
   });
   if ((wk.ranking ?? []).length) ok.push(`Ranking coerente (${wk.ranking.length} Fio(s))`);
+
+  // Dedup de saída — um Fio aparece em no máximo um bloco (§4.2). Itens de
+  // movement por string (legado) não têm fio e são ignorados nesta checagem.
+  const blockOf = new Map();
+  const claim = (fio, block) => {
+    if (!fio) return;
+    if (blockOf.has(fio) && blockOf.get(fio) !== block) {
+      errors.push(`Fio "${fio}" aparece em dois blocos (${blockOf.get(fio)} e ${block}) — um Fio, um bloco`);
+    } else {
+      blockOf.set(fio, block);
+    }
+  };
+  (wk.highlights ?? []).forEach((hl) => claim(hl.fio, "highlights"));
+  (wk.ranking ?? []).forEach((r) => claim(r.fio, "ranking"));
+  for (const k of ["novas", "seguem", "venceram"]) {
+    (wk.movements?.[k] ?? []).forEach((it) => { if (it && typeof it === "object") claim(it.fio, "movements"); });
+  }
+  if (!errors.some((e) => e.startsWith("Fio "))) ok.push("Dedup de saída: nenhum Fio em dois blocos");
+
+  // Curadoria obrigatória — um final não pode conter placeholder "(rascunho)".
+  if (collectStrings(wk).some((s) => /\(rascunho\)/i.test(s))) {
+    errors.push("Conteúdo com placeholder \"(rascunho)\" — finalize a curadoria antes de publicar");
+  }
 
   (wk.sources ?? []).forEach((s, i) => {
     if (!/^https?:\/\//.test(s.url ?? "")) errors.push(`Fonte ${i + 1}: URL inválida`);
