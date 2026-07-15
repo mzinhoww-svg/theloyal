@@ -20,6 +20,11 @@ export type EditionRow = {
   sources_count: number | null;
   deals_count: number | null;
   created_at: string | null;
+  scheduled_at: string | null;
+  published_at: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  curated: boolean | null;
 };
 
 export type EditionFull = EditionRow & {
@@ -28,7 +33,7 @@ export type EditionFull = EditionRow & {
 
 // Colunas leves para a lista (sem o `json`, que pode ser pesado).
 const LIST_COLS =
-  "id,product,number,date,title,status,gate_validate,gate_audit,quality_score,beehiiv_post_id,beehiiv_url,sources_count,deals_count,created_at";
+  "id,product,number,date,title,status,gate_validate,gate_audit,quality_score,beehiiv_post_id,beehiiv_url,sources_count,deals_count,created_at,scheduled_at,published_at,approved_by,approved_at,curated";
 
 export const getEditions = (limit = 200) =>
   rest<EditionRow>(

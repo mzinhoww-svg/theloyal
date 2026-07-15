@@ -6,6 +6,7 @@ import {
   gatesPass,
   type EditionRow,
 } from "@/lib/admin-digests";
+import { getDrafts } from "@/lib/admin-digest-ops";
 import {
   StatCard,
   PageHeader,
@@ -108,7 +109,7 @@ function EditionRowView({ e }: { e: EditionRow }) {
 }
 
 export default async function DigestsPage() {
-  const editions = await getEditions();
+  const [editions, drafts] = await Promise.all([getEditions(), getDrafts()]);
 
   const total = editions.length;
   const publicadas = editions.filter(isPublished).length;
@@ -121,7 +122,15 @@ export default async function DigestsPage() {
     <>
       <PageHeader
         title="Digests"
-        sub="Ciclo de vida de cada edição — coleta, gates de QA, qualidade e publicação no Beehiiv."
+        sub="Ciclo de vida de cada edição — curadoria, gates de QA, qualidade e publicação no Beehiiv."
+        actions={
+          <a
+            href="/admin/digests/new"
+            className="inline-flex min-h-[36px] items-center rounded border border-green-600 bg-green-600 px-3 py-1.5 text-sm font-semibold text-paper hover:bg-green-700"
+          >
+            Curar nova edição
+          </a>
+        }
       />
 
       <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
@@ -155,6 +164,56 @@ export default async function DigestsPage() {
       </div>
 
       <ProductSummary rows={editions} />
+
+      {drafts.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-2 font-display text-lg font-semibold">Rascunhos em curadoria</h2>
+          <Table>
+            <thead>
+              <tr>
+                <Th>Produto</Th>
+                <Th>Data</Th>
+                <Th>Assunto</Th>
+                <Th className="text-right">Deals</Th>
+                <Th>Status</Th>
+                <Th></Th>
+              </tr>
+            </thead>
+            <tbody>
+              {drafts.map((d) => (
+                <tr key={d.id}>
+                  <Td>
+                    <Pill tone={toneForProduct(d.product)}>{d.product}</Pill>
+                  </Td>
+                  <Td className="font-mono tabular-nums text-gray-500">{d.date}</Td>
+                  <Td className="max-w-[26rem]">
+                    <a
+                      href={`/admin/digests/drafts/${encodeURIComponent(d.id)}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {d.subject || d.id}
+                    </a>
+                  </Td>
+                  <Td className="text-right font-mono tabular-nums">
+                    {Array.isArray(d.deal_ids) ? d.deal_ids.length : 0}
+                  </Td>
+                  <Td>
+                    <Pill tone={toneForStatus(d.status)}>{d.status}</Pill>
+                  </Td>
+                  <Td>
+                    <a
+                      href={`/admin/digests/drafts/${encodeURIComponent(d.id)}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      abrir →
+                    </a>
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </section>
+      )}
 
       <section className="mb-8">
         <h2 className="mb-2 font-display text-lg font-semibold">Todas as edições</h2>
