@@ -7,6 +7,8 @@
 // histórico suficiente → "em-formacao". Nunca chuta uma data sem base. Ondas
 // quase simultâneas (mesma campanha em várias origens) são colapsadas.
 
+import { assessCampaignQuality } from "./campaign-quality.mjs";
+
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TRAILING_DATE = /(\d{4}-\d{2}-\d{2})$/;
 const DAY_MS = 86_400_000;
@@ -223,11 +225,15 @@ function sortForecasts(a, b) {
 export function buildForecast(rows, opts = {}) {
   const now = todayISO(opts.now);
   const cfg = resolveConfig(opts.config);
+
+  // Fase C0.2 — qualidade temporal + duplicidade antes da formação de ondas
+  // (espelho de lib/forecast.ts).
+  const quality = assessCampaignQuality(rows, { normalize: normProgram });
+
   const routeGroups = new Map();
   const destGroups = new Map();
 
-  for (const row of rows) {
-    if (normProgram(row.tipo) !== "transferencia") continue;
+  for (const row of quality.eligibleRows) {
     const d = windowDate(row);
     if (!d) continue;
     const origem = normProgram(row.origem);
@@ -266,7 +272,7 @@ export function buildForecast(rows, opts = {}) {
     routes.filter((r) => r.confidence !== "em-formacao").length +
     clusters.filter((c) => c.confidence !== "em-formacao").length;
 
-  return { generatedFor: now, routesTracked: routes.length, clustersTracked: clusters.length, withPrediction, routes, clusters };
+  return { generatedFor: now, routesTracked: routes.length, clustersTracked: clusters.length, withPrediction, routes, clusters, quality };
 }
 
 const MONTHS_PT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];

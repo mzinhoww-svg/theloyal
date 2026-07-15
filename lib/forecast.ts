@@ -16,6 +16,8 @@
 // ESPELHO: scripts/forecast-engine.mjs replica esta lógica para o pipeline de
 // render (Node ESM puro, sem build). Ao alterar o algoritmo aqui, replique lá.
 
+import { assessCampaignQuality, type CampaignQualityAssessment } from "./campaign-quality.ts";
+
 export type Confidence = "alta" | "media" | "baixa" | "em-formacao";
 export type Cadence = "mensal" | "irregular" | "esparsa" | null;
 export type Scope = "route" | "cluster";
@@ -67,6 +69,7 @@ export interface ForecastResult {
   withPrediction: number; // rotas+clusters com janela prevista
   routes: Forecast[];
   clusters: Forecast[];
+  quality: CampaignQualityAssessment; // Fase C0.2 — conjunto elegível + exclusões
 }
 
 // ---------------------------------------------------------------------------
@@ -351,11 +354,16 @@ export function buildForecast(
 ): ForecastResult {
   const now = todayISO(opts.now);
   const cfg = resolveConfig(opts.config);
+
+  // Fase C0.2 — qualidade temporal + duplicidade ANTES da formação de ondas.
+  // Só campanhas elegíveis (data plausível, não duplicata crítica, não
+  // placeholder/permanente) entram na série. Mesmo conjunto usado pelo Predict.
+  const quality = assessCampaignQuality(rows, { normalize: normProgram });
+
   const routeGroups = new Map<string, { origem: string; destino: string; dates: Set<string>; percents: number[] }>();
   const destGroups = new Map<string, { destino: string; dates: Set<string>; percents: number[] }>();
 
-  for (const row of rows) {
-    if (normProgram(row.tipo) !== "transferencia") continue;
+  for (const row of quality.eligibleRows) {
     const d = windowDate(row);
     if (!d) continue;
     const origem = normProgram(row.origem);
@@ -394,7 +402,7 @@ export function buildForecast(
     routes.filter((r) => r.confidence !== "em-formacao").length +
     clusters.filter((c) => c.confidence !== "em-formacao").length;
 
-  return { generatedFor: now, routesTracked: routes.length, clustersTracked: clusters.length, withPrediction, routes, clusters };
+  return { generatedFor: now, routesTracked: routes.length, clustersTracked: clusters.length, withPrediction, routes, clusters, quality };
 }
 
 // ---------------------------------------------------------------------------
