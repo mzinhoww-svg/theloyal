@@ -8,12 +8,21 @@ import {
   Th,
   Td,
   EmptyRow,
+  EmptyState,
   type Tone,
 } from "@/components/admin/ui";
+import {
+  Disclosure,
+  SegmentBar,
+  HorizonHeatmap,
+  OpportunityCard,
+  ProbBar,
+  type Segment,
+} from "@/components/admin/dashboard";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
 import { snapshotAllAction } from "./actions";
-import { MODEL_VERSION } from "@/lib/predict-engine";
+import { MODEL_VERSION, HORIZONS } from "@/lib/predict-engine";
 import { QualityPanel } from "@/components/admin/QualityPanel";
 
 function confTone(c: string): Tone {
@@ -22,6 +31,7 @@ function confTone(c: string): Tone {
 const pct = (n: number | null | undefined) => (n == null ? "—" : `${Math.round(n * 100)}%`);
 const bonusLabel = (p: Prediction) =>
   p.bonusCandidates[0] ? `${p.bonusCandidates[0].value}% (${pct(p.bonusCandidates[0].probability)})` : "—";
+const seriesLabel = (p: Prediction) => (p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`);
 
 // dd/mm/aa a partir de ISO (sem new Date, determinístico).
 const shortDate = (iso: string) => {
@@ -59,7 +69,7 @@ function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: bo
   return (
     <tr className={blocked ? "bg-paper/40" : undefined}>
       <Td label="Série" className="whitespace-nowrap font-medium">
-        {p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`}
+        {seriesLabel(p)}
       </Td>
       <Td label="Campanhas" className="text-right font-mono tabular-nums">{p.recordsTotal}</Td>
       <Td label="Dias desde a última" className="text-right font-mono tabular-nums text-gray-500">
@@ -98,32 +108,13 @@ function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: bo
   );
 }
 
-function ProbBar({ label, v, tone }: { label: string; v: number; tone: Tone }) {
-  const bg: Record<Tone, string> = {
-    green: "bg-green-600",
-    blue: "bg-blue-600",
-    yellow: "bg-yellow-500",
-    red: "bg-red-600",
-    gray: "bg-gray-400",
-  };
-  return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="w-10 flex-none font-mono tabular-nums text-gray-500">{label}</span>
-      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-paper-dark">
-        <div className={`h-full rounded-full ${bg[tone]}`} style={{ width: `${Math.round(v * 100)}%` }} />
-      </div>
-      <span className="w-10 flex-none text-right font-mono tabular-nums">{pct(v)}</span>
-    </div>
-  );
-}
-
 function DetailCard({ p }: { p: Prediction }) {
   const t = confTone(p.confidence);
   return (
     <div className="rounded-lg border border-line bg-surface p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-display text-base font-semibold">
-          {p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`}
+          {seriesLabel(p)}
           <span className="ml-2 align-middle">
             <Pill tone={t}>{p.confidence}</Pill>
           </span>
@@ -194,12 +185,65 @@ function DetailCard({ p }: { p: Prediction }) {
 
 const isReady = (p: Prediction) => p.readiness === "ready" || p.readiness === "ready_with_warnings";
 
+// Distribuição de confiança de uma lista de séries → segmentos da barra.
+function confSegments(list: Prediction[]): Segment[] {
+  const count = (f: (p: Prediction) => boolean) => list.filter(f).length;
+  return [
+    { label: "alta", value: count((p) => !p.blockReason && p.confidence === "alta"), tone: "green" },
+    { label: "média", value: count((p) => !p.blockReason && p.confidence === "media"), tone: "blue" },
+    { label: "baixa", value: count((p) => !p.blockReason && p.confidence === "baixa"), tone: "yellow" },
+    { label: "bloqueada", value: count((p) => p.blockReason != null), tone: "gray" },
+  ];
+}
+
+function SeriesTable({ rows, empty }: { rows: Prediction[]; empty: string }) {
+  return (
+    <Table>
+      <thead>
+        <tr>
+          <Th>Série</Th>
+          <Th className="text-right">Campanhas</Th>
+          <Th className="text-right">Dias desde a última</Th>
+          <Th className="text-right">Cadência (dias)</Th>
+          <Th>Ondas (datas)</Th>
+          <Th className="text-right">Prob. 30d</Th>
+          <Th className="text-right">Prob. 90d</Th>
+          <Th>Bônus provável</Th>
+          <Th>Confiança</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.length ? (
+          rows.map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
+        ) : (
+          <EmptyRow cols={9} label={empty} />
+        )}
+      </tbody>
+    </Table>
+  );
+}
+
 export default async function PredictPage() {
   const { result, ledgerRows, asOf, datasetComplete } = await loadPredict();
   const series = [...result.clusters, ...result.routes];
   const ready = series.filter(isReady).length;
   const blocked = series.filter((p) => p.blockReason != null).length;
   const topReadyCluster = result.clusters.find(isReady) ?? result.clusters[0];
+
+  // Dashboard: séries prontas com probabilidade, ranqueadas pelo curto prazo.
+  const ranked = series
+    .filter((p) => isReady(p) && p.probabilities)
+    .sort((a, b) => (b.probabilities?.p30 ?? 0) - (a.probabilities?.p30 ?? 0));
+  const opportunities = ranked.slice(0, 6);
+  const heatRows = ranked.slice(0, 10).map((p) => {
+    const pr = p.probabilities;
+    return {
+      label: seriesLabel(p),
+      values: pr
+        ? [pr.p7, pr.p15, pr.p30, pr.p60, pr.p90, pr.p180]
+        : HORIZONS.map((): number | null => null),
+    };
+  });
 
   return (
     <>
@@ -229,7 +273,7 @@ export default async function PredictPage() {
         <StatCard label="As of" value={<span className="text-lg">{asOf}</span>} sub={datasetComplete ? "carga completa" : "carga PARCIAL"} tone={datasetComplete ? undefined : "red"} />
       </section>
 
-      <div className="mb-4 mt-4">
+      <div className="mb-6 mt-4">
         <Legend
           items={[
             { tone: "green", label: "alta" },
@@ -240,7 +284,52 @@ export default async function PredictPage() {
         />
       </div>
 
-      <QualityPanel quality={result.quality} />
+      <section className="mb-8">
+        <h2 className="mb-1 font-display text-lg font-semibold">Oportunidades — maior chance em 30 dias</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Séries prontas ranqueadas pela probabilidade de nova campanha no curto prazo. Projeção
+          estatística da recorrência — nunca veredito nem garantia.
+        </p>
+        {opportunities.length ? (
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
+            {opportunities.map((p) => (
+              <OpportunityCard
+                key={p.seriesKey}
+                label={seriesLabel(p)}
+                confidence={p.confidence}
+                tone={confTone(p.confidence)}
+                p30={p.probabilities?.p30 ?? 0}
+                p90={p.probabilities?.p90 ?? 0}
+                bonus={p.bonusCandidates[0] ? bonusLabel(p) : null}
+                cadenceDays={p.medianIntervalAll}
+                daysSinceLast={p.daysSinceLast}
+                window={p.centralDate ? shortDate(p.centralDate) : null}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            label="nenhuma série pronta com probabilidade calculada"
+            hint="Séries entram aqui quando acumulam histórico suficiente (≥3 campanhas) e passam nos gates de qualidade."
+          />
+        )}
+      </section>
+
+      {heatRows.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-1 font-display text-lg font-semibold">Mapa de probabilidade por horizonte</h2>
+          <p className="mb-3 text-sm text-gray-500">
+            As {heatRows.length} séries de maior probabilidade em 30d, abertas por prazo (7 a 180
+            dias). Quanto mais escura a célula, maior a chance de nova campanha até aquele prazo.
+          </p>
+          <HorizonHeatmap horizons={[...HORIZONS]} rows={heatRows} />
+        </section>
+      )}
+
+      <section className="mb-8 grid gap-3 md:grid-cols-2">
+        <SegmentBar title="Confiança · programas" segments={confSegments(result.clusters)} />
+        <SegmentBar title="Confiança · rotas" segments={confSegments(result.routes)} />
+      </section>
 
       {topReadyCluster && (
         <section className="mb-8">
@@ -249,8 +338,20 @@ export default async function PredictPage() {
         </section>
       )}
 
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Programas (cluster → destino)</h2>
+      <Disclosure
+        title="Qualidade do ledger (C0.2)"
+        count={result.quality.excluded.length}
+        sub="campanhas excluídas antes da formação das séries"
+      >
+        <QualityPanel quality={result.quality} embedded />
+      </Disclosure>
+
+      <Disclosure
+        title="Programas (cluster → destino)"
+        count={result.clusters.length}
+        sub="todas as séries por programa"
+        open
+      >
         <p className="mb-3 text-sm text-gray-500">
           Cada linha é uma série de transferência bonificada para o programa. <strong>Campanhas</strong> = quantas
           já ocorreram no histórico; <strong>Dias desde a última</strong> = há quanto tempo foi a mais recente;{" "}
@@ -260,62 +361,27 @@ export default async function PredictPage() {
           elas — a prova da cadência. Séries com menos de 3 campanhas ficam bloqueadas — sem previsão até acumular
           histórico.
         </p>
-        <Table>
-          <thead>
-            <tr>
-              <Th>Série</Th>
-              <Th className="text-right">Campanhas</Th>
-              <Th className="text-right">Dias desde a última</Th>
-              <Th className="text-right">Cadência (dias)</Th>
-              <Th>Ondas (datas)</Th>
-              <Th className="text-right">Prob. 30d</Th>
-              <Th className="text-right">Prob. 90d</Th>
-              <Th>Bônus provável</Th>
-              <Th>Confiança</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.clusters.length ? (
-              result.clusters.map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
-            ) : (
-              <EmptyRow cols={9} label="sem séries de transferência" />
-            )}
-          </tbody>
-        </Table>
-      </section>
+        <SeriesTable rows={result.clusters} empty="sem séries de transferência" />
+      </Disclosure>
 
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Rotas (origem → destino)</h2>
+      <Disclosure
+        title="Rotas (origem → destino)"
+        count={result.routes.length}
+        sub="todas as séries por rota específica"
+      >
         <p className="mb-3 text-sm text-gray-500">
-          Mesma leitura das colunas, agora por rota específica (origem → destino). <strong>Cadência</strong> em
-          dias entre campanhas; <strong>Prob. 30d/90d</strong> = chance de nova janela no prazo. A coluna{" "}
-          <strong>Ondas (datas)</strong> lista as campanhas que compõem o histórico, com o intervalo em dias entre
-          elas — é a prova da cadência (ex.: duas ondas separadas por 943 dias). Rotas com menos de 3 campanhas
-          ficam bloqueadas.
+          Mesma leitura das colunas dos programas, agora por rota específica (origem → destino).
+          A coluna <strong>Ondas (datas)</strong> lista as campanhas que compõem o histórico, com o
+          intervalo em dias entre elas — é a prova da cadência (ex.: duas ondas separadas por 943
+          dias). Rotas com menos de 3 campanhas ficam bloqueadas.
         </p>
-        <Table>
-          <thead>
-            <tr>
-              <Th>Série</Th>
-              <Th className="text-right">Campanhas</Th>
-              <Th className="text-right">Dias desde a última</Th>
-              <Th className="text-right">Cadência (dias)</Th>
-              <Th>Ondas (datas)</Th>
-              <Th className="text-right">Prob. 30d</Th>
-              <Th className="text-right">Prob. 90d</Th>
-              <Th>Bônus provável</Th>
-              <Th>Confiança</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.routes.length ? (
-              result.routes.slice(0, 60).map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
-            ) : (
-              <EmptyRow cols={9} label="sem rotas" />
-            )}
-          </tbody>
-        </Table>
-      </section>
+        <SeriesTable rows={result.routes.slice(0, 60)} empty="sem rotas" />
+      </Disclosure>
+
+      <p className="mt-8 border-t border-line pt-4 text-xs text-gray-400">
+        Projeção estatística a partir da recorrência do histórico do ledger — nunca veredito nem
+        garantia. Séries sem base suficiente ficam bloqueadas; o motor nunca chuta uma data.
+      </p>
     </>
   );
 }

@@ -7,12 +7,22 @@ import { StatCard, Pill, Table, Th, Td, EmptyRow, type Tone } from "@/components
 const SEV_TONE: Record<Severity, Tone> = { ok: "green", warning: "yellow", critical: "red" };
 const DUP_TONE = (s: string): Tone => (s === "probable_duplicate" ? "red" : s === "possible_duplicate" ? "yellow" : "gray");
 
-export function QualityPanel({ quality }: { quality: CampaignQualityAssessment }) {
+// `embedded` omite o cabeçalho próprio — usado quando o painel vive dentro de
+// um <Disclosure> que já dá título e contexto à seção.
+export function QualityPanel({
+  quality,
+  embedded = false,
+}: {
+  quality: CampaignQualityAssessment;
+  embedded?: boolean;
+}) {
   const c = quality.counters;
   const excluded = quality.excluded;
   return (
-    <section className="mb-8">
-      <h2 className="mb-1 font-display text-lg font-semibold">Qualidade do ledger (C0.2)</h2>
+    <section className={embedded ? undefined : "mb-8"}>
+      {!embedded && (
+        <h2 className="mb-1 font-display text-lg font-semibold">Qualidade do ledger (C0.2)</h2>
+      )}
       <p className="mb-3 text-sm text-gray-500">
         Validação temporal + duplicidade provável aplicadas <strong>antes</strong> da formação das
         séries. Só campanhas elegíveis entram no Forecast e no Predict. Nenhum dado é alterado.

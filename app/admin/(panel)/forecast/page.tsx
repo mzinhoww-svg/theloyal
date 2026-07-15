@@ -8,10 +8,12 @@ import {
   Th,
   Td,
   EmptyRow,
+  EmptyState,
   Sparkline,
   fmtDate,
   type Tone,
 } from "@/components/admin/ui";
+import { Disclosure, NextWindowCard } from "@/components/admin/dashboard";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
 import { DistributionBar, WindowTimeline, Field } from "@/components/admin/forecast-charts";
@@ -37,6 +39,10 @@ const CONF_LABEL: Record<Confidence, string> = {
 };
 
 const INPUT = "rounded border border-line bg-surface px-2 py-1 text-sm text-ink";
+
+// Dias entre duas datas ISO (UTC, sem fuso).
+const daysBetweenISO = (a: string, b: string) =>
+  Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86_400_000);
 
 function ConfCell({ v }: { v: PredictView }) {
   return (
@@ -87,94 +93,90 @@ function QuickOverride({ v, action, label }: { v: PredictView; action: "pin" | "
   );
 }
 
-function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: PredictView[] }) {
+function PredictTable({ columnLabel, rows }: { columnLabel: string; rows: PredictView[] }) {
   return (
-    <section className="mb-8">
-      <h2 className="mb-1 font-display text-lg font-semibold">{title}</h2>
-      <p className="mb-3 text-sm text-gray-500">{sub}</p>
-      <Table>
-        <thead>
-          <tr>
-            <Th>{title.includes("programa") ? "Programa" : "Rota"}</Th>
-            <Th>Confiança</Th>
-            <Th>Editorial</Th>
-            <Th className="text-right">Ondas</Th>
-            <Th>Última</Th>
-            <Th className="text-right">Maior interv.</Th>
-            <Th>Janela prevista</Th>
-            <Th className="text-right">Cadência</Th>
-            <Th>Base / alertas</Th>
-            <Th>Ações</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length ? (
-            rows.map((v) => (
-              <tr key={v.key} className={v.muted ? "opacity-50" : undefined}>
-                <Td label={title.includes("programa") ? "Programa" : "Rota"} className="font-medium">
-                  <span className="inline-flex items-center gap-1.5">
-                    {v.pinned && <Pill tone="blue">fixado</Pill>}
-                    {v.muted && <Pill tone="gray">silenciado</Pill>}
-                    {v.route}
-                    {v.typicalPercent ? (
-                      <span className="font-mono text-xs text-gray-400" title="bônus típico observado (mediana)">
-                        bônus ~{v.typicalPercent}%
-                      </span>
-                    ) : null}
-                  </span>
-                </Td>
-                <Td label="Confiança">
-                  <ConfCell v={v} />
-                </Td>
-                <Td label="Editorial">
-                  <EligibilityCell v={v} />
-                </Td>
-                <Td label="Ondas" className="text-right font-mono tabular-nums">
-                  {v.samples}
-                  {v.intervals.length ? (
-                    <span className="text-gray-400"> · {v.intervals.length}i</span>
-                  ) : null}
-                </Td>
-                <Td label="Última" className="font-mono text-xs tabular-nums text-gray-500">{v.lastWindow ?? "—"}</Td>
-                <Td label="Maior interv." className="text-right font-mono tabular-nums">
-                  {v.maxIntervalDays != null ? (
-                    <span className={v.maxIntervalDays >= 540 ? "text-red-600" : v.maxIntervalDays >= 365 ? "text-yellow-500" : undefined}>
-                      {v.maxIntervalDays}d
+    <Table>
+      <thead>
+        <tr>
+          <Th>{columnLabel}</Th>
+          <Th>Confiança</Th>
+          <Th>Editorial</Th>
+          <Th className="text-right">Ondas</Th>
+          <Th>Última</Th>
+          <Th className="text-right">Maior interv.</Th>
+          <Th>Janela prevista</Th>
+          <Th className="text-right">Cadência</Th>
+          <Th>Base / alertas</Th>
+          <Th>Ações</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.length ? (
+          rows.map((v) => (
+            <tr key={v.key} className={v.muted ? "opacity-50" : undefined}>
+              <Td label={columnLabel} className="font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  {v.pinned && <Pill tone="blue">fixado</Pill>}
+                  {v.muted && <Pill tone="gray">silenciado</Pill>}
+                  {v.route}
+                  {v.typicalPercent ? (
+                    <span className="font-mono text-xs text-gray-400" title="bônus típico observado (mediana)">
+                      bônus ~{v.typicalPercent}%
                     </span>
-                  ) : (
-                    "—"
-                  )}
-                </Td>
-                <Td label="Janela prevista" className="font-mono tabular-nums">
-                  {v.windowStart ? formatWindow(v.windowStart, v.windowEnd) : "—"}
-                </Td>
-                <Td label="Cadência" className="w-24 text-right">
-                  {v.intervals.length >= 2 ? (
-                    <Sparkline data={v.intervals} tone={CONF_TONE[v.confidence]} height={22} />
-                  ) : (
-                    <span className="text-xs text-gray-400">—</span>
-                  )}
-                </Td>
-                <Td label="Base / alertas" className="text-xs text-gray-500">
-                  {v.basis}
-                  {v.warnings.length > 0 && (
-                    <span className="mt-0.5 block text-red-600">{v.warnings.join(" · ")}</span>
-                  )}
-                </Td>
-                <Td className="tl-cell-action">
-                  <div className="flex items-center gap-1">
-                    <QuickOverride v={v} action="pin" label={v.pinned ? "—" : "fixar"} />
-                    <QuickOverride v={v} action="mute" label={v.muted ? "—" : "silenciar"} />
-                  </div>
-                </Td>
-              </tr>
-            ))
-          ) : (
-            <EmptyRow cols={10} label="sem séries" />
-          )}
-        </tbody>
-      </Table>
-    </section>
+                  ) : null}
+                </span>
+              </Td>
+              <Td label="Confiança">
+                <ConfCell v={v} />
+              </Td>
+              <Td label="Editorial">
+                <EligibilityCell v={v} />
+              </Td>
+              <Td label="Ondas" className="text-right font-mono tabular-nums">
+                {v.samples}
+                {v.intervals.length ? (
+                  <span className="text-gray-400"> · {v.intervals.length}i</span>
+                ) : null}
+              </Td>
+              <Td label="Última" className="font-mono text-xs tabular-nums text-gray-500">{v.lastWindow ?? "—"}</Td>
+              <Td label="Maior interv." className="text-right font-mono tabular-nums">
+                {v.maxIntervalDays != null ? (
+                  <span className={v.maxIntervalDays >= 540 ? "text-red-600" : v.maxIntervalDays >= 365 ? "text-yellow-500" : undefined}>
+                    {v.maxIntervalDays}d
+                  </span>
+                ) : (
+                  "—"
+                )}
+              </Td>
+              <Td label="Janela prevista" className="font-mono tabular-nums">
+                {v.windowStart ? formatWindow(v.windowStart, v.windowEnd) : "—"}
+              </Td>
+              <Td label="Cadência" className="w-24 text-right">
+                {v.intervals.length >= 2 ? (
+                  <Sparkline data={v.intervals} tone={CONF_TONE[v.confidence]} height={22} />
+                ) : (
+                  <span className="text-xs text-gray-400">—</span>
+                )}
+              </Td>
+              <Td label="Base / alertas" className="text-xs text-gray-500">
+                {v.basis}
+                {v.warnings.length > 0 && (
+                  <span className="mt-0.5 block text-red-600">{v.warnings.join(" · ")}</span>
+                )}
+              </Td>
+              <Td className="tl-cell-action">
+                <div className="flex items-center gap-1">
+                  <QuickOverride v={v} action="pin" label={v.pinned ? "—" : "fixar"} />
+                  <QuickOverride v={v} action="mute" label={v.muted ? "—" : "silenciar"} />
+                </div>
+              </Td>
+            </tr>
+          ))
+        ) : (
+          <EmptyRow cols={10} label="sem séries" />
+        )}
+      </tbody>
+    </Table>
   );
 }
 
@@ -182,6 +184,19 @@ export default async function PredictPage() {
   const data = await loadPredict();
   const { config, configRow, overrides, result } = data;
   const eligibleCount = [...data.routes, ...data.clusters].filter((v) => v.editorialEligible).length;
+
+  // Próximas janelas: rotas e programas não silenciados cuja janela toca o
+  // horizonte semanal, ordenados por abertura (fixados primeiro).
+  const upcoming = [...data.clusters, ...data.routes]
+    .filter((v) => !v.muted && v.windowStart && v.windowEnd)
+    .map((v) => ({
+      v,
+      open: daysBetweenISO(data.generatedFor, v.windowStart as string),
+      close: daysBetweenISO(data.generatedFor, v.windowEnd as string),
+    }))
+    .filter((w) => w.open <= config.horizonWeekly && w.close >= 0)
+    .sort((a, b) => (a.v.pinned !== b.v.pinned ? (a.v.pinned ? -1 : 1) : a.open - b.open))
+    .slice(0, 6);
 
   // Timeline: janelas dos programas dentro do horizonte semanal, não silenciadas.
   const timeline = data.clusters
@@ -242,12 +257,40 @@ export default async function PredictPage() {
         <StatCard label="Gerado para" value={<span className="text-lg">{data.generatedFor}</span>} sub="data de referência (recalculado ao vivo)" />
       </section>
 
+      <section className="mb-8">
+        <h2 className="mb-1 font-display text-lg font-semibold">Próximas janelas</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          O que abre (ou já está aberto) dentro do horizonte semanal ({config.horizonWeekly}d),
+          ordenado pela abertura. Fixados vêm primeiro; silenciados ficam de fora.
+        </p>
+        {upcoming.length ? (
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
+            {upcoming.map(({ v, open, close }) => (
+              <NextWindowCard
+                key={v.key}
+                label={v.route}
+                confidenceLabel={CONF_LABEL[v.confidence]}
+                tone={CONF_TONE[v.confidence]}
+                daysToOpen={open}
+                daysToClose={close}
+                window={formatWindow(v.windowStart, v.windowEnd)}
+                typicalPercent={v.typicalPercent}
+                basis={v.basis}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            label="nenhuma janela prevista dentro do horizonte"
+            hint="Janelas aparecem aqui quando uma série com previsão entra no horizonte semanal configurado."
+          />
+        )}
+      </section>
+
       <section className="mb-8 grid gap-3 md:grid-cols-2">
         <DistributionBar title="Confiança · por rota" dist={data.distributionRoutes} />
         <DistributionBar title="Confiança · por programa" dist={data.distributionClusters} />
       </section>
-
-      <QualityPanel quality={data.result.quality} />
 
       <section className="mb-8">
         <h2 className="mb-1 font-display text-lg font-semibold">Timeline de janelas previstas</h2>
@@ -257,15 +300,39 @@ export default async function PredictPage() {
         <WindowTimeline from={data.generatedFor} horizon={config.horizonWeekly} items={timeline} />
       </section>
 
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Parâmetros do motor</h2>
+      <Disclosure
+        title="Previsão por programa"
+        count={data.clusters.length}
+        sub="cluster do destino — consolida campanhas program-wide de várias origens"
+        open
+      >
+        <PredictTable columnLabel="Programa" rows={data.clusters} />
+      </Disclosure>
+
+      <Disclosure
+        title="Previsão por rota"
+        count={data.routes.length}
+        sub="origem → destino · cadência = série de intervalos entre janelas"
+      >
+        <PredictTable columnLabel="Rota" rows={data.routes} />
+      </Disclosure>
+
+      <Disclosure
+        title="Qualidade do ledger (C0.2)"
+        count={result.quality.excluded.length}
+        sub="campanhas excluídas antes da formação das séries"
+      >
+        <QualityPanel quality={result.quality} embedded />
+      </Disclosure>
+
+      <Disclosure title="Parâmetros do motor" sub="recorrência → confiança e janela (admin, daily e weekly)">
         <p className="mb-3 text-sm text-gray-500">
           Ajusta como a recorrência vira confiança e janela. Vale para o admin, o daily e o weekly.
           {configRow?.updated_at && (
             <span className="text-gray-400"> · última alteração {fmtDate(configRow.updated_at)} por {configRow.updated_by ?? "—"}</span>
           )}
         </p>
-        <ActionForm action={saveConfigAction} className="rounded-lg border border-line bg-surface p-4">
+        <ActionForm action={saveConfigAction} className="rounded-lg border border-line bg-paper p-4">
           <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
             {cfgField("wave_epsilon_days", "Janela de onda (dias)", "Janelas ≤ N dias contam como a mesma campanha.", config.waveEpsilonDays)}
             {cfgField("min_samples", "Mínimo de janelas", "Abaixo disso, fica em formação (sem previsão).", config.minSamples)}
@@ -282,14 +349,14 @@ export default async function PredictPage() {
             </SubmitButton>
           </div>
         </ActionForm>
-      </section>
+      </Disclosure>
 
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Overrides</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Fixar (destaca), silenciar (retira dos digests) ou sobrescrever a confiança de uma série.
-        </p>
-        <ActionForm action={setOverrideAction} className="mb-4 rounded-lg border border-line bg-surface p-4">
+      <Disclosure
+        title="Overrides"
+        count={overrides.length}
+        sub="fixar, silenciar ou sobrescrever a confiança de uma série"
+      >
+        <ActionForm action={setOverrideAction} className="mb-4 rounded-lg border border-line bg-paper p-4">
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Escopo">
               <select name="scope" className={INPUT} defaultValue="cluster">
@@ -371,19 +438,23 @@ export default async function PredictPage() {
             )}
           </tbody>
         </Table>
-      </section>
+      </Disclosure>
 
-      <section className="mb-8">
-        <div className="mb-1 flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">Histórico de snapshots</h2>
-          {snapTrend.length >= 2 && (
-            <div className="w-40">
-              <Sparkline data={snapTrend} tone="blue" height={26} />
+      <Disclosure
+        title="Histórico de snapshots"
+        count={data.snapshots.length}
+        sub="cada “Recalcular + snapshot” grava um ponto"
+      >
+        {snapTrend.length >= 2 && (
+          <div className="mb-3 max-w-xs">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+              Séries com previsão por snapshot
             </div>
-          )}
-        </div>
+            <Sparkline data={snapTrend} tone="blue" height={26} />
+          </div>
+        )}
         <p className="mb-3 text-sm text-gray-500">
-          Cada &ldquo;Recalcular + snapshot&rdquo; grava um ponto. Acompanhe como a base de previsão evolui com o backfill.
+          Acompanhe como a base de previsão evolui com o backfill.
         </p>
         <Table>
           <thead>
@@ -413,18 +484,7 @@ export default async function PredictPage() {
             )}
           </tbody>
         </Table>
-      </section>
-
-      <PredictTable
-        title="Previsão por programa"
-        sub="Cluster do destino — consolida campanhas program-wide de várias origens."
-        rows={data.clusters}
-      />
-      <PredictTable
-        title="Previsão por rota"
-        sub="Origem → destino. Cadência = série de intervalos entre janelas."
-        rows={data.routes}
-      />
+      </Disclosure>
 
       <p className="mt-8 border-t border-line pt-4 text-xs text-gray-400">
         Projeção por recorrência do histórico do ledger. Sem base suficiente → em formação; nunca chuta uma data.
