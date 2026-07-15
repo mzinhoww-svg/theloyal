@@ -21,6 +21,7 @@
     "beehiiv": "node scripts/beehiiv-publish.mjs",
     "collect": "node scripts/collect-skus.mjs",
     "pro:vpm": "node scripts/pro-vpm.mjs",
+    "accuracy": "node scripts/accuracy.mjs",
     "edition": "node scripts/render-system.mjs && node scripts/publish.mjs"
   },
   "dependencies": {

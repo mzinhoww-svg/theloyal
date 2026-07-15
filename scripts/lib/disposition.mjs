@@ -149,7 +149,10 @@ export function computeDisposition(item = {}, ctx = {}) {
   }
 
   // --- Sinal de sub-critério: conteúdo forte, fonte fraca (§3.6) ---
-  if (breakdownComplete(item.scoreBreakdown) && Number(item.scoreBreakdown.fontes) < 50 && Number(item.tlScore) >= 70) {
+  // Limiares ADAPTATIVOS (ruler-config); o piso de ação (faixa C acima) é fixo.
+  const weakMax = ctx.config?.signals?.weakSourceFontesMax ?? 50;
+  const strongMin = ctx.config?.signals?.strongScoreMin ?? 70;
+  if (breakdownComplete(item.scoreBreakdown) && Number(item.scoreBreakdown.fontes) < weakMax && Number(item.tlScore) >= strongMin) {
     reasons.push("sinal: conteúdo forte com sub-critério de fontes baixo (conteúdo forte, fonte fraca)");
   }
 

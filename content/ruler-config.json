@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "signals": {
+    "weakSourceFontesMax": 50,
+    "strongScoreMin": 70
+  },
+  "hardFloors": {
+    "actionRequiresSignature": true,
+    "valeAgirAutoPublish": false
+  },
+  "note": "Limiares numéricos ADAPTATIVOS da régua (Fase 3.3). A ESTRUTURA — faixas, assimetria, piso duro — é fixa em código. hardFloors são imutáveis por config (documentam a garantia; a régua ignora tentativas de afrouxá-los). Só os limiares de 'signals' são calibráveis, guiados pelo motor de acurácia."
+}

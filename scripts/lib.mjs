@@ -106,6 +106,16 @@ export function loadEntities(path = "content/entities/index.json") {
   }
 }
 
+// Config de limiares adaptativos da régua (content/ruler-config.json). Best-effort:
+// ausência ⇒ {} (o motor de disposição usa os defaults embutidos).
+export function loadRulerConfig(path = "content/ruler-config.json") {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
 export function pad(n) {
   return String(n).padStart(4, "0");
 }

@@ -4,7 +4,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import {
   DISCLAIMER, VERDICTS, TL_WEIGHTS, assertEditorialRules, editorialRuleMessage,
-  editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, loadEntities, verdictForScore,
+  editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, loadEntities, loadRulerConfig, verdictForScore,
 } from "./lib.mjs";
 import { computeDisposition } from "./lib/disposition.mjs";
 
@@ -106,8 +106,9 @@ export function validateEdition(ed, opts = {}) {
   // da régua como AVISOS — verdicto de ação sem breakdown (rebaixa p/
   // monitoramento) e ação de fonte fraca — e expõe as disposições ao publisher.
   const entities = opts.entities ?? loadEntities();
+  const config = opts.config ?? loadRulerConfig();
   const dispositions = deals.map((d, i) => {
-    const disposition = computeDisposition(d, { now: ed.date, entities });
+    const disposition = computeDisposition(d, { now: ed.date, entities, config });
     const tag = `Deal ${i + 1} (${d.title ?? "sem título"})`;
     if (disposition.faixa === "D" && disposition.reasons.some((r) => /sem scoreBreakdown/.test(r))) {
       warn(`${tag}: verdicto de ação sem scoreBreakdown completo — a régua rebaixa para monitoramento (faixa D)`);
