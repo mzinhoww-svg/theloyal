@@ -35,14 +35,12 @@ export default function Home() {
             <Reveal className="mt-8">
               <EdicaoMock />
             </Reveal>
-            <Reveal className="mt-6">
-              <Link
-                href="/edicao"
-                className="inline-flex min-h-11 items-center text-base font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
-              >
-                Ver edições reais no arquivo
-              </Link>
-            </Reveal>
+            <Link
+              href="/edicao"
+              className="mt-6 inline-flex min-h-11 items-center text-base font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+            >
+              Ver edições reais no arquivo
+            </Link>
           </div>
         </section>
         <Metodo />

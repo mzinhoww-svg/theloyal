@@ -38,7 +38,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setTimeout(() => {
       // Marca saída (transição) e só então remove — entrada/saída interrompíveis.
       setToasts((t) => t.map((x) => (x.id === id ? { ...x, leaving: true } : x)));
-      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 200);
+      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 160);
     }, 6000);
   }, []);
 

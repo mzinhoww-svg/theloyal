@@ -246,23 +246,19 @@ export function ComoAnalisamos() {
             </div>
           </Reveal>
         </div>
-        <Reveal>
-          <div className="mt-8 rounded bg-ink px-5 py-4 font-mono text-[13px] leading-7 text-paper sm:px-6 sm:text-sm md:mt-12">
-            <span className="text-gray-400">TL Score = </span>
-            25·valor + 15·regra + 15·vigência + 10·fricção + 10·aplicabilidade +
-            10·liquidez + 10·estoque + 5·fontes
-            <span className="block text-green-500">
-              sem vigência confirmada → Não confirmado, sempre
-            </span>
-          </div>
-        </Reveal>
-        <Reveal>
-          <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-surface py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">
-            Promoções podem mudar sem aviso. Confira sempre as regras no site
-            oficial antes de comprar, transferir ou resgatar. O The Loyal não faz
-            recomendação financeira individual: a decisão final é sempre sua.
-          </p>
-        </Reveal>
+        <div className="mt-8 rounded bg-ink px-5 py-4 font-mono text-[13px] leading-7 text-paper sm:px-6 sm:text-sm md:mt-12">
+          <span className="text-gray-400">TL Score = </span>
+          25·valor + 15·regra + 15·vigência + 10·fricção + 10·aplicabilidade +
+          10·liquidez + 10·estoque + 5·fontes
+          <span className="block text-green-500">
+            sem vigência confirmada → Não confirmado, sempre
+          </span>
+        </div>
+        <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-surface py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">
+          Promoções podem mudar sem aviso. Confira sempre as regras no site
+          oficial antes de comprar, transferir ou resgatar. O The Loyal não faz
+          recomendação financeira individual: a decisão final é sempre sua.
+        </p>
       </div>
     </section>
   );

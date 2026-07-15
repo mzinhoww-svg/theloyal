@@ -53,9 +53,9 @@
      Substitui o transition-colors dos pressionáveis (cobre cor E transform). */
   .tl-press {
     transition:
-      color 150ms var(--ease-out),
-      background-color 150ms var(--ease-out),
-      border-color 150ms var(--ease-out),
+      color var(--motion-press) var(--ease-out),
+      background-color var(--motion-press) var(--ease-out),
+      border-color var(--motion-press) var(--ease-out),
       transform var(--motion-press) var(--ease-out);
   }
   .tl-press:active {
@@ -108,6 +108,8 @@
 .tl-toast[data-leaving] {
   opacity: 0;
   transform: translateY(8px);
+  /* Saída um pouco mais rápida que a entrada (180ms): resposta mais ágil. */
+  transition-duration: var(--motion-press);
 }
 
 /* ===== Mascote Ponto: idle (PONTO-MASCOTE-GUIA.md secao 5) ===== */
