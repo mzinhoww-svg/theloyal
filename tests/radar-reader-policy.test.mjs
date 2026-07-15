@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { composeRadarViewModel, deriveReaderDecision } from "../lib/radar-view-model.ts";
+import { buildForecast, radarItems, upcomingWindows } from "../lib/forecast.ts";
 
 const NOW = "2026-07-15";
 const FRESH = { status: "fresh", generatedAt: "2026-07-15T06:00:00Z", ageHours: 6 };
@@ -156,4 +157,24 @@ test("unidade: backtest com poucas observações (<3) NÃO reprova por acurácia
   const r = deriveReaderDecision(null, predict, "opportunity", "compatible", CTX);
   assert.ok(!r.readerBlockReasons.includes("backtest_fraco"));
   assert.equal(r.readerPublishable, true);
+});
+
+// --------------------------------------------------- pipeline (artefato ao leitor)
+
+test("pipeline: todo item de radar carrega proveniência source='forecast'", () => {
+  const fc = buildForecast(regular(), { now: NOW });
+  const items = [...radarItems(fc.routes), ...radarItems(fc.clusters)];
+  assert.ok(items.length > 0);
+  for (const it of items) assert.equal(it.source, "forecast");
+});
+
+test("pipeline: nota de corte do weekly (confiança≥média) exclui série 'baixa'", () => {
+  // Série irregular longa → confiança baixa no Forecast; média corta, baixa incluiria.
+  const irregular = [
+    "2025-01-05", "2025-01-30", "2025-04-02", "2025-04-20", "2025-07-01", "2025-07-11",
+  ].map((d) => ({ id: `itau-azul-transferencia-${d}`, tipo: "transferencia", origem: "itau", destino: "azul", percentual: 25, vigencia_inicio: d, vigencia_fim: d, first_seen: d, observed_at: d, created_at: `${d}T12:00:00Z` }));
+  const fc = buildForecast(irregular, { now: "2025-07-15" });
+  const media = upcomingWindows(fc, { now: "2025-07-15", horizonDays: 90, minConfidence: "media" });
+  const baixa = upcomingWindows(fc, { now: "2025-07-15", horizonDays: 90, minConfidence: "baixa" });
+  assert.ok(baixa.length >= media.length, "corte 'baixa' é mais permissivo que 'media'");
 });

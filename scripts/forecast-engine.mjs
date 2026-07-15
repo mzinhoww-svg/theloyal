@@ -316,6 +316,8 @@ export function radarItems(forecasts) {
       confidence: f.confidence,
       window: formatWindow(f.windowStart, f.windowEnd),
       basis: f.basis,
+      // Proveniência canônica (espelho TS). Ver lib/forecast.ts radarItems.
+      source: "forecast",
       ...(f.typicalPercent ? { bonus: `~${f.typicalPercent}%` } : {}),
     }));
 }

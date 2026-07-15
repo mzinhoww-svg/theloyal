@@ -149,8 +149,11 @@ async function main() {
   const daily = datasetComplete
     ? upcomingWindows(fc, { now: NOW, horizonDays: config.horizonDaily, minConfidence: "media" }).filter(notMuted)
     : [];
+  // Nota de corte da política canônica (§7.4): o leitor só recebe janela com
+  // confiança ≥ média. Antes o weekly publicava "baixa" — overpromessa (premissa
+  // 6). Séries abaixo do corte não somem: viram "monitoramento" (degrade honesto).
   const weekly = datasetComplete
-    ? upcomingWindows(fc, { now: NOW, horizonDays: config.horizonWeekly, minConfidence: "baixa" }).filter(notMuted)
+    ? upcomingWindows(fc, { now: NOW, horizonDays: config.horizonWeekly, minConfidence: "media" }).filter(notMuted)
     : [];
 
   // Frescor: maior observed_at do ledger (sem novo schema) para o consumidor

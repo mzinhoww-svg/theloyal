@@ -67,21 +67,31 @@ para esse futuro; a função é testada pela unidade, não pela integração.
 
 ---
 
-### F1 — Proveniência e artefato ao leitor (sem migration)
+### F1 — Nota de corte no artefato + proveniência (sem migration) — **CONCLUÍDA**
 
-**Objetivo:** o que chega ao leitor passa a vir do **resultado canônico**, com
-proveniência honesta — fechando D4/D6. Ainda **admin-gated**/atrás do QA; publicação
-final é F3.
+**Objetivo:** parar de overprometer ao leitor (D6) e tornar a política operante na
+reconciliação. **Descoberta que reescopa F1:** o pipeline roda sobre **espelhos ESM
+hand-made** (`forecast-engine.mjs`, `campaign-quality.mjs`) — "roda sem build de TS" —
+e **não há espelho** de `predict-engine`/`radar-view-model`. Logo, levar o **resultado
+canônico (Predict)** ao artefato exige espelhar o hazard+reconciliação em `.mjs` **ou**
+migrar o pipeline para consumir `.ts`. Ambas são decisões estruturais — o próprio
+roadmap do repo coloca "Predict na Digest" em P5. Portanto **F1 entrega o corte e a
+proveniência sobre o caminho Forecast atual; o Predict→leitor vai para F3.**
 
-| Item | Problema | Comportamento esperado | Reusa | Arquivos prováveis | Risco | Aceite | Testes |
-|---|---|---|---|---|---|---|---|
-| **F1-01** | Config canônica dispersa | Um módulo com d_max (14/30/60), gates por finalidade, TTLs (24h/24h/7d), horizontes por superfície (Daily 7–30 / Weekly ≤90) — versionado | defaults de `forecast`/`predict` | `lib/radar-policy-config.ts` (novo) | baixo | um lugar só; reconciliação lê dele | paridade config→comportamento |
-| **F1-02** | Artefato ao leitor sai do Forecast cru | `scripts/forecast.mjs` monta `digest.radarDaily/Weekly` a partir do **resultado canônico** (Predict quando pronto; Forecast fallback rotulado), aplicando `readerPublishable` | `composeRadarViewModel` no pipeline | `scripts/forecast.mjs`, `lib/admin-radar.ts` | **médio** (muda saída) | só séries `readerSurface="prediction"` viram janela; demais viram "em observação"/omitidas | radar do artefato = série publicável |
-| **F1-03** | `confidence:"baixa"` chega ao leitor | Corte por confiança≥média no artefato (hoje `radarWeekly` emite "baixa") | `deriveReaderDecision` | `scripts/forecast.mjs` | baixo | nenhuma janela "baixa" no artefato | asserção no render |
-| **F1-04** | Proveniência invisível | `radarItem` carrega `engine` (predict/forecast) e, no fallback, rótulo **"cadência aproximada"** | reader decision | `content/forecast.schema.json`, render | baixo | fallback sempre rotulado | schema + render |
-| **F1-05** | Faixa/bônus como ponto | Leitor vê **faixa de datas** e **faixa de bônus**, nunca ponto/máximo; disclaimer presente | `window`, `bonusCandidates`, regra 10 | render (email/web/plain) | baixo | zero ponto/máximo; disclaimer presente | QA de marca (`tl-qa`) |
+| Item | Problema | Entregue | Arquivos | Risco |
+|---|---|---|---|---|
+| **F1-01** | Config canônica dispersa | Módulo versionado (d_max 14/30/60, gates, TTLs, horizontes, `minReaderConfidence`) lido pela reconciliação | `lib/radar-policy-config.ts` | baixo |
+| **F1-02** | Reconciliação ignora overrides (divergência admin×pipeline) | `composeRadarViewModel` **override-aware** (mute/pin/confidence) — uma fonte única; corrige o gap do `loadRadar` | `lib/radar-view-model.ts` | médio |
+| **F1-03** | `confidence:"baixa"` chega ao leitor | Corte por confiança≥média no **weekly** do pipeline (era "baixa" → overpromessa) | `scripts/forecast.mjs` | baixo |
+| **F1-04** | Proveniência invisível | `radarItem` carrega `source:"forecast"` (espelhado ts/mjs); schema atualizado | `lib/forecast.ts`, `scripts/forecast-engine.mjs`, `content/forecast.schema.json` | baixo |
 
-**Fora de escopo F1:** publicar de fato ao leitor sem aprovação; snapshot persistido.
+**Verificação F1:** typecheck + build verdes; suíte verde (parity ts↔mjs preservada);
+testes novos: `radar-overrides.test.mjs`, cortes/proveniência em `radar-reader-policy.test.mjs`.
+
+**Deferido conscientemente (não em F1):** montar o artefato ao leitor a partir do
+**resultado canônico (Predict)** e o rótulo de fallback "cadência aproximada" — exige a
+decisão espelho/TS (F3). A faixa de datas/bônus (F1-05 original) já é intrínseca ao
+render atual (janela é faixa; bônus é `~%`); a troca de fonte para Predict é o que falta.
 
 ---
 
@@ -107,6 +117,7 @@ Fecha D5 e a auditoria de acurácia real. Cada item exige ADR promovido e migrat
 
 | Item | Fecha | Estrutura | ADR |
 |---|---|---|---|
+| **F3-00** Predict→leitor no artefato | **D4** — o motor que mede passa a ser o que publica; exige espelho ESM de predict/reconciliação **ou** migração do pipeline para `.ts` | decisão de build do pipeline | ADR-001/008 |
 | **F3-01** Snapshot canônico + aprovação persistida com TTL | nota de corte com "aprovação vigente"; Daily/Weekly do mesmo snapshot | `prediction_snapshots`, `editorial_approval`, `usages` | ADR-006 |
 | **F3-02** Consolidação rastreável Weekly←Daily | **D5** — Weekly consolida a semana de Dailies por diff de snapshot | snapshots versionados + "o que mudou" (13 eventos) | ADR-006 |
 | **F3-03** `prediction_outcome` (previsto × realizado, Brier) | **D4 definitivo** — motor canônico auditado contra a realidade, não só backtest | entidade de outcome | ADR-006 |

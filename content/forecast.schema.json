@@ -41,7 +41,9 @@
         "confidence": { "type": "string", "enum": ["alta", "media", "baixa"] },
         "window": { "type": "string" },
         "basis": { "type": "string" },
-        "bonus": { "type": "string" }
+        "bonus": { "type": "string" },
+        "source": { "type": "string", "enum": ["forecast", "predict"], "description": "Proveniência canônica (POLITICA-CANONICA-RADAR.md §5.1): motor que originou o item. 'forecast' = recorrência; 'predict' = motor canônico (fase estrutural)." },
+        "engine": { "type": "string", "enum": ["forecast", "predict"], "description": "Alias de proveniência para consumidores do resultado canônico." }
       }
     },
     "forecast": {
