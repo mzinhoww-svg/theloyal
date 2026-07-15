@@ -124,35 +124,33 @@ export function StickyCTA() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // Aparece so depois que o form do hero deixa a viewport (ancora) e some
-    // quando o CTA final entra em cena, para nunca sobrepor o fechamento.
+    // Estado por geometria (rAF, passivo): robusto para scroll lento, rapido,
+    // salto ao topo e resize. Aparece quando o form do hero passa por cima e
+    // some do CTA final ate o fim da pagina, sem reaparecer sobre o rodape.
     const anchor = document.getElementById("hero-cta-anchor");
     const final = document.getElementById("cta-final");
-    let heroPassed = false;
-    let finalIn = false;
-    const update = () => setShow(heroPassed && !finalIn);
-
-    const observers: IntersectionObserver[] = [];
-    if (anchor) {
-      const io = new IntersectionObserver(([e]) => {
-        heroPassed = !e.isIntersecting && e.boundingClientRect.top < 0;
-        update();
-      });
-      io.observe(anchor);
-      observers.push(io);
-    }
-    if (final) {
-      const io = new IntersectionObserver(
-        ([e]) => {
-          finalIn = e.isIntersecting;
-          update();
-        },
-        { rootMargin: "0px 0px -20% 0px" },
-      );
-      io.observe(final);
-      observers.push(io);
-    }
-    return () => observers.forEach((o) => o.disconnect());
+    let raf = 0;
+    const compute = () => {
+      raf = 0;
+      const heroPassed = anchor
+        ? anchor.getBoundingClientRect().bottom < 0
+        : window.scrollY > 600;
+      const finalReached = final
+        ? final.getBoundingClientRect().top < window.innerHeight * 0.9
+        : false;
+      setShow(heroPassed && !finalReached);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(compute);
+    };
+    compute();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
 
   useEffect(() => {
