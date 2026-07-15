@@ -202,6 +202,9 @@ correta) e planejar a paridade de colunas / migração — **não** nesta etapa.
 Sugestão: agrupar M1–M3 e B1–B3 numa onda **P1-E (polish)**, docs-first, antes ou
 logo após sair de draft.
 
+> **Atualização:** M1–M3 e B1–B3 foram **aplicados** na onda P1-E — ver
+> `docs/IMPLEMENTACAO-P1E-POLISH-RADAR.md`. **A1 permanece** dívida pós-P1.
+
 ## 25. Checklist para sair de draft
 
 - [x] Sem bloqueadores.

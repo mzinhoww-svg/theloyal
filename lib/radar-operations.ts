@@ -8,6 +8,19 @@
 import type { RadarSeries, RadarViewModel, ProductStatus } from "./radar-view-model.ts";
 import { mainEngine, predictAvailable, forecastAvailable, duplicateState } from "./radar-filters.ts";
 
+// --------------------------------------------------------------------------- views
+// Abas da página do Radar (?view=). Fonte única, pura e testável.
+export type RadarView = "geral" | "oportunidades" | "revisoes" | "bloqueios" | "operacao";
+export const RADAR_VIEWS: RadarView[] = ["geral", "oportunidades", "revisoes", "bloqueios", "operacao"];
+
+// Normaliza o ?view= (M1): view inválida/desconhecida cai em "geral" e sinaliza
+// `invalid` para a UI mostrar um aviso discreto (sem quebrar links válidos).
+export function resolveRadarView(raw: string | null | undefined): { view: RadarView; invalid: boolean } {
+  const v = (raw ?? "").trim();
+  if (v === "" || v === "geral") return { view: "geral", invalid: false };
+  return RADAR_VIEWS.includes(v as RadarView) ? { view: v as RadarView, invalid: false } : { view: "geral", invalid: true };
+}
+
 // --------------------------------------------------------------------------- filas
 export type RadarQueueKey =
   | "opportunities"
@@ -124,7 +137,7 @@ export function buildOperationalAlerts(vm: RadarViewModel): RadarAlert[] {
       ? { id: "duplicates", title: "Duplicidades prováveis", severity: "warning", scope: "series", impact: "Intervalos falsos evitados; par em revisão.", affected: h.probableDuplicateCount, action: "Auditar duplicidade", diagnosticHref: "/admin/radar?duplicate=probable" }
       : null,
     h.placeholderCount > 0
-      ? { id: "placeholders", title: "Programas inválidos (placeholders)", severity: "warning", scope: "series", impact: "Não-programas excluídos das séries.", affected: h.placeholderCount, action: "Revisar extração", diagnosticHref: "/admin/radar?cause=qualidade_temporal" }
+      ? { id: "placeholders", title: "Programas inválidos (placeholders)", severity: "warning", scope: "series", impact: "Não-programas excluídos das séries.", affected: h.placeholderCount, action: "Revisar extração", diagnosticHref: "/admin/radar?cause=placeholder" }
       : null,
     noEngine > 0
       ? { id: "no_prediction", title: "Séries sem previsão utilizável", severity: "info", scope: "series", impact: "Nenhum motor produziu resultado utilizável.", affected: noEngine, action: "Monitorar", diagnosticHref: "/admin/radar?engine=none" }

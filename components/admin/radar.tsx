@@ -16,6 +16,8 @@ import {
 } from "@/lib/radar-view-model";
 import { deriveFilterFacets, CAUSE_LABEL, CLUSTER_ORIGIN } from "@/lib/radar-filters";
 import { PRODUCT_STATUS_TONE, freshnessTone } from "./radar-vocab";
+import { RADAR_H } from "@/lib/radar-headings";
+import { RADAR_EMPTY } from "@/lib/radar-empty";
 
 const STATUS_TONE = PRODUCT_STATUS_TONE;
 
@@ -31,8 +33,9 @@ export function RadarHealthSummary({ vm }: { vm: RadarViewModel }) {
       className={`mb-5 rounded-lg border p-4 ${
         alerting ? "border-yellow-500 bg-yellow-100" : "border-line bg-surface"
       }`}
-      aria-label="Saúde do Radar"
+      aria-labelledby="radar-saude"
     >
+      <h2 id="radar-saude" className="sr-only">{RADAR_H.saude}</h2>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
         <span className="inline-flex items-center gap-2">
           <Pill tone={m.datasetComplete ? "green" : "red"}>
@@ -81,7 +84,8 @@ export function RadarHealthSummary({ vm }: { vm: RadarViewModel }) {
 export function RadarKpis({ vm }: { vm: RadarViewModel }) {
   const h = vm.health;
   return (
-    <section className="mb-6 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(170px,1fr))]">
+    <section aria-labelledby="radar-indicadores" className="mb-6 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(170px,1fr))]">
+      <h2 id="radar-indicadores" className="sr-only">{RADAR_H.indicadores}</h2>
       <StatCard label="Base" value={vm.metadata.datasetComplete ? "completa" : "parcial"} sub={`${vm.metadata.rowsRead} linhas`} tone={vm.metadata.datasetComplete ? undefined : "red"} />
       <StatCard label="Frescor" value={vm.metadata.freshnessStatus} sub={vm.metadata.generatedAt ? vm.metadata.generatedAt.slice(0, 10) : "sem artefato"} tone={vm.metadata.freshnessStatus === "fresh" ? "green" : "yellow"} />
       <StatCard label="Elegíveis p/ pauta" value={h.seriesEditoriallyEligible} sub="gate editorial ≥5 ondas" tone={h.seriesEditoriallyEligible > 0 ? "green" : "gray"} />
@@ -126,7 +130,8 @@ export function RadarFilters({ vm, current }: { vm: RadarViewModel; current: Rec
   const opt = (v: string) => <option key={v} value={v}>{v}</option>;
   const facets = deriveFilterFacets(vm.series);
   return (
-    <form method="get" className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border border-line bg-surface p-3 text-sm">
+    <form method="get" aria-labelledby="radar-filtros" className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border border-line bg-surface p-3 text-sm">
+      <h2 id="radar-filtros" className="sr-only">{RADAR_H.filtros}</h2>
       <label className="flex flex-col gap-1">
         <span className="text-xs text-gray-500">Busca (rota/programa)</span>
         <input
@@ -233,7 +238,9 @@ export function RadarFilters({ vm, current }: { vm: RadarViewModel; current: Rec
 // Tabela unificada de séries (§6.4) — linguagem de produto; sem CV/hazard/desvio.
 export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
   return (
-    <Table>
+    <section aria-labelledby="radar-series">
+      <h2 id="radar-series" className="mb-2 font-display text-lg font-semibold text-ink">{RADAR_H.series}</h2>
+      <Table>
       <thead>
         <tr>
           <Th>Rota</Th>
@@ -251,7 +258,7 @@ export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
       </thead>
       <tbody>
         {series.length === 0 ? (
-          <EmptyRow cols={11} label="Nenhum resultado após filtros." hint="Ajuste ou limpe os filtros para ver as séries." />
+          <EmptyRow cols={11} label={RADAR_EMPTY.no_filter_results.title} hint={`${RADAR_EMPTY.no_filter_results.description} ${RADAR_EMPTY.no_filter_results.action}`} />
         ) : (
           series.map((s) => (
             <tr key={`${s.scope}:${s.seriesKey}`}>
@@ -291,5 +298,6 @@ export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
         )}
       </tbody>
     </Table>
+    </section>
   );
 }

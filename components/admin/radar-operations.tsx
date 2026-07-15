@@ -12,8 +12,11 @@ import {
   NO_SNAPSHOT_MESSAGE,
   type RadarQueue,
   type RadarQueueKey,
+  type RadarView,
 } from "@/lib/radar-operations";
 import { ALERT_SEVERITY_TONE, PRODUCT_STATUS_TONE } from "./radar-vocab";
+
+export type { RadarView };
 
 const SEV_TONE = ALERT_SEVERITY_TONE;
 const pct = (n: number | null, step = 5): string => (n == null ? "—" : `${Math.round((n * 100) / step) * step}%`);
@@ -24,7 +27,6 @@ const engineLabel = (s: RadarSeries): string => {
 };
 const href = (s: RadarSeries) => `/admin/radar/${encodeURIComponent(s.seriesKey)}`;
 
-export type RadarView = "geral" | "oportunidades" | "revisoes" | "bloqueios" | "operacao";
 const TABS: { view: RadarView; label: string }[] = [
   { view: "geral", label: "Visão geral" },
   { view: "oportunidades", label: "Oportunidades" },
@@ -54,10 +56,13 @@ export function RadarTabs({ current }: { current: RadarView }) {
 }
 
 // § 12 — Resumo operacional (recomendação textual por regras explícitas).
-export function RadarOperationalSummary({ vm }: { vm: RadarViewModel }) {
+// B3: `compact` (visão geral) mostra risco + contagens + link p/ operação; a
+// versão completa (view=operacao) acrescenta ação prioritária e a frase-resumo.
+export function RadarOperationalSummary({ vm, compact = false }: { vm: RadarViewModel; compact?: boolean }) {
   const s = operationalSummary(vm);
   return (
-    <section className="mb-5 rounded-lg border border-line bg-surface p-4">
+    <section className="mb-5 rounded-lg border border-line bg-surface p-4" aria-labelledby="radar-resumo-op">
+      <h2 id="radar-resumo-op" className="mb-2 font-display text-lg font-semibold text-ink">Resumo operacional</h2>
       <div className="mb-3 flex items-center gap-2">
         <Pill tone={s.healthy ? "green" : "yellow"}>{s.healthy ? "Radar saudável" : "Requer atenção"}</Pill>
         <span className="text-sm text-gray-500">Risco principal: <strong className="text-gray-700">{s.mainRisk}</strong></span>
@@ -67,8 +72,16 @@ export function RadarOperationalSummary({ vm }: { vm: RadarViewModel }) {
         <StatCard label="Exigem atenção" value={s.needAttention} tone={s.needAttention > 0 ? "yellow" : "gray"} />
         <StatCard label="Bloqueadas" value={s.blocked} tone={s.blocked > 0 ? "red" : "gray"} />
       </div>
-      <p className="mt-3 text-sm text-gray-700">{s.text}</p>
-      <p className="mt-1 text-sm text-blue-600">Ação prioritária: {s.priorityAction}.</p>
+      {compact ? (
+        <p className="mt-3 text-sm text-blue-600">
+          <a href="/admin/radar?view=operacao" className="hover:underline">Ver operação (ação prioritária e alertas) →</a>
+        </p>
+      ) : (
+        <>
+          <p className="mt-3 text-sm text-gray-700">{s.text}</p>
+          <p className="mt-1 text-sm text-blue-600">Ação prioritária: {s.priorityAction}.</p>
+        </>
+      )}
     </section>
   );
 }

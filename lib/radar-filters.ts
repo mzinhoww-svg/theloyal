@@ -81,6 +81,7 @@ export function seriesCauses(s: RadarSeries): string[] {
   const c: string[] = [];
   if (s.productStatus === "dataset_incomplete") c.push("base_incompleta");
   if (s.quality.temporalCritical > 0) c.push("qualidade_temporal");
+  if (s.quality.placeholder > 0) c.push("placeholder");
   if (s.quality.probableDuplicate > 0) c.push("duplicidade");
   if (s.productStatus === "insufficient_history") c.push("historico_insuficiente");
   if (s.productStatus === "no_prediction") c.push("sem_motor");
@@ -94,6 +95,7 @@ export function seriesCauses(s: RadarSeries): string[] {
 const CAUSE_ORDER = [
   "base_incompleta",
   "qualidade_temporal",
+  "placeholder",
   "duplicidade",
   "historico_insuficiente",
   "sem_motor",
@@ -105,6 +107,7 @@ const CAUSE_ORDER = [
 export const CAUSE_LABEL: Record<string, string> = {
   base_incompleta: "base incompleta",
   qualidade_temporal: "qualidade temporal",
+  placeholder: "programa inválido (placeholder)",
   duplicidade: "duplicidade",
   historico_insuficiente: "histórico insuficiente",
   sem_motor: "motor indisponível",

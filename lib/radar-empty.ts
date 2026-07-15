@@ -128,10 +128,11 @@ export const RADAR_EMPTY: Record<RadarEmptyKey, RadarEmptyState> = {
     diagnosticHref: "/admin/radar?freshness=stale",
   },
   load_error: {
-    title: "Falha ao ler o ledger.",
-    description: "A leitura do Supabase não retornou.",
-    impact: "O Radar não pode compor as séries.",
-    action: "Recarregar a página; verificar credenciais do admin.",
+    title: "Falha ao carregar o Radar.",
+    description: "A leitura do ledger ou a composição não completou.",
+    impact: "O Radar não pôde montar as séries desta requisição.",
+    action: "Tentar novamente; se persistir, verificar credenciais do admin e os logs.",
+    diagnosticHref: "/admin/logs",
   },
   series_not_found: {
     title: "Série não encontrada.",
@@ -148,3 +149,9 @@ export const RADAR_EMPTY: Record<RadarEmptyKey, RadarEmptyState> = {
     diagnosticHref: "/admin/radar",
   },
 };
+
+// Estado padronizado para uma falha REAL de carregamento (boundary de erro).
+// Nunca expõe stack/mensagem crua — só o conteúdo do catálogo. B1.
+export function resolveRadarLoadError(): RadarEmptyState {
+  return RADAR_EMPTY.load_error;
+}

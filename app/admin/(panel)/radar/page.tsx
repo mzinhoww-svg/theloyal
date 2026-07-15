@@ -16,10 +16,10 @@ import {
   RadarQueuesView,
   RadarBlocksView,
   RadarChanges,
-  type RadarView,
 } from "@/components/admin/radar-operations";
 import { loadRadar } from "@/lib/admin-radar";
 import { applyRadarFilters, RADAR_FILTER_KEYS, type RadarFilterValues } from "@/lib/radar-filters";
+import { resolveRadarView } from "@/lib/radar-operations";
 import { RADAR_EMPTY } from "@/lib/radar-empty";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -28,16 +28,13 @@ function str(v: string | string[] | undefined): string {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
 }
 
-const VIEWS: RadarView[] = ["geral", "oportunidades", "revisoes", "bloqueios", "operacao"];
-
 export default async function RadarPage({
   searchParams,
 }: {
   searchParams?: SearchParams;
 }) {
   const sp = searchParams ?? {};
-  const viewRaw = str(sp.view);
-  const view: RadarView = (VIEWS as string[]).includes(viewRaw) ? (viewRaw as RadarView) : "geral";
+  const { view, invalid } = resolveRadarView(str(sp.view));
 
   const current: Record<string, string> = {};
   for (const k of RADAR_FILTER_KEYS) current[k] = str(sp[k]);
@@ -53,13 +50,18 @@ export default async function RadarPage({
         title="Radar"
         sub="Visão unificada de campanhas — Forecast e Predict como motores internos de uma única leitura do ledger. Alertas e bloqueios acima de qualquer número."
       />
+      {invalid && (
+        <p role="status" className="mb-3 rounded-lg border border-yellow-500 bg-yellow-100 px-3 py-2 text-sm text-ink">
+          Aba não encontrada — exibindo a <strong>Visão geral</strong>. Verifique o link.
+        </p>
+      )}
       <RadarTabs current={view} />
 
       {empty ? (
         <EmptyState label={RADAR_EMPTY.no_campaigns.title} hint={`${RADAR_EMPTY.no_campaigns.description} ${RADAR_EMPTY.no_campaigns.action}`} />
       ) : view === "geral" ? (
         <>
-          <RadarOperationalSummary vm={vm} />
+          <RadarOperationalSummary vm={vm} compact />
           <RadarHealthSummary vm={vm} />
           <RadarKpis vm={vm} />
           <RadarFilters vm={vm} current={current} />
