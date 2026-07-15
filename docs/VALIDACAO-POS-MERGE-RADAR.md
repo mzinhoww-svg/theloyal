@@ -223,3 +223,99 @@ HANDOFF PARA RADAR PROGRAM COORDINATOR
 ```
 
 > Não implementar correções até autorização explícita do coordenador.
+
+---
+
+# Rodada 2 — tentativa de fechar F4 e F5 (2026-07-15)
+
+> Somente leitura. Não produção. Sem SQL. Sem alteração de código, migration, ADR.
+> S1–S7 não iniciados. Base do PR inalterada. Produção não consultada.
+> A Rodada 1 (acima) permanece como referência.
+
+## R2.1 — Disponibilidade do ambiente com dados vivos
+
+Objetivo: rodar a validação funcional em ambiente **somente leitura, não produção, com dados
+vivos**, para fechar F4 (dado vivo) e F5 (resíduo M2 ao vivo).
+
+Sondagem executada (sem tocar produção, sem SQL):
+
+| Verificação | Resultado |
+|---|---|
+| Arquivos `.env` / `.env.local` / `.env.staging` no container | **Ausentes** |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` no processo | Vazias |
+| `SUPABASE_SERVICE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | Vazias |
+| `ADMIN_TOKEN` / `ADMIN_USER` / `ADMIN_PASSWORD` | Vazias |
+| Qualquer var `supabase|staging|service_role` | Nenhuma |
+
+**Conclusão.** Não há credenciais de um ambiente não-produção com dados vivos neste container.
+Sem `SERVICE_ROLE_KEY`, o painel só roda em *modo mock / leitura vazia* — nenhuma fila é populada,
+nenhum KPI real, nenhum detalhe ao vivo, nenhum tempo de resposta mensurável contra o ledger.
+
+Caminhos alternativos foram **descartados por violarem as restrições da tarefa**, não por
+indisponibilidade técnica:
+- Supabase MCP `execute_sql` (mesmo `SELECT`) → proibido por **"não escrever SQL"**.
+- Consultar o projeto `qjqnqcsdnpvvmyzkavoq` (produção) → proibido por **"não consultar produção"**.
+- `create_branch` (preview DB) → mutação de infraestrutura + custo; fora de "somente leitura" e não
+  carregaria o dado vivo de produção mesmo assim.
+
+Portanto **nenhum caminho lícito** dentro das restrições permite a validação funcional ao vivo aqui.
+
+## R2.2 — Validações esperadas (estado nesta rodada)
+
+| Validação | Estado | Motivo |
+|---|---|---|
+| Completude | ⛔ Não confirmado | Sem ledger vivo |
+| Frescor | ⛔ Não confirmado | Sem artefato/ambiente-alvo |
+| KPIs | ⛔ Não confirmado | Sem dados |
+| Filas populadas | ⛔ Não confirmado | Modo mock = filas vazias |
+| Detalhe ao vivo | ⛔ Não confirmado | Sem série real |
+| Comportamento do ledger real | ⛔ Não confirmado | Sem acesso lícito |
+| Tempos de resposta | ⛔ Não confirmado | Sem instância viva |
+| Número de leituras | ⛔ Não confirmado | Sem instância viva |
+| Timeouts | ⛔ Não confirmado | Sem instância viva |
+| Consistência com o Radar em dado vivo | ⛔ Não confirmado | Sem dados |
+| Reprodução do resíduo M2 (ao vivo) | ⛔ Não confirmado | Sem dados (ver R2.3 para leitura de código) |
+
+## R2.3 — F5 / M2: determinação em código (evidência complementar, não é a confirmação ao vivo)
+
+Como a repro ao vivo é impossível aqui, foi feita uma leitura direta do código mergeado (`854137a`)
+— pura, sem violar restrições — para caracterizar o resíduo M2:
+
+- Alerta de placeholders aponta o diagnóstico para **`?cause=placeholder`** — `lib/radar-operations.ts:140`
+  (o M2 relatava `?cause=qualidade_temporal`, que isolava a coisa errada).
+- `seriesCauses(s)` inclui `"placeholder"` sse `s.quality.placeholder > 0` — `lib/radar-filters.ts:84`.
+- Filtro: `if (f.cause && !seriesCauses(s).includes(f.cause)) return false` — `lib/radar-filters.ts:152`.
+  Logo `?cause=placeholder` **isola corretamente** as séries com placeholder. `qualidade_temporal`
+  é uma causa **separada** (linha 83), e o alerta temporal aponta para `?quality=bloqueada` (`:134`).
+- Comportamento coberto por `tests/radar-filters.test.mjs` (suíte 225/225 verde).
+
+**Leitura de código: M2 aparenta estar resolvido** no merge — o link do alerta de placeholders isola
+placeholders. Isso **reduz o risco** de F5, mas **não é** a confirmação ao vivo que o gate 5 exige.
+Por instrução da tarefa, sem ambiente vivo, F5 permanece formalmente **not_confirmed**.
+
+## R2.4 — Estados finais
+
+| Item | Estado final (Rodada 2) |
+|---|---|
+| **F4** | **blocked** — sem ambiente não-produção com dados vivos; validação funcional ao vivo não executável dentro das restrições |
+| **F5** | **not_confirmed** — repro ao vivo impossível; leitura de código sugere M2 resolvido (evidência complementar, não confirmatória) |
+| **Gate 4** | **fechado no nível conceitual** (inalterado; sem SQL, sem execução) |
+| **Gate 5** | **permanece aberto** — exige confirmação ao vivo, não obtida |
+| **Structural Implementation (S1–S7)** | **blocked** — depende de gates 3, 4 e 5; gate 5 aberto |
+
+## R2.5 — Evidência de que nada foi alterado em produção
+
+- Produção **não consultada**: nenhuma chamada a banco de produção, nenhum `execute_sql`, nenhum
+  acesso ao projeto `qjqnqcsdnpvvmyzkavoq`. Ações desta rodada: `ls`/`printenv` locais e leitura de
+  arquivos do repositório.
+- **Sem SQL** executado. **Sem migration.** **Sem código alterado.** **Sem ADR promovido.**
+- **S1–S7 não iniciados.** **Base do PR inalterada** (head recebe apenas este adendo documental).
+- Único efeito no repositório: este adendo em `docs/VALIDACAO-POS-MERGE-RADAR.md`.
+
+## R2.6 — Para efetivamente fechar F4/F5 e o gate 5 (pré-requisito da próxima tentativa)
+
+Prover um ambiente **staging read-only com dados vivos** e injetar no container, como variáveis de
+ambiente (nunca produção):
+`SUPABASE_URL` (staging) · `SUPABASE_SERVICE_ROLE_KEY` (staging, leitura) · `ADMIN_TOKEN`.
+Com isso o painel sai do modo mock e a Rodada 3 pode medir completude, frescor, KPIs, filas,
+detalhe, tempos/leituras/timeouts e reproduzir M2 ao vivo — fechando F4, F5 e o gate 5.
