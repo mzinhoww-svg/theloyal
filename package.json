@@ -18,6 +18,8 @@
     "pro": "node scripts/pro.mjs",
     "forecast": "node scripts/forecast.mjs",
     "weekly": "node scripts/render-weekly.mjs",
+    "weekly:draft": "node scripts/weekly-consolidate.mjs",
+    "weekly:build": "node scripts/render-weekly.mjs",
     "beehiiv": "node scripts/beehiiv-publish.mjs",
     "collect": "node scripts/collect-skus.mjs",
     "pro:vpm": "node scripts/pro-vpm.mjs",

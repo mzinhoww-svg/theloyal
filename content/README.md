@@ -135,12 +135,40 @@ edição.
 
 ## Weekly digest (`content/weekly/AAAA-Wnn.json`)
 
-Produto semanal centrado no Radar. Se o JSON **não** trouxer `radar`, o render
-puxa `digest.radarWeekly` de `content/forecast.json`. Seções: tese da semana,
-Radar, movimentos do ledger (`movements` — abriram/seguem/encerraram),
-destaques, o que monitorar, fontes, disclaimer. Schema em
-`content/weekly.schema.json`; saída em `out/weekly*`. Mesmas regras invioláveis
-do daily (validadas por `scripts/render-weekly.mjs` e pelo gate global `qa`).
+Produto semanal que **consolida a Daily** por Fio (thread ancorado na identidade
+canônica `entityKey`/`routeKey` do deal). Seções, na ordem de leitura: tese da
+semana → **o que mudou** (`movements` — abriram/seguem/encerraram) → **o que
+pesou** (`highlights`) → **onde está o valor** (`ranking`) → **o que vem** (Radar
++ `watch`) → fontes, disclaimer. O Radar deixou de ser o centro: entra como o
+bloco "O que vem" (ponte para o Predict). Schema em `content/weekly.schema.json`;
+saída em `out/weekly*`. Mesmas regras invioláveis do daily.
+
+Ver o desenho completo em `docs/design/weekly-daily-consolidation.md` e o plano
+em `docs/design/weekly-daily-consolidation-plan.md`.
+
+### Fluxo de curadoria (máquina sugere, humano aprova)
+
+```
+npm run weekly:draft -- --start AAAA-MM-DD --end AAAA-MM-DD --number N [--prev content/weekly/AAAA-Wpp.json]
+```
+
+1. `weekly:draft` lê as edições da Daily da semana (`content/editions/*.json`) e
+   grava um **rascunho** `content/weekly/AAAA-Wnn.draft.json`, consolidando por
+   Fio: `movements` integral, candidatos de `highlights`, ordem de `ranking` e
+   `watch` — tudo com **lineage** `{edition, deal}` até a edição de origem. É
+   read-only nas edições, determinístico e **separado do render** (o motor que
+   consolida não é o que publica).
+2. **Curadoria humana** copia o rascunho para o final `AAAA-Wnn.json` e: escreve
+   a **tese** (`signal`), escreve as **notas** dos `highlights`, **aprova** a
+   ordem do `ranking`, confirma o `watch`, e **remove o `_meta`** e qualquer
+   texto `(rascunho)`. Enquanto o TL Score for digitado, a máquina sugere o
+   ranking mas quem publica ordem de valor é a curadoria.
+3. `npm run weekly:build -- content/weekly/AAAA-Wnn.json` valida e renderiza
+   (e-mail/plain/web). Gates: um Fio em no máximo um bloco; rumor
+   (`nao-confirmado`) não ranqueia; nenhum placeholder `(rascunho)` num final.
+
+Idempotência: `weekly:draft` só escreve o `*.draft.json`; **nunca** toca no final
+curado. Rodar de novo regenera o rascunho sem destruir a curadoria.
 
 ## Regras que o validador aplica (gate de publicação)
 
