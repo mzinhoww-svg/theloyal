@@ -53,8 +53,8 @@ export function GET(req: Request) {
       : "vale-agir";
     const v = VERDICT[verdict];
     const score = Number(searchParams.get("score"));
-    const scoreTxt =
-      verdict !== "nao-confirmado" && Number.isFinite(score) ? String(Math.round(score)) : "—";
+    const hasScore = verdict !== "nao-confirmado" && Number.isFinite(score);
+    const scoreTxt = hasScore ? String(Math.round(score)) : "sem nota";
     core = (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 24 }}>
@@ -62,11 +62,12 @@ export function GET(req: Request) {
             style={{
               display: "flex",
               fontFamily: "monospace",
-              fontSize: 180,
+              fontSize: hasScore ? 180 : 80,
               fontWeight: 700,
-              color: HEX.ink,
+              color: hasScore ? HEX.ink : HEX.gray400,
               lineHeight: 0.9,
-              letterSpacing: -5,
+              letterSpacing: hasScore ? -5 : -2,
+              marginBottom: hasScore ? 0 : 16,
             }}
           >
             {scoreTxt}

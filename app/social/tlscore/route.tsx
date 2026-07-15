@@ -25,10 +25,10 @@ export function GET(req: Request) {
   const confirmed = verdict !== "nao-confirmado";
 
   const scoreRaw = Number(searchParams.get("score"));
-  const score =
-    confirmed && Number.isFinite(scoreRaw)
-      ? String(Math.max(0, Math.min(100, Math.round(scoreRaw))))
-      : "—";
+  const hasScore = confirmed && Number.isFinite(scoreRaw);
+  const score = hasScore
+    ? String(Math.max(0, Math.min(100, Math.round(scoreRaw))))
+    : "sem nota";
 
   const title =
     searchParams.get("title")?.slice(0, 120) ||
@@ -64,11 +64,12 @@ export function GET(req: Request) {
             style={{
               display: "flex",
               fontFamily: "monospace",
-              fontSize: 220,
+              fontSize: hasScore ? 220 : 92,
               fontWeight: 700,
               lineHeight: 0.9,
-              color: HEX.ink,
-              letterSpacing: -6,
+              color: hasScore ? HEX.ink : HEX.gray400,
+              letterSpacing: hasScore ? -6 : -2,
+              marginBottom: hasScore ? 0 : 20,
             }}
           >
             {score}
