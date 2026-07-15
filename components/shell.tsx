@@ -10,18 +10,18 @@ export function Nav() {
   return (
     <header className="sticky top-0 z-[100] border-b border-line bg-paper/95 backdrop-blur">
       <div className="tl-container flex h-16 items-center justify-between">
-        <a href="#" className="inline-flex min-h-11 items-center font-display text-xl text-ink">
+        <a href="/" className="inline-flex min-h-11 items-center font-display text-xl text-ink">
           <span className="font-semibold">The </span>
           <span className="font-bold">Loyal</span>
         </a>
         <nav aria-label="Principal" className="flex items-center gap-2 sm:gap-4">
-          <a href="#metodo" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
+          <a href="/#metodo" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
             Método
           </a>
-          <a href="#edicao" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
-            A edição
+          <a href="/edicao" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
+            Edições
           </a>
-          <a href="#como-analisamos" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
+          <a href="/#como-analisamos" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
             Como analisamos
           </a>
           <a
