@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "entities": [
+    { "key": "livelo", "name": "Livelo", "type": "programa-origem", "aliases": ["Livelo"] },
+    { "key": "esfera", "name": "Esfera", "type": "programa-origem", "aliases": ["Esfera"] },
+    { "key": "smiles", "name": "Smiles", "type": "programa-cia", "aliases": ["Smiles"] },
+    { "key": "latam-pass", "name": "LATAM Pass", "type": "programa-cia", "aliases": ["Latam Pass", "LATAM Pass", "latampass", "Latam Pass"] },
+    { "key": "azul-fidelidade", "name": "Azul Fidelidade", "type": "programa-cia", "aliases": ["Azul", "Azul Fidelidade"] }
+  ]
+}

@@ -31,7 +31,22 @@
             }
           }
         },
-        "note": { "type": "string" }
+        "note": { "type": "string" },
+        "derivedFrom": {
+          "type": "array",
+          "description": "Lineage (RFC-001 §4.13 / M-4): quais edições e deals do Daily compõem a amostra (sampled). Torna o average rastreável até a fonte — reconstrói quem/quando/com que veredito.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["edition"],
+            "properties": {
+              "edition": { "type": "integer", "minimum": 1, "description": "Número da edição do Daily de origem." },
+              "deal": { "type": "string", "description": "Categoria/título do deal amostrado." },
+              "verdict": { "type": "string", "enum": ["vale-agir", "vale-olhar", "casos-especificos", "esperaria", "evitaria", "nao-confirmado"] },
+              "tlScore": { "type": "integer", "minimum": 0, "maximum": 100 }
+            }
+          }
+        }
       }
     },
     "benchmarks": {

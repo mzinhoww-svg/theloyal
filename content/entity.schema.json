@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://theloyalty/entity.schema.json",
+  "title": "The Loyalty — Registro canônico de Entities",
+  "description": "Camada de memória do EKS (RFC-001 §4.3 / M-4): coisas duráveis do domínio (programas, bancos, varejo, canais) com identidade canônica estável. Reconcilia menções livres ('Livelo', 'livelo') a um único objeto, base de lineage e acúmulo entre edições.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "entities"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1, "description": "Versão do contrato do registro (RFC-001 §12)." },
+    "entities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "type"],
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Chave canônica imutável (one-way door)." },
+          "name": { "type": "string", "description": "Nome de exibição." },
+          "type": { "type": "string", "enum": ["programa-origem", "programa-cia", "banco", "varejo", "canal"] },
+          "aliases": { "type": "array", "items": { "type": "string" }, "description": "Grafias/menções que resolvem para esta entidade." },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  }
+}
