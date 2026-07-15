@@ -14,6 +14,7 @@
 import { join } from "node:path";
 import { fetchAllRows } from "./admin-db";
 import { getConfig } from "./admin-forecast";
+import { LEDGER_QUALITY_SELECT } from "./ledger-select";
 import type { CampaignRow } from "./forecast";
 import { composeRadarViewModel, type RadarViewModel } from "./radar-view-model";
 // Frescor: reusa o módulo canônico (scripts/forecast-freshness.mjs). allowJs no
@@ -21,9 +22,9 @@ import { composeRadarViewModel, type RadarViewModel } from "./radar-view-model";
 import { assessForecastFile } from "../scripts/forecast-freshness.mjs";
 
 // Colunas lidas: identidade + datas de evento + datas de proveniência + sinais
-// de duplicidade (source_url). Explícitas (não `*`) para não puxar colunas pesadas.
-const RADAR_SELECT =
-  "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim,first_seen,last_seen,observed_at,created_at,source_url,origin";
+// de duplicidade (source_url). Reusa a fonte ÚNICA (lib/ledger-select), a mesma
+// do Forecast legado, para paridade da amostra elegível. Fase A1.
+export const RADAR_SELECT = LEDGER_QUALITY_SELECT;
 
 const FORECAST_ARTIFACT = join(process.cwd(), "content", "forecast.json");
 
