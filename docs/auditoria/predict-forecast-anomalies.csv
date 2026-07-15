@@ -1,0 +1,12 @@
+tipo,serie,campanha_A_data,campanha_B_data,intervalo_dias,evidencia,causa_provavel,impacto_forecast,impacto_predict
+# Anomalias temporais nas series de transferencia (banco vivo, 2026-07-15). intervalo entre window_dates consecutivos.
+intervalo>900,route:livelo->connectmiles,2023-12-12,2026-07-12,943,"mesma campanha Livelo->ConnectMiles 40%; A=id ...-2023-12-12 (vigencia_fim 2023-12-12) extraido do artigo 'ultimo-dia...ate hoje (12)' visto 2026-07-12; B=id ...-2026-07-12 origin=daily",erro de data na extracao (ano+mes fabricados 2023-12 em vez de 2026-07),"prev janela ~fev/2029 conf=baixa (2 amostras, intervalo 943)",bloqueado (nd=2<3)
+intervalo>540,route:portobank->azul,2024-10-23,2026-07-14,629,"A vigencia_fim 2024-10-23 vs first_seen tardio; B recente",provavel erro de ano na campanha A,intervalo inflado na serie,inflado
+intervalo>365,route:itau->smiles,2024-09-16,2026-01-02,473,serie mistura 2024 mal-datado com 2026,erro de ano / lacuna,inflado,inflado
+intervalo>365,route:credicard->latampass,2024-11-14,2026-03-01,472,idem,erro de ano / lacuna,inflado,inflado
+intervalo>365,route:smiles->latampass,2024-11-01,2025-12-25,419,idem,erro de ano / lacuna,inflado,inflado
+intervalo>365,route:livelo->azul,2023-02-24,2024-03-28,398,ancora 2023-02-24 (vigencia_fim antiga) antes do bloco 2024,erro de ano / campanha antiga,inflado no inicio da serie,inflado
+intervalo>365,route:interloop->azul,2024-11-12,2025-12-05,388,idem,erro de ano / lacuna,inflado,inflado
+padrao-sistematico,ALL-transferencia,-,-,-,"369 pares (window_date, first_seen): media(first_seen - window_date)=310 dias; 156 linhas com gap 300-430d (~1 ano); 283/369 (77%) com first_seen >180d apos window_date","window_date (=vigencia_fim via id) sistematicamente ~1 ano ANTES de first_seen — erro de ano na extracao de vigencia; motor ignora first_seen/observed_at por design",series com datas erradas concentradas em 2024,idem
+concentracao-2024,ALL-transferencia,-,-,-,"364 datas resolvidas: 276 em 2024, 53 em 2025, 30 em 2026, 5 em 2023",pilha de campanhas 2025 mal-datadas para 2024,cadencia/variancia distorcidas,idem
+sem-vigencia_inicio,ALL-transferencia,-,-,-,"vigencia_inicio nulo em 2185/2543 (total) e 451/507 transferencias; 144 transferencias sem data derivavel (excluidas dos 2 motores)",extracao raramente preenche vigencia_inicio,perda de 144 campanhas,perda de 144 campanhas

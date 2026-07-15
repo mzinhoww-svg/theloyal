@@ -1451,6 +1451,13 @@ esforço alto, depende de decisão de negócio, risco médio). *Quick win:* exib
 histórico de snapshots (`getSnapshots`) na página. *Consolidação:* passar
 `opts.config` de uma tabela `predict_config`.
 
+> **Auditoria forense (complemento):** a análise campanha-a-campanha com dados reais do
+> Supabase está em **`docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md`** (+ evidências em
+> `docs/auditoria/`). Achado-raiz: os motores datam a campanha pela `vigencia_fim`
+> extraída (com **erro de ano sistemático**, média +310 dias) e **ignoram `first_seen`**,
+> produzindo séries cronologicamente falsas; o intervalo de 943 dias é a **mesma
+> campanha duplicada** com data fabricada, não uma lacuna.
+
 ---
 
 ### C24 — Jobs e crons
