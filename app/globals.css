@@ -11,6 +11,10 @@
   body {
     @apply bg-paper text-ink font-sans antialiased;
   }
+  /* Ancoras nao ficam sob o header sticky (WCAG 2.4.11) nem sob o sticky CTA */
+  :where(section, [id])[id] {
+    scroll-margin-top: 72px;
+  }
   ::selection {
     @apply bg-green-100 text-ink;
   }
@@ -28,8 +32,10 @@
   .tl-container {
     @apply mx-auto max-w-page px-6 lg:px-12;
   }
+  /* Ritmo vertical mobile-first: bandas de fundo separam os beats,
+     entao o padding e respiro interno, nao vazio entre secoes. */
   .tl-section {
-    @apply py-16 md:py-24 lg:py-28;
+    @apply py-12 md:py-24 lg:py-28;
   }
 }
 

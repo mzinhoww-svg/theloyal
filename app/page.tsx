@@ -18,13 +18,13 @@ export default function Home() {
       <main id="conteudo">
         <Hero />
         <Problema />
-        <Metodo />
-        <Recebe />
-        <section id="edicao" className="tl-section border-b border-line bg-paper-dark">
+        {/* Prova do produto logo apos o problema: o leitor ve a solucao real
+            antes de absorver metodo e oferta. */}
+        <section id="edicao" className="tl-section bg-paper-dark">
           <div className="tl-container">
             <Reveal>
               <SectionLabel>Uma edição por dentro</SectionLabel>
-              <h2 className="max-w-content font-display text-3xl font-semibold leading-tight md:text-4xl">
+              <h2 className="max-w-content font-display text-[26px] font-semibold leading-tight md:text-4xl">
                 Assim chega na sua caixa de entrada.
               </h2>
               <p className="mt-3 max-w-content text-lg text-gray-500">
@@ -32,7 +32,7 @@ export default function Home() {
                 Sem rodeio, sem caça-clique.
               </p>
             </Reveal>
-            <Reveal className="mt-10">
+            <Reveal className="mt-8">
               <EdicaoMock />
             </Reveal>
             <Reveal className="mt-6">
@@ -45,18 +45,20 @@ export default function Home() {
             </Reveal>
           </div>
         </section>
-        <ParaQuem />
+        <Metodo />
         <ComoAnalisamos />
+        <Recebe />
+        <ParaQuem />
         <CTAFinal />
-        <section id="glossario" className="tl-section border-t border-line">
+        <section id="glossario" className="tl-section">
           <div className="tl-container">
             <Reveal>
               <SectionLabel>Se aparecer um termo técnico, ele está explicado aqui</SectionLabel>
-              <h2 className="max-w-content font-display text-3xl font-semibold leading-tight md:text-4xl">
+              <h2 className="max-w-content font-display text-[26px] font-semibold leading-tight md:text-4xl">
                 Mini-glossário
               </h2>
             </Reveal>
-            <dl className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+            <dl className="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2">
               {[
                 ["Milheiro", "Mil pontos ou mil milhas. É a unidade usada pra comparar preços."],
                 ["CPM (custo por milheiro)", "Quanto você paga, em reais, por cada mil pontos, já com todas as taxas."],
