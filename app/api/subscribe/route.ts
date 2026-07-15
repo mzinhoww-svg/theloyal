@@ -34,7 +34,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  let body: { email?: string; empresa?: string };
+  let body: {
+    email?: string;
+    empresa?: string;
+    source?: string;
+    perfil?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -72,6 +80,31 @@ export async function POST(req: NextRequest) {
     ? publicationId
     : `pub_${publicationId}`;
 
+  const sanitize = (v: unknown, max: number): string | undefined =>
+    typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
+
+  // Qual form da pagina originou o cadastro (landing, cta-final, hero,
+  // pro-waitlist, guia-cpm...). Sinal secundario. Default "landing".
+  const formSource = sanitize(body.source, 60) ?? "landing";
+
+  // Canal de tráfego (twitter, linkedin, ...) capturado do utm_source da URL.
+  // É o que responde "de onde veio o assinante" — a atribuição de canal.
+  const channelSource = sanitize(body.utm_source, 60);
+  const utmMedium = sanitize(body.utm_medium, 60);
+  const utmCampaign = sanitize(body.utm_campaign, 60);
+
+  // utm_source do Beehiiv = canal quando houver; senão, o form da página. O form
+  // da página vai como utm_medium quando há canal, para não perder nenhum sinal.
+  const beehiivSource = channelSource ?? formSource;
+  const beehiivMedium = utmMedium ?? (channelSource ? formSource : undefined);
+
+  // Perfil declarado (consumidor / heavy-user / profissional) na waitlist do
+  // Pro. Vai como custom field para segmentar o upsell. Opcional.
+  const perfil =
+    typeof body.perfil === "string" && body.perfil.trim()
+      ? body.perfil.trim().slice(0, 40)
+      : undefined;
+
   try {
     const res = await fetch(
       `https://api.beehiiv.com/v2/publications/${pubId}/subscriptions`,
@@ -85,7 +118,12 @@ export async function POST(req: NextRequest) {
           email,
           reactivate_existing: false,
           send_welcome_email: true,
-          utm_source: "landing",
+          utm_source: beehiivSource,
+          ...(beehiivMedium ? { utm_medium: beehiivMedium } : {}),
+          ...(utmCampaign ? { utm_campaign: utmCampaign } : {}),
+          ...(perfil
+            ? { custom_fields: [{ name: "perfil", value: perfil }] }
+            : {}),
         }),
       },
     );

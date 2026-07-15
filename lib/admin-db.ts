@@ -43,6 +43,42 @@ export async function rest<T = Record<string, unknown>>(
   }
 }
 
+// Carrega TODAS as linhas de uma tabela via paginacao DETERMINISTICA (ordem
+// explicita, nunca a ordem padrao do banco), sem o limite silencioso de 2000.
+// Retorna { rows, complete }: complete=false se alguma pagina falhar ou o teto
+// de seguranca for atingido — o chamador deve bloquear saida editorial nesse
+// caso, nunca descartar linhas em silencio. Fase C0.
+export async function fetchAllRows<T = Record<string, unknown>>(
+  table: string,
+  select: string,
+  opts: { pageSize?: number; maxPages?: number; order?: string } = {},
+): Promise<{ rows: T[]; complete: boolean; pages: number }> {
+  const pageSize = opts.pageSize ?? 1000;
+  const maxPages = opts.maxPages ?? 50;
+  const order = opts.order ?? "id.asc";
+  if (!SERVICE_KEY) return { rows: [], complete: false, pages: 0 };
+  const rows: T[] = [];
+  let pages = 0;
+  for (let offset = 0; ; offset += pageSize) {
+    if (pages >= maxPages) return { rows, complete: false, pages }; // teto de seguranca
+    let chunk: T[];
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/${table}?select=${select}&order=${order}&limit=${pageSize}&offset=${offset}`,
+        { headers: headers(), cache: "no-store" },
+      );
+      if (!res.ok) return { rows, complete: false, pages };
+      chunk = (await res.json()) as T[];
+    } catch {
+      return { rows, complete: false, pages };
+    }
+    pages++;
+    rows.push(...chunk);
+    if (chunk.length < pageSize) break; // ultima pagina
+  }
+  return { rows, complete: true, pages };
+}
+
 // Chamada de RPC (funcoes admin_*). Retorna o JSON cru; o chamador tipa.
 export async function rpc<T = unknown>(
   fn: string,
@@ -83,11 +119,51 @@ export async function patch(
   }
 }
 
+// Insere linhas (INSERT), opcionalmente com upsert por chave de conflito.
+// Usado pela área de predict (overrides e snapshots). Server-only.
+export async function insert(
+  table: string,
+  rows: Record<string, unknown> | Record<string, unknown>[],
+  opts: { onConflict?: string } = {},
+): Promise<void> {
+  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  const prefer = opts.onConflict
+    ? "return=minimal,resolution=merge-duplicates"
+    : "return=minimal";
+  const qs = opts.onConflict ? `?on_conflict=${encodeURIComponent(opts.onConflict)}` : "";
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${qs}`, {
+    method: "POST",
+    headers: headers({ prefer }),
+    body: JSON.stringify(rows),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`INSERT ${table} falhou (${res.status}) ${detail.slice(0, 200)}`);
+  }
+}
+
+// Remove linhas por filtro PostgREST (ex.: "id=eq.<uuid>"). Server-only.
+export async function del(table: string, filter: string): Promise<void> {
+  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+    method: "DELETE",
+    headers: headers({ prefer: "return=minimal" }),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`DELETE ${table} falhou (${res.status}) ${detail.slice(0, 200)}`);
+  }
+}
+
 // ---- Tipos das RPCs (espelham o retorno real verificado no banco) ----
 
 export type Metrics = {
   news_hoje: number;
   news_total: number;
+  news_processadas: number;
+  news_erro: number;
   news_pendentes: number;
   campanhas_total: number;
   campanhas_ativas: number;

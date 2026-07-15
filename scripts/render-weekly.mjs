@@ -10,6 +10,7 @@ import {
   CONFIDENCE, DISCLAIMER, EMOJI_RE, INTERNAL_RE, RADAR_NOTE_DEFAULT, TOKENS, URGENCY_RE, VERDICTS,
   collectStrings,
 } from "./lib.mjs";
+import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -21,18 +22,31 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
-// Se o weekly não trouxer radar, usa digest.radarWeekly do forecast (se houver).
+// Se o weekly não trouxer radar, usa digest.radarWeekly do forecast — SÓ se o
+// artefato estiver fresco e completo (Fase C0). Stale/incompleto/ausente/inválido
+// → radar automático NÃO usado (nunca publica números desatualizados em silêncio).
 function resolveRadar(wk) {
-  if (wk.radar && Array.isArray(wk.radar.windows) && wk.radar.windows.length) return wk.radar;
+  if (wk.radar && Array.isArray(wk.radar.windows) && wk.radar.windows.length) return wk.radar; // override manual
   if (!existsSync(FORECAST_PATH)) return null;
+  let fc;
   try {
-    const fc = JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
-    const windows = fc?.digest?.radarWeekly ?? [];
-    if (!windows.length) return null;
-    return { note: RADAR_NOTE_DEFAULT, windows };
+    fc = JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
   } catch {
+    console.error("[weekly] content/forecast.json inválido — radar automático não usado.");
     return null;
   }
+  const maxAgeHours = Number(process.env.MAX_FORECAST_AGE_HOURS) || DEFAULT_MAX_FORECAST_AGE_HOURS;
+  const health = assessForecastArtifact(fc, { maxAgeHours });
+  if (health.status !== "fresh") {
+    console.error(
+      `[weekly] forecast.json ${health.status} (${(health.reasons ?? []).join("; ")}) — ` +
+        "radar automático NÃO usado (sem números stale).",
+    );
+    return null;
+  }
+  const windows = fc?.digest?.radarWeekly ?? [];
+  if (!windows.length) return null;
+  return { note: RADAR_NOTE_DEFAULT, windows };
 }
 
 // ---------- Validação editorial ----------
@@ -60,6 +74,15 @@ export function validateWeekly(wk) {
     (radar.windows ?? []).forEach((w, i) => {
       if (!w.label || !w.window) errors.push(`Radar ${i + 1}: label/window ausente`);
       if (!["alta", "media", "baixa"].includes(w.confidence)) errors.push(`Radar ${i + 1}: confiança "${w.confidence}" inválida (em-formacao nunca vira radar)`);
+      // Nota de corte da política canônica (§7.4): o leitor só recebe PREVISÃO com
+      // confiança ≥ média. Item automático (source:forecast) abaixo disso bloqueia;
+      // item editorial abaixo disso vira aviso (deveria ser monitoramento, não janela).
+      if (w.confidence === "baixa") {
+        const automatic = w.source === "forecast" || w.seriesKey != null || w.generatedAt != null;
+        const msg = `Radar ${i + 1} (${w.label ?? "sem rótulo"}): confiança "baixa" está abaixo da nota de corte (≥ média) — publique como monitoramento, não como janela`;
+        if (automatic) errors.push(msg);
+        else warnings.push(msg);
+      }
     });
     if (!errors.some((e) => e.startsWith("Radar"))) ok.push(`Radar coerente (${(radar.windows ?? []).length} janela(s), sem veredito)`);
   }

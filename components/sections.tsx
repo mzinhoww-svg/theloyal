@@ -291,7 +291,7 @@ export function CTAFinal() {
               5 minutos de leitura. De graça. Cancela em um clique.
             </p>
             <div className="mx-auto mt-8 max-w-xl rounded-lg bg-paper p-5 text-left text-ink sm:p-6">
-              <SubscribeForm submitLabel="Quero receber por e-mail" onSuccess={() => setCelebrate(true)} />
+              <SubscribeForm submitLabel="Quero receber por e-mail" source="cta-final" onSuccess={() => setCelebrate(true)} />
             </div>
           </div>
         </Reveal>

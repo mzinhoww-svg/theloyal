@@ -123,7 +123,7 @@ export default async function BackfillPage({
             <select
               name="status"
               defaultValue={statusFilter}
-              className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+              className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
             >
               <option value="">status: todos</option>
               {statuses.map((s) => (
@@ -135,7 +135,7 @@ export default async function BackfillPage({
             <select
               name="source"
               defaultValue={sourceFilter}
-              className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+              className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
             >
               <option value="">fonte: todas</option>
               {sources.map((s) => (

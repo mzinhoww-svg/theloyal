@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Sidebar, MobileNav } from "@/components/admin/Sidebar";
 import { LiveRefresh } from "@/components/admin/LiveRefresh";
+import { CommandPalette } from "@/components/admin/CommandPalette";
 import { ToastProvider } from "@/components/admin/toast";
 import { SubmitButton } from "@/components/admin/SubmitButton";
+import { StatusDot } from "@/components/admin/ui";
 import { adminConfigured } from "@/lib/admin-db";
 import { logout } from "@/app/admin/login/actions";
 
@@ -44,23 +46,34 @@ export default function PanelLayout({
                   Sair
                 </SubmitButton>
               </form>
-              <p className="text-[11px] leading-snug text-gray-400">
+              <p className="text-[11px] leading-snug text-gray-500">
                 Guardrail factual ativo. Conferência humana no Beehiiv.
               </p>
             </div>
           </aside>
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="flex items-center justify-between gap-3 border-b border-line bg-surface px-5 py-2.5">
-              <a href="/admin" className="flex items-center gap-2 md:hidden">
-                <span className="flex h-7 w-7 items-center justify-center rounded bg-ink font-display text-xs font-bold text-paper">
-                  TL
+            <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-surface px-5 py-2.5">
+              <div className="flex items-center gap-3">
+                <a href="/admin" className="flex items-center gap-2 md:hidden">
+                  <span className="flex h-7 w-7 items-center justify-center rounded bg-ink font-display text-xs font-bold text-paper">
+                    TL
+                  </span>
+                  <span className="text-sm font-semibold">Central</span>
+                </a>
+                <CommandPalette />
+                <span
+                  className="hidden items-center gap-1.5 text-xs text-gray-500 md:inline-flex"
+                  title={
+                    configured
+                      ? "Lendo e operando dados ao vivo do Supabase."
+                      : "Sem SUPABASE_SERVICE_ROLE_KEY — painel em modo mock."
+                  }
+                >
+                  <StatusDot tone={configured ? "green" : "yellow"} />
+                  {configured ? "Supabase" : "modo mock"}
                 </span>
-                <span className="text-sm font-semibold">Central</span>
-              </a>
-              <span className="hidden text-xs text-gray-400 md:block">
-                The Loyal · Central de Controle
-              </span>
+              </div>
               <div className="flex items-center gap-2">
                 <LiveRefresh renderedAt={renderedAt} />
                 <form action={logout} className="md:hidden">

@@ -1,6 +1,8 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { track } from "@/lib/track";
+import { getAttribution } from "@/lib/attribution";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -9,11 +11,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export function SubscribeForm({
   compact = false,
   submitLabel = "Quero receber grátis",
+  source = "landing",
   onFocusChange,
   onSuccess,
 }: {
   compact?: boolean;
   submitLabel?: string;
+  source?: string;
   onFocusChange?: (focused: boolean) => void;
   onSuccess?: () => void;
 }) {
@@ -41,16 +45,57 @@ export function SubscribeForm({
 
     setStatus("loading");
     setMessage("");
-    // ===== INTEGRACAO BEEHIIV: substituir este mock =====
-    // Trocar o delay abaixo por um fetch para uma route handler propria
-    // (app/api/subscribe/route.ts) que chama a API do Beehiiv no servidor com a
-    // chave em variavel de ambiente (BEEHIIV_API_KEY). Nunca expor a chave no
-    // client. Manter o honeypot acima e adicionar rate limit na route.
-    await new Promise((r) => setTimeout(r, 900));
-    // ===== fim do trecho a substituir =====
-    setStatus("success");
-    setMessage("Pronto. A próxima edição chega às 8h. Ponto abanou o rabo, o que é raro.");
-    onSuccess?.();
+
+    // Canal de origem (twitter, linkedin, ...) capturado da URL, separado do
+    // `source` (qual form da pagina). Vai junto no evento e no cadastro.
+    const attribution = getAttribution();
+    track("subscribe_submit", { source, ...attribution });
+
+    // Chama a route handler no servidor (app/api/subscribe/route.ts), que fala
+    // com o Beehiiv usando a chave em variavel de ambiente. A chave nunca chega
+    // ao client. O honeypot "empresa" tambem vai no corpo (a rota o trata).
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          empresa: (data.get("empresa") as string) || "",
+          source,
+          ...attribution,
+        }),
+      });
+
+      if (res.ok) {
+        track("subscribe_success", { source, ...attribution });
+        setStatus("success");
+        setMessage(
+          "Pronto. A próxima edição chega às 8h. Ponto abanou o rabo, o que é raro.",
+        );
+        onSuccess?.();
+        return;
+      }
+
+      // A rota devolve erros tipados; traduz para a voz do Ponto sem vazar detalhe.
+      const payload = (await res.json().catch(() => ({}))) as { error?: string };
+      track("subscribe_error", {
+        source,
+        ...attribution,
+        reason: payload.error ?? String(res.status),
+      });
+      if (res.status === 429) {
+        setMessage("Muitas tentativas. Respire e tente de novo em um minuto.");
+      } else if (payload.error === "invalid_email") {
+        setMessage("Confira o e-mail. Ponto farejou um erro de digitação.");
+      } else {
+        setMessage("Algo falhou no envio. Tente de novo em instantes.");
+      }
+      setStatus("error");
+    } catch {
+      track("subscribe_error", { source, ...attribution, reason: "network" });
+      setMessage("Sem conexão com o servidor. Tente de novo em instantes.");
+      setStatus("error");
+    }
   }
 
   if (status === "success") {

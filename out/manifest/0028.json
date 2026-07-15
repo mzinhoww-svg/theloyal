@@ -3,7 +3,7 @@
   "date": "2026-07-08",
   "slug": "0028",
   "status": "APROVADA",
-  "generatedAt": "2026-07-14T11:31:09.470Z",
+  "generatedAt": "2026-07-14T11:09:38.610Z",
   "input": "content/editions/0028.json",
   "outputs": [
     {
@@ -15,8 +15,8 @@
     {
       "type": "plain",
       "path": "out/plain/0028.txt",
-      "bytes": 2693,
-      "sha256": "dce5c97006f66a4cff9da50d8199524ea487d06dee27de410c7bd48ad56a7c35"
+      "bytes": 2694,
+      "sha256": "df61634a8877b0d328454fff9fb43b3c338bdd3433bc55cce98ac5fd3782627e"
     },
     {
       "type": "web",

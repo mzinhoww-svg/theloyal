@@ -1,4 +1,4 @@
-import { getNews, type NewsRow } from "@/lib/admin-db";
+import { getNews, getMetrics, type NewsRow } from "@/lib/admin-db";
 import {
   StatCard,
   PageHeader,
@@ -24,11 +24,16 @@ export default async function NoticiasPage({
 }: {
   searchParams: { status?: string; source?: string };
 }) {
-  const news = await getNews(500);
+  // Contagens REAIS vêm do RPC admin_metrics (count(*) exato no banco). A lista
+  // abaixo carrega só as 500 mais recentes — é uma amostra para inspeção, não a
+  // fonte dos totais. Fallback para a amostra se o RPC estiver indisponível.
+  const [news, m] = await Promise.all([getNews(500), getMetrics()]);
 
-  const processadas = news.filter((n) => statusOf(n) === "processada").length;
-  const pendentes = news.filter((n) => statusOf(n) === "pendente").length;
-  const erros = news.filter((n) => statusOf(n) === "erro").length;
+  const total = m?.news_total ?? news.length;
+  const processadas =
+    m?.news_processadas ?? news.filter((n) => statusOf(n) === "processada").length;
+  const pendentes = m?.news_pendentes ?? news.filter((n) => statusOf(n) === "pendente").length;
+  const erros = m?.news_erro ?? news.filter((n) => statusOf(n) === "erro").length;
 
   const statusFilter = searchParams.status || "";
   const sourceFilter = searchParams.source || "";
@@ -55,7 +60,7 @@ export default async function NoticiasPage({
       />
 
       <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
-        <StatCard label="Total" value={news.length} sub={`${sources.length} fontes`} tone="gray" />
+        <StatCard label="Total" value={total} sub={`${sources.length} fontes · ${news.length} recentes carregadas`} tone="gray" />
         <StatCard label="Processadas" value={processadas} sub="extração concluída" tone="green" />
         <StatCard
           label="Pendentes"
@@ -78,7 +83,7 @@ export default async function NoticiasPage({
             <select
               name="status"
               defaultValue={statusFilter}
-              className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+              className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
             >
               <option value="">status: todos</option>
               <option value="processada">processada</option>
@@ -88,7 +93,7 @@ export default async function NoticiasPage({
             <select
               name="source"
               defaultValue={sourceFilter}
-              className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+              className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
             >
               <option value="">fonte: todas</option>
               {sources.map((s) => (
@@ -164,15 +169,19 @@ export default async function NoticiasPage({
                 );
               })
             ) : (
-              <EmptyRow cols={7} label="nenhuma notícia para este filtro" />
+              <EmptyRow
+                cols={7}
+                label="Nenhuma notícia para este filtro"
+                hint="Ajuste os filtros acima ou rode a coleta (ingest) em Crons para trazer novas fontes."
+              />
             )}
           </tbody>
         </Table>
-        {filtered.length > 200 && (
-          <p className="mt-2 text-xs text-gray-400">
-            Exibindo 200 de {filtered.length} notícias.
-          </p>
-        )}
+        <p className="mt-2 text-xs text-gray-500">
+          Lista: {Math.min(filtered.length, 200)} de {filtered.length} (amostra das 500 mais recentes).
+          No banco: {total.toLocaleString("pt-BR")} no total · {processadas.toLocaleString("pt-BR")} lidas ·{" "}
+          {pendentes.toLocaleString("pt-BR")} na fila · {erros.toLocaleString("pt-BR")} com erro.
+        </p>
       </section>
     </>
   );

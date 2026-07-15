@@ -9,17 +9,20 @@ import {
 import { bucketByDay, deriveAttention, needsReview } from "@/lib/admin-series";
 import {
   StatCard,
+  Card,
+  CardLabel,
   AttentionStrip,
   GateChips,
   PageHeader,
   Pill,
-  StatusDot,
+  StatusCell,
   Table,
   Th,
   Td,
   EmptyRow,
   toneForStatus,
   toneForVerdict,
+  statusLabel,
   fmtDate,
 } from "@/components/admin/ui";
 
@@ -39,7 +42,7 @@ export default async function DashboardPage() {
   const runList = runs ?? [];
   const last = pipeline[0];
 
-  const newsErro = news.filter((n) => n.error).length;
+  const newsErro = m?.news_erro ?? news.filter((n) => n.error).length;
   const newsPendentes =
     m?.news_pendentes ?? news.filter((n) => !n.processed && !n.error).length;
   const venceHoje = campaigns.filter((c) => c.status === "vence-hoje").length;
@@ -110,19 +113,15 @@ export default async function DashboardPage() {
       </section>
 
       <section className="mt-4 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
-        <div className="relative h-full overflow-hidden rounded-lg border border-line bg-surface p-4">
-          <span
-            className="absolute left-0 top-0 h-full w-1 bg-line"
-            aria-hidden="true"
-          />
-          <div className="text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+        <Card>
+          <CardLabel tone={last ? toneForStatus(last.status) : undefined}>
             Última rodada editorial
-          </div>
+          </CardLabel>
           {last ? (
             <div className="mt-2 flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <Pill tone={toneForStatus(last.status)}>
-                  {last.status ?? "—"}
+                  {statusLabel(last.status)}
                 </Pill>
                 <span className="font-mono text-xs tabular-nums text-gray-500">
                   {fmtDate(last.started_at)}
@@ -134,9 +133,9 @@ export default async function DashboardPage() {
               />
             </div>
           ) : (
-            <div className="mt-2 text-sm text-gray-400">sem rodadas</div>
+            <div className="mt-2 text-sm text-gray-500">Nenhuma rodada ainda.</div>
           )}
-        </div>
+        </Card>
         <StatCard
           label="Notícias com erro"
           value={newsErro}
@@ -172,10 +171,7 @@ export default async function DashboardPage() {
                 <tr key={`${r.jobname}-${i}`}>
                   <Td className="font-mono">{r.jobname}</Td>
                   <Td>
-                    <span className="inline-flex items-center gap-2">
-                      <StatusDot tone={toneForStatus(r.status)} />
-                      {r.status ?? "—"}
-                    </span>
+                    <StatusCell status={r.status} />
                   </Td>
                   <Td className="font-mono tabular-nums text-gray-500">
                     {fmtDate(r.start_time)}
@@ -184,7 +180,11 @@ export default async function DashboardPage() {
                 </tr>
               ))
             ) : (
-              <EmptyRow cols={4} label="sem execuções registradas" />
+              <EmptyRow
+                cols={4}
+                label="Nenhuma execução registrada"
+                hint="Os crons de coleta e análise aparecem aqui assim que rodam. Dispare um em Crons."
+              />
             )}
           </tbody>
         </Table>
@@ -238,7 +238,11 @@ export default async function DashboardPage() {
                 </tr>
               ))
             ) : (
-              <EmptyRow cols={7} label="sem campanhas" />
+              <EmptyRow
+                cols={7}
+                label="Nenhuma campanha no ledger"
+                hint="Campanhas entram pela extração de notícias. Rode a análise em Crons ou colete em Notícias."
+              />
             )}
           </tbody>
         </Table>

@@ -158,6 +158,59 @@ export function validateEdition(ed) {
   return { errors, warnings, ok };
 }
 
+// Contenção Fase C0 — impede que o Radar manual do Daily contradiga a fonte
+// automática (content/forecast.json), repetindo a divergência Daily×Weekly já
+// identificada. Determinístico e puro (recebe o artefato explicitamente).
+//
+// Regra: uma janela de radar é "automática" quando declara proveniência
+// (source:"forecast" ou seriesKey/generatedAt). Nesse caso ela DEVE bater com o
+// forecast (senão é ERRO que bloqueia). Sem proveniência, é tratada como
+// "análise editorial" — nunca apresentada como previsão automática — e uma
+// divergência com o arquivo vira AVISO (não bloqueia edições legadas).
+const normLabel = (s) => String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+
+export function validateRadarConsistency(ed, forecastArtifact) {
+  const errors = [];
+  const warnings = [];
+  const windows = Array.isArray(ed?.radar?.windows) ? ed.radar.windows : null;
+  if (!windows || !windows.length) return { errors, warnings };
+
+  const radarDaily = Array.isArray(forecastArtifact?.digest?.radarDaily) ? forecastArtifact.digest.radarDaily : [];
+  const byLabel = new Map(radarDaily.map((w) => [normLabel(w.label), w]));
+
+  windows.forEach((w, i) => {
+    const tag = `Radar ${i + 1} (${w.label ?? "sem rótulo"})`;
+    const isAutomatic = w.source === "forecast" || w.seriesKey != null || w.generatedAt != null;
+    const match = byLabel.get(normLabel(w.label));
+
+    // Nota de corte da política canônica (§7.4): o leitor só recebe PREVISÃO com
+    // confiança ≥ média. Automático abaixo disso bloqueia; editorial abaixo disso
+    // vira aviso (deveria ser monitoramento). em-formacao já é barrado pelo schema.
+    if (w.confidence === "baixa") {
+      const msg = `${tag}: confiança "baixa" está abaixo da nota de corte (≥ média) — publique como monitoramento, não como janela`;
+      if (isAutomatic) errors.push(msg);
+      else warnings.push(msg);
+    }
+
+    if (isAutomatic) {
+      if (!match) {
+        errors.push(`${tag}: marcado como automático (source:forecast) mas a série não está no forecast atual (bloqueada ou ausente) — não pode ser publicado como previsão automática`);
+        return;
+      }
+      if (String(match.window) !== String(w.window))
+        errors.push(`${tag}: janela "${w.window}" diverge do forecast automático ("${match.window}")`);
+      if (w.bonus != null && match.bonus != null && String(w.bonus) !== String(match.bonus))
+        errors.push(`${tag}: bônus "${w.bonus}" diverge do forecast automático ("${match.bonus}")`);
+    } else if (match && String(match.window) !== String(w.window)) {
+      warnings.push(`${tag}: radar editorial diverge do forecast automático (arquivo: "${match.window}") — marque como "Análise editorial" ou alinhe ao motor`);
+    } else {
+      warnings.push(`${tag}: radar manual sem proveniência (source/seriesKey) — tratado como análise editorial, não como previsão automática`);
+    }
+  });
+
+  return { errors, warnings };
+}
+
 export function report(ed, result) {
   const slug = editionSlug(ed);
   const status = result.errors.length ? "FALHOU" : "APROVADA";

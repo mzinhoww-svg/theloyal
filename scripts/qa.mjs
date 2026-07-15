@@ -4,7 +4,17 @@
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { DISCLAIMER, EMOJI_RE, URGENCY_RE, collectStrings, listEditionFiles, loadEdition } from "./lib.mjs";
-import { validateEdition } from "./validate.mjs";
+import { validateEdition, validateRadarConsistency } from "./validate.mjs";
+
+const FORECAST_PATH = "content/forecast.json";
+function loadForecastArtifact() {
+  if (!existsSync(FORECAST_PATH)) return null;
+  try {
+    return JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
+  } catch {
+    return null;
+  }
+}
 
 const blocks = [];
 const warns = [];
@@ -13,8 +23,13 @@ const block = (m) => blocks.push(m);
 const warn = (m) => warns.push(m);
 const pass = (m) => passes.push(m);
 
-// Componentes onde hex é permitido (exceção do mascote/gráficos).
-const HEX_EXEMPT = new Set(["PontoMascot.tsx", "graphics.tsx"]);
+// Componentes onde hex é permitido (exceção do mascote/gráficos e do card OG,
+// asset visual gerado via Satori/next-og que não aceita classes do tema).
+const HEX_EXEMPT = new Set([
+  "PontoMascot.tsx",
+  "graphics.tsx",
+  "opengraph-image.tsx",
+]);
 // Cores default do Tailwind proibidas. gray/green/blue/yellow/red são tokens
 // redefinidos da marca — permitidos.
 const DEFAULT_COLOR_RE = /\b(?:bg|text|border|from|to|via|ring|fill|stroke|divide|placeholder|decoration|accent|outline)-(?:white|black|slate|zinc|neutral|stone|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose|amber|orange|lime)(?:-\d{2,3})?\b/;
@@ -39,7 +54,7 @@ function auditSource() {
     if (!HEX_EXEMPT.has(base) && HEX_RE.test(src)) { block(`Hex hardcoded em componente: ${f}`); hexHits++; }
     if (DEFAULT_COLOR_RE.test(src)) { block(`Cor default do Tailwind em ${f}: ${src.match(DEFAULT_COLOR_RE)[0]}`); defaultHits++; }
   }
-  if (!hexHits) pass("Nenhum hex hardcoded fora de PontoMascot/graphics");
+  if (!hexHits) pass("Nenhum hex hardcoded fora de PontoMascot/graphics/opengraph-image");
   if (!defaultHits) pass("Nenhuma cor default do Tailwind (bg-white/slate/indigo…)");
 
   // Disclaimer obrigatório no footer e na metodologia. Check semântico
@@ -65,11 +80,16 @@ function auditSource() {
 function auditEditions() {
   const files = listEditionFiles();
   if (!files.length) { warn("Nenhuma edição em content/editions/"); return; }
+  const forecastArtifact = loadForecastArtifact();
   for (const f of files) {
     const ed = loadEdition(`content/editions/${f}`);
     const r = validateEdition(ed);
     if (r.errors.length) r.errors.forEach((m) => block(`JSON Nº ${ed.number}: ${m}`));
     else pass(`JSON Nº ${ed.number}: validação editorial OK`);
+    // Contenção C0: Radar do Daily não pode contradizer o forecast automático.
+    const rc = validateRadarConsistency(ed, forecastArtifact);
+    rc.errors.forEach((m) => block(`Radar Nº ${ed.number}: ${m}`));
+    rc.warnings.forEach((m) => warn(`Radar Nº ${ed.number}: ${m}`));
   }
 }
 

@@ -34,6 +34,7 @@
       "type": "array",
       "description": "Radar de VPM observado no não-aéreo (Shopping): custo de fabricação de resgate por player, derivado de preço público de catálogo. Nunca CMI interno.",
       "items": { "$ref": "#/$defs/shopping" }
+    },
     "radar": {
       "type": "object",
       "description": "Radar de janelas — projeção estatística por recorrência do ledger. Não é veredito nem garantia.",
@@ -148,7 +149,10 @@
         "confidence": { "type": "string", "enum": ["alta", "media", "baixa"], "description": "Confiança da projeção. em-formacao nunca vira linha de radar." },
         "window": { "type": "string", "description": "Janela prevista, ex: 17 a 24 jul" },
         "basis": { "type": "string", "description": "Base da projeção (cadência, nº de janelas)" },
-        "bonus": { "type": "string", "description": "Bônus típico em mono, ex: ~23%" }
+        "bonus": { "type": "string", "description": "Bônus típico em mono, ex: ~23%" },
+        "source": { "type": "string", "description": "Proveniência (Fase C0). 'forecast' = automático (deve bater com content/forecast.json); ausente = análise editorial." },
+        "seriesKey": { "type": "string", "description": "Chave da série no forecast automático (proveniência)." },
+        "generatedAt": { "type": "string", "description": "Quando o número automático foi gerado (proveniência/frescor)." }
       }
     },
     "source": {

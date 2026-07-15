@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { track } from "@/lib/track";
 import { LedgerTexture } from "./graphics";
 import { PontoMascot } from "./PontoMascot";
 import { SubscribeForm } from "./SubscribeForm";
@@ -86,7 +87,7 @@ export function Hero() {
           </p>
 
           <div className="mt-6 max-w-xl md:mt-8">
-            <SubscribeForm submitLabel="Quero receber grátis" onFocusChange={setTilt} onSuccess={() => setCelebrate(true)} />
+            <SubscribeForm submitLabel="Quero receber grátis" source="hero" onFocusChange={setTilt} onSuccess={() => setCelebrate(true)} />
           </div>
           <ul className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-gray-500">
             <li>Fonte oficial</li>
@@ -174,6 +175,7 @@ export function StickyCTA() {
       <a
         href="#assinar"
         tabIndex={show ? undefined : -1}
+        onClick={() => track("cta_click", { source: "sticky" })}
         className="flex min-h-12 w-full items-center justify-center rounded bg-green-600 px-4 text-base font-semibold text-paper transition-colors duration-150 hover:bg-green-700"
       >
         Receber grátis, todo dia às 8h

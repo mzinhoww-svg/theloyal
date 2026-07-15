@@ -1,12 +1,11 @@
-import { rest } from "@/lib/admin-db";
-import {
-  forecastRows,
-  calendarRows,
-  type Campaignish,
-} from "@/lib/admin-forecast";
+import { rest, fetchAllRows } from "@/lib/admin-db";
+import { calendarRows, type Campaignish } from "@/lib/admin-calendar";
+import { getConfig } from "@/lib/admin-forecast";
+import { buildForecast, formatWindow, type CampaignRow } from "@/lib/forecast";
 import {
   PageHeader,
   Pill,
+  GateChips,
   Table,
   Th,
   Td,
@@ -35,9 +34,12 @@ const CONF_TONE = (c: string): "green" | "blue" | "gray" =>
 
 export default async function ObservabilityPage() {
   const month = new Date().toISOString().slice(0, 7);
-  const [campaigns, valuations, editions] = await Promise.all([
-    rest<Campaignish>(
-      "campaigns?select=origem,destino,tipo,percentual,vigencia_inicio,vigencia_fim,observed_at&limit=500",
+  const [{ config }, loaded, valuations, editions] = await Promise.all([
+    getConfig(),
+    // Leitura completa e paginada — sem o limite silencioso de 2000. Fase C0.
+    fetchAllRows<CampaignRow>(
+      "campaigns",
+      "id,origem,destino,tipo,percentual,vigencia_inicio,vigencia_fim,observed_at",
     ),
     rest<Valuation>(
       "valuations?select=program,piso,teto,confidence&is_current=eq.true&order=piso.desc",
@@ -47,8 +49,19 @@ export default async function ObservabilityPage() {
     ),
   ]);
 
-  const forecast = forecastRows(campaigns);
-  const calendar = calendarRows(campaigns, month);
+  const campaigns = loaded.rows;
+  const datasetComplete = loaded.complete;
+
+  // Previsão pelo motor único (mesma config da área de predict). Programas +
+  // rotas, mapeados para o shape compacto desta tabela.
+  const fc = buildForecast(campaigns, { config });
+  const forecast = [...fc.clusters, ...fc.routes].map((f) => ({
+    rota: f.route,
+    conf: f.confidence,
+    prediction: f.windowStart ? `próxima janela ~ ${formatWindow(f.windowStart, f.windowEnd)}` : "histórico insuficiente",
+    basis: f.basis,
+  }));
+  const calendar = calendarRows(campaigns as Campaignish[], month);
 
   // Marcador de "hoje" no calendário (só se o mês exibido é o corrente).
   const todayIso = new Date().toISOString().slice(0, 10);
@@ -105,7 +118,7 @@ export default async function ObservabilityPage() {
               );
             })
           ) : (
-            <p className="text-sm text-gray-400">sem campanhas no mês</p>
+            <p className="text-sm text-gray-500">Sem campanhas com vigência neste mês.</p>
           )}
         </div>
       </section>
@@ -144,9 +157,15 @@ export default async function ObservabilityPage() {
           </tbody>
         </Table>
         {forming.length > 0 && (
-          <p className="mt-2 text-xs text-gray-400">
-            + {forming.length} rotas ainda em formação (menos de 3 janelas
-            observadas) — sem previsão até acumular histórico.
+          <p className="mt-2 text-xs text-gray-500">
+            + {forming.length} rotas ainda em formação (menos de {config.minSamples} janela
+            {config.minSamples === 1 ? "" : "s"} observada
+            {config.minSamples === 1 ? "" : "s"}) — sem previsão até acumular histórico.
+          </p>
+        )}
+        {!datasetComplete && (
+          <p className="mt-2 text-xs text-red-600">
+            Leitura do ledger incompleta — a previsão acima pode estar parcial. Recarregue.
           </p>
         )}
       </section>
@@ -209,8 +228,8 @@ export default async function ObservabilityPage() {
                   <Td className="font-mono tabular-nums text-gray-500">
                     {e.date ?? "—"}
                   </Td>
-                  <Td className="font-mono">
-                    {e.gate_validate ? "✓" : "✗"} {e.gate_audit ? "✓" : "✗"}
+                  <Td>
+                    <GateChips validate={e.gate_validate} audit={e.gate_audit} />
                   </Td>
                   <Td className="text-right font-mono tabular-nums">
                     {e.quality_score ?? "—"}

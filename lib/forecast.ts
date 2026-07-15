@@ -13,8 +13,10 @@
 // "Ondas" quase simultâneas (mesma campanha em várias origens) são colapsadas
 // antes de medir cadência, para não superestimar a frequência.
 //
-// ESPELHO: scripts/predictions.mjs replica esta lógica para o pipeline de
+// ESPELHO: scripts/forecast-engine.mjs replica esta lógica para o pipeline de
 // render (Node ESM puro, sem build). Ao alterar o algoritmo aqui, replique lá.
+
+import { assessCampaignQuality, type CampaignQualityAssessment } from "./campaign-quality.ts";
 
 export type Confidence = "alta" | "media" | "baixa" | "em-formacao";
 export type Cadence = "mensal" | "irregular" | "esparsa" | null;
@@ -50,6 +52,14 @@ export interface Forecast {
   cadence: Cadence;
   typicalPercent: number | null;
   basis: string;
+  windows: string[]; // datas (ondas) históricas, ordenadas
+  intervals: number[]; // dias entre ondas consecutivas (série de cadência)
+  // --- Contenção Fase C0 ---
+  maxIntervalDays: number | null; // maior intervalo observado (para alerta de outlier)
+  warnings: string[]; // alertas legíveis (intervalo longo/extremo, horizonte, etc.)
+  editorialEligible: boolean; // pode chegar ao leitor? (gate separado do cálculo interno)
+  editorialBlockReason: string | null; // motivo primário do bloqueio (código legível)
+  requiresEditorialReview: boolean; // janela além do horizonte editorial → revisar
 }
 
 export interface ForecastResult {
@@ -59,6 +69,7 @@ export interface ForecastResult {
   withPrediction: number; // rotas+clusters com janela prevista
   routes: Forecast[];
   clusters: Forecast[];
+  quality: CampaignQualityAssessment; // Fase C0.2 — conjunto elegível + exclusões
 }
 
 // ---------------------------------------------------------------------------
@@ -68,7 +79,45 @@ export interface ForecastResult {
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TRAILING_DATE = /(\d{4}-\d{2}-\d{2})$/;
 const DAY_MS = 86_400_000;
-const WAVE_EPSILON_DAYS = 3; // janelas ≤ 3 dias entre si = mesma onda
+const WAVE_EPSILON_DAYS = 3; // janelas ≤ 3 dias entre si = mesma onda (default)
+
+// Parâmetros ajustáveis do motor. Defaults = constantes históricas. O admin
+// persiste overrides no Supabase (forecast_config) e passa via opts.config.
+export interface ForecastConfig {
+  waveEpsilonDays: number; // ondas ≤ N dias = mesma campanha
+  minSamples: number; // < N janelas → em-formacao (sem previsão INTERNA)
+  samplesAlta: number; // mínimo de janelas p/ confiança alta
+  samplesMedia: number; // mínimo de janelas p/ confiança media
+  cvAlta: number; // coef. de variação máx. p/ alta
+  cvMedia: number; // coef. de variação máx. p/ media
+  horizonDaily: number; // horizonte (dias) do radar do daily
+  horizonWeekly: number; // horizonte (dias) do radar do weekly
+  // --- Contenção Fase C0 (defaults versionados em código; NÃO vêm do banco) ---
+  minEditorialWaves: number; // < N ondas → inelegível p/ publicação (mesmo que calcule)
+  longIntervalWarningDays: number; // intervalo acima disso → warning
+  extremeIntervalDays: number; // intervalo acima disso → warning crítico + bloqueia publicação
+  maxEditorialHorizonDays: number; // janela além disso → exige revisão + bloqueia publicação
+}
+
+export const DEFAULT_FORECAST_CONFIG: ForecastConfig = {
+  waveEpsilonDays: WAVE_EPSILON_DAYS,
+  minSamples: 2,
+  samplesAlta: 4,
+  samplesMedia: 3,
+  cvAlta: 0.35,
+  cvMedia: 0.6,
+  horizonDaily: 10,
+  horizonWeekly: 21,
+  // Contenção Fase C0 (ver docs/ARQUITETURA-PRODUTO-RADAR-PREDITIVO.md §27c).
+  minEditorialWaves: 5,
+  longIntervalWarningDays: 365,
+  extremeIntervalDays: 540,
+  maxEditorialHorizonDays: 180,
+};
+
+export function resolveConfig(partial?: Partial<ForecastConfig> | null): ForecastConfig {
+  return { ...DEFAULT_FORECAST_CONFIG, ...(partial ?? {}) };
+}
 
 function isValidISODate(s: unknown): s is string {
   if (typeof s !== "string" || !ISO_DATE.test(s.slice(0, 10))) return false;
@@ -133,11 +182,11 @@ function stdev(xs: number[]): number {
   return Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1));
 }
 
-// Colapsa datas ≤ WAVE_EPSILON_DAYS entre si na mais antiga da onda.
-function collapseWaves(sortedDates: string[]): string[] {
+// Colapsa datas ≤ epsilon dias entre si na mais antiga da onda.
+export function collapseWaves(sortedDates: string[], epsilon: number): string[] {
   const out: string[] = [];
   for (const d of sortedDates) {
-    if (!out.length || daysBetween(out[out.length - 1], d) > WAVE_EPSILON_DAYS) out.push(d);
+    if (!out.length || daysBetween(out[out.length - 1], d) > epsilon) out.push(d);
   }
   return out;
 }
@@ -147,8 +196,13 @@ function todayISO(now?: string): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function classify(samples: number, cv: number, medianDays: number): { confidence: Confidence; cadence: Cadence } {
-  if (samples < 2) return { confidence: "em-formacao", cadence: null };
+function classify(
+  samples: number,
+  cv: number,
+  medianDays: number,
+  cfg: ForecastConfig,
+): { confidence: Confidence; cadence: Cadence } {
+  if (samples < cfg.minSamples) return { confidence: "em-formacao", cadence: null };
   const cadence: Cadence =
     samples >= 3 && medianDays >= 24 && medianDays <= 37 && cv <= 0.4
       ? "mensal"
@@ -156,8 +210,8 @@ function classify(samples: number, cv: number, medianDays: number): { confidence
         ? "esparsa"
         : "irregular";
   let confidence: Confidence;
-  if (samples >= 4 && cv <= 0.35) confidence = "alta";
-  else if (samples >= 3 && cv <= 0.6) confidence = "media";
+  if (samples >= cfg.samplesAlta && cv <= cfg.cvAlta) confidence = "alta";
+  else if (samples >= cfg.samplesMedia && cv <= cfg.cvMedia) confidence = "media";
   else confidence = "baixa";
   return { confidence, cadence };
 }
@@ -172,12 +226,13 @@ function analyze(
   waves: string[],
   percents: number[],
   now: string,
+  cfg: ForecastConfig,
 ): Forecast {
   const samples = waves.length;
   const last = samples ? waves[samples - 1] : null;
   const typicalPercent = percents.length ? median(percents) : null;
 
-  if (samples < 2) {
+  if (samples < cfg.minSamples) {
     return {
       scope, route, origem, destino,
       confidence: "em-formacao",
@@ -185,6 +240,12 @@ function analyze(
       samples, medianDays: null, meanDays: null, stdevDays: null,
       lastWindow: last, cadence: null, typicalPercent,
       basis: `${samples} janela(s) — histórico insuficiente para prever`,
+      windows: waves, intervals: [],
+      maxIntervalDays: null,
+      warnings: [],
+      editorialEligible: false,
+      editorialBlockReason: `em_formacao (${samples}<${cfg.minSamples} ondas)`,
+      requiresEditorialReview: false,
     };
   }
 
@@ -194,7 +255,7 @@ function analyze(
   const mn = Math.round(mean(intervals));
   const sd = Math.round(stdev(intervals));
   const cv = mn > 0 ? sd / mn : 1;
-  const { confidence, cadence } = classify(samples, cv, med);
+  const { confidence, cadence } = classify(samples, cv, med, cfg);
 
   let center = addDays(last as string, med || 30);
   let guard = 0;
@@ -207,6 +268,8 @@ function analyze(
   const cadenceLabel =
     cadence === "mensal" ? "cadência mensal" : cadence === "esparsa" ? "cadência esparsa" : "cadência irregular";
 
+  const gate = editorialGate(samples, intervals, daysBetween(now, center), cfg);
+
   return {
     scope, route, origem, destino, confidence,
     windowStart: addDays(center, -half),
@@ -214,7 +277,63 @@ function analyze(
     samples, medianDays: med, meanDays: mn, stdevDays: sd,
     lastWindow: last, cadence, typicalPercent,
     basis: `${samples} janelas · ${cadenceLabel} ~${med} dias (média ${mn}, desvio ${sd}) · última ${last}`,
+    windows: waves, intervals,
+    maxIntervalDays: gate.maxIntervalDays,
+    warnings: gate.warnings,
+    editorialEligible: gate.editorialEligible,
+    editorialBlockReason: gate.editorialBlockReason,
+    requiresEditorialReview: gate.requiresEditorialReview,
   };
+}
+
+// Gate de contenção Fase C0: separa cálculo interno de elegibilidade editorial.
+// NÃO altera a matemática — só decide se um resultado calculado pode ser
+// publicado, preservando e sinalizando intervalos anômalos (nunca apaga).
+export interface EditorialGate {
+  maxIntervalDays: number | null;
+  warnings: string[];
+  editorialEligible: boolean;
+  editorialBlockReason: string | null;
+  requiresEditorialReview: boolean;
+}
+
+export function editorialGate(
+  samples: number,
+  intervals: number[],
+  daysToCenter: number,
+  cfg: ForecastConfig,
+): EditorialGate {
+  const warnings: string[] = [];
+  const maxIntervalDays = intervals.length ? Math.max(...intervals) : null;
+
+  if (maxIntervalDays != null) {
+    if (maxIntervalDays > 900)
+      warnings.push(`intervalo extremo de ${maxIntervalDays} dias (>900) — possível anomalia de dado (data suspeita, duplicidade ou lacuna de cobertura); revisar antes de publicar`);
+    else if (maxIntervalDays >= cfg.extremeIntervalDays)
+      warnings.push(`intervalo extremo de ${maxIntervalDays} dias (≥${cfg.extremeIntervalDays})`);
+    else if (maxIntervalDays >= cfg.longIntervalWarningDays)
+      warnings.push(`intervalo longo de ${maxIntervalDays} dias (≥${cfg.longIntervalWarningDays})`);
+  }
+
+  const beyondHorizon = daysToCenter > cfg.maxEditorialHorizonDays;
+  if (beyondHorizon)
+    warnings.push(`janela prevista a ${daysToCenter} dias (>${cfg.maxEditorialHorizonDays}) — exige revisão editorial`);
+  if (daysToCenter > 365) warnings.push(`previsão a mais de 365 dias — revisão crítica`);
+
+  let editorialEligible = true;
+  let editorialBlockReason: string | null = null;
+  if (samples < cfg.minEditorialWaves) {
+    editorialEligible = false;
+    editorialBlockReason = `historico_insuficiente_para_publicacao (${samples}<${cfg.minEditorialWaves} ondas)`;
+  } else if (maxIntervalDays != null && maxIntervalDays >= cfg.extremeIntervalDays) {
+    editorialEligible = false;
+    editorialBlockReason = `intervalo_extremo (${maxIntervalDays}d ≥ ${cfg.extremeIntervalDays})`;
+  } else if (beyondHorizon) {
+    editorialEligible = false;
+    editorialBlockReason = `horizonte_excedido (${daysToCenter}d > ${cfg.maxEditorialHorizonDays})`;
+  }
+
+  return { maxIntervalDays, warnings, editorialEligible, editorialBlockReason, requiresEditorialReview: beyondHorizon };
 }
 
 const RANK: Record<Confidence, number> = { alta: 0, media: 1, baixa: 2, "em-formacao": 3 };
@@ -229,13 +348,22 @@ function sortForecasts(a: Forecast, b: Forecast): number {
 // Motor
 // ---------------------------------------------------------------------------
 
-export function buildForecast(rows: CampaignRow[], opts: { now?: string } = {}): ForecastResult {
+export function buildForecast(
+  rows: CampaignRow[],
+  opts: { now?: string; config?: Partial<ForecastConfig> | null } = {},
+): ForecastResult {
   const now = todayISO(opts.now);
+  const cfg = resolveConfig(opts.config);
+
+  // Fase C0.2 — qualidade temporal + duplicidade ANTES da formação de ondas.
+  // Só campanhas elegíveis (data plausível, não duplicata crítica, não
+  // placeholder/permanente) entram na série. Mesmo conjunto usado pelo Predict.
+  const quality = assessCampaignQuality(rows, { normalize: normProgram });
+
   const routeGroups = new Map<string, { origem: string; destino: string; dates: Set<string>; percents: number[] }>();
   const destGroups = new Map<string, { destino: string; dates: Set<string>; percents: number[] }>();
 
-  for (const row of rows) {
-    if (normProgram(row.tipo) !== "transferencia") continue;
+  for (const row of quality.eligibleRows) {
     const d = windowDate(row);
     if (!d) continue;
     const origem = normProgram(row.origem);
@@ -258,15 +386,15 @@ export function buildForecast(rows: CampaignRow[], opts: { now?: string } = {}):
 
   const routes: Forecast[] = [];
   for (const [route, g] of Array.from(routeGroups.entries())) {
-    const waves = collapseWaves(Array.from(g.dates).sort());
-    routes.push(analyze("route", route, g.origem, g.destino, waves, g.percents, now));
+    const waves = collapseWaves(Array.from(g.dates).sort(), cfg.waveEpsilonDays);
+    routes.push(analyze("route", route, g.origem, g.destino, waves, g.percents, now, cfg));
   }
   routes.sort(sortForecasts);
 
   const clusters: Forecast[] = [];
   for (const [destino, g] of Array.from(destGroups.entries())) {
-    const waves = collapseWaves(Array.from(g.dates).sort());
-    clusters.push(analyze("cluster", `→${destino}`, null, destino, waves, g.percents, now));
+    const waves = collapseWaves(Array.from(g.dates).sort(), cfg.waveEpsilonDays);
+    clusters.push(analyze("cluster", `→${destino}`, null, destino, waves, g.percents, now, cfg));
   }
   clusters.sort(sortForecasts);
 
@@ -274,7 +402,7 @@ export function buildForecast(rows: CampaignRow[], opts: { now?: string } = {}):
     routes.filter((r) => r.confidence !== "em-formacao").length +
     clusters.filter((c) => c.confidence !== "em-formacao").length;
 
-  return { generatedFor: now, routesTracked: routes.length, clustersTracked: clusters.length, withPrediction, routes, clusters };
+  return { generatedFor: now, routesTracked: routes.length, clustersTracked: clusters.length, withPrediction, routes, clusters, quality };
 }
 
 // ---------------------------------------------------------------------------
@@ -320,6 +448,7 @@ export interface RadarItem {
   confidence: Confidence;
   window: string;
   basis: string;
+  source: "forecast";
   bonus?: string;
 }
 
@@ -327,7 +456,10 @@ export interface RadarItem {
 // já em pt-BR). em-formacao é descartado (nunca vira linha de radar).
 export function radarItems(forecasts: Forecast[]): RadarItem[] {
   return forecasts
-    .filter((f) => f.confidence !== "em-formacao" && f.windowStart)
+    // Gate C0: só séries editorialmente elegíveis viram item de radar. Séries
+    // bloqueadas (amostra curta, intervalo extremo, horizonte excedido) NUNCA
+    // saem como item editorial comum, mesmo que o motor tenha calculado janela.
+    .filter((f) => f.confidence !== "em-formacao" && f.windowStart && f.editorialEligible)
     .map((f) => ({
       label:
         f.scope === "cluster"
@@ -336,6 +468,11 @@ export function radarItems(forecasts: Forecast[]): RadarItem[] {
       confidence: f.confidence,
       window: formatWindow(f.windowStart, f.windowEnd),
       basis: f.basis,
+      // Proveniência canônica (POLITICA-CANONICA-RADAR.md §5.1): o item vem do
+      // motor de recorrência (Forecast). O leitor nunca vê "Forecast"; o render
+      // usa isto como metadado. Quando a reconciliação canônica alimentar a
+      // digest (fase estrutural), o Predict passa a preencher esta proveniência.
+      source: "forecast" as const,
       ...(f.typicalPercent ? { bonus: `~${f.typicalPercent}%` } : {}),
     }));
 }
@@ -359,6 +496,7 @@ export function upcomingWindows(
     .filter((r) => {
       if (RANK[r.confidence] > floor) return false;
       if (!r.windowStart || !r.windowEnd) return false;
+      if (!r.editorialEligible) return false; // gate C0: bloqueadas não entram no digest
       return daysBetween(now, r.windowStart) <= horizon && daysBetween(now, r.windowEnd) >= 0;
     })
     .sort(sortForecasts);
