@@ -3,7 +3,8 @@
 // social-export.mjs (que busca as rotas /social/* via HTTP) para ambientes que
 // não podem subir um listener. Espelha os layouts de app/social/*.
 //
-// Uso: node scripts/social-render.mjs        -> PNGs em out/social/
+// Uso: node scripts/social-render.mjs            -> PNGs em content/social/cards/
+//      OUT=/tmp/x node scripts/social-render.mjs  -> destino custom
 import React from "react";
 import { ImageResponse } from "next/dist/compiled/@vercel/og/index.node.js";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -133,21 +134,112 @@ function carrossel({ i = 1, n = 6, kind = "texto", kick = "Método à mostra", t
   return [frame(s, [indicator, core, h("div", { key: "f", style: { display: "flex", fontSize: 22, color: HEX.gray400, letterSpacing: 1 } }, "The Loyal · pontos e milhas sem pegadinha")]), s];
 }
 
-const CARDS = [
-  ["quote-mito-desvaloriza.png", quote({ kick: "Mito vs. conta", text: "Milha nunca desvaloriza é a frase mais cara do mundo dos pontos." })],
-  ["quote-metodo-bonus.png", quote({ kick: "Método à mostra", text: "Um bônus dobra a quantidade de pontos, não o valor deles." })],
-  ["tlscore-vale-agir.png", tlscore({ score: 88, verdict: "vale-agir", title: "Transferência bonificada com compra de origem em desconto", bars: [92, 90, 100, 80, 85, 80, 75, 90] })],
-  ["tlscore-nao-confirmado.png", tlscore({ verdict: "nao-confirmado", title: "Rumor de 120% em compra direta ainda sem regulamento" })],
-  ["conta-esfera-latam.png", conta({ title: "Esfera → Latam Pass, 100% de bônus", rows: "custo origem:R$ 1.200,00|pontos:50.000|bônus:100%|milhas finais:100.000", result: "CPM final:R$ 12,00 /milheiro" })],
-  ["c1-1-capa.png", carrossel({ i: 1, n: 6, kind: "capa", kick: "Método à mostra", title: "Por que bônus de 100% quase nunca vale" })],
-  ["c1-2-texto.png", carrossel({ i: 2, n: 6, kind: "texto", title: "O bônus dobra a quantidade", body: "Mas não dobra o valor. Se a milha vale pouco no resgate, 100% sobre pouco continua pouco." })],
-  ["c1-3-texto.png", carrossel({ i: 3, n: 6, kind: "texto", title: "O número que decide é o VPM", body: "Quanto a milha vale quando você usa. Sem ele, a porcentagem do anúncio não diz nada." })],
-  ["c1-4-texto.png", carrossel({ i: 4, n: 6, kind: "texto", title: "Spread = VPM − CPM", body: "Positivo, talvez valha. Negativo, a manchete escondeu metade da conta." })],
-  ["c1-5-veredito.png", carrossel({ i: 5, n: 6, kind: "veredito", score: 88, verdict: "vale-agir", body: "Quando o spread fecha e a regra é clara, vira Vale agir — com a conta à mostra." })],
-  ["c1-6-cta.png", carrossel({ i: 6, n: 6, kind: "cta", title: "A conta completa vira uma edição de 5 minutos, todo dia útil às 8h.", body: "Assine grátis · theloyal.com.br" })],
+// ---------------------------------------------------------------------------
+// MANIFESTO COMPLETO — 30 dias. Hooks extraídos dos bancos de docs/GTM-CONTENT-30D.md.
+// ---------------------------------------------------------------------------
+const METODO = [
+  ["m01", "Um bônus dobra a quantidade de pontos, não o valor deles."],
+  ["m02", "CPM é o preço de acumular. Sem ele, “100% de bônus” é só uma manchete."],
+  ["m03", "Milha barata que resgata mal não é barata. É cara disfarçada."],
+  ["m04", "O TL Score premia a conta inteira, não o número da capa."],
+  ["m05", "Sem regra e sem data, não é oportunidade. É Não confirmado."],
+  ["m06", "A comparação certa é entre o CPM de acúmulo e o VPM do seu resgate."],
+  ["m07", "Cartão premium se justifica por conta, não por status."],
+  ["m08", "Cashback e pontos não se comparam pela porcentagem, e sim pelo valor final em reais."],
+  ["m09", "Bônus de algo que você não consegue usar vale zero."],
+  ["m10", "Acumular sem plano de resgate é financiar o programa, não a sua viagem."],
+  ["m11", "A origem do dado é parte do dado. Rumor não é conta fechada."],
+  ["m12", "Toda a análise cabe numa subtração: VPM menos CPM."],
+];
+const MITO = [
+  ["v01", "Milha nunca desvaloriza é a frase mais cara do mundo dos pontos."],
+  ["v02", "Bônus alto sobre um ponto que vale pouco é bônus cosmético."],
+  ["v03", "Volume não é veredito. Todo mundo transferindo não quer dizer que vale."],
+  ["v04", "Cartão premium se paga na milha? Só depois de subtrair a anuidade."],
+  ["v05", "Desconto sobre um preço já ruim continua ruim."],
+  ["v06", "Acumular sem plano de resgate não é ganhar. É emprestar."],
+  ["v07", "Nenhum programa é o melhor em tudo. Fidelidade cega custa spread."],
+  ["v08", "Status só vale a conta dos benefícios que você de fato usa."],
+  ["v09", "Sofisticação é escolher pela conta, não pelo status do instrumento."],
+  ["v10", "Programa de loja não vale nada? Alguns têm o melhor VPM do mercado."],
+  ["v11", "Transferir ponto não é de graça: a origem também tem um VPM."],
+  ["v12", "Prazo curto não melhora uma conta ruim."],
+];
+const PONTO = [
+  ["p01", "Foi conferir a vigência. Não achou regulamento. A sobrancelha continuou levantada."],
+  ["p02", "O que ele não adora é o resgate custando três vezes mais milhas que mês passado. Ele anotou."],
+  ["p03", "Perguntaram se valia a pena. Ele pediu a conta. Ainda está esperando a conta."],
+  ["p04", "O Ponto não tem programa favorito. O Ponto tem planilha."],
+  ["p05", "Perguntou qual era o VPM do resgate. O silêncio respondeu."],
+  ["p06", "Contas boas não fogem. Contas ruins é que insistem em correr."],
+  ["p07", "Leu o regulamento até o fim. O “nunca” durava doze meses."],
+  ["p08", "Fez a conta da anuidade. Continuou na categoria de baixo, com mais dinheiro."],
+  ["p09", "Ele desconfia porque já fez a conta antes."],
+  ["p10", "Não tinha segredo. Tinha subtração: o que a milha vale menos o que custou."],
+];
+const PERGUNTA = [
+  ["q01", "Qual foi o pior resgate que você já fez sem perceber na hora?"],
+  ["q02", "Você acumula com um resgate em mente, ou acumula primeiro e pensa depois?"],
+  ["q03", "Quantos programas você acompanha? E quantos você realmente usa?"],
+  ["q04", "Cartão com anuidade alta: você já fez a conta de quanto resgatou no ano?"],
+  ["q05", "Cashback ou pontos: qual venceu a última conta que você fez?"],
+  ["q06", "Qual programa mais te decepcionou com desvalorização silenciosa?"],
+  ["q07", "Você já deixou ponto expirar? Quanto acha que perdeu?"],
+  ["q08", "Se pudesse manter um só programa, qual seria — e por quê?"],
 ];
 
-const OUT = process.env.OUT || join(process.cwd(), "out", "social");
+const TLSCORES = [
+  ["tl-vale-agir", { score: 88, verdict: "vale-agir", title: "Transferência bonificada com compra de origem em desconto", bars: [92, 90, 100, 80, 85, 80, 75, 90] }],
+  ["tl-vale-olhar", { score: 76, verdict: "vale-olhar", title: "Compra de pontos com bônus, resgate de liquidez média", bars: [78, 82, 90, 70, 72, 68, 65, 85] }],
+  ["tl-casos-especificos", { score: 62, verdict: "casos-especificos", title: "Bônus só compensa para quem já é do clube", bars: [64, 70, 80, 55, 50, 60, 58, 75] }],
+  ["tl-esperaria", { score: 48, verdict: "esperaria", title: "Spread apertado, melhor aguardar a próxima janela", bars: [46, 55, 70, 40, 42, 45, 50, 60] }],
+  ["tl-evitaria", { score: 31, verdict: "evitaria", title: "CPM acima do VPM de resgate: a conta não fecha", bars: [28, 40, 55, 30, 25, 30, 35, 50] }],
+  ["tl-nao-confirmado", { verdict: "nao-confirmado", title: "Rumor de 120% em compra direta ainda sem regulamento" }],
+];
+const CONTAS = [
+  ["conta-esfera-latam", { title: "Esfera → Latam Pass, 100% de bônus", rows: "custo origem:R$ 1.200,00|pontos:50.000|bônus:100%|milhas finais:100.000", result: "CPM final:R$ 12,00 /milheiro" }],
+  ["conta-compra-pontos", { title: "Compra de pontos com 60% de bônus", rows: "preço base:R$ 38,00 /mil|bônus:60%|CPM bruto:R$ 23,75|VPM resgate:R$ 28,00", result: "spread:+R$ 4,25 /milheiro" }],
+];
+
+const CAROUSELS = {
+  c1: [
+    { kind: "capa", kick: "Método à mostra", title: "Por que bônus de 100% quase nunca vale" },
+    { kind: "texto", title: "O bônus dobra a quantidade", body: "Mas não dobra o valor. Se a milha vale pouco no resgate, 100% sobre pouco continua pouco." },
+    { kind: "texto", title: "O número que decide é o VPM", body: "Quanto a milha vale quando você usa. Sem ele, a porcentagem do anúncio não diz nada." },
+    { kind: "texto", title: "Spread = VPM − CPM", body: "Positivo, talvez valha. Negativo, a manchete escondeu metade da conta." },
+    { kind: "veredito", score: 88, verdict: "vale-agir", body: "Quando o spread fecha e a regra é clara, vira Vale agir — com a conta à mostra." },
+    { kind: "cta", title: "A conta completa vira uma edição de 5 minutos, todo dia útil às 8h.", body: "Assine grátis · theloyal.com.br" },
+  ],
+  c2: [
+    { kind: "capa", kick: "Método à mostra", title: "A régua em três números" },
+    { kind: "texto", title: "CPM — o preço de acumular", body: "Quanto custa cada mil milhas depois do bônus. R$ 1.200 por 100 mil dá R$ 12 por milheiro." },
+    { kind: "texto", title: "VPM — o preço de usar", body: "Quanto essas mil milhas valem no resgate real. Milha barata que resgata mal é cara disfarçada." },
+    { kind: "texto", title: "Spread — a subtração que decide", body: "VPM menos CPM. Positivo, pode valer. Negativo, a oferta trabalha contra você." },
+    { kind: "texto", title: "É isto que o TL Score condensa", body: "Oito critérios auditáveis, uma nota de 0 a 100, um veredito. A conta à mostra, sempre." },
+    { kind: "cta", title: "A conta de cada promoção, todo dia útil às 8h.", body: "Assine grátis · theloyal.com.br" },
+  ],
+  c3: [
+    { kind: "capa", kick: "Como analisamos", title: "A categoria mais impopular — e mais útil" },
+    { kind: "texto", title: "Sem regra publicada, não há veredito", body: "Uma oferta sem regulamento é uma oferta que pode mudar antes de você agir." },
+    { kind: "texto", title: "Sem vigência, não há timing", body: "Data não é detalhe burocrático. É o que separa uma conta real de um boato." },
+    { kind: "veredito", verdict: "nao-confirmado", body: "Classificamos como Não confirmado e seguimos. Radar, não recomendação." },
+    { kind: "texto", title: "Perder o hype custa menos que errar a conta", body: "De quem confiou nela. Independência não é postura; é método." },
+    { kind: "cta", title: "Método antes de manchete, todo dia.", body: "Assine grátis · theloyal.com.br" },
+  ],
+};
+
+const CARDS = [
+  ...METODO.map(([id, text]) => [`metodo-${id}.png`, quote({ kick: "Método à mostra", text })]),
+  ...MITO.map(([id, text]) => [`mito-${id}.png`, quote({ kick: "Mito vs. conta", text })]),
+  ...PONTO.map(([id, text]) => [`ponto-${id}.png`, quote({ kick: "Ponto comenta", text })]),
+  ...PERGUNTA.map(([id, text]) => [`pergunta-${id}.png`, quote({ kick: "Pergunta do dia", text })]),
+  ...TLSCORES.map(([id, cfg]) => [`${id}.png`, tlscore(cfg)]),
+  ...CONTAS.map(([id, cfg]) => [`${id}.png`, conta(cfg)]),
+  ...Object.entries(CAROUSELS).flatMap(([ck, panels]) =>
+    panels.map((p, idx) => [`carrossel-${ck}-${idx + 1}-${p.kind}.png`, carrossel({ ...p, i: idx + 1, n: panels.length })])),
+];
+
+const OUT = process.env.OUT || join(process.cwd(), "content", "social", "cards");
 mkdirSync(OUT, { recursive: true });
 let ok = 0;
 for (const [file, [el, size]] of CARDS) {

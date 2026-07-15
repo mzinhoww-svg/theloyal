@@ -38,12 +38,23 @@ Exemplos:
 /social/carrossel?i=1&n=6&kind=capa&title=Como+decidimos+se+vale
 ```
 
-## Exportar os PNGs
+## Cards prontos
+
+O lote completo (68 PNGs) já vem versionado em [`cards/`](./cards/): 12 Método, 12
+Mito, 10 Ponto, 8 Perguntas, 6 TL Score (um por veredito), 2 conta feita e os 3
+carrosséis (18 painéis). Prontos para postar.
+
+## Exportar / regerar os PNGs
+
+Dois caminhos:
 
 ```bash
-npm run build && npm run start        # sobe o app em :3000
+# 1. Offline, sem servidor (usa o @vercel/og empacotado) -> content/social/cards/
+node scripts/social-render.mjs
+
+# 2. Via HTTP das rotas reais -> out/social/
+npm run build && npm run start
 BASE=http://localhost:3000 node scripts/social-export.mjs
-# PNGs em out/social/
 ```
 
 Em CI ou sem rodar local, aponte `BASE` para a URL de preview da Vercel.
