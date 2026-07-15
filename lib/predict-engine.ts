@@ -10,9 +10,19 @@
 // Readiness com BLOQUEIO (< minSamples → insuficiente). Backtesting walk-forward
 // (nunca usa dado futuro). Confiança rebaixada por variância/backtest.
 //
-// Reaproveita normalização e a data-real-da-janela do forecast (lib/forecast).
+// Formação de séries (datas, normalização, ondas, agrupamento) vem do
+// series-builder compartilhado com o Forecast (ADR-SERIES-001).
 
-import { windowDate, normProgram, type CampaignRow } from "./forecast.ts";
+import {
+  windowDate,
+  normProgram,
+  toMs,
+  daysBetween,
+  addDays,
+  collapseWaves,
+  groupTransferSeries,
+  type CampaignRow,
+} from "./series-builder.ts";
 import { assessCampaignQuality, type CampaignQualityAssessment } from "./campaign-quality.ts";
 
 export type Confidence = "alta" | "media" | "baixa" | "insuficiente";
@@ -104,32 +114,9 @@ export const MODEL_VERSION = "campaign_predict_v2";
 export const BACKTEST_VERSION = "walk_forward_v1";
 
 // ---------------------------------------------------------------------------
-// Datas e estatística
+// Estatística (semântica própria deste motor: null em vazio, sem
+// arredondamento — diferente do Forecast; por isso NÃO vive no series-builder)
 // ---------------------------------------------------------------------------
-
-const DAY_MS = 86_400_000;
-
-function toMs(iso: string): number {
-  return Date.parse(iso.slice(0, 10) + "T00:00:00Z");
-}
-function daysBetween(a: string, b: string): number {
-  return Math.round((toMs(b) - toMs(a)) / DAY_MS);
-}
-function addDays(iso: string, n: number): string {
-  return new Date(toMs(iso) + n * DAY_MS).toISOString().slice(0, 10);
-}
-
-// Colapsa datas quase simultâneas (mesma campanha em várias origens/fontes) em
-// uma única "onda", tomando a data mais antiga do grupo.
-function collapseWaves(dates: string[], epsilon: number): string[] {
-  const sorted = Array.from(new Set(dates)).sort();
-  const waves: string[] = [];
-  for (const d of sorted) {
-    const last = waves[waves.length - 1];
-    if (last == null || daysBetween(last, d) > epsilon) waves.push(d);
-  }
-  return waves;
-}
 
 // Peso de recência exponencial: evento mais recente (rank 0) pesa 1; decai por
 // meia-vida em nº de eventos. rankFromNewest = 0 para o mais novo.
@@ -528,25 +515,14 @@ export function buildPredict(
   const quality = assessCampaignQuality(campaigns, { normalize: normProgram });
   const transf = quality.eligibleRows;
 
-  // Agrupa por destino (cluster) e por origem→destino (route).
-  const byCluster = new Map<string, CampaignRow[]>();
-  const byRoute = new Map<string, { origem: string; destino: string; rows: CampaignRow[] }>();
-  for (const c of transf) {
-    const destino = normProgram(c.destino);
-    const origem = normProgram(c.origem);
-    if (!destino) continue;
-    (byCluster.get(destino) ?? byCluster.set(destino, []).get(destino)!).push(c);
-    if (!origem) continue;
-    const rk = `${origem}→${destino}`;
-    if (!byRoute.has(rk)) byRoute.set(rk, { origem, destino, rows: [] });
-    byRoute.get(rk)!.rows.push(c);
-  }
+  // Particionamento rota/cluster compartilhado com o Forecast (series-builder).
+  const groups = groupTransferSeries(transf, normProgram);
 
-  const clusters = Array.from(byCluster.entries())
-    .map(([destino, rows]) => predictOne("cluster", null, destino, rows, asOf, cfg))
+  const clusters = Array.from(groups.clusters.values())
+    .map((g) => predictOne("cluster", null, g.destino, g.rows, asOf, cfg))
     .sort((a, b) => b.recordsTotal - a.recordsTotal);
-  const routes = Array.from(byRoute.values())
-    .map(({ origem, destino, rows }) => predictOne("route", origem, destino, rows, asOf, cfg))
+  const routes = Array.from(groups.routes.values())
+    .map((g) => predictOne("route", g.origem as string, g.destino, g.rows, asOf, cfg))
     .sort((a, b) => b.recordsTotal - a.recordsTotal);
 
   return { asOf, modelVersion: MODEL_VERSION, backtestVersion: BACKTEST_VERSION, clusters, routes, quality };
