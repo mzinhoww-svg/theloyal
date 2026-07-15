@@ -17,6 +17,7 @@
     "subject": { "type": "string" },
     "preheader": { "type": "string" },
     "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "consolidateFromDaily": { "type": "boolean", "description": "Quando true, o render substitui highlights pela consolidação automática das edições Daily do período (Fase 2.1). Cada highlight referencia sourceEditions e herda a disposição mais restritiva — a Weekly nunca sobe a régua." },
     "signal": { "type": "string", "minLength": 1, "description": "Tese da semana" },
     "radar": {
       "type": "object",
@@ -49,7 +50,8 @@
           "title": { "type": "string" },
           "note": { "type": "string" },
           "verdict": { "type": "string", "enum": ["vale-agir", "vale-olhar", "casos-especificos", "esperaria", "evitaria", "nao-confirmado"] },
-          "score": { "type": "integer", "minimum": 0, "maximum": 100 }
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "sourceEditions": { "type": "array", "items": { "type": "integer" }, "description": "Números das edições Daily de origem (rastreabilidade da consolidação, Fase 2.1)." }
         }
       }
     },

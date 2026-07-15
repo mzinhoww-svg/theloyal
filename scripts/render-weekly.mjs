@@ -8,9 +8,21 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   CONFIDENCE, DISCLAIMER, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS,
-  assertEditorialRules, editorialRuleMessage,
+  assertEditorialRules, editorialRuleMessage, listEditionFiles, loadEdition, loadEntities,
 } from "./lib.mjs";
 import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
+import { consolidatedHighlights } from "./lib/weekly-consolidate.mjs";
+
+// Consolidação Weekly ← Daily (Fase 2.1 / P2.14). Só age quando o JSON pede
+// (consolidateFromDaily:true): lê as edições do Daily no período e substitui os
+// highlights pelos consolidados (rastreáveis via sourceEditions, sem subir a
+// régua). Sem a flag, o weekly segue manual — saída inalterada.
+export function prepareWeekly(wk, opts = {}) {
+  if (!wk || wk.consolidateFromDaily !== true) return wk;
+  const editions = (opts.editions ?? listEditionFiles().map((f) => loadEdition(`content/editions/${f}`)));
+  const entities = opts.entities ?? loadEntities();
+  return { ...wk, highlights: consolidatedHighlights(wk, editions, { entities }) };
+}
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -337,7 +349,7 @@ function main() {
   mkdirSync("out/weekly-web", { recursive: true });
   let failed = false;
   for (const path of files) {
-    const wk = JSON.parse(readFileSync(path, "utf8"));
+    const wk = prepareWeekly(JSON.parse(readFileSync(path, "utf8")));
     const result = validateWeekly(wk);
     result.errors.forEach((m) => console.error(`  ✗ ${m}`));
     if (result.errors.length) { failed = true; console.error(`[weekly] Nº ${wk.number}: FALHOU — ${result.errors.length} erro(s)`); continue; }

@@ -226,6 +226,15 @@ async function main() {
   const live = Boolean(apiKey && publicationId) && !opts.dryRun;
 
   const nowIso = new Date().toISOString();
+  // Log da régua aplicada por item (Fase 2.3): base para o motor de acurácia
+  // cruzar "o que publicamos como ação de fato se confirmou?".
+  const dispositions = (qa.dispositions ?? []).map((x) => ({
+    index: x.index,
+    title: x.title,
+    faixa: x.disposition.faixa,
+    downgradeTo: x.disposition.downgradeTo,
+    tier: x.disposition.tier,
+  }));
   const record = {
     number: ed.number,
     date: ed.date,
@@ -234,6 +243,8 @@ async function main() {
     contentHash: hash,
     action: opts.action,
     mode: live ? "live" : (opts.dryRun ? "dry-run" : "mock"),
+    provenance: "cli", // trilha CLI; campos do MCP (ex.: provenance próprio) são preservados no merge abaixo
+    dispositions,
     postId: prev?.postId ?? null,
     previewUrl: prev?.previewUrl ?? localPreview,
     postUrl: prev?.postUrl ?? null,
@@ -263,10 +274,12 @@ async function main() {
     console.log(`[beehiiv] Modo ${record.mode}: nada enviado à API. Payload em ${OUT_DIR}/${slug}.request.json.`);
   }
 
-  // 5. Registra status (idempotência + histórico).
+  // 5. Registra status (idempotência + histórico). Preserva campos desconhecidos
+  // do registro anterior (ex.: `provenance` gravado por outra trilha como o MCP —
+  // P0.3), para o script não ficar cego ao que o MCP publicou.
   const history = Array.isArray(prev?.history) ? prev.history : [];
   history.push({ at: nowIso, action: opts.action, mode: record.mode, status: record.status, contentHash: hash, forced: opts.force });
-  ledger.posts[slug] = { ...record, history };
+  ledger.posts[slug] = { ...(prev ?? {}), ...record, history };
   saveLedger(ledger);
   writeReport(slug, record, errors);
 
