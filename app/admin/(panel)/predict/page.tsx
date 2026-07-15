@@ -14,6 +14,7 @@ import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
 import { snapshotAllAction } from "./actions";
 import { MODEL_VERSION } from "@/lib/predict-engine";
+import { QualityPanel } from "@/components/admin/QualityPanel";
 
 function confTone(c: string): Tone {
   return c === "alta" ? "green" : c === "media" ? "blue" : c === "baixa" ? "yellow" : "gray";
@@ -238,6 +239,8 @@ export default async function PredictPage() {
           ]}
         />
       </div>
+
+      <QualityPanel quality={result.quality} />
 
       {topReadyCluster && (
         <section className="mb-8">

@@ -15,6 +15,7 @@ import {
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
 import { DistributionBar, WindowTimeline, Field } from "@/components/admin/forecast-charts";
+import { QualityPanel } from "@/components/admin/QualityPanel";
 import {
   saveConfigAction,
   setOverrideAction,
@@ -245,6 +246,8 @@ export default async function PredictPage() {
         <DistributionBar title="Confiança · por rota" dist={data.distributionRoutes} />
         <DistributionBar title="Confiança · por programa" dist={data.distributionClusters} />
       </section>
+
+      <QualityPanel quality={data.result.quality} />
 
       <section className="mb-8">
         <h2 className="mb-1 font-display text-lg font-semibold">Timeline de janelas previstas</h2>
