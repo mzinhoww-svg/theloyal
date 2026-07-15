@@ -12,6 +12,7 @@ import {
 } from "./lib.mjs";
 import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
 import { consolidatedHighlights } from "./lib/weekly-consolidate.mjs";
+import { schemaErrors } from "./lib/schema.mjs";
 
 // Consolidação Weekly ← Daily (Fase 2.1 / P2.14). Só age quando o JSON pede
 // (consolidateFromDaily:true): lê as edições do Daily no período e substitui os
@@ -66,6 +67,10 @@ const REQUIRED = ["number", "period", "dateStart", "dateEnd", "publishTime", "re
 
 export function validateWeekly(wk) {
   const errors = [], warnings = [], ok = [];
+  // Contrato de schema em runtime (P2.13b) — antes dos checks semânticos.
+  const schemaErrs = schemaErrors("weekly", wk);
+  for (const m of schemaErrs) errors.push(m);
+  if (!schemaErrs.length) ok.push("Contrato de schema (weekly.schema.json) satisfeito");
   const missing = REQUIRED.filter((k) => wk[k] === undefined || wk[k] === null || wk[k] === "");
   if (missing.length) errors.push(`Campos obrigatórios ausentes: ${missing.join(", ")}`);
   else ok.push("Estrutura do weekly completa");

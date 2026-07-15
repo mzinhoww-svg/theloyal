@@ -1,4 +1,4 @@
-// Fonte de verdade ÚNICA da taxonomia de Verdict do The Loyalty.
+// Fonte de verdade ÚNICA da taxonomia de Verdict do The Loyal.
 // Apêndice C do RFC-001 (Editorial Knowledge System). Todo pipeline —
 // validação/render de e-mail (Pipeline A, scripts/lib.mjs), render de e-mail
 // legado e web archive (Pipeline B, renderer/*, components/daily) — deriva

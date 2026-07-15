@@ -3,7 +3,8 @@
 // (Salvar como PDF a partir da web, com @media print).
 // Uso: node scripts/pro.mjs [caminho.json]
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import { DISCLAIMER, TOKENS, VERDICTS, assertEditorialRules, editorialRuleMessage, loadEdition } from "./lib.mjs";
+import { DISCLAIMER, TOKENS, VERDICTS, assertEditorialRules, editorialRuleMessage, collectStrings, loadEdition } from "./lib.mjs";
+import { schemaErrors } from "./lib/schema.mjs";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -17,6 +18,10 @@ function esc(s) {
 
 export function validatePro(r) {
   const errors = [], warnings = [], ok = [];
+  // Contrato de schema em runtime (P2.13b) — antes dos checks semânticos.
+  const schemaErrs = schemaErrors("pro", r);
+  for (const m of schemaErrs) errors.push(m);
+  if (!schemaErrs.length) ok.push("Contrato de schema (pro-report.schema.json) satisfeito");
   const missing = REQUIRED.filter((k) => r[k] === undefined || r[k] === null || r[k] === "");
   if (missing.length) errors.push(`Campos obrigatórios ausentes: ${missing.join(", ")}`);
   else ok.push("Estrutura executiva completa (10 seções)");
@@ -54,6 +59,7 @@ export function validatePro(r) {
   if ((r.sources ?? []).length && r.sources.every((s) => /^https?:\/\//.test(s.url ?? ""))) ok.push("Fontes com URL");
 
   // Tom executivo: sinalizar explicação básica e parágrafos longos.
+  const strings = collectStrings(r);
   strings.forEach((s) => {
     if (/\b(o que é|como funciona|para iniciantes|passo a passo)\b/iu.test(s)) warnings.push(`Tom pouco executivo (explicação básica): ${JSON.stringify(s.slice(0, 50))}`);
   });
