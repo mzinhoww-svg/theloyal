@@ -110,6 +110,14 @@ O envio das edições é feito pelo Publisher (`npm run beehiiv`, ver `content/R
 publica a peça já renderizada no Beehiiv, por padrão só como **rascunho**, com QA gate,
 idempotência e ledger em `content/beehiiv-status.json`.
 
+## MCP — servidor Rams
+
+O projeto registra o servidor MCP **rams** (transporte HTTP, `https://worker.rams.ai/mcp`)
+em `.mcp.json`. O token de acesso **não** fica no repositório: defina a variável de
+ambiente `RAMS_API_KEY` (o valor `rams_...`) na máquina ou no ambiente remoto do
+Claude Code — o `.mcp.json` referencia `${RAMS_API_KEY}` no header `Authorization`.
+Sem a variável, o servidor simplesmente não autentica; nada quebra no build.
+
 ## Produção / go-live
 
 Passo a passo de ativação (GitHub Actions, secrets, publicação assistida, checklist
