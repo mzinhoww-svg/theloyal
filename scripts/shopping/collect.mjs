@@ -30,19 +30,22 @@ async function sb(path, { method = "GET", body, prefer } = {}) {
 const rpc = (fn, a = {}) =>
   fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: SB_KEY, authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" }, body: JSON.stringify(a) }).then((r) => r.json());
 
-// Flags do navegador. --disable-http2 contorna o ERR_HTTP2_PROTOCOL_ERROR que a
-// Azul Fidelidade devolve para conexões headless; AutomationControlled reduz
-// detecção de bot.
-const LAUNCH_ARGS = ["--no-sandbox", "--disable-http2", "--disable-blink-features=AutomationControlled"];
+// Flags do navegador. AutomationControlled reduz detecção de bot.
+// (--disable-http2 foi testado contra a Azul e removido: não destravou o portal
+// — só trocou a falha instantânea por timeout de 45s, inchando o run. A Azul
+// bloqueia a coleta headless no nível de rede; precisa de outra abordagem.)
+const LAUNCH_ARGS = ["--no-sandbox", "--disable-blink-features=AutomationControlled"];
 
-// goto com 1 retry — cobre falhas transitórias de rede/protocolo (Azul).
+// goto com 1 retry para falhas transitórias, mas NÃO repete em timeout — um
+// portal que pendura (ex.: Azul) é bloqueio determinístico, não vale gastar
+// outros 25s. Timeout curto (25s) para falhar rápido nas fontes bloqueadas.
 async function gotoResilient(page, url) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
       return;
     } catch (e) {
-      if (attempt === 2) throw e;
+      if (attempt === 2 || /timeout/i.test(String(e))) throw e;
       await page.waitForTimeout(1500);
     }
   }
