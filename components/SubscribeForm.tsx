@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { track } from "@/lib/track";
+import { getAttribution } from "@/lib/attribution";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -44,7 +45,11 @@ export function SubscribeForm({
 
     setStatus("loading");
     setMessage("");
-    track("subscribe_submit", { source });
+
+    // Canal de origem (twitter, linkedin, ...) capturado da URL, separado do
+    // `source` (qual form da pagina). Vai junto no evento e no cadastro.
+    const attribution = getAttribution();
+    track("subscribe_submit", { source, ...attribution });
 
     // Chama a route handler no servidor (app/api/subscribe/route.ts), que fala
     // com o Beehiiv usando a chave em variavel de ambiente. A chave nunca chega
@@ -57,11 +62,12 @@ export function SubscribeForm({
           email,
           empresa: (data.get("empresa") as string) || "",
           source,
+          ...attribution,
         }),
       });
 
       if (res.ok) {
-        track("subscribe_success", { source });
+        track("subscribe_success", { source, ...attribution });
         setStatus("success");
         setMessage(
           "Pronto. A próxima edição chega às 8h. Ponto abanou o rabo, o que é raro.",
@@ -72,7 +78,11 @@ export function SubscribeForm({
 
       // A rota devolve erros tipados; traduz para a voz do Ponto sem vazar detalhe.
       const payload = (await res.json().catch(() => ({}))) as { error?: string };
-      track("subscribe_error", { source, reason: payload.error ?? String(res.status) });
+      track("subscribe_error", {
+        source,
+        ...attribution,
+        reason: payload.error ?? String(res.status),
+      });
       if (res.status === 429) {
         setMessage("Muitas tentativas. Respire e tente de novo em um minuto.");
       } else if (payload.error === "invalid_email") {
@@ -82,7 +92,7 @@ export function SubscribeForm({
       }
       setStatus("error");
     } catch {
-      track("subscribe_error", { source, reason: "network" });
+      track("subscribe_error", { source, ...attribution, reason: "network" });
       setMessage("Sem conexão com o servidor. Tente de novo em instantes.");
       setStatus("error");
     }
