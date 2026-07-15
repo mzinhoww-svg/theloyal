@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Pill, type Tone } from "./ui";
+import { Pill, Sparkline, type Tone } from "./ui";
 
 // Blocos de dashboard das áreas Forecast/Predict — server-safe, só tokens da
 // marca. A camada de leitura rápida fica no topo da página; o detalhe pesado
@@ -184,6 +184,7 @@ export function OpportunityCard({
   cadenceDays,
   daysSinceLast,
   window,
+  trend,
   actions,
 }: {
   label: string;
@@ -196,6 +197,7 @@ export function OpportunityCard({
   cadenceDays: number | null;
   daysSinceLast: number | null;
   window: string | null;
+  trend?: number[];
   actions?: ReactNode;
 }) {
   return (
@@ -237,6 +239,12 @@ export function OpportunityCard({
           <dd className="font-mono tabular-nums text-ink">{window ?? "—"}</dd>
         </div>
       </dl>
+      {trend && trend.length >= 2 && (
+        <div className="mt-2 border-t border-line pt-2">
+          <div className="mb-1 text-[11px] text-gray-400">prob. 30d ao longo dos snapshots</div>
+          <Sparkline data={trend} tone={tone} height={20} />
+        </div>
+      )}
       {actions != null && (
         <div className="mt-2 flex items-center gap-1 border-t border-line pt-2">{actions}</div>
       )}

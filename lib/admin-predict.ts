@@ -6,7 +6,10 @@ import { rest, insert, fetchAllRows } from "./admin-db";
 import { buildPredict, type Prediction, type PredictResult } from "./predict-engine";
 import { getOverrides, type OverrideRow } from "./admin-forecast";
 import { applyPredictOverrides, type WithOverrides } from "./predict-overrides";
+import { groupSnapshotRows, type SnapshotTrendRow, type TrendPoint } from "./predict-trends";
 import type { CampaignRow } from "./forecast";
+
+export type { TrendPoint } from "./predict-trends";
 
 export type { Prediction, PredictResult } from "./predict-engine";
 
@@ -60,6 +63,35 @@ export async function loadPredict(now?: string): Promise<{
     datasetComplete: loaded.complete,
     asOf,
   };
+}
+
+// Tendência das séries: uma ÚNICA query (in.() nas chaves) pelos últimos
+// `days` dias de snapshots, agrupada em memória. Sem snapshot diário não há
+// tendência — a coleta automatizável vive em /api/predict-snapshot.
+export async function getSeriesTrends(
+  seriesKeys: string[],
+  days = 90,
+  now?: string,
+): Promise<Map<string, TrendPoint[]>> {
+  if (!seriesKeys.length) return new Map();
+  const ref = now ? Date.parse(now + "T00:00:00Z") : Date.now();
+  const since = new Date(ref - days * 86_400_000).toISOString().slice(0, 10);
+  const list = seriesKeys.map((k) => `"${k.replace(/"/g, "")}"`).join(",");
+  const rows = await rest<SnapshotTrendRow>(
+    `predict_snapshots?select=series_key,as_of_date,prob_30,confidence,backtest` +
+      `&series_key=in.(${encodeURIComponent(list)})` +
+      `&as_of_date=gte.${since}&order=as_of_date.asc`,
+  );
+  return groupSnapshotRows(rows);
+}
+
+// Snapshota TODAS as séries do dia (upsert idempotente por série+as_of_date).
+// Usado pela action do admin e pelo endpoint de cron.
+export async function snapshotAll(by?: string): Promise<{ count: number; asOf: string }> {
+  const { result } = await loadPredict();
+  const all = [...result.clusters, ...result.routes];
+  for (const p of all) await saveSnapshot(p, by);
+  return { count: all.length, asOf: result.asOf };
 }
 
 export const getSnapshots = (limit = 20) =>

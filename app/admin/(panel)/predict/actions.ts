@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { loadPredict, saveSnapshot } from "@/lib/admin-predict";
+import { snapshotAll } from "@/lib/admin-predict";
 import { readOverridePayload, saveOverride, removeOverrideById } from "@/lib/admin-overrides";
 import type { ActionState } from "@/components/admin/toast";
 
@@ -41,11 +41,9 @@ export async function snapshotAllAction(
   _formData: FormData,
 ): Promise<ActionState> {
   try {
-    const { result } = await loadPredict();
-    const all = [...result.clusters, ...result.routes];
-    for (const p of all) await saveSnapshot(p);
+    const { count, asOf } = await snapshotAll(who());
     revalidatePath("/admin/predict");
-    return { ok: true, message: `${all.length} séries snapshotadas (as_of ${result.asOf})` };
+    return { ok: true, message: `${count} séries snapshotadas (as_of ${asOf})` };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "falha ao snapshotar" };
   }

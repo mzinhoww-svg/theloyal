@@ -1,5 +1,12 @@
-import { loadPredict, type Prediction, type PredictSeriesView } from "@/lib/admin-predict";
+import {
+  loadPredict,
+  getSeriesTrends,
+  type Prediction,
+  type PredictSeriesView,
+  type TrendPoint,
+} from "@/lib/admin-predict";
 import { overrideRouteKey } from "@/lib/predict-overrides";
+import { p30Series, calibrationFromTrend, type Calibration } from "@/lib/predict-trends";
 import {
   StatCard,
   PageHeader,
@@ -10,6 +17,7 @@ import {
   Td,
   EmptyRow,
   EmptyState,
+  Sparkline,
   type Tone,
 } from "@/components/admin/ui";
 import {
@@ -134,8 +142,9 @@ function SeriesRow({ p, showHistory = false }: { p: PredictSeriesView; showHisto
   );
 }
 
-function DetailCard({ p }: { p: Prediction }) {
+function DetailCard({ p, trend }: { p: Prediction; trend?: TrendPoint[] }) {
   const t = confTone(p.confidence);
+  const spark = p30Series(trend);
   return (
     <div className="rounded-lg border border-line bg-surface p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -172,6 +181,16 @@ function DetailCard({ p }: { p: Prediction }) {
             <div className="mt-2 font-mono text-xs text-gray-500">
               janela {p.windowStart} … {p.windowEnd} · central {p.centralDate}
             </div>
+            {spark && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+                  Evolução da prob. 30d (snapshots)
+                </div>
+                <div className="max-w-[240px]">
+                  <Sparkline data={spark} tone={t} height={24} />
+                </div>
+              </div>
+            )}
           </div>
           <div>
             <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
@@ -280,6 +299,19 @@ export default async function PredictPage() {
     };
   });
 
+  // Tendência: uma query pelos snapshots das séries em destaque (últimos 90d).
+  const trendKeys = Array.from(
+    new Set([
+      ...ranked.slice(0, 10).map((p) => p.seriesKey),
+      ...(topReadyCluster ? [topReadyCluster.seriesKey] : []),
+    ]),
+  );
+  const trends = await getSeriesTrends(trendKeys);
+  const calibrations = trendKeys
+    .map((k) => ({ key: k, cal: calibrationFromTrend(trends.get(k)) }))
+    .filter((c): c is { key: string; cal: Calibration } => c.cal != null);
+  const labelByKey = new Map(series.map((p) => [p.seriesKey, seriesLabel(p)]));
+
   return (
     <>
       <PageHeader
@@ -340,6 +372,7 @@ export default async function PredictPage() {
                 cadenceDays={p.medianIntervalAll}
                 daysSinceLast={p.daysSinceLast}
                 window={p.centralDate ? shortDate(p.centralDate) : null}
+                trend={p30Series(trends.get(p.seriesKey)) ?? undefined}
                 actions={
                   <>
                     <QuickOverride p={p} action="pin" label={p.pinned ? "—" : "fixar"} />
@@ -376,9 +409,56 @@ export default async function PredictPage() {
       {topReadyCluster && (
         <section className="mb-8">
           <h2 className="mb-2 font-display text-lg font-semibold">Detalhe — programa com mais histórico</h2>
-          <DetailCard p={topReadyCluster} />
+          <DetailCard p={topReadyCluster} trend={trends.get(topReadyCluster.seriesKey)} />
         </section>
       )}
+
+      <Disclosure
+        title="Calibração do motor"
+        count={calibrations.length}
+        sub="primeiro vs último snapshot por série — o backtest está melhorando?"
+      >
+        {calibrations.length ? (
+          <Table>
+            <thead>
+              <tr>
+                <Th>Série</Th>
+                <Th className="text-right">Snapshots</Th>
+                <Th>Período</Th>
+                <Th className="text-right">Prob. 30d</Th>
+                <Th className="text-right">Acerto de janela</Th>
+                <Th className="text-right">Erro mediano</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {calibrations.map(({ key, cal }) => (
+                <tr key={key}>
+                  <Td label="Série" className="font-medium">{labelByKey.get(key) ?? key}</Td>
+                  <Td label="Snapshots" className="text-right font-mono tabular-nums">{cal.snapshots}</Td>
+                  <Td label="Período" className="font-mono text-xs tabular-nums text-gray-500">
+                    {shortDate(cal.firstAsOf)} … {shortDate(cal.lastAsOf)}
+                  </Td>
+                  <Td label="Prob. 30d" className="text-right font-mono tabular-nums">
+                    {pct(cal.p30First)} → {pct(cal.p30Last)}
+                  </Td>
+                  <Td label="Acerto de janela" className="text-right font-mono tabular-nums">
+                    {pct(cal.hitRateFirst)} → {pct(cal.hitRateLast)}
+                  </Td>
+                  <Td label="Erro mediano" className="text-right font-mono tabular-nums">
+                    {cal.errorFirst != null ? `${cal.errorFirst}d` : "—"} →{" "}
+                    {cal.errorLast != null ? `${cal.errorLast}d` : "—"}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        ) : (
+          <EmptyState
+            label="ainda não há snapshots suficientes para medir tendência"
+            hint="A tendência precisa de ≥2 snapshots por série. Gere um agora no botão acima — e o cron diário (/api/predict-snapshot) acumula o histórico automaticamente."
+          />
+        )}
+      </Disclosure>
 
       <Disclosure
         title="Qualidade do ledger (C0.2)"
