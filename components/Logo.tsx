@@ -1,5 +1,5 @@
-// Logo oficial The Loyalty. Tokens do tema apenas — nenhum hex hardcodado.
-// Wordmark: Fraunces (var --font-display) "The" 600 + "Loyalty" 700.
+// Logo oficial The Loyal. Tokens do tema apenas — nenhum hex hardcodado.
+// Wordmark: Fraunces (var --font-display) "The" 600 + "Loyal" 700.
 // Monograma: quadrado (bg token) + letras (currentColor) construidas em geometria fixa.
 
 type WordmarkProps = {
@@ -15,7 +15,7 @@ export function Wordmark({ tone = "ink", withTagline = false, className = "" }: 
     <span className={`inline-flex flex-col leading-none ${className}`}>
       <span className={`font-display ${text}`} style={{ letterSpacing: "-0.01em" }}>
         <span style={{ fontWeight: 600 }}>The </span>
-        <span style={{ fontWeight: 700 }}>Loyalty</span>
+        <span style={{ fontWeight: 700 }}>Loyal</span>
       </span>
       {withTagline && (
         <span className="mt-1 font-sans text-[0.72em] font-normal text-gray-500">
@@ -34,7 +34,7 @@ type MonogramProps = {
   title?: string;
 };
 
-export function Monogram({ size = 48, variant = "default", className = "", title = "The Loyalty" }: MonogramProps) {
+export function Monogram({ size = 48, variant = "default", className = "", title = "The Loyal" }: MonogramProps) {
   const square =
     variant === "green" ? "bg-green-600" : variant === "inverted" ? "bg-paper" : "bg-ink";
   const letters = variant === "default" ? "text-paper" : "text-ink";

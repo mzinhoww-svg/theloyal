@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { CONFIDENCE, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
+import { resolveDailyRadar } from "./render.mjs";
 
 // ---------- Componentes React (mesmos blocos canônicos da marca) ----------
 
@@ -49,6 +50,7 @@ function Badge({ verdict, score }) {
 }
 
 function Article({ ed }) {
+  const radar = resolveDailyRadar(ed);
   return h(
     "article",
     { className: "tl-web" },
@@ -68,7 +70,7 @@ function Article({ ed }) {
         h("span", null, `LEITURA DE ${ed.readingMinutes} MIN`),
       ),
     ),
-    h("h1", { className: "tl-sr" }, `The Loyalty Nº ${ed.number} — ${ed.subject ?? "Edição do Daily"}`),
+    h("h1", { className: "tl-sr" }, `The Loyal Nº ${ed.number} — ${ed.subject ?? "Edição do Daily"}`),
     h(
       "section",
       { "aria-labelledby": "sinal" },
@@ -170,16 +172,16 @@ function Article({ ed }) {
           ),
         )
       : null,
-    ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
+    radar && Array.isArray(radar.windows) && radar.windows.length
       ? h(
           "section",
           null,
           h("span", { className: "tl-label" }, "Radar de janelas"),
-          h("p", { className: "tl-radar-note" }, ed.radar.note ?? RADAR_NOTE_DEFAULT),
+          h("p", { className: "tl-radar-note" }, radar.note ?? RADAR_NOTE_DEFAULT),
           h(
             "ul",
             { className: "tl-radar" },
-            ed.radar.windows.map((w, i) => {
+            radar.windows.map((w, i) => {
               const c = CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa;
               return h(
                 "li",
@@ -318,7 +320,7 @@ export function renderWebArchive(ed) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Loyalty Nº ${ed.number} — ${escAttr(ed.subject ?? "Daily")}</title>
+<title>The Loyal Nº ${ed.number} — ${escAttr(ed.subject ?? "Daily")}</title>
 <meta name="description" content="${escAttr(desc)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

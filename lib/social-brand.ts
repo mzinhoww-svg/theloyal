@@ -3,6 +3,8 @@
 // diretamente (exceção prevista no CLAUDE.md), não classes do tema, porque o
 // runtime do satori/next-og não resolve Tailwind.
 
+import { CANONICAL_VERDICTS } from "../scripts/taxonomy.mjs";
+
 export const HEX = {
   paper: "#FAF7F0",
   paperDark: "#F1ECE1",
@@ -32,29 +34,29 @@ export type Verdict =
   | "evitaria"
   | "nao-confirmado";
 
-// Espelha VERDICT_STYLE de components/ui.tsx, mas com hex (o card não tem
-// Tailwind). Mantém a regra 8: green de texto é green-700; amarelo é fill com
-// texto Ink; vermelho é fill com texto surface; não confirmado é borda tracejada.
+// Paleta social do veredito (hex; o card não tem Tailwind). Mantém a regra 8:
+// green de texto é green-700; amarelo é fill com texto Ink; vermelho é fill com
+// texto surface; não confirmado é borda tracejada. Só ESTILO — os RÓTULOS vêm da
+// taxonomia canônica (scripts/taxonomy.mjs), não são mais copiados aqui
+// (DEBT-004): assim o rótulo do social nunca diverge do Daily/Weekly/Pro.
+const STYLE: Record<Verdict, { bg: string; fg: string; dashed?: boolean }> = {
+  "vale-agir": { bg: HEX.green100, fg: HEX.green700 },
+  "vale-olhar": { bg: HEX.blue100, fg: HEX.blue700 },
+  "casos-especificos": { bg: HEX.paperDark, fg: HEX.gray500 },
+  esperaria: { bg: HEX.yellow500, fg: HEX.ink },
+  evitaria: { bg: HEX.red600, fg: HEX.surfaceOnRed },
+  "nao-confirmado": { bg: HEX.paper, fg: HEX.gray500, dashed: true },
+};
+
 export const VERDICT: Record<
   Verdict,
   { label: string; bg: string; fg: string; dashed?: boolean }
-> = {
-  "vale-agir": { label: "VALE AGIR", bg: HEX.green100, fg: HEX.green700 },
-  "vale-olhar": { label: "VALE OLHAR", bg: HEX.blue100, fg: HEX.blue700 },
-  "casos-especificos": {
-    label: "SÓ PARA CASOS ESPECÍFICOS",
-    bg: HEX.paperDark,
-    fg: HEX.gray500,
-  },
-  esperaria: { label: "ESPERARIA", bg: HEX.yellow500, fg: HEX.ink },
-  evitaria: { label: "EVITARIA", bg: HEX.red600, fg: HEX.surfaceOnRed },
-  "nao-confirmado": {
-    label: "NÃO CONFIRMADO",
-    bg: HEX.paper,
-    fg: HEX.gray500,
-    dashed: true,
-  },
-};
+> = Object.fromEntries(
+  CANONICAL_VERDICTS.map((v: { key: string; label: string }) => [
+    v.key,
+    { label: v.label, ...STYLE[v.key as Verdict] },
+  ]),
+) as Record<Verdict, { label: string; bg: string; fg: string; dashed?: boolean }>;
 
 export function isVerdict(v: string | null | undefined): v is Verdict {
   return !!v && Object.prototype.hasOwnProperty.call(VERDICT, v);

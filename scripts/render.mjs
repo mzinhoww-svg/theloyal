@@ -1,12 +1,39 @@
 // Renderização da edição: e-mail HTML (coluna única 600px, fallbacks Georgia/
 // Arial/Consolas, zero request externo) e versão em texto puro.
 // Uso: node scripts/render.mjs [caminho-da-edicao.json]
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { CONFIDENCE, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
+import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
 const MONO = "Consolas, 'Courier New', monospace";
+const FORECAST_PATH = "content/forecast.json";
+
+// Radar do Daily: override manual no JSON tem prioridade; ausente, puxa
+// digest.radarDaily do forecast — SÓ se fresco e completo (gate C0), igual ao
+// Weekly. Stale/ausente/inválido ⇒ null (nunca publica número desatualizado em
+// silêncio). Antes o radar do Daily era só colado à mão (INCONS-9).
+export function resolveDailyRadar(ed) {
+  if (ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length) return ed.radar; // override manual
+  if (!existsSync(FORECAST_PATH)) return null;
+  let fc;
+  try {
+    fc = JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
+  } catch {
+    console.error("[render] content/forecast.json inválido — radar automático do Daily não usado.");
+    return null;
+  }
+  const maxAgeHours = Number(process.env.MAX_FORECAST_AGE_HOURS) || DEFAULT_MAX_FORECAST_AGE_HOURS;
+  const health = assessForecastArtifact(fc, { maxAgeHours });
+  if (health.status !== "fresh") {
+    console.error(`[render] forecast.json ${health.status} — radar automático do Daily NÃO usado (sem números stale).`);
+    return null;
+  }
+  const windows = fc?.digest?.radarDaily ?? [];
+  if (!windows.length) return null;
+  return { note: RADAR_NOTE_DEFAULT, windows };
+}
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -73,10 +100,11 @@ export function renderEmail(ed) {
       </table>
       <div style="font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400};margin-top:6px">Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com outliers e promo fora da banda; n/c quando a amostra é insuficiente.</div>`
     : "";
-  const radarHtml = ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
+  const radar = resolveDailyRadar(ed);
+  const radarHtml = radar && Array.isArray(radar.windows) && radar.windows.length
     ? label("Radar de janelas") +
-      `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(ed.radar.note ?? RADAR_NOTE_DEFAULT)}</div>` +
-      ed.radar.windows
+      `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(radar.note ?? RADAR_NOTE_DEFAULT)}</div>` +
+      radar.windows
         .map((w) => {
           const c = CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa;
           const bonus = w.bonus ? ` <span style="font-family:${MONO};font-size:13px;color:${TOKENS.g500}">${esc(w.bonus)}</span>` : "";
@@ -161,10 +189,11 @@ export function renderPlain(ed) {
     L.push("SHOPPING · VPM OBSERVADO (R$/milheiro, catálogo público)");
     for (const s of ed.shoppingWatch) L.push(`  ${s.player} · ${s.category}: ${s.vpmObservado}`);
   }
-  if (ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length) {
+  const radar = resolveDailyRadar(ed);
+  if (radar && Array.isArray(radar.windows) && radar.windows.length) {
     L.push("RADAR DE JANELAS");
-    L.push(ed.radar.note ?? RADAR_NOTE_DEFAULT, "");
-    for (const w of ed.radar.windows) {
+    L.push(radar.note ?? RADAR_NOTE_DEFAULT, "");
+    for (const w of radar.windows) {
       const c = (CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa).label;
       L.push(`  ${w.label}${w.bonus ? " " + w.bonus : ""}  —  ${w.window}  [${c}]`);
       if (w.basis) L.push(`    ${w.basis}`);
