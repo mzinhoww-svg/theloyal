@@ -1,15 +1,47 @@
 // Renderização da edição: e-mail HTML (coluna única 600px, fallbacks Georgia/
 // Arial/Consolas, zero request externo) e versão em texto puro.
 // Uso: node scripts/render.mjs [caminho-da-edicao.json]
-import { mkdirSync, writeFileSync } from "node:fs";
-import { CONFIDENCE, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition } from "./lib.mjs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { CONFIDENCE, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS, editionSlug, listEditionFiles, loadEdition, monitoringLine } from "./lib.mjs";
+import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
 const MONO = "Consolas, 'Courier New', monospace";
+const FORECAST_PATH = "content/forecast.json";
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+// Radar do Daily: se a edição não trouxer radar manual, usa digest.radarDaily do
+// forecast — SÓ se o artefato estiver fresco e completo (mesma regra honesta da
+// Weekly; nunca publica número stale em silêncio). Vem do resultado canônico
+// reconciliado (Predict canônico; nota de corte já aplicada em scripts/forecast.mjs).
+export function resolveRadar(ed, opts = {}) {
+  if (ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length) return ed.radar; // override manual
+  let fc = opts.artifact ?? null; // injeção para teste; produção lê o arquivo
+  if (!fc) {
+    if (!existsSync(FORECAST_PATH)) return null;
+    try {
+      fc = JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
+    } catch {
+      console.error("[daily] content/forecast.json inválido — radar automático não usado.");
+      return null;
+    }
+  }
+  const maxAgeHours = Number(process.env.MAX_FORECAST_AGE_HOURS) || DEFAULT_MAX_FORECAST_AGE_HOURS;
+  const health = assessForecastArtifact(fc, { maxAgeHours });
+  if (health.status !== "fresh") {
+    console.error(`[daily] forecast.json ${health.status} — radar automático NÃO usado (sem números stale).`);
+    return null;
+  }
+  const windows = fc?.digest?.radarDaily ?? [];
+  const monitoringCount = Number(fc?.digest?.radarMonitoringDaily) || 0;
+  // Mostra o bloco quando há janela publicável OU quando há séries em observação
+  // (A2: o leitor vê "monitorando N séries" em vez de silêncio — degrade honesto).
+  if (!windows.length && !monitoringCount) return null;
+  return { note: RADAR_NOTE_DEFAULT, windows, monitoringCount };
 }
 
 function badge(verdict, score) {
@@ -73,10 +105,14 @@ export function renderEmail(ed) {
       </table>
       <div style="font-family:${SANS};font-size:12px;line-height:1.6;color:${TOKENS.g400};margin-top:6px">Custo de fabricação de resgate não-aéreo por catálogo público (R$/milheiro). Mediana com outliers e promo fora da banda; n/c quando a amostra é insuficiente.</div>`
     : "";
-  const radarHtml = ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length
+  const radar = resolveRadar(ed);
+  const radarMon = radar && radar.monitoringCount
+    ? `<div style="font-family:${SANS};font-size:12px;color:${TOKENS.g400};margin-top:10px">${esc(monitoringLine(radar.monitoringCount))}</div>`
+    : "";
+  const radarHtml = radar
     ? label("Radar de janelas") +
-      `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(ed.radar.note ?? RADAR_NOTE_DEFAULT)}</div>` +
-      ed.radar.windows
+      `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(radar.note ?? RADAR_NOTE_DEFAULT)}</div>` +
+      (radar.windows ?? [])
         .map((w) => {
           const c = CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa;
           const bonus = w.bonus ? ` <span style="font-family:${MONO};font-size:13px;color:${TOKENS.g500}">${esc(w.bonus)}</span>` : "";
@@ -90,7 +126,7 @@ export function renderEmail(ed) {
             ${basis}
           </div>`;
         })
-        .join("")
+        .join("") + radarMon
     : "";
 
   const sourcesHtml = ed.sources
@@ -161,14 +197,16 @@ export function renderPlain(ed) {
     L.push("SHOPPING · VPM OBSERVADO (R$/milheiro, catálogo público)");
     for (const s of ed.shoppingWatch) L.push(`  ${s.player} · ${s.category}: ${s.vpmObservado}`);
   }
-  if (ed.radar && Array.isArray(ed.radar.windows) && ed.radar.windows.length) {
+  const radar = resolveRadar(ed);
+  if (radar) {
     L.push("RADAR DE JANELAS");
-    L.push(ed.radar.note ?? RADAR_NOTE_DEFAULT, "");
-    for (const w of ed.radar.windows) {
+    L.push(radar.note ?? RADAR_NOTE_DEFAULT, "");
+    for (const w of radar.windows ?? []) {
       const c = (CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa).label;
       L.push(`  ${w.label}${w.bonus ? " " + w.bonus : ""}  —  ${w.window}  [${c}]`);
       if (w.basis) L.push(`    ${w.basis}`);
     }
+    if (radar.monitoringCount) L.push(`  ${monitoringLine(radar.monitoringCount)}`);
     L.push("");
   }
   L.push("FONTES");

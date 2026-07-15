@@ -184,7 +184,9 @@ async function main() {
         opportunityHorizonDays: config.horizonWeekly,
       })
     : null;
-  const radarDaily = readerVm ? buildReaderRadar(readerVm.series, { now: NOW, horizonDays: config.horizonDaily }).items : [];
+  const radarDailyReader = readerVm
+    ? buildReaderRadar(readerVm.series, { now: NOW, horizonDays: config.horizonDaily })
+    : { items: [], monitoringCount: 0 };
   const radarWeeklyReader = readerVm
     ? buildReaderRadar(readerVm.series, { now: NOW, horizonDays: config.horizonWeekly })
     : { items: [], monitoringCount: 0 };
@@ -209,7 +211,8 @@ async function main() {
     digest: {
       daily,
       weekly,
-      radarDaily,
+      radarDaily: radarDailyReader.items,
+      radarMonitoringDaily: radarDailyReader.monitoringCount,
       radarWeekly: radarWeeklyReader.items,
       radarMonitoringWeekly: radarWeeklyReader.monitoringCount,
     },

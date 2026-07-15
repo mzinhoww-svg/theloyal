@@ -8,7 +8,7 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   CONFIDENCE, DISCLAIMER, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS,
-  assertEditorialRules, editorialRuleMessage, listEditionFiles, loadEdition, loadEntities,
+  assertEditorialRules, editorialRuleMessage, listEditionFiles, loadEdition, loadEntities, monitoringLine,
 } from "./lib.mjs";
 import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
 import { consolidatedHighlights } from "./lib/weekly-consolidate.mjs";
@@ -57,8 +57,9 @@ function resolveRadar(wk) {
     return null;
   }
   const windows = fc?.digest?.radarWeekly ?? [];
-  if (!windows.length) return null;
-  return { note: RADAR_NOTE_DEFAULT, windows };
+  const monitoringCount = Number(fc?.digest?.radarMonitoringWeekly) || 0;
+  if (!windows.length && !monitoringCount) return null;
+  return { note: RADAR_NOTE_DEFAULT, windows, monitoringCount };
 }
 
 // ---------- Validação editorial ----------
@@ -113,7 +114,7 @@ export function validateWeekly(wk) {
 // ---------- Radar (HTML e-mail) ----------
 function radarEmail(radar) {
   if (!radar) return "";
-  const rows = radar.windows.map((w) => {
+  const rows = (radar.windows ?? []).map((w) => {
     const c = CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa;
     const bonus = w.bonus ? ` <span style="font-family:${MONO};font-size:13px;color:${TOKENS.g500}">${esc(w.bonus)}</span>` : "";
     const basis = w.basis ? `<div style="font-family:${SANS};font-size:12px;color:${TOKENS.g400};margin-top:2px">${esc(w.basis)}</div>` : "";
@@ -126,7 +127,10 @@ function radarEmail(radar) {
       ${basis}
     </div>`;
   }).join("");
-  return `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(radar.note ?? RADAR_NOTE_DEFAULT)}</div>${rows}`;
+  const mon = radar.monitoringCount
+    ? `<div style="font-family:${SANS};font-size:12px;color:${TOKENS.g400};margin-top:10px">${esc(monitoringLine(radar.monitoringCount))}</div>`
+    : "";
+  return `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(radar.note ?? RADAR_NOTE_DEFAULT)}</div>${rows}${mon}`;
 }
 
 function labelBlock(text) {
@@ -198,11 +202,12 @@ export function renderWeeklyPlain(wk) {
   if (radar) {
     L.push("RADAR DE JANELAS");
     L.push(radar.note ?? RADAR_NOTE_DEFAULT, "");
-    for (const w of radar.windows) {
+    for (const w of radar.windows ?? []) {
       const c = (CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa).label;
       L.push(`  ${w.label}${w.bonus ? " " + w.bonus : ""}  —  ${w.window}  [${c}]`);
       if (w.basis) L.push(`    ${w.basis}`);
     }
+    if (radar.monitoringCount) L.push(`  ${monitoringLine(radar.monitoringCount)}`);
     L.push("");
   }
   const mov = wk.movements ?? {};
@@ -257,13 +262,14 @@ function WeeklyArticle({ wk, radar }) {
           h("span", { className: "tl-label" }, "Radar de janelas"),
           h("p", { className: "tl-radar-note" }, radar.note ?? RADAR_NOTE_DEFAULT),
           h("ul", { className: "tl-radar" },
-            radar.windows.map((w, i) =>
+            (radar.windows ?? []).map((w, i) =>
               h("li", { key: i, className: "tl-radar-item" },
                 h("div", { className: "tl-radar-head" },
                   h("span", { className: "tl-radar-label" }, w.label, w.bonus ? h("span", { className: "mono tl-radar-bonus" }, ` ${w.bonus}`) : null),
                   h("span", { className: "mono tl-radar-window" }, w.window)),
                 h(ConfPill, { conf: w.confidence }),
-                w.basis ? h("div", { className: "tl-radar-basis" }, w.basis) : null))))
+                w.basis ? h("div", { className: "tl-radar-basis" }, w.basis) : null))),
+          radar.monitoringCount ? h("p", { className: "tl-radar-note" }, monitoringLine(radar.monitoringCount)) : null)
       : null,
     wk.movements
       ? h("section", null,
