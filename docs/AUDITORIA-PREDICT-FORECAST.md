@@ -1,5 +1,14 @@
 # Auditoria profunda — Forecast & Predict (The Loyal)
 
+> **⚠ Reconciliada e parcialmente corrigida (2026-07-15).** A evidência **canônica** é
+> `docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md` (+ `docs/auditoria/`). A reconciliação de
+> métricas e a correção de conclusões estão em `docs/RECONCILIACAO-AUDITORIAS-RADAR.md`.
+> **Correções que se aplicam a este documento:** (1) o intervalo de 943 dias **não** é
+> fragmentação rota/cluster nem lacuna de backfill — é a **mesma campanha duplicada com
+> data fabricada** (erro de extração temporal); fallback para cluster **não** o corrige.
+> (2) Os números aqui (ledger 2.438 / transf. 488) são um retrato **anterior** do banco
+> vivo; os canônicos (2.543 / 504–507, 2026-07-15) estão na auditoria forense.
+>
 > **Escopo:** auditoria de leitura. Nenhum código, dado, migration, snapshot,
 > backfill ou digest foi alterado. Levantamento de contexto, evidências e
 > hipóteses de causa para embasar decisões posteriores.

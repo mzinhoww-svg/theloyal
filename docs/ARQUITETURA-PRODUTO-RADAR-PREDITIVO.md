@@ -19,12 +19,23 @@
 
 ## 1. Resumo executivo
 
+> **⚠ Revisão canônica (2026-07-15).** Este documento foi atualizado pela evidência
+> forense (`docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md` + `docs/auditoria/`). A **§27f**
+> supersede o pipeline (§4), o backlog (§27b) e a Fase C0 (§27c). Regra-mãe:
+> **nenhum modelo compensa uma cronologia corrompida.** O intervalo de 943 dias **não**
+> é fragmentação rota/cluster nem lacuna de backfill: é a **mesma campanha duplicada
+> com data fabricada** (erro de extração temporal). A conclusão de "usar `first_seen`
+> como data de ocorrência" foi **corrigida**: proveniência valida, não substitui.
+> Ordem revisada: validação temporal e identidade/deduplicação **precedem** séries e
+> motores. Ver §27f e ADR-RADAR-009/010.
+
 O The Loyal tem hoje dois motores desalinhados (`forecast` e `predict v2`) que
 leem a mesma tabela sem camada de qualidade, sem política de datas, sem janela
 histórica real e sem governança. O resultado são previsões que parecem
-incoerentes: datas a 2028 tiradas de um único intervalo de 943 dias, campanhas
-recentes invisíveis, radar semanal preso a um snapshot de 119 linhas, e um Daily
-digitado à mão que contradiz o Weekly.
+incoerentes: datas ao futuro tiradas de um único intervalo de 943 dias (que a
+auditoria forense mostrou ser uma **duplicata com data fabricada**, não cadência),
+campanhas recentes invisíveis, radar semanal preso a um snapshot desatualizado, e
+um Daily digitado à mão que contradiz o Weekly.
 
 Este documento propõe o **Radar Preditivo de Campanhas**: um pipeline único
 `Fontes → Extração → Campanha normalizada → Qualidade → Série → Modelos →
@@ -100,12 +111,17 @@ apenas como metadado de proveniência.
 
 ## 4. Arquitetura funcional alvo
 
+> **⚠ Supersedido pela §27f.4:** a ordem abaixo foi revisada para inserir **Validação
+> temporal** e **Identidade e deduplicação** como etapas explícitas **antes** da
+> normalização e das séries. Use a ordem da §27f.4.
+
 Pipeline canônico (cada campanha nova percorre só o subconjunto afetado):
 
 ```
-Fontes → Notícias → Extração → Campanha normalizada → Qualidade do dado
-       → Série analítica → Modelos → Reconciliação → Aprovação editorial
-       → Snapshot canônico → Daily / Weekly / Pro / Admin
+Fontes → Notícias → Extração → Validação temporal → Identidade/deduplicação
+       → Campanha normalizada → Qualidade do dado → Série analítica → Modelos
+       → Reconciliação → Aprovação editorial → Snapshot canônico
+       → Daily / Weekly / Pro / Admin
 ```
 
 | Camada | Objetivo | Entrada | Saída | Fonte de verdade | Regras | Estados | Falhas | Responsável | Indicadores | Critério de aceite |
@@ -352,7 +368,7 @@ editado, e grava `change_log` append-only.
 `programa_origem|programa_destino|tipo_campanha|mercado|segmento|mecanica`, **com
 pooling parcial hierárquico para o cluster de destino** quando a rota é rala.
 
-Regra de decisão (resolve o caso 943d):
+Regra de decisão (granularidade — **não** é o remédio do 943d, ver correção abaixo):
 
 ```
 se rota tem ondas suficientes e cobertura ok        → série de ROTA
@@ -362,10 +378,19 @@ senão, se cluster de destino tem ondas suficientes  → série de DESTINO (rót
 senão                                                → nenhuma previsão (Não confirmado)
 ```
 
-No caso `livelo→connectmiles` (2 ondas, 943d), a rota **não** prevê sozinha; o
-sistema cai para o cluster `→connectmiles` (4 ondas, incluindo esfera), que
-mostra cadência real e evita o intervalo artificial. O leitor vê "ConnectMiles
-(via Livelo/Esfera)", não uma data a 2028.
+> **⚠ Correção canônica (evidência forense — supersede o parágrafo original).** A versão
+> anterior afirmava que, no caso `livelo→connectmiles`, "o sistema cai para o cluster
+> `→connectmiles` (4 ondas, incluindo esfera), que mostra cadência real e evita o
+> intervalo artificial". **Isso está incorreto.** A auditoria forense
+> (`docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md` §11–12) mostra que a rota
+> `livelo→connectmiles` tem **2 registros da MESMA campanha** (uma com `vigencia_fim`
+> fabricada em 2023-12-12) e que os registros `esfera→connectmiles` do cluster **também
+> estão mal-datados** (2024 em vez de 2025). O cluster **não tem cadência real** e o
+> **fallback para cluster NÃO corrige** o dado temporal corrompido — apenas diluiria o
+> gap numa média de datas igualmente erradas. **A hierarquia rota/cluster é uma decisão
+> de granularidade legítima para fragmentação REAL, não o conserto do 943d.** O 943d é
+> resolvido **antes dos motores** por validação temporal (ADR-010) e deduplicação
+> (ADR-009). Ver §27f.
 
 - **Série de rota:** cobertura suficiente na própria rota.
 - **Série de destino:** rota rala, cluster rico.
@@ -903,6 +928,136 @@ atual — todos implementáveis **antes** do novo modelo de dados.
 C0 estabiliza a percepção do produto sem esperar a refatoração de dados. É
 pré-requisito de credibilidade para as fases 1–6.
 
+> **⚠ A §27f abaixo supersede esta Fase C0 (§27c), o pipeline da §4 e o backlog da §27b**
+> com base na evidência forense canônica (`docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md`).
+
+## 27f. Revisão canônica pós-forense (supersede §4, §27b, §27c)
+
+> Evidência canônica: `docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md`,
+> `docs/auditoria/*.csv`, `docs/auditoria/predict-forecast-lineage.md`,
+> `docs/auditoria/edge-function-campaigns.md`, `docs/RECONCILIACAO-AUDITORIAS-RADAR.md`.
+> ADRs: 002, 003, 004, 005, 007, 008 (revisados), 009, 010 (novos).
+
+### 27f.1 Regra-mãe
+```
+Nenhum modelo pode compensar uma cronologia corrompida.
+```
+A arquitetura anterior começava cedo demais pela construção de séries e pelos motores.
+Validação temporal e identidade/deduplicação **precedem** séries e modelos.
+
+### 27f.2 Correção do caso 943d (supersede §11, §14, §27d.6, §27d.7 no que toca ao 943d)
+- **Rota versus cluster NÃO é a causa raiz.** A rota `livelo→connectmiles` tem 2
+  registros da **mesma campanha** (uma com `vigencia_fim=2023-12-12` fabricada de "hoje
+  (12)"); os `esfera→connectmiles` do cluster **também** estão mal-datados (2024 em vez
+  de 2025). **Pooling/fallback para cluster NÃO corrige dado temporal corrompido.**
+- **A correção começa antes dos motores:** validação temporal (ADR-010) + identidade/
+  deduplicação (ADR-009). A ausência de bloqueio no Forecast é **falha secundária** do
+  modelo.
+
+### 27f.3 Data de ocorrência (corrige a conclusão do `first_seen`)
+- **Datas de evento** (`vigencia_inicio`, `vigencia_fim`, `data_anuncio`) ancoram a
+  série. **Datas de proveniência** (`data_publicacao`=`first_seen`, `observed_at`,
+  `created_at`) **validam plausibilidade** e acionam bloqueio/reprocessamento/revisão —
+  **nunca substituem** a data do evento nem entram na série. Detalhe: ADR-010, §6.
+
+### 27f.4 Nova ordem do pipeline-alvo (supersede §4)
+```
+Fontes
+→ Notícias
+→ Extração
+→ Validação temporal            (ADR-010 — plausibilidade; bloqueia data suspeita)
+→ Identidade e deduplicação     (ADR-009 — identidade estável, não vigencia_fim)
+→ Normalização                  (catálogo programs/aliases)
+→ Qualidade e elegibilidade     (include_in_prediction, motivos visíveis)
+→ Séries e ondas
+→ Forecast/Predict
+→ Reconciliação
+→ Aprovação editorial
+→ Snapshot
+→ Distribuição
+```
+
+### 27f.5 Nova Fase C0 (substitui §27c) — contenção em runtime, sem migration
+Cada item: mudança mínima · arquivos · sem migration? · aceite · risco · rollback.
+
+**C0.1 — Baseline e testes.** Fixture realista do caso `livelo→connectmiles`; testes de
+`windowDate`, geração de `id`, duplicidade provável, formação de ondas, gate de amostra;
+**paridade Forecast TS↔MJS**.
+- *Mudança mínima:* adicionar `tests/*.mjs`. *Arquivos:* `tests/`, fixtures. *Sem
+  migration?* **Sim.** *Aceite:* `node --test` cobre `windowDate`/`collapseWaves`/gate/
+  dedup + compara `lib/forecast.ts`↔`scripts/forecast-engine.mjs` em fixtures. *Risco:*
+  baixo. *Rollback:* remover testes.
+
+**C0.2 — Validação temporal em runtime** (sem alterar banco): calcular flags de
+plausibilidade (ADR-010), comparar datas de evento × proveniência, **bloquear** datas
+suspeitas, exibir motivo, **não corrigir automaticamente**.
+- *Mudança mínima:* função `evaluateTemporalPlausibility` em memória na leitura do
+  ledger. *Arquivos:* `lib/forecast.ts`/`lib/predict-engine.ts` (camada de qualidade),
+  admin. *Sem migration?* **Sim** (só runtime). *Aceite:* o exemplo canônico retorna
+  `suspect_year`, `include_in_prediction=false`; a série exclui a campanha e mostra o
+  motivo. *Risco:* médio (falsos positivos). *Rollback:* desligar a flag/gate.
+
+**C0.3 — Duplicidade provável em runtime** (sem merge, sem alterar banco): detectar
+pares potencialmente duplicados, **bloquear o intervalo** formado por duplicidade
+provável, exibir os registros relacionados, permitir revisão manual só no admin, **não
+persistir** decisão estrutural.
+- *Mudança mínima:* detector de pares em memória por série. *Arquivos:* camada de
+  qualidade + admin. *Sem migration?* **Sim.** *Aceite:* o par `…-2023-12-12`/
+  `…-2026-07-12` é marcado `probable_duplicate` e o intervalo de 943d não entra na
+  cadência. *Risco:* médio. *Rollback:* desligar o detector.
+
+**C0.4 — Dataset completo:** remover o **limite silencioso de 2.000** registros;
+paginação; ordenação determinística; **bloquear publicação se o dataset estiver
+incompleto**.
+- *Mudança mínima:* paginar as queries de `campaigns` (admin + CLI). *Arquivos:*
+  `lib/admin-forecast.ts`, `lib/admin-predict.ts`, `scripts/forecast.mjs`. *Sem
+  migration?* **Sim.** *Aceite:* nº de linhas lidas = nº elegível na janela; flag
+  `dataset_incompleto` bloqueia publicação. *Risco:* performance. *Rollback:* voltar ao
+  limit.
+
+**C0.5 — Gates estatísticos e editoriais:** mínimo de ondas; data suspeita; duplicidade
+provável; intervalo extremo; horizonte excessivo; dataset incompleto; forecast stale.
+- *Mudança mínima:* conjunto de gates na saída dos motores + no render. *Arquivos:*
+  motores, `scripts/render-weekly.mjs`, admin. *Sem migration?* **Sim.** *Aceite:*
+  cada gate bloqueia/rebaixa com motivo visível; nada publica abaixo do gate. *Risco:*
+  cobertura menor. *Rollback:* relaxar gates por config.
+
+**C0.6 — Distribuição e interface:** bloquear `forecast.json` antigo; exibir data e
+idade; bloquear Daily manual contraditório; mostrar motivo de exclusão; mostrar
+intervalo anômalo; mostrar registros suspeitos.
+- *Mudança mínima:* freshness gate no render + campos de motivo no admin/Digest.
+  *Arquivos:* `scripts/render-weekly.mjs`, admin, componentes de Digest. *Sem
+  migration?* **Sim.** *Aceite:* render recusa snapshot velho; admin mostra idade,
+  motivo de exclusão, intervalo anômalo e registros suspeitos. *Risco:* Weekly sem radar
+  até regenerar. *Rollback:* remover o gate.
+
+### 27f.6 Contenção (sem migration) × correção estrutural (fase futura)
+**Sem migration (C0):** testes; paginação; verificação de frescor; flags de
+plausibilidade em memória; bloqueio de campanha suspeita em runtime; detecção de
+duplicidade provável em runtime; warnings; gates de publicação; correções de interface;
+paridade TS/MJS; bloqueio do Daily contraditório.
+**Exige estrutura futura:** `campaign_identity`; histórico de versões
+(`campaign_version`); observações por fonte (`source_observation`); merge auditável;
+correção **persistida** dos dados; novo modelo de vigência; catálogo persistido de
+`programs`/`aliases`; `data_evento` persistida; snapshot canônico;
+`prediction_outcome`; reconciliador completo.
+
+### 27f.7 Backlog reordenado (supersede §27b)
+Prioridades: **P0** validação temporal e duplicidade · **P1** testes, dataset completo e
+frescor · **P2** gates editoriais · **P3** novo modelo de identidade, vigência e
+normalização · **P4** motores, reconciliação e snapshots · **P5** experiência, outcomes
+e automação. **`data_evento` isolada NÃO é o primeiro item** — primeiro existem as regras
+de proveniência, plausibilidade e validação.
+
+| Prio | Itens (mapeados aos R-xx da §27b + novos) |
+|---|---|
+| **P0** validação temporal e duplicidade | Validação temporal em runtime (C0.2, ADR-010); duplicidade provável em runtime (C0.3, ADR-009); alerta/bloqueio de intervalo anômalo (ex-R-09 antecipado, mas como bloqueio, não só rebaixamento) |
+| **P1** testes, dataset completo e frescor | Testes + paridade TS/MJS (C0.1 / R-20); dataset completo/paginação (C0.4 / R-03); freshness gate + idade (C0.6 / R-18); `vigencia_fim` text→date (R-02) |
+| **P2** gates editoriais | Gates estatísticos/editoriais (C0.5); readiness completo com `suspect_date`/`probable_duplicate` (R-10 estendido, ADR-004); aprovação obrigatória p/ warnings; bloqueio do Daily contraditório (C0.5/C0.6) |
+| **P3** identidade, vigência e normalização | `campaign_identity`/`campaign_version`/`source_observation` (ADR-009); modelo de vigência + `data_evento` **persistida** (R-01, ADR-002/010); catálogo `programs`/`aliases` (R-04) |
+| **P4** motores, reconciliação e snapshots | Janela adaptativa+decay (R-05); outlier detectar+rebaixar sobre série válida (R-09, ADR-005); reconciliador+contrato (R-12, ADR-008); snapshot canônico+estados (R-14, ADR-006); `predict_config` (R-11); backfill completeness (R-13, ADR-007) |
+| **P5** experiência, outcomes e automação | Admin Radar unificado (R-15); ações+override auditado (R-16); Digest lê snapshot único (R-17); backtest+Brier+calibração (R-19); `prediction_outcome` (§27d.9); publicação automática só após acurácia comprovada |
+
 ## 27d. Revisão conceitual (resolve pontos em aberto)
 
 Esta seção **refina e supersede** recomendações preliminares das §§13–17 onde
@@ -1032,8 +1187,12 @@ no_route_prediction            # nem rota nem cluster suficientes → Não confi
   **nunca** como previsão da rota Livelo→ConnectMiles. O leitor entende que não é
   garantia para aquela origem.
 
-No caso 943d: a rota Livelo→ConnectMiles cai para `destination_cluster_prediction`
-rotulado, ou para `no_route_prediction` se o cluster também não passar o gate.
+No caso 943d: **a evidência forense mostra que não há fragmentação de rota** — a rota
+tem 2 registros da mesma campanha (data fabricada) e o cluster também está mal-datado.
+Portanto o 943d **não** se resolve por `destination_cluster_prediction`: resolve-se por
+**validação temporal (ADR-010)** e **deduplicação (ADR-009)** antes da série. A regra
+rota/cluster deste item vale para fragmentação **real**, sobre séries já
+temporalmente válidas. Ver §27f.
 
 ### 27d.7 Completude do backfill — seis camadas (supersede §8)
 
@@ -1054,9 +1213,11 @@ encontrada. Se qualquer camada anterior < 100%, o vazio é **lacuna**
 (`backfill_incomplete`), não silêncio. `backfill_completeness` por série deriva das
 seis camadas nos meses da janela.
 
-Aplicação ao 943d: só se pode afirmar que Livelo→ConnectMiles ficou 943 dias
-parada se as camadas de coleta daquele intervalo estiverem completas. Enquanto não
-estiverem, a rota é `backfill_incomplete` → Predict bloqueia.
+Aplicação ao 943d: **não é lacuna de backfill** (é duplicidade por data fabricada — §27f,
+ADR-009/010). A completude por camadas vale para intervalos longos **legítimos** — só se
+pode afirmar silêncio real, para uma série já temporalmente válida e deduplicada, se as
+camadas de coleta do intervalo estiverem completas; enquanto não, a série é
+`backfill_incomplete` → Predict bloqueia.
 
 ### 27d.8 Snapshot × uso editorial (supersede §19 parcial)
 

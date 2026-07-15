@@ -1,8 +1,20 @@
 # ADR-RADAR-002 — Política de datas e modelo de vigência
 
 - **Status:** proposed
-- **Data:** 2026-07-15
-- **Relacionado:** arquitetura §5, §6, §27d.2, §27d.4
+- **Data:** 2026-07-15 · **Revisado:** 2026-07-15 (evidência forense)
+- **Relacionado:** arquitetura §5, §6, §27d.2, §27d.4, §27f; ADR-RADAR-010 (validação
+  temporal); `docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md` §26 (correção da conclusão)
+
+## ⚠ Reforço canônico (evidência forense + edge function)
+- **Datas de evento** (`vigencia_inicio`, `vigencia_fim`, `data_anuncio`) ancoram a
+  série. **Datas de proveniência** (`data_publicacao`=`first_seen`, `observed_at`,
+  `created_at`) **validam plausibilidade** e acionam bloqueio/reprocessamento/revisão,
+  mas **nunca substituem** automaticamente a data do evento nem entram na série.
+- Corrige a conclusão anterior da auditoria forense (que sugeria usar `first_seen` como
+  data de ocorrência): `first_seen` é proveniência (a edge fn o preenche de
+  `news_raw.published_at` — ver `docs/auditoria/edge-function-campaigns.md`).
+- A detecção de `suspect_year`/`suspect_month`/`suspect_daymonth` e a decisão de
+  bloqueio migram para **ADR-RADAR-010** (política formal `evaluateTemporalPlausibility`).
 
 ## Contexto
 `vigencia_fim` é TEXT e aceita lixo (`na`); `vigencia_inicio` é nulo em 90% das

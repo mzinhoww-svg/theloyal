@@ -1,8 +1,17 @@
 # ADR-RADAR-004 — Readiness e gates de amostra por finalidade
 
 - **Status:** proposed
-- **Data:** 2026-07-15
-- **Relacionado:** arquitetura §13, §15, §16, §27d.1
+- **Data:** 2026-07-15 · **Revisado:** 2026-07-15 (evidência forense)
+- **Relacionado:** arquitetura §13, §15, §16, §27d.1, §27f; ADR-RADAR-009, ADR-RADAR-010
+
+## ⚠ Nota canônica
+Os gates de amostra deste ADR são **necessários mas não suficientes**. No caso das 2
+ondas de `livelo→connectmiles`, o gate de amostra do Predict (≥3) por acaso bloqueou —
+mas a série era **lixo** (duplicata com data fabricada), não "pouca amostra legítima".
+Gates de amostra operam **depois** da validação temporal (ADR-010) e da deduplicação
+(ADR-009): contar ondas só faz sentido sobre ondas **reais**. O readiness completo
+(`data_quality_blocked`) deve incluir `suspect_date` e `probable_duplicate` como razões
+de bloqueio, além de amostra insuficiente.
 
 ## Contexto
 Forecast publica com 2 ondas (1 intervalo) e gera janela ±3 dias de aparência

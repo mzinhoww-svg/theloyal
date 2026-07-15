@@ -1,8 +1,16 @@
 # ADR-RADAR-008 — Papéis de Forecast e Predict e reconciliação
 
 - **Status:** proposed
-- **Data:** 2026-07-15
-- **Relacionado:** arquitetura §15, §16, §17, §27d.1
+- **Data:** 2026-07-15 · **Revisado:** 2026-07-15 (evidência forense)
+- **Relacionado:** arquitetura §15, §16, §17, §27d.1, §27f; ADR-RADAR-009, ADR-RADAR-010
+
+## ⚠ Nota canônica
+A reconciliação Predict>Forecast opera **sobre séries temporalmente válidas e
+deduplicadas** (ADR-010, ADR-009). O fato de, no caso 943d, o Predict bloquear e o
+Forecast prever Fev/2029 **não** é um problema de reconciliação — é dado corrompido a
+montante. Nenhuma regra de precedência entre motores conserta cronologia falsa;
+"escolher o motor certo" pressupõe que a série **exista**. A regra-mãe (§27f) precede
+este ADR: **nenhum modelo compensa uma cronologia corrompida.**
 
 ## Contexto
 Forecast (recorrência simples) e Predict v2 (hazard/backtest) coexistem. Só o

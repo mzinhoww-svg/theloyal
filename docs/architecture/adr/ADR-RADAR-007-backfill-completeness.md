@@ -1,8 +1,17 @@
 # ADR-RADAR-007 — Completude do backfill
 
 - **Status:** proposed
-- **Data:** 2026-07-15
-- **Relacionado:** arquitetura §8, §27d.7; auditoria §4, §16
+- **Data:** 2026-07-15 · **Revisado:** 2026-07-15 (evidência forense)
+- **Relacionado:** arquitetura §8, §27d.7, §27f; `docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md`
+  §11–12; ADR-RADAR-009, ADR-RADAR-010
+
+## ⚠ Correção canônica
+O caso **943d NÃO é lacuna de backfill**: são dois registros da **mesma campanha**
+(duplicidade por `id`-com-`vigencia_fim`) com **data fabricada** (erro de extração). A
+completude de backfill deste ADR é necessária para **outros** intervalos longos
+(silêncio real vs mês não coberto), **não** para o 943d. Ordem correta: primeiro
+validação temporal (ADR-010) e deduplicação (ADR-009); só então a completude de
+backfill decide se um intervalo **remanescente** é silêncio ou lacuna.
 
 ## Contexto
 O "progresso" do backfill conta URLs coletadas, não campanhas válidas. Ele pode
@@ -10,8 +19,9 @@ marcar 100% com backlog de extração pendente e/ou artigos sem campanha. Não h
 como distinguir "mês sem campanha" (silêncio real) de "mês não coberto" (lacuna).
 
 ## Problema
-Sem cobertura mensurável, um intervalo longo (943 dias) pode ser lacuna de coleta
-disfarçada de silêncio real — e o motor prevê como se fosse cadência.
+Sem cobertura mensurável, um intervalo longo **legítimo** (após corrigir data e
+duplicidade) pode ser lacuna de coleta disfarçada de silêncio real — e o motor prevê
+como se fosse cadência.
 
 ## Alternativas
 1. Progresso = fila de URLs vazia (status quo).
