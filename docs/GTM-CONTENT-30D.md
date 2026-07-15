@@ -24,8 +24,13 @@
 - **Diversidade:** o banco cobre milhas/transferência, compra de pontos, cartões/
   anuidade, cashback, clube de pontos, varejo, bancos, resgate/liquidez, CRM e
   método — para 30 dias não repetirem o mesmo assunto.
-- **CTA:** X → `?utm_source=twitter` na bio/post; LinkedIn → `?utm_source=linkedin`
-  no **primeiro comentário**.
+- **Alcance primeiro no X (regra-mãe do canal):** views e engajamento são o objetivo
+  primário de todo tweet — é o combustível do funil. Por isso, **no X o link vai
+  sempre no primeiro comentário (reply), nunca no corpo do tweet** (link externo no
+  corpo estrangula o alcance). O tweet principal fica nativo, com hook na 1ª linha.
+  Detalhes e kit de engajamento na seção própria abaixo.
+- **CTA:** X → link em `?utm_source=twitter` no **primeiro comentário** + link fixo na
+  bio; LinkedIn → `?utm_source=linkedin` também no **primeiro comentário**.
 
 ---
 
@@ -58,8 +63,14 @@ Legenda de IDs no banco abaixo. "SdD" = Sinal do dia (`[deal verificado]`).
 | 21 | Seg | SdD `[deal verificado]` | Mito V6 | reply analítico | Ensaio E10 + comentários |
 | 22 | Ter | SdD `[deal verificado]` | Método M7 | quote de notícia | comentar 15 min |
 
+**X — post 3** (coluna "engajar/quote") rotaciona entre: reply analítico do dia,
+quote de notícia, **Pergunta do dia (Q1–Q8)** e **Enquete (Poll1–Poll4)** — os dois
+últimos são plays de alcance/engajamento puro (ver Kit de engajamento). Ritmo
+sugerido: 2 perguntas + 1 enquete por semana, o resto reply/quote reativo.
+
 Sábados: Recap (R1–R4, um por semana). Reserva para dias sem deal: M8–M12, V7–V12,
-P5–P10, E11–E15 (banco abaixo) mantêm o motor abastecido sem repetir.
+P5–P10, E11–E15, Q1–Q8, Poll1–Poll4 (bancos abaixo) mantêm o motor abastecido sem
+repetir.
 
 ---
 
@@ -109,22 +120,30 @@ P5–P10, E11–E15 (banco abaixo) mantêm o motor abastecido sem repetir.
 
 ## Templates de aprovação (`risk: high`)
 
-### Sinal do dia (SdD)
+### Sinal do dia (SdD) — thread curta, link no reply
 
-> Sinal do dia: [programa] mexeu em [regra]. Na prática, o CPM do resgate mais
-> usado saiu de R$ [x] para R$ [y]. Continua valendo? Depende do resgate. A conta
-> feita e o TL Score na edição de hoje. [link]
+> Tweet 1 (hook): [programa] acabou de mexer em [regra]. Na prática, o CPM do
+> resgate mais usado saiu de R$ [x] para R$ [y].
+> Tweet 2 (conta): Isso muda o veredito? Depende do VPM do seu resgate. Fizemos a
+> conta com fonte e vigência confirmada.
+> Tweet 3 (CTA): A conta completa e o TL Score saíram na edição de hoje. Link no
+> primeiro comentário.
+> [reply]: [link]
 
-### Deal Desk aberto
+### Deal Desk aberto — thread, link no reply
 
-> A conta de hoje: [origem] → [destino], com [bônus]% de bônus.
-> Custo: R$ [x] · milhas finais: [n] · CPM: R$ [y]/milheiro · TL Score [nota].
-> Caro ou barato? Depende do VPM do seu resgate. O spread completo na edição. [link]
-> (Promoções podem mudar sem aviso. Confira as regras no site oficial antes de
-> comprar, transferir ou resgatar.)
+> Tweet 1 (hook): A conta de hoje: [origem] → [destino] com [bônus]% de bônus dá
+> CPM de R$ [y]/milheiro.
+> Tweet 2 (conta): Custo R$ [x] · milhas finais [n] · TL Score [nota]. Caro ou
+> barato? Depende do VPM do seu resgate — e é aí que a maioria das ofertas cai.
+> Tweet 3 (CTA + disclaimer): O spread completo na edição. Link no primeiro
+> comentário. (Promoções podem mudar sem aviso. Confira as regras no site oficial
+> antes de comprar, transferir ou resgatar.)
+> [reply]: [link]
 
 > Regra: só publicar com fonte oficial e vigência confirmada. Sem isso, a peça
-> vira Sinal de radar com veredito Não confirmado, nunca recomendação.
+> vira Sinal de radar com veredito Não confirmado, nunca recomendação. O link fica
+> sempre no reply, para não estrangular o alcance do tweet principal.
 
 ---
 
@@ -389,6 +408,80 @@ agir. Detalhes nas edições. [link]
 radar sem regulamento. O resumo honesto do mês de loyalty, sem torcida. [link]
 
 ---
+
+## Kit de engajamento do X (alcance e views primeiro)
+
+No X, cada tweet é otimizado para alcance antes de conversão. Ferramentas abaixo —
+todas dentro da voz Sage, sem ragebait, sem urgência artificial, sem hype.
+
+### Fórmulas de hook (a primeira linha para o scroll)
+
+- **Número seco:** "R$ 12 por milheiro. É esse o número que decide se a promoção de
+  hoje vale — e quase ninguém calcula."
+- **Contraintuitivo verdadeiro:** "Bônus de 100% pode ser um mau negócio. Quase
+  sempre é, na verdade."
+- **Pergunta que expõe lacuna:** "Você sabe o VPM do seu último resgate? Se não
+  sabe, provavelmente pagou caro sem perceber."
+- **Correção de crença comum:** "'Milha não desvaloriza' é a frase mais cara do
+  mundo dos pontos."
+- **Abertura de conta:** "Vou fazer uma conta de 30 segundos que muda como você olha
+  pra qualquer promoção de milha."
+
+Regra do hook: o primeiro tweet nunca começa com preâmbulo ("Hoje quero falar
+sobre..."). Começa com o número ou a tese. E nunca leva link.
+
+### Banco — Pergunta do dia (Q1–Q8, engajamento, auto)
+
+Formato que convida o leitor a trazer o próprio número — gera resposta, que gera
+alcance. Responder aos comentários faz parte da peça.
+
+**Q1.** Qual foi o pior resgate que você já fez sem perceber na hora? A gente
+aprende mais com o VPM ruim do que com o bônus alto.
+**Q2.** Você acumula pontos com um resgate em mente, ou acumula primeiro e pensa
+depois? Sem julgamento — é só a pergunta que decide o valor do saldo.
+**Q3.** Quantos programas de pontos você acompanha hoje? E quantos você realmente
+usa? A distância entre os dois números costuma ser reveladora.
+**Q4.** Cartão com anuidade alta: você já fez a conta de quanto realmente resgatou
+no último ano, ou confia no "se paga sozinho"?
+**Q5.** Cashback ou pontos: qual venceu a última conta que você fez? E você fez a
+conta, ou foi no feeling?
+**Q6.** Qual programa mais te decepcionou com desvalorização silenciosa? O tipo que
+sobe o custo de resgate sem mandar e-mail.
+**Q7.** Você já deixou ponto expirar? Quanto acha que perdeu? A conta costuma doer
+mais do que a gente imagina.
+**Q8.** Se você só pudesse manter um programa de fidelidade, qual seria — e por que
+esse fecha a sua conta melhor que os outros?
+
+### Banco — Enquetes (Poll1–Poll4, engajamento puro, auto)
+
+Enquete é o formato de maior taxa de engajamento do X. Sempre com uma leitura
+editorial no reply.
+
+**Poll1.** Na hora de decidir uma transferência bonificada, o que você olha
+primeiro? / Tamanho do bônus / CPM final / VPM do resgate / Vigência da regra
+> reply: se você marcou "tamanho do bônus", esse é justamente o número que menos
+> decide. O que fecha a conta é o VPM.
+
+**Poll2.** Ponto/milha é, pra você, mais... / Investimento / Desconto / Diversão /
+Dor de cabeça
+> reply: seja qual for a resposta, a régua é a mesma — quanto vale no resgate menos
+> quanto custou acumular.
+
+**Poll3.** Você confia mais em qual fonte pra decidir uma promoção? / Influenciador
+/ Grupo de WhatsApp / Regulamento oficial / Seu próprio cálculo
+> reply: as duas últimas são as únicas que sobrevivem a uma auditoria. As outras são
+> ponto de partida, não veredito.
+
+**Poll4.** Qual desses te faria cancelar um programa? / Desvalorização de resgate /
+Anuidade que subiu / Regra que ficou confusa / Nunca cancelo
+> reply: "nunca cancelo" é exatamente a inércia com que os programas contam. O churn
+> silencioso começa quando o consumidor avançado faz a conta.
+
+### Republicação/salvamento
+
+Peças de Método (M1–M12) são as mais salvas. Fechar com um convite honesto quando
+couber: "Guarde essa conta para a próxima promoção que aparecer." Sem apelo,
+sem "salve agora que vai sumir".
 
 ## Notas de produção
 

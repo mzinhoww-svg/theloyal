@@ -182,6 +182,37 @@ pessoal cresce mais rápido; poste pela página, reamplifique no pessoal); "Feat
 O motor gera o lote da semana no domingo + os "Sinais do dia" às 7h (antes do
 Daily das 8h, para o social puxar pra edição).
 
+### 2.4.1 Princípio do X: alcance e engajamento primeiro
+
+No Twitter/X, **gerar views e engajamento é sempre o objetivo primário do post** —
+é o que alimenta todo o resto do funil. Assinante é a consequência; alcance é a
+causa. O algoritmo do X premia dwell time, respostas, republicações e salvamentos,
+e **pune link externo no corpo do tweet**. Logo:
+
+- **Link nunca no corpo do tweet.** Vai no **primeiro comentário (reply)**. O tweet
+  principal fica nativo, para não ter alcance estrangulado. A bio carrega o link
+  permanente.
+- **Hook na primeira linha.** A primeira linha decide se o scroll para. Abrir com um
+  número, uma afirmação contraintuitiva ou uma pergunta — nunca com preâmbulo.
+- **Thread > tweet solto** quando há conta a mostrar: mais dwell time e mais pontos
+  de resposta. O Deal Desk rende melhor em 3–5 tweets do que em um.
+- **Formatos que puxam resposta:** "Mito vs. conta" (gera quote-tweet e debate),
+  pergunta do dia (convida o leitor a trazer o próprio número), enquete (engajamento
+  puro, brand-safe). Ver o kit de engajamento em `GTM-CONTENT-30D.md`.
+- **Republicação/salvamento como meta:** peças de método são as mais salvas — pedir
+  o salvamento quando fizer sentido ("guarde essa conta para a próxima promoção").
+- **Recência.** Reagir rápido a movimento de programa/notícia é a maior alavanca de
+  alcance orgânico. Recência + utilidade = distribuição.
+
+**Sem violar a marca:** engajamento vem de insight e provocação honesta (a conta que
+contraria a manchete), nunca de ragebait, urgência artificial ou clickbait que
+distorce. Sage não grita — mas para o scroll com um número.
+
+**Sequenciamento reach → conversão:** a maioria dos tweets otimiza alcance (nativo,
+sem link, com hook e gancho de resposta); um subconjunto (Deal Desk, "a conta
+completa saiu na edição") carrega o CTA no reply. Não é um contra o outro por tweet:
+o alcance de hoje é o assinante de amanhã.
+
 ### 2.5 Crescimento 0→1 (as primeiras 1.000 pessoas certas)
 
 - **X:** 15 min/dia de reply analítico (com dado/conta) em threads de milhas/
@@ -196,14 +227,29 @@ Daily das 8h, para o social puxar pra edição).
 
 **North Star:** assinantes confirmados/semana (não seguidores).
 
+**Indicador líder do X (precede o North Star):** no Twitter, **views e engajamento
+(respostas + republicações + salvamentos)** são a métrica que se otimiza primeiro —
+é ela que antecede o assinante. Um tweet que não gera alcance não gera clique no
+reply, não gera assinante. Ordem de leitura das métricas do X:
+
+1. **Impressões/views** por tweet (alcance bruto — o combustível).
+2. **Engagement rate** (respostas + reposts + salvamentos ÷ impressões) — qualidade.
+3. **Cliques no link do reply/bio** (a ponte para a landing).
+4. **Assinantes via `utm_source=twitter`** (o resultado).
+
+Otimizar de cima para baixo: sem 1 e 2, não há 3 e 4. Dobrar semanalmente no
+formato/hook que mais gera 1 e 2, cortar o que não gera.
+
 | Fase | Semanas | Foco | Meta (sobre `[baseline]`) |
 |---|---|---|---|
 | 0 — Fundação | 1 | Setup + OG + UTM + automação conectada | Motor postando, medição ligada |
-| 1 — Ritmo | 2–5 | Cadência completa + engajamento diário | 1ª leitura: X vs LinkedIn |
-| 2 — Escala | 6–9 | Dobrar no canal/formato campeão + colab | +X% assinantes/sem |
-| 3 — Otimização | 10–13 | Cortar o que não converte + régua de e-mail | Relatório 90d |
+| 1 — Ritmo | 2–5 | Cadência + engajamento diário; achar os hooks que dão view | 1ª leitura: quais formatos alcançam |
+| 2 — Escala | 6–9 | Dobrar no hook/formato de maior view + colab | +X% views e engagement/sem |
+| 3 — Otimização | 10–13 | Converter alcance em assinante; régua de e-mail | Relatório 90d |
 
-Instrumentar por `utm_source` é o que revela onde investir a energia agressiva.
+Instrumentar por `utm_source` revela onde investir; instrumentar **views por
+formato** revela **o que** postar mais. As duas leituras juntas guiam a energia
+agressiva.
 
 ---
 
@@ -270,16 +316,20 @@ Instrumentar por `utm_source` é o que revela onde investir a energia agressiva.
 
 ### 3.4 Os 5 formatos-pilar (molde)
 
-**1. Sinal do dia (X — diário, aprovar):**
-> Sinal do dia: [programa] mexeu em [regra]. Na prática, o CPM do resgate mais
-> usado saiu de R$ [x] para R$ [y]. Continua valendo? Depende do resgate. A conta
-> feita e o TL Score na edição de hoje. [link]
+> Nota: no X o link vai sempre no **primeiro comentário (reply)**, nunca no corpo —
+> alcance primeiro. Versões em thread e o kit de engajamento estão em
+> [`GTM-CONTENT-30D.md`](./GTM-CONTENT-30D.md).
 
-**2. Deal Desk aberto (X — aprovar):**
+**1. Sinal do dia (X — diário, aprovar, thread + link no reply):**
+> [programa] acabou de mexer em [regra]. Na prática, o CPM do resgate mais usado
+> saiu de R$ [x] para R$ [y]. A conta feita e o TL Score na edição de hoje — link
+> no primeiro comentário.
+
+**2. Deal Desk aberto (X — aprovar, thread + link no reply):**
 > A conta de hoje: [origem] → [destino], com [bônus]% de bônus.
 > Custo: R$ [x] · milhas finais: [n] · CPM: R$ [y]/milheiro.
 > Isso é caro ou barato? Depende do VPM do seu resgate. O spread e o TL Score
-> completo na edição. [link]
+> completo na edição — link no primeiro comentário.
 > (Promoções podem mudar sem aviso. Confira as regras no site oficial.)
 
 **3. Método à mostra (LinkedIn/X — auto):**
@@ -514,17 +564,28 @@ REGRAS INVIOLÁVEIS (nunca quebrar):
 - Faltou regra/vigência = "Não confirmado". Nunca chute.
 - Voz Sage: analítica, direta, sem hype. Ponto só em 3ª pessoa, humor seco.
 
+ALCANCE PRIMEIRO (X):
+- No X, o objetivo primário de todo tweet é view e engajamento (respostas, reposts,
+  salvamentos). Assinante é consequência do alcance.
+- NUNCA colocar link no corpo do tweet — o link vai sempre no campo "reply_link"
+  (primeiro comentário). Tweet nativo tem mais alcance.
+- Primeira linha = hook (número, tese contraintuitiva ou pergunta). Sem preâmbulo.
+- Deal Desk e Sinal do dia saem como thread curta (2–3 tweets), não tweet solto.
+- Gerar 1 peça de engajamento/dia para o X: pergunta do dia OU enquete (brand-safe).
+
 SAÍDA (por edição, em JSON, um objeto por peça):
-{ "channel": "x" | "linkedin", "format": "...", "text": "...",
-  "risk": "low" | "high", "cta_link": "..." }
-- x_sinal_do_dia -> risk high
-- x_deal_desk -> risk high
+{ "channel": "x" | "linkedin", "format": "...", "text": "..." | "thread": ["..."],
+  "risk": "low" | "high", "reply_link": "..." }
+- x_sinal_do_dia -> risk high, formato thread, link em reply_link
+- x_deal_desk -> risk high, formato thread, link em reply_link
+- x_pergunta / x_enquete -> risk low (engajamento, sem link no corpo)
 - metodo / mito / ponto / recap -> risk low
 - linkedin_ensaio -> risk low se evergreen, high se citar dado da edição
 
-CTA: peças de deal terminam com "a conta completa e o TL Score na edição: [link]".
-Link X = <landing>?utm_source=twitter
-Link LinkedIn = <landing>?utm_source=linkedin (postar no 1º comentário, não no corpo)
+CTA: peças de deal terminam o último tweet com "a conta completa e o TL Score na
+edição. Link no primeiro comentário." e o link vai em reply_link.
+Link X = <landing>?utm_source=twitter (no reply, nunca no corpo)
+Link LinkedIn = <landing>?utm_source=linkedin (no 1º comentário, nunca no corpo)
 ```
 
 ### 5.5 Economia de chamadas (ficar folgado nos 20k)
