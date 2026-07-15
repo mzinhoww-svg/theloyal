@@ -168,3 +168,48 @@ test("weeklySignals: exporta transição verdictStart→verdictEnd por Fio", asy
   assert.equal(sig.tlScoreEnd, 30);
   assert.ok(Array.isArray(sig.lineage) && sig.lineage.length === 2);
 });
+
+// --- Passo 3: estado de Fio entre semanas (priorFioKeys do final curado) ---
+
+test("priorFioKeys: deriva dos blocos do final curado (sem _meta)", async () => {
+  const { priorFioKeys } = await import("../scripts/weekly-consolidate.mjs");
+  const finalWk = {
+    movements: { novas: [], seguem: [{ text: "x", fio: "livelo->smiles" }], venceram: [] },
+    ranking: [{ rank: 1, fio: "esfera->latam-pass" }],
+    highlights: [{ fio: "amex->lifemiles", title: "t", note: "n" }],
+  };
+  const keys = priorFioKeys(finalWk);
+  assert.ok(keys.has("livelo->smiles") && keys.has("esfera->latam-pass") && keys.has("amex->lifemiles"));
+});
+
+test("priorFioKeys: prefere _meta.fios quando presente (rascunho)", async () => {
+  const { priorFioKeys } = await import("../scripts/weekly-consolidate.mjs");
+  const draft = { _meta: { fios: [{ key: "a" }, { key: "b" }] }, movements: { novas: [{ fio: "c" }] } };
+  const keys = priorFioKeys(draft);
+  assert.ok(keys.has("a") && keys.has("b") && !keys.has("c"));
+});
+
+test("consolidate: REABRIU usando o final anterior (continuidade sobrevive à curadoria)", () => {
+  // Fio existia antes da janela (firstSeen antigo) e NÃO está no final anterior → REABRIU.
+  const eds = [edition(1, "2026-07-08", [deal({ firstSeen: "2026-05-01", vigencia: "2026-08-31T00:00:00-03:00" })])];
+  const prevFinal = { movements: { novas: [], seguem: [], venceram: [] }, ranking: [{ rank: 1, fio: "outra-rota" }], highlights: [] };
+  const d = consolidate({ editions: eds, windowStart: "2026-07-06", windowEnd: "2026-07-12", number: 1, prevWeekly: prevFinal, entityReg: REG });
+  assert.equal(d._meta.fios.find((f) => f.key === "livelo->smiles").state, "REABRIU");
+});
+
+// --- Passo 4: sanity-check de data ---
+
+test("implausibleDate: pega erro de ano; ignora datas plausíveis", async () => {
+  const { implausibleDate } = await import("../scripts/weekly-consolidate.mjs");
+  const win = { windowStart: "2026-07-06", windowEnd: "2026-07-12" };
+  assert.match(implausibleDate("2023-12-12", win), /anterior à janela/);
+  assert.match(implausibleDate("2029-01-01", win), /após a janela/);
+  assert.equal(implausibleDate("2026-07-31", win), null);
+  assert.equal(implausibleDate("aguardando", win), null); // não-data não acusa
+});
+
+test("consolidate: data implausível vira aviso em _meta.warnings, não bloqueia", () => {
+  const eds = [edition(1, "2026-07-08", [deal({ firstSeen: "2023-01-01", vigencia: "2026-08-31T00:00:00-03:00" })])];
+  const d = consolidate({ editions: eds, windowStart: "2026-07-06", windowEnd: "2026-07-12", number: 1, entityReg: REG });
+  assert.ok(Array.isArray(d._meta.warnings) && d._meta.warnings.some((w) => /firstSeen/.test(w)));
+});
