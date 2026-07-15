@@ -3,6 +3,7 @@
 // documentados como tokens: mesma excecao permitida ao mascote/graficos.
 import { readFileSync, readdirSync } from "node:fs";
 import { basename } from "node:path";
+import { CANONICAL_VERDICTS } from "./taxonomy.mjs";
 
 export const TOKENS = {
   ink: "#111111", paper: "#FAF7F0", paperDark: "#F1ECE1", surface: "#FFFFFF",
@@ -12,15 +13,21 @@ export const TOKENS = {
   red600: "#D64545", green100: "#D9F4E9", blue100: "#E4EAFF",
 };
 
-// Mapa TL Score -> veredito (DESIGN.md 1.3 / Operating Manual 5.3).
-export const VERDICTS = {
-  "vale-agir": { label: "VALE AGIR", min: 85, max: 100, bg: TOKENS.green100, fg: TOKENS.green700 },
-  "vale-olhar": { label: "VALE OLHAR", min: 70, max: 84, bg: TOKENS.blue100, fg: TOKENS.blue700 },
-  "casos-especificos": { label: "SÓ PARA CASOS ESPECÍFICOS", min: 55, max: 69, bg: TOKENS.paperDark, fg: TOKENS.g500 },
-  esperaria: { label: "ESPERARIA", min: 40, max: 54, bg: TOKENS.yellow500, fg: TOKENS.ink },
-  evitaria: { label: "EVITARIA", min: 0, max: 39, bg: TOKENS.red600, fg: TOKENS.surface },
-  "nao-confirmado": { label: "NÃO CONFIRMADO", min: null, max: null, bg: TOKENS.paperDark, fg: TOKENS.g500 },
+// Mapa TL Score -> veredito. Derivado da fonte única (scripts/taxonomy.mjs,
+// Apêndice C do RFC-001). A paleta de e-mail é atribuída por família semântica —
+// email-safe, mesma cor final de antes. Alterar taxonomia: mexer em taxonomy.mjs.
+const VERDICT_FAMILY_COLORS = {
+  green: { bg: TOKENS.green100, fg: TOKENS.green700 },
+  blue: { bg: TOKENS.blue100, fg: TOKENS.blue700 },
+  gray: { bg: TOKENS.paperDark, fg: TOKENS.g500 },
+  yellow: { bg: TOKENS.yellow500, fg: TOKENS.ink },
+  red: { bg: TOKENS.red600, fg: TOKENS.surface },
 };
+export const VERDICTS = Object.fromEntries(
+  CANONICAL_VERDICTS.map((v) => [v.key, {
+    label: v.label, min: v.min, max: v.max, ...VERDICT_FAMILY_COLORS[v.family],
+  }]),
+);
 
 // Pílulas de confiança do Radar de janelas. Fill + texto escuro (nunca verde-500
 // nem amarelo como texto). Espelha o padrão dos badges de veredito.

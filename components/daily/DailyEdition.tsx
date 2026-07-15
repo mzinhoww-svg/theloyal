@@ -4,7 +4,9 @@
 import type { ReactNode } from "react";
 
 export type Verdict =
-  | "vale-agir" | "vale-olhar" | "depende" | "esperaria" | "nao-vale" | "evitaria" | "nao-confirmado";
+  | "vale-agir" | "vale-olhar" | "casos-especificos" | "esperaria" | "evitaria" | "nao-confirmado"
+  // Aliases legados (deprecados, janela de compatibilidade — RFC-001 §12.2):
+  | "depende" | "nao-vale";
 
 export interface Deal {
   tag?: string; titulo?: string; texto?: string;
@@ -24,14 +26,19 @@ export interface Edition {
   footer?: { descricao?: string; assinatura_ponto?: string; links?: Record<string, string> };
 }
 
+// Taxonomia canonica (Apendice C do RFC-001). vale-olhar e azul (nao verde) e
+// casos-especificos existe. depende/nao-vale seguem como aliases DEPRECADOS
+// (janela de compatibilidade) para nao quebrar conteudo antigo.
 const VERDICT: Record<string, { label: string; cls: string }> = {
   "vale-agir": { label: "VALE AGIR", cls: "bg-green-100 text-green-700" },
-  "vale-olhar": { label: "VALE OLHAR", cls: "bg-green-100 text-green-700" },
-  depende: { label: "DEPENDE", cls: "bg-yellow-100 text-ink" },
+  "vale-olhar": { label: "VALE OLHAR", cls: "bg-blue-100 text-blue-700" },
+  "casos-especificos": { label: "SO PARA CASOS ESPECIFICOS", cls: "bg-paper-dark text-gray-500" },
   esperaria: { label: "ESPERARIA", cls: "bg-yellow-100 text-ink" },
-  "nao-vale": { label: "NAO VALE", cls: "bg-red-100 text-red-700" },
   evitaria: { label: "EVITARIA", cls: "bg-red-100 text-red-700" },
   "nao-confirmado": { label: "NAO CONFIRMADO", cls: "bg-paper-dark text-gray-500" },
+  // Aliases legados (deprecados): herdam o estilo do alvo canonico.
+  depende: { label: "ESPERARIA", cls: "bg-yellow-100 text-ink" },
+  "nao-vale": { label: "EVITARIA", cls: "bg-red-100 text-red-700" },
 };
 
 function VerdictChip({ verdict }: { verdict?: string }) {

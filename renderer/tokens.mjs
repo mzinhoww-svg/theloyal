@@ -23,27 +23,33 @@ export const TOKENS = {
 };
 
 // Taxonomia de veredito: rotulo + familia de cor. O rotulo SEMPRE aparece no chip
-// (nunca sinalizado so por cor).
-export const VERDICT = {
-  "vale-agir": { label: "VALE AGIR", family: "green" },
-  "vale-olhar": { label: "VALE OLHAR", family: "green" },
-  depende: { label: "DEPENDE", family: "yellow" },
-  esperaria: { label: "ESPERARIA", family: "yellow" },
-  "nao-vale": { label: "NAO VALE", family: "red" },
-  evitaria: { label: "EVITARIA", family: "red" },
-  "nao-confirmado": { label: "NAO CONFIRMADO", family: "gray" },
-};
+// (nunca sinalizado so por cor). Derivada da fonte unica scripts/taxonomy.mjs
+// (Apendice C do RFC-001). Divergencia com o Pipeline A e barrada por
+// tests/taxonomy.test.mjs. `depende`/`nao-vale` seguem como aliases DEPRECADOS
+// (janela de compatibilidade, RFC-001 §12.2) para nao quebrar conteudo antigo.
+import { CANONICAL_VERDICTS, DEPRECATED_VERDICT_ALIASES, resolveVerdictKey } from "../scripts/taxonomy.mjs";
+
+export const VERDICT = Object.fromEntries([
+  ...CANONICAL_VERDICTS.map((v) => [v.key, { label: v.label.toUpperCase(), family: v.family }]),
+  // Aliases legados (deprecados): herdam rotulo/familia do alvo canonico.
+  ...Object.entries(DEPRECATED_VERDICT_ALIASES).map(([legacy, target]) => {
+    const t = CANONICAL_VERDICTS.find((v) => v.key === target);
+    return [legacy, { label: t.label.toUpperCase(), family: t.family, deprecated: true }];
+  }),
+]);
 
 export const VERDICT_FAMILY = {
   green: { bg: "#D9F4E9", text: "#007A57" },
+  blue: { bg: "#E4EAFF", text: "#2547CC" },
   yellow: { bg: "#FCF0CE", text: "#7A5B00" },
   red: { bg: "#F9E2E2", text: "#B53A3A" },
   gray: { bg: "#EDE8DD", text: "#555555" },
 };
 
 export function verdict(key) {
-  const k = String(key || "").toLowerCase();
-  return VERDICT[k] || { label: (String(key || "").toUpperCase() || "SEM VEREDITO"), family: "gray" };
+  const k = resolveVerdictKey(key);
+  return VERDICT[k] || VERDICT[String(key || "").toLowerCase()] ||
+    { label: (String(key || "").toUpperCase() || "SEM VEREDITO"), family: "gray" };
 }
 
 // Paleta aprovada para auditoria de tokens (tokens oficiais + tons de e-mail documentados).
@@ -52,6 +58,7 @@ export const APPROVED_HEX = new Set([
   "#111111", "#FAF7F0", "#F1ECE1", "#FFFFFF", "#E5E0D5",
   "#3D3A34", "#555555", "#8A8578", "#B7B2A6",
   "#007A57", "#00A878", "#00C48C", "#D9F4E9",
+  "#E4EAFF", "#2547CC",
   "#F2C94C", "#FCF0CE", "#7A5B00",
   "#B53A3A", "#F9E2E2", "#EDE8DD",
 ]);
