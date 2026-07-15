@@ -483,6 +483,9 @@ Forecast×Predict; taxa de divergência > `d_max`; (Ev.4) Brier/calibração.
 
 ## 25. Decisões que ainda dependem do usuário (≤10) (briefing §12)
 
+> **Fechadas:** estas 9 decisões foram aprovadas (recomendações + defaults + escopo
+> final do MVP) em **[`APROVACAO-MVP-RADAR.md`](./APROVACAO-MVP-RADAR.md)**.
+
 1. **Motor canônico ao leitor (D2/D5).** Rec.: Predict quando `ready`, Forecast
    fallback. A: como recomendado. B: manter só Forecast no leitor por ora.
    Impacto: valor ao leitor. Não decidir → Predict segue invisível.
