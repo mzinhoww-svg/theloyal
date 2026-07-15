@@ -1,4 +1,4 @@
-// Sistema de renderização do The Loyalty.
+// Sistema de renderização do The Loyal.
 // Entrada: UM JSON editorial (content/edition.schema.json).
 // Saídas, a partir dessa única fonte de verdade:
 //   1. E-mail HTML email-safe .............. out/email/NNNN.html

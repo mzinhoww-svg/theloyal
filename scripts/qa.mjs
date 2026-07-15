@@ -102,11 +102,34 @@ function auditEmailDir(dir) {
     const textish = html.replace(/<[^>]+>/g, " ");
     if (EMOJI_RE.test(textish)) block(`${tag}: emoji no corpo`);
     if (URGENCY_RE.test(textish)) block(`${tag}: urgência artificial`);
+    if (/The Loyalty/.test(html)) block(`${tag}: marca "The Loyalty" no corpo (correto: "The Loyal")`);
     if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
     if (/<script/i.test(html)) block(`${tag}: contém <script> (proibido em e-mail)`);
     if (/(?:src|background)\s*=?\s*["']?https?:\/\//i.test(html) || /url\(\s*https?:/i.test(html)) block(`${tag}: carrega recurso externo (deve ser self-contained)`);
     if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
     if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: sem emoji/urgência, self-contained, disclaimer presente`);
+  }
+}
+
+// Audita as superfícies WEB (arquivo/archive) — regras invioláveis apropriadas a
+// uma página real (não exige self-contained: web carrega fontes externas). Cobre
+// emoji, urgência, marca, amarelo-como-texto, disclaimer, lang pt-BR e uma h1.
+// (E8 do backlog: qa.mjs passa a auditar a web, antes só o e-mail.)
+function auditWebDir(dir) {
+  if (!existsSync(dir)) return;
+  for (const f of readdirSync(dir).filter((n) => n.endsWith(".html"))) {
+    const tag = `Web ${dir}/${f}`;
+    const html = readFileSync(join(dir, f), "utf8");
+    const textish = html.replace(/<[^>]+>/g, " ");
+    if (EMOJI_RE.test(textish)) block(`${tag}: emoji no corpo`);
+    if (URGENCY_RE.test(textish)) block(`${tag}: urgência artificial`);
+    if (/The Loyalty/.test(html)) block(`${tag}: marca "The Loyalty" no corpo (correto: "The Loyal")`);
+    if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
+    if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
+    if (!/<html[^>]*lang="pt-BR"/i.test(html)) block(`${tag}: <html> sem lang="pt-BR"`);
+    const h1s = (html.match(/<h1[\s>]/gi) || []).length;
+    if (h1s !== 1) block(`${tag}: deve ter exatamente uma h1 (tem ${h1s})`);
+    if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: web conforme (marca, disclaimer, lang pt-BR, uma h1)`);
   }
 }
 
@@ -117,10 +140,16 @@ function auditEmail() {
   auditEmailDir("out/weekly");
 }
 
+function auditWeb() {
+  auditWebDir("out/web");
+  auditWebDir("out/weekly-web");
+}
+
 function main() {
   auditSource();
   auditEditions();
   auditEmail();
+  auditWeb();
 
   console.log("== TL QA ==");
   passes.forEach((m) => console.log(`  ✓ ${m}`));
