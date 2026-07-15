@@ -30,6 +30,24 @@ async function sb(path, { method = "GET", body, prefer } = {}) {
 const rpc = (fn, a = {}) =>
   fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: SB_KEY, authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" }, body: JSON.stringify(a) }).then((r) => r.json());
 
+// Flags do navegador. --disable-http2 contorna o ERR_HTTP2_PROTOCOL_ERROR que a
+// Azul Fidelidade devolve para conexões headless; AutomationControlled reduz
+// detecção de bot.
+const LAUNCH_ARGS = ["--no-sandbox", "--disable-http2", "--disable-blink-features=AutomationControlled"];
+
+// goto com 1 retry — cobre falhas transitórias de rede/protocolo (Azul).
+async function gotoResilient(page, url) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
+      return;
+    } catch (e) {
+      if (attempt === 2) throw e;
+      await page.waitForTimeout(1500);
+    }
+  }
+}
+
 async function collectOne(browser, source) {
   const ctx = await browser.newContext({
     locale: "pt-BR",
@@ -37,7 +55,7 @@ async function collectOne(browser, source) {
   });
   const page = await ctx.newPage();
   try {
-    await page.goto(source.product_url, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await gotoResilient(page, source.product_url);
     await page.waitForTimeout(5000);
     const adapter = ADAPTERS[source.program_code];
     if (!adapter) throw new Error(`sem adapter para ${source.program_code}`);
@@ -71,7 +89,7 @@ async function runDiagnose() {
   console.log(`[diagnose] ${sources.length} fontes · saída em ${OUT_DIR}/`);
 
   const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS });
   const report = [];
 
   for (const s of sources) {
@@ -83,7 +101,7 @@ async function runDiagnose() {
     const page = await ctx.newPage();
     const entry = { source_id: s.id, program_code: s.program_code, url: s.product_url, slug };
     try {
-      await page.goto(s.product_url, { waitUntil: "domcontentloaded", timeout: 45000 });
+      await gotoResilient(page, s.product_url);
       await page.waitForTimeout(5000);
       const d = await diagnose(page, s.program_code);
       writeFileSync(`${OUT_DIR}/${slug}.html`, await page.content());
@@ -132,7 +150,7 @@ async function main() {
 
   // 3. navegador
   const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS });
   let ok = 0, fail = 0, obs = 0;
 
   for (const s of sources) {
