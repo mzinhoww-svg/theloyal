@@ -192,7 +192,9 @@ export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
           series.map((s) => (
             <tr key={`${s.scope}:${s.seriesKey}`}>
               <Td className="font-medium">
-                {s.seriesKey}
+                <a href={`/admin/radar/${encodeURIComponent(s.seriesKey)}`} className="text-blue-600 hover:underline">
+                  {s.seriesKey}
+                </a>
                 {s.scope === "cluster" && <span className="ml-1 text-xs text-gray-500">(agregado)</span>}
               </Td>
               <Td><Pill tone={STATUS_TONE[s.productStatus]}>{productStatusLabel(s.productStatus)}</Pill></Td>

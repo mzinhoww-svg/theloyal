@@ -20,7 +20,7 @@ import {
   type ForecastConfig,
 } from "./forecast.ts";
 import { buildPredict, type Prediction } from "./predict-engine.ts";
-import type { CampaignQualityAssessment, ExcludedCampaign } from "./campaign-quality.ts";
+import type { CampaignQualityAssessment, ExcludedCampaign, CampaignQualityRow } from "./campaign-quality.ts";
 
 // Estados consolidados da série (§7 do backlog). Precedência "o primeiro que
 // dispara vence" — espelha a hierarquia de bloqueios do D16, sem lógica nova.
@@ -44,6 +44,7 @@ export interface RadarSeriesQuality {
   temporalCritical: number; // excluídas por severidade temporal crítica
   probableDuplicate: number; // excluídas/relacionadas por duplicidade provável
   placeholder: number;
+  used: CampaignQualityRow[]; // as campanhas elegíveis desta série (detalhe P1-B §15)
   excluded: ExcludedCampaign[]; // as excluídas desta série (para o detalhe P1-B)
 }
 
@@ -180,7 +181,7 @@ const BLOCKING_STATUSES = new Set<ProductStatus>([
 
 // Divergência entre motores (D6): faixas sobre |central Predict − centro Forecast|,
 // atenuada uma faixa quando as janelas se sobrepõem.
-function divergence(forecast: Forecast | null, predict: Prediction | null): { days: number | null; level: DivergenceLevel } {
+export function computeDivergence(forecast: Forecast | null, predict: Prediction | null): { days: number | null; level: DivergenceLevel } {
   const pc = iso(predict?.centralDate);
   const fStart = iso(forecast?.windowStart);
   const fEnd = iso(forecast?.windowEnd);
@@ -277,14 +278,14 @@ export function composeRadarViewModel(rows: CampaignRow[], opts: ComposeOpts): R
     const dest = e.route.split("→")[1] ?? "";
     (exclByDest.get(dest) ?? exclByDest.set(dest, []).get(dest)!).push(e);
   }
-  // Válidas (elegíveis) contadas por rota e por destino.
-  const validByRoute = new Map<string, number>();
-  const validByDest = new Map<string, number>();
+  // Válidas (elegíveis) agrupadas por rota e por destino (para o detalhe P1-B).
+  const usedByRoute = new Map<string, CampaignQualityRow[]>();
+  const usedByDest = new Map<string, CampaignQualityRow[]>();
   for (const r of quality.eligibleRows) {
     const rk = `${normProgram(r.origem)}→${normProgram(r.destino)}`;
-    validByRoute.set(rk, (validByRoute.get(rk) ?? 0) + 1);
+    (usedByRoute.get(rk) ?? usedByRoute.set(rk, []).get(rk)!).push(r);
     const d = normProgram(r.destino);
-    validByDest.set(d, (validByDest.get(d) ?? 0) + 1);
+    (usedByDest.get(d) ?? usedByDest.set(d, []).get(d)!).push(r);
   }
 
   const keys = new Set<string>(Array.from(fByKey.keys()).concat(Array.from(pByKey.keys())));
@@ -300,16 +301,18 @@ export function composeRadarViewModel(rows: CampaignRow[], opts: ComposeOpts): R
     const destination = normProgram(base.destino);
 
     const excluded = scope === "cluster" ? (exclByDest.get(destination) ?? []) : (exclByRoute.get(key) ?? []);
+    const used = scope === "cluster" ? (usedByDest.get(destination) ?? []) : (usedByRoute.get(key) ?? []);
     const seriesQuality: RadarSeriesQuality = {
-      campaignsValid: scope === "cluster" ? (validByDest.get(destination) ?? 0) : (validByRoute.get(key) ?? 0),
+      campaignsValid: used.length,
       campaignsExcluded: excluded.length,
       temporalCritical: excluded.filter((e) => e.temporal.severity === "critical").length,
       probableDuplicate: excluded.filter((e) => e.duplicate.status === "probable_duplicate").length,
       placeholder: excluded.filter((e) => e.reason === "placeholder_program").length,
+      used,
       excluded,
     };
 
-    const div = divergence(forecast, predict);
+    const div = computeDivergence(forecast, predict);
     const productStatus = deriveStatus(forecast, predict, seriesQuality, div.level, {
       now,
       datasetComplete: opts.datasetComplete,

@@ -23,7 +23,7 @@ import { assessForecastFile } from "../scripts/forecast-freshness.mjs";
 // Colunas lidas: identidade + datas de evento + datas de proveniência + sinais
 // de duplicidade (source_url). Explícitas (não `*`) para não puxar colunas pesadas.
 const RADAR_SELECT =
-  "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim,first_seen,last_seen,observed_at,created_at,source_url";
+  "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim,first_seen,last_seen,observed_at,created_at,source_url,origin";
 
 const FORECAST_ARTIFACT = join(process.cwd(), "content", "forecast.json");
 
