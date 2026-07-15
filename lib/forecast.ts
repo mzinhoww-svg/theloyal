@@ -448,6 +448,7 @@ export interface RadarItem {
   confidence: Confidence;
   window: string;
   basis: string;
+  source: "forecast";
   bonus?: string;
 }
 
@@ -467,6 +468,11 @@ export function radarItems(forecasts: Forecast[]): RadarItem[] {
       confidence: f.confidence,
       window: formatWindow(f.windowStart, f.windowEnd),
       basis: f.basis,
+      // Proveniência canônica (POLITICA-CANONICA-RADAR.md §5.1): o item vem do
+      // motor de recorrência (Forecast). O leitor nunca vê "Forecast"; o render
+      // usa isto como metadado. Quando a reconciliação canônica alimentar a
+      // digest (fase estrutural), o Predict passa a preencher esta proveniência.
+      source: "forecast" as const,
       ...(f.typicalPercent ? { bonus: `~${f.typicalPercent}%` } : {}),
     }));
 }

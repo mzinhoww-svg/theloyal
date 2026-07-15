@@ -46,7 +46,7 @@ export function SubmitButton({
         type="button"
         title={title}
         onClick={() => setArmed(true)}
-        className={`tl-press ${BASE} ${VARIANT[variant]}`}
+        className={`${BASE} ${VARIANT[variant]}`}
       >
         {children}
       </button>
@@ -60,7 +60,7 @@ export function SubmitButton({
       title={title}
       onBlur={() => armed && setArmed(false)}
       aria-live={armed ? "polite" : undefined}
-      className={`tl-press ${BASE} ${confirm ? VARIANT.danger : VARIANT[variant]}`}
+      className={`${BASE} ${confirm ? VARIANT.danger : VARIANT[variant]}`}
     >
       {confirm && !pending ? confirm : label}
     </button>

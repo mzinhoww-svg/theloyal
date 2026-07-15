@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { track } from "@/lib/track";
 import { LedgerTexture } from "./graphics";
 import { PontoMascot } from "./PontoMascot";
 import { SubscribeForm } from "./SubscribeForm";
@@ -174,6 +175,7 @@ export function StickyCTA() {
       <a
         href="#assinar"
         tabIndex={show ? undefined : -1}
+        onClick={() => track("cta_click", { source: "sticky" })}
         className="flex min-h-12 w-full items-center justify-center rounded bg-green-600 px-4 text-base font-semibold text-paper transition-colors duration-150 hover:bg-green-700"
       >
         Receber grátis, todo dia às 8h

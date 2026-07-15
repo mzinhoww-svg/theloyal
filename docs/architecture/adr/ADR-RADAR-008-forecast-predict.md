@@ -1,8 +1,10 @@
 # ADR-RADAR-008 — Papéis de Forecast e Predict e reconciliação
 
-- **Status:** proposed
-- **Data:** 2026-07-15 · **Revisado:** 2026-07-15 (evidência forense)
-- **Relacionado:** arquitetura §15, §16, §17, §27d.1, §27f; ADR-RADAR-009, ADR-RADAR-010
+- **Status:** accepted
+- **Data:** 2026-07-15 · **Revisado:** 2026-07-15 (evidência forense) ·
+  **Aceito:** 2026-07-15 (por `docs/POLITICA-CANONICA-RADAR.md`)
+- **Relacionado:** arquitetura §15, §16, §17, §27d.1, §27f; ADR-RADAR-009, ADR-RADAR-010;
+  `docs/POLITICA-CANONICA-RADAR.md` (política canônica que promove este ADR)
 
 ## ⚠ Nota canônica
 A reconciliação Predict>Forecast opera **sobre séries temporalmente válidas e
@@ -30,7 +32,7 @@ potencialmente contraditórias, e o motor "melhor" não chega ao produto.
    revisão`; `Predict blocked + Forecast elegível → Forecast (fallback)`; `ambos
    blocked → Não confirmado`. Divergência acima do limiar → revisão obrigatória.
 
-## Decisão proposta
+## Decisão (aceita)
 Alternativa 3. Forecast sobe o gate de publicação (≥5 ondas, ADR-004), nunca é
 manchete sozinho, e serve de baseline/fallback e comparação. Daily e Weekly leem
 o **mesmo** resultado reconciliado (nunca motores diferentes por produto).
@@ -47,10 +49,23 @@ o **mesmo** resultado reconciliado (nunca motores diferentes por produto).
 - Fallback frequente ao Forecast pode confundir se mal rotulado.
 - Limiar de divergência mal calibrado gera revisões demais ou de menos.
 
-## Questões em aberto
-- Divergência máxima aceitável (ex. 30 dias de centro).
-- Se o Forecast pode chegar ao leitor ou fica só no admin.
+## Questões em aberto — resolvidas na aceitação
+- **Divergência máxima:** resolvida em faixas (não um limiar único), sobre a data
+  central, com sobreposição de janela como atenuante: ≤14d compatível · 15–30d
+  warning · >30d revisão · >60d bloqueio (`APROVACAO-MVP-RADAR.md` Decisão 2;
+  `lib/radar-view-model.ts` `computeDivergence`).
+- **Forecast ao leitor:** **pode** chegar, **apenas como fallback rotulado "cadência
+  aproximada"** e rebaixado — nunca manchete sozinho (`POLITICA-CANONICA-RADAR.md`
+  §1.5, §7.2).
 
-## Critério para `accepted`
-Aprovação do usuário do motor canônico (Predict), do papel do Forecast e das
-regras de reconciliação.
+## Nota de corte de publicação (adicionada na aceitação)
+Uma série só vira **previsão ao leitor** quando **todas** verdadeiras:
+`datasetComplete ∧ fresh ∧ readiness∈{ready,ready_with_warnings} ∧ confiança≥média ∧
+(backtest.observations≥3 → windowHitRate≥0,5) ∧ divergência∉{revisão,bloqueio} ∧
+aprovação_editorial_vigente`. Abaixo disso: monitoramento honesto ou corte — nunca
+número em silêncio. Definição completa e granular em `POLITICA-CANONICA-RADAR.md` §7.4.
+
+## Critério para `accepted` — atendido
+Aprovação do motor canônico (Predict), do papel do Forecast (baseline + fallback
+rotulado + comparação) e das regras de reconciliação, formalizada em
+`POLITICA-CANONICA-RADAR.md` (2026-07-15).

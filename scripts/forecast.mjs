@@ -8,7 +8,13 @@
 // O motor é scripts/forecast-engine.mjs (espelho de lib/forecast.ts).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { buildForecast, radarItems, resolveConfig, upcomingWindows } from "./forecast-engine.mjs";
+import { buildForecast, resolveConfig, upcomingWindows } from "./forecast-engine.mjs";
+// Resultado canônico ao leitor (F3-00). O pipeline consome os módulos .ts
+// diretamente (Node ≥22.18 / CI Node 24 fazem type-stripping nativo) — assim o
+// radar do leitor vem da RECONCILIAÇÃO (Predict canônico + Forecast fallback),
+// não do Forecast cru. Ver docs/POLITICA-CANONICA-RADAR.md §7 e F3-00.
+import { composeRadarViewModel } from "../lib/radar-view-model.ts";
+import { buildReaderRadar } from "../lib/reader-radar.ts";
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co").replace(/\/+$/, "");
 const SUPABASE_KEY =
@@ -149,8 +155,11 @@ async function main() {
   const daily = datasetComplete
     ? upcomingWindows(fc, { now: NOW, horizonDays: config.horizonDaily, minConfidence: "media" }).filter(notMuted)
     : [];
+  // Nota de corte da política canônica (§7.4): o leitor só recebe janela com
+  // confiança ≥ média. Antes o weekly publicava "baixa" — overpromessa (premissa
+  // 6). Séries abaixo do corte não somem: viram "monitoramento" (degrade honesto).
   const weekly = datasetComplete
-    ? upcomingWindows(fc, { now: NOW, horizonDays: config.horizonWeekly, minConfidence: "baixa" }).filter(notMuted)
+    ? upcomingWindows(fc, { now: NOW, horizonDays: config.horizonWeekly, minConfidence: "media" }).filter(notMuted)
     : [];
 
   // Frescor: maior observed_at do ledger (sem novo schema) para o consumidor
@@ -159,6 +168,26 @@ async function main() {
     const v = typeof r.observed_at === "string" ? r.observed_at.slice(0, 10) : null;
     return v && (!mx || v > mx) ? v : mx;
   }, null);
+
+  // Radar do leitor a partir do RESULTADO CANÔNICO reconciliado (Predict quando
+  // pronto; Forecast fallback rotulado), com a nota de corte (§7.4) já aplicada.
+  // Fecha a premissa 4: o motor que MEDE (backtest) passa a ser o que PUBLICA.
+  // Overrides do operador reaplicados dentro da reconciliação (fonte única).
+  const readerVm = datasetComplete
+    ? composeRadarViewModel(rows, {
+        now: NOW,
+        config,
+        datasetComplete,
+        pagesRead: 1,
+        freshness: { status: "fresh", generatedAt: new Date().toISOString(), ageHours: 0 },
+        overrides,
+        opportunityHorizonDays: config.horizonWeekly,
+      })
+    : null;
+  const radarDaily = readerVm ? buildReaderRadar(readerVm.series, { now: NOW, horizonDays: config.horizonDaily }).items : [];
+  const radarWeeklyReader = readerVm
+    ? buildReaderRadar(readerVm.series, { now: NOW, horizonDays: config.horizonWeekly })
+    : { items: [], monitoringCount: 0 };
 
   const artifact = {
     generatedAt: new Date().toISOString(),
@@ -180,8 +209,9 @@ async function main() {
     digest: {
       daily,
       weekly,
-      radarDaily: datasetComplete ? radarItems(daily) : [],
-      radarWeekly: datasetComplete ? radarItems(weekly) : [],
+      radarDaily,
+      radarWeekly: radarWeeklyReader.items,
+      radarMonitoringWeekly: radarWeeklyReader.monitoringCount,
     },
   };
 
