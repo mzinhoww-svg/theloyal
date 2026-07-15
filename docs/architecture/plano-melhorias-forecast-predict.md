@@ -1,5 +1,12 @@
 # Plano de implementação — melhorias Forecast & Predict
 
+> **✅ STATUS (2026-07-15): ENTREGUE INTEGRALMENTE no PR #76** — Fases 0–4 e
+> Trilha D, incluindo o rename, overrides no Predict, tendência de snapshots
+> com cron, filtros server-side, `lib/series-builder.ts` (ADR-SERIES-001) e a
+> fila assistida de correção de datas (migração 0008 aplicada). Documento
+> mantido como registro; a sequência viva está em
+> `plano-implementacao-consolidado.md`.
+
 > Sequência proposta após a camada de dashboards (PR #76). Fases ordenadas por
 > valor ÷ risco; cada uma é um PR independente e mergeável sozinho. Gates de
 > saída em todas: `npm run typecheck` + `npm run build` + `npm test` verdes e
