@@ -2,7 +2,7 @@
 // (lib/predict-engine) e persiste snapshots observáveis (predict_snapshots).
 // Usa admin-db (SERVICE_ROLE_KEY) — nunca importado por Client Component.
 
-import { rest, insert } from "./admin-db";
+import { rest, insert, fetchAllRows } from "./admin-db";
 import { buildPredict, type Prediction, type PredictResult } from "./predict-engine";
 import type { CampaignRow } from "./forecast";
 
@@ -28,13 +28,24 @@ export async function loadPredict(now?: string): Promise<{
   configured: boolean;
   ledgerRows: number;
   result: PredictResult;
+  datasetComplete: boolean;
+  asOf: string;
 }> {
   const asOf = (now ?? new Date().toISOString()).slice(0, 10);
-  const campaigns = await rest<CampaignRow>(
-    "campaigns?select=id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim&limit=2000",
+  // Leitura COMPLETA e paginada — sem o limite silencioso de 2000. Fase C0.
+  const loaded = await fetchAllRows<CampaignRow>(
+    "campaigns",
+    "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim",
   );
+  const campaigns = loaded.rows;
   const result = buildPredict(campaigns, { asOf });
-  return { configured: campaigns.length > 0, ledgerRows: campaigns.length, result };
+  return {
+    configured: campaigns.length > 0,
+    ledgerRows: campaigns.length,
+    result,
+    datasetComplete: loaded.complete,
+    asOf,
+  };
 }
 
 export const getSnapshots = (limit = 20) =>

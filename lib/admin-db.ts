@@ -43,6 +43,42 @@ export async function rest<T = Record<string, unknown>>(
   }
 }
 
+// Carrega TODAS as linhas de uma tabela via paginacao DETERMINISTICA (ordem
+// explicita, nunca a ordem padrao do banco), sem o limite silencioso de 2000.
+// Retorna { rows, complete }: complete=false se alguma pagina falhar ou o teto
+// de seguranca for atingido — o chamador deve bloquear saida editorial nesse
+// caso, nunca descartar linhas em silencio. Fase C0.
+export async function fetchAllRows<T = Record<string, unknown>>(
+  table: string,
+  select: string,
+  opts: { pageSize?: number; maxPages?: number; order?: string } = {},
+): Promise<{ rows: T[]; complete: boolean; pages: number }> {
+  const pageSize = opts.pageSize ?? 1000;
+  const maxPages = opts.maxPages ?? 50;
+  const order = opts.order ?? "id.asc";
+  if (!SERVICE_KEY) return { rows: [], complete: false, pages: 0 };
+  const rows: T[] = [];
+  let pages = 0;
+  for (let offset = 0; ; offset += pageSize) {
+    if (pages >= maxPages) return { rows, complete: false, pages }; // teto de seguranca
+    let chunk: T[];
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/${table}?select=${select}&order=${order}&limit=${pageSize}&offset=${offset}`,
+        { headers: headers(), cache: "no-store" },
+      );
+      if (!res.ok) return { rows, complete: false, pages };
+      chunk = (await res.json()) as T[];
+    } catch {
+      return { rows, complete: false, pages };
+    }
+    pages++;
+    rows.push(...chunk);
+    if (chunk.length < pageSize) break; // ultima pagina
+  }
+  return { rows, complete: true, pages };
+}
+
 // Chamada de RPC (funcoes admin_*). Retorna o JSON cru; o chamador tipa.
 export async function rpc<T = unknown>(
   fn: string,
