@@ -143,3 +143,117 @@ git revert <sha_docs> <sha_admin> <sha_editorial> <sha_freshness> <sha_dataset> 
 Os parâmetros são constantes de código; reverter o motor restaura o
 comportamento anterior sem efeitos colaterais externos. `content/forecast.json`
 não foi regenerado nesta fase (mantido como estava).
+
+---
+
+# C0.2 — Validação temporal e duplicidade provável
+
+Extensão da Fase C0 que age **antes da formação de ondas/intervalos**, para que
+campanhas temporalmente incoerentes ou provavelmente duplicadas não entrem nas
+séries do Forecast nem do Predict. Tudo em **runtime**, sem tocar o banco.
+
+```
+campaigns → validação temporal → detecção de duplicidade → conjunto elegível
+→ formação de ondas → intervalos → Forecast/Predict → gates editoriais (C0)
+```
+
+## Funções (fonte compartilhada)
+
+Módulo puro `lib/campaign-quality.ts` (+ espelho `scripts/campaign-quality.mjs`),
+injetável (`normalize`=normProgram do motor). O `normalize` compartilhado evita
+regras divergentes entre Forecast e Predict.
+
+- `resolveEventDateCandidate(row)` — data candidata pela **mesma** prioridade do
+  `windowDate` (início > data no id > fim). Ser ISO válida ≠ ser plausível.
+- `evaluateTemporalPlausibility(row, config)` → `{status, severity, flags,
+  eventDate, provenanceDate, dayDifference, includeInPrediction,
+  requiresReprocessing, requiresHumanReview, reasons}`.
+- `detectProbableDuplicates(rows, temporalById, {config, normalize})` →
+  `{groups, byCampaignId}` (`unique|possible_duplicate|probable_duplicate`).
+- `isCampaignEligibleForPrediction(row, temporal, duplicate, {normalize})`.
+- `assessCampaignQuality(rows, {config, normalize})` — **ponto único**: filtra
+  transferências, avalia temporal + duplicidade e devolve `{perId, eligibleRows,
+  excluded, counters, duplicateGroups}`. Chamado igual por `buildForecast`
+  (TS+MJS) e `buildPredict`.
+
+## Regras — datas de evento × proveniência
+
+- **Evento** (ancoram a série): `vigencia_inicio`, data no `id`, `vigencia_fim`.
+- **Proveniência** (só validam plausibilidade, **nunca** substituem o evento nem
+  entram na série): `first_seen` (= data de publicação da notícia, por
+  `docs/auditoria/edge-function-campaigns.md`), `observed_at`, `created_at`,
+  `last_seen`. `dayDifference` = proveniência(mín) − evento.
+
+Estados: `valid`, `missing_event_date`, `invalid_event_date`,
+`permanent_or_open_ended`, `event_far_before_source`, `event_after_source`,
+`conflicting_event_dates`, `suspect_year` (o mais grave prevalece; `flags` lista
+todos).
+
+## Limiares (centralizados em `DEFAULT_QUALITY_CONFIG`)
+
+```
+eventFarBeforeSourceWarningDays  = 180   # > → event_far_before_source (warning)
+eventFarBeforeSourceCriticalDays = 300   # > e sem início explícito → suspect_year (exclui)
+eventAfterSourceToleranceDays    = 30    # evento > maxProv + 30 → event_after_source (revisão)
+yearMismatchToleranceDays        = 300   # divergência entre candidatas → conflicting
+provenanceProximityDays          = 15    # dedup: first_seen/observed_at próximos
+duplicatePossibleScore           = 3     # ≥ → possible_duplicate
+duplicateProbableScore           = 5     # ≥ → probable_duplicate
+```
+
+**Score de duplicidade** (documentado): mesmo percentual +2 (próximo ≤5pp +1),
+proveniência ≤15d +2, mesmo domínio de fonte +1, mesma URL +1, **uma data válida
++ uma temporalmente crítica +3**, vigência incompatível (>300d) +1. Origem/destino/
+tipo são a **pré-condição** (agrupamento), nunca pontuam sozinhos — bônus isolado
+(+2) fica abaixo do limiar de possível.
+
+## Caso Livelo→ConnectMiles — antes × depois
+
+| | Registro A (`…-2023-12-12`) | Registro B (`…-2026-07-12`) |
+|---|---|---|
+| `vigencia_inicio` | null | null |
+| `vigencia_fim` | 2023-12-12 (fabricada) | 2026-07-12 |
+| `first_seen` (proveniência) | 2026-07-12 | 2026-07-10 |
+| **Antes** | entrava; 943d era formado; Forecast previa ~2029 | entrava |
+| **Depois** | `suspect_year` (Δ 943d), `includeInPrediction=false`, **excluído** | `valid`, elegível |
+| Par A/B | `probable_duplicate` (score 8) | idem |
+
+Resultado: o intervalo de 943 dias **não é formado**, a rota fica com 1 onda
+(→ em-formação no Forecast; bloqueada no Predict), **não há previsão de 2029**, e
+o **Predict recebe exatamente o mesmo conjunto elegível**. Nenhuma data é
+corrigida; ambos os registros permanecem no banco e visíveis no admin.
+
+## Falsos positivos possíveis (e mitigação)
+
+- **Notícia recente sobre campanha antiga real:** se `vigencia_inicio` explícita =
+  data do evento, rebaixa de `suspect_year` → `event_far_before_source` (warning)
+  + `requiresHumanReview`, **sem excluir** e **sem autocorrigir** para `first_seen`.
+- **Campanha futura legítima:** `event_after_source` gera revisão, não bloqueio
+  automático.
+- **Duplicidade:** exige combinação de sinais (não só bônus); `possible_duplicate`
+  só bloqueia se combinado com erro temporal crítico.
+
+## Limitações do runtime
+
+- Deteção é **calculada a cada execução** (não persistida) — reversível, mas não
+  cria `campaign_identity`/`version`/`source_observation` no banco.
+- Sem texto/título das notícias no ledger, o sinal de “prorrogação/último dia”
+  não é usado (score baseia-se nas colunas disponíveis).
+- Em `probable_duplicate` **sem** membro temporalmente crítico, ambos permanecem
+  elegíveis (apenas sinalizados) — evitar descartar dado arbitrariamente.
+- `suspect_month`/`suspect_day_month` estão no enum mas não são emitidos ainda
+  (heurística fina adiada).
+
+## O que ainda exige migration (fase estrutural)
+
+Persistir identidade/versão/observação; `vigencia_type`+`vigencia_raw`;
+`data_evento` materializada; catálogo `programs`/`program_aliases`; merge/dedup
+persistido; reprocessamento dirigido por `requiresReprocessing`. Nada disso é
+feito aqui.
+
+## Rollback
+
+Reverter os commits C0.2 (`feat(radar): temporal quality…`, `fix(radar): apply
+campaign quality…`, `test(radar): c0.2…`, `fix(admin): expose temporal…`) e a
+linha `allowImportingTsExtensions` do tsconfig. Como é 100% runtime, o motor
+volta ao comportamento C0 sem qualquer efeito no banco ou em produção.
