@@ -118,15 +118,15 @@ export default async function LogsPage({
           {filtered.length > 0 ? (
             filtered.map((r, i) => (
               <tr key={`${r.source}-${r.label}-${i}`}>
-                <Td className="whitespace-nowrap font-mono tabular-nums text-gray-500">
+                <Td label="Data/hora" className="whitespace-nowrap font-mono tabular-nums text-gray-500">
                   {fmtDate(r.when)}
                 </Td>
-                <Td className="text-gray-500">{r.source}</Td>
-                <Td className="font-mono">{r.label}</Td>
-                <Td>
+                <Td label="Origem" className="text-gray-500">{r.source}</Td>
+                <Td label="Job / Produto" className="font-mono">{r.label}</Td>
+                <Td label="Status">
                   <StatusCell status={r.status} />
                 </Td>
-                <Td className="text-gray-500">{r.message || "—"}</Td>
+                <Td label="Mensagem" className="text-gray-500">{r.message || "—"}</Td>
               </tr>
             ))
           ) : (

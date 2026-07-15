@@ -45,18 +45,18 @@ function ProductSummary({ rows }: { rows: EditionRow[] }) {
         <tbody>
           {summary.map((s) => (
             <tr key={s.product}>
-              <Td>
+              <Td label="Produto">
                 <Pill tone={toneForProduct(s.product)}>{s.product}</Pill>
               </Td>
-              <Td className="text-right font-mono tabular-nums">{s.total}</Td>
-              <Td className="text-right font-mono tabular-nums text-gray-500">
+              <Td className="text-right font-mono tabular-nums" label="Edições">{s.total}</Td>
+              <Td className="text-right font-mono tabular-nums text-gray-500" label="Gates OK">
                 {s.gatesOk}/{s.total}
               </Td>
-              <Td className="text-right font-mono tabular-nums text-gray-500">
+              <Td className="text-right font-mono tabular-nums text-gray-500" label="No Beehiiv">
                 {s.published}/{s.total}
               </Td>
-              <Td className="text-right font-mono tabular-nums">{s.avgQuality ?? "—"}</Td>
-              <Td className="font-mono tabular-nums text-gray-500">{s.lastDate ?? "—"}</Td>
+              <Td className="text-right font-mono tabular-nums" label="Qual. média">{s.avgQuality ?? "—"}</Td>
+              <Td className="font-mono tabular-nums text-gray-500" label="Última">{s.lastDate ?? "—"}</Td>
             </tr>
           ))}
         </tbody>
@@ -68,34 +68,34 @@ function ProductSummary({ rows }: { rows: EditionRow[] }) {
 function EditionRowView({ e }: { e: EditionRow }) {
   return (
     <tr>
-      <Td>
+      <Td label="Produto">
         <Pill tone={toneForProduct(e.product)}>{e.product}</Pill>
       </Td>
-      <Td className="font-mono tabular-nums text-gray-500">
+      <Td className="font-mono tabular-nums text-gray-500" label="Nº">
         {e.number != null ? `#${String(e.number).padStart(4, "0")}` : "—"}
       </Td>
-      <Td className="font-mono tabular-nums text-gray-500">{e.date ?? "—"}</Td>
-      <Td className="max-w-[28rem]">
+      <Td className="font-mono tabular-nums text-gray-500" label="Data">{e.date ?? "—"}</Td>
+      <Td className="max-w-[28rem]" label="Título">
         <a href={`/admin/digests/${encodeURIComponent(e.id)}`} className="text-blue-600 hover:underline">
           {e.title ?? e.id}
         </a>
       </Td>
-      <Td>
+      <Td label="Status">
         <Pill tone={isPublished(e) ? "green" : toneForStatus(e.status)}>
           {isPublished(e) ? "no beehiiv" : (e.status ?? "—")}
         </Pill>
       </Td>
-      <Td>
+      <Td label="Gates">
         <GateChips validate={e.gate_validate} audit={e.gate_audit} />
       </Td>
-      <Td className="text-right font-mono tabular-nums">
+      <Td className="text-right font-mono tabular-nums" label="Qual.">
         <span className={qtone(e.quality_score) === "red" ? "text-red-600" : undefined}>
           {e.quality_score ?? "—"}
         </span>
       </Td>
-      <Td className="text-right font-mono tabular-nums text-gray-500">{e.sources_count ?? "—"}</Td>
-      <Td className="text-right font-mono tabular-nums text-gray-500">{e.deals_count ?? "—"}</Td>
-      <Td>
+      <Td className="text-right font-mono tabular-nums text-gray-500" label="Fontes">{e.sources_count ?? "—"}</Td>
+      <Td className="text-right font-mono tabular-nums text-gray-500" label="Deals">{e.deals_count ?? "—"}</Td>
+      <Td className="tl-cell-action">
         {e.beehiiv_url ? (
           <a href={e.beehiiv_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
             abrir →
@@ -182,11 +182,11 @@ export default async function DigestsPage() {
             <tbody>
               {drafts.map((d) => (
                 <tr key={d.id}>
-                  <Td>
+                  <Td label="Produto">
                     <Pill tone={toneForProduct(d.product)}>{d.product}</Pill>
                   </Td>
-                  <Td className="font-mono tabular-nums text-gray-500">{d.date}</Td>
-                  <Td className="max-w-[26rem]">
+                  <Td className="font-mono tabular-nums text-gray-500" label="Data">{d.date}</Td>
+                  <Td className="max-w-[26rem]" label="Assunto">
                     <a
                       href={`/admin/digests/drafts/${encodeURIComponent(d.id)}`}
                       className="text-blue-600 hover:underline"
@@ -194,13 +194,13 @@ export default async function DigestsPage() {
                       {d.subject || d.id}
                     </a>
                   </Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td className="text-right font-mono tabular-nums" label="Deals">
                     {Array.isArray(d.deal_ids) ? d.deal_ids.length : 0}
                   </Td>
-                  <Td>
+                  <Td label="Status">
                     <Pill tone={toneForStatus(d.status)}>{d.status}</Pill>
                   </Td>
-                  <Td>
+                  <Td className="tl-cell-action">
                     <a
                       href={`/admin/digests/drafts/${encodeURIComponent(d.id)}`}
                       className="text-blue-600 hover:underline"

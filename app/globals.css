@@ -33,6 +33,144 @@
   }
 }
 
+/* ===== Central de Controle — mobile-first ===== */
+
+/* Safe-area do iPhone (notch / home bar) para a navegação inferior. */
+.tl-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Espaço no fim do conteúdo para não ficar sob a bottom navigation (só mobile). */
+@media (max-width: 767px) {
+  .tl-safe-bottom-pad {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
+  }
+}
+
+/* Trava o scroll do body enquanto o drawer está aberto. */
+.tl-lock-scroll {
+  overflow: hidden;
+}
+
+/* Drawer de navegação: desliza da esquerda. transform/opacity apenas — o
+   reset global de prefers-reduced-motion neutraliza a transição. */
+.tl-drawer-panel {
+  transform: translateX(-100%);
+  transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+.tl-drawer-open .tl-drawer-panel {
+  transform: translateX(0);
+}
+.tl-drawer-scrim {
+  opacity: 0;
+  transition: opacity 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+.tl-drawer-open .tl-drawer-scrim {
+  opacity: 1;
+}
+
+/* Tabela → cards no mobile. Cada linha vira um card com campos rotulados
+   (label em cima, valor embaixo). Zero scroll horizontal. Acima de md (768px)
+   a tabela volta ao formato normal com header sticky. */
+@media (max-width: 767px) {
+  .tl-datatable {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .tl-datatable table,
+  .tl-datatable thead,
+  .tl-datatable tbody,
+  .tl-datatable tr,
+  .tl-datatable th,
+  .tl-datatable td {
+    display: block;
+    width: auto;
+  }
+  /* Header vira rótulo por célula (data-label); some visualmente mas segue
+     no DOM para leitores de tela. */
+  .tl-datatable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .tl-datatable tbody tr {
+    margin-bottom: 12px;
+    border: 1px solid theme(colors.line);
+    border-radius: 12px;
+    background: theme(colors.surface);
+    padding: 4px 16px;
+  }
+  /* Neutraliza zebra/hover no card (especificidade > variantes utilitárias). */
+  .tl-datatable tbody tr:nth-child(even),
+  .tl-datatable tbody tr:hover {
+    background: theme(colors.surface);
+  }
+  .tl-datatable tbody tr:last-child {
+    margin-bottom: 0;
+  }
+  .tl-datatable td {
+    display: block;
+    width: auto;
+    padding: 9px 0;
+    border: 0;
+    border-bottom: 1px solid theme(colors.line);
+    text-align: left;
+    font-size: 14px;
+    /* No card, valores longos (URLs, ids, rotas) quebram em vez de estourar
+       a largura — garante zero scroll horizontal mesmo a 320px. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  /* max-width utilitário de coluna não faz sentido no card (ocupa a linha). */
+  .tl-datatable td[class*="max-w-"] {
+    max-width: none;
+  }
+  .tl-datatable td:last-child {
+    border-bottom: 0;
+  }
+  .tl-datatable td[data-label]:not([data-label=""])::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: theme(colors.gray.400);
+  }
+  /* Célula que ocupa a linha inteira sem rótulo (ações, empty state). */
+  .tl-datatable td.tl-cell-full {
+    text-align: left;
+  }
+  .tl-datatable td.tl-cell-full::before {
+    content: none;
+  }
+  /* Ações dentro do card: alvo cheio para o polegar. */
+  .tl-datatable td.tl-cell-action {
+    padding-top: 12px;
+  }
+  .tl-datatable td.tl-cell-action::before {
+    content: none;
+  }
+  .tl-datatable td.tl-cell-action form,
+  .tl-datatable td.tl-cell-action button,
+  .tl-datatable td.tl-cell-action a {
+    width: 100%;
+  }
+  .tl-datatable td.tl-cell-action > * {
+    display: flex;
+    width: 100%;
+  }
+}
+
 /* Entrada de secao no scroll: fade + translateY(12px), 400ms, uma vez */
 .tl-reveal {
   opacity: 0;

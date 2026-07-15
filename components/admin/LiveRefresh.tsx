@@ -38,13 +38,16 @@ export function LiveRefresh({ renderedAt }: { renderedAt: string }) {
 
   return (
     <div className="flex items-center gap-2 text-xs text-gray-500">
-      <span className="font-mono tabular-nums" aria-live="polite">
+      <span
+        className="hidden font-mono tabular-nums sm:inline"
+        aria-live="polite"
+      >
         {pending ? "atualizando…" : `atualizado ${hhmmss(renderedAt)}`}
       </span>
       <button
         type="button"
         onClick={() => startTransition(() => router.refresh())}
-        className="min-h-[44px] rounded border border-line bg-surface px-2 font-semibold text-ink hover:bg-paper-dark"
+        className="inline-flex min-h-[44px] items-center rounded-lg border border-line bg-surface px-3.5 font-semibold text-ink transition-colors hover:bg-paper-dark active:scale-[0.98]"
       >
         Atualizar
       </button>
@@ -53,7 +56,7 @@ export function LiveRefresh({ renderedAt }: { renderedAt: string }) {
         onClick={() => setAuto((a) => !a)}
         aria-pressed={auto}
         title={auto ? "Auto-refresh ligado (30s)" : "Auto-refresh desligado"}
-        className={`min-h-[44px] rounded border px-2 font-semibold ${
+        className={`inline-flex min-h-[44px] items-center rounded-lg border px-3.5 font-semibold transition-colors active:scale-[0.98] ${
           auto
             ? "border-green-600 text-green-700"
             : "border-line text-gray-500 hover:bg-paper-dark"

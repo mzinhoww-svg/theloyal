@@ -111,7 +111,7 @@ function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: 
           {rows.length ? (
             rows.map((v) => (
               <tr key={v.key} className={v.muted ? "opacity-50" : undefined}>
-                <Td className="font-medium">
+                <Td label={title.includes("programa") ? "Programa" : "Rota"} className="font-medium">
                   <span className="inline-flex items-center gap-1.5">
                     {v.pinned && <Pill tone="blue">fixado</Pill>}
                     {v.muted && <Pill tone="gray">silenciado</Pill>}
@@ -123,20 +123,20 @@ function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: 
                     ) : null}
                   </span>
                 </Td>
-                <Td>
+                <Td label="Confiança">
                   <ConfCell v={v} />
                 </Td>
-                <Td>
+                <Td label="Editorial">
                   <EligibilityCell v={v} />
                 </Td>
-                <Td className="text-right font-mono tabular-nums">
+                <Td label="Ondas" className="text-right font-mono tabular-nums">
                   {v.samples}
                   {v.intervals.length ? (
                     <span className="text-gray-400"> · {v.intervals.length}i</span>
                   ) : null}
                 </Td>
-                <Td className="font-mono text-xs tabular-nums text-gray-500">{v.lastWindow ?? "—"}</Td>
-                <Td className="text-right font-mono tabular-nums">
+                <Td label="Última" className="font-mono text-xs tabular-nums text-gray-500">{v.lastWindow ?? "—"}</Td>
+                <Td label="Maior interv." className="text-right font-mono tabular-nums">
                   {v.maxIntervalDays != null ? (
                     <span className={v.maxIntervalDays >= 540 ? "text-red-600" : v.maxIntervalDays >= 365 ? "text-yellow-500" : undefined}>
                       {v.maxIntervalDays}d
@@ -145,23 +145,23 @@ function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: 
                     "—"
                   )}
                 </Td>
-                <Td className="font-mono tabular-nums">
+                <Td label="Janela prevista" className="font-mono tabular-nums">
                   {v.windowStart ? formatWindow(v.windowStart, v.windowEnd) : "—"}
                 </Td>
-                <Td className="w-24 text-right">
+                <Td label="Cadência" className="w-24 text-right">
                   {v.intervals.length >= 2 ? (
                     <Sparkline data={v.intervals} tone={CONF_TONE[v.confidence]} height={22} />
                   ) : (
                     <span className="text-xs text-gray-400">—</span>
                   )}
                 </Td>
-                <Td className="text-xs text-gray-500">
+                <Td label="Base / alertas" className="text-xs text-gray-500">
                   {v.basis}
                   {v.warnings.length > 0 && (
                     <span className="mt-0.5 block text-red-600">{v.warnings.join(" · ")}</span>
                   )}
                 </Td>
-                <Td>
+                <Td className="tl-cell-action">
                   <div className="flex items-center gap-1">
                     <QuickOverride v={v} action="pin" label={v.pinned ? "—" : "fixar"} />
                     <QuickOverride v={v} action="mute" label={v.muted ? "—" : "silenciar"} />
@@ -343,9 +343,9 @@ export default async function PredictPage() {
             {overrides.length ? (
               overrides.map((o) => (
                 <tr key={o.id}>
-                  <Td className="text-gray-500">{o.scope === "cluster" ? "programa" : "rota"}</Td>
-                  <Td className="font-medium">{o.route}</Td>
-                  <Td>
+                  <Td label="Escopo" className="text-gray-500">{o.scope === "cluster" ? "programa" : "rota"}</Td>
+                  <Td label="Rota / programa" className="font-medium">{o.route}</Td>
+                  <Td label="Ação">
                     {o.action === "confidence" ? (
                       <span>confiança → <Pill tone={CONF_TONE[(o.confidence ?? "baixa") as Confidence]}>{o.confidence}</Pill></span>
                     ) : o.action === "pin" ? (
@@ -354,9 +354,9 @@ export default async function PredictPage() {
                       <Pill tone="gray">silenciado</Pill>
                     )}
                   </Td>
-                  <Td className="text-gray-500">{o.note ?? "—"}</Td>
-                  <Td className="font-mono text-xs text-gray-500">{fmtDate(o.created_at)}</Td>
-                  <Td>
+                  <Td label="Nota" className="text-gray-500">{o.note ?? "—"}</Td>
+                  <Td label="Quando" className="font-mono text-xs text-gray-500">{fmtDate(o.created_at)}</Td>
+                  <Td className="tl-cell-action">
                     <ActionForm action={removeOverrideAction}>
                       <input type="hidden" name="id" value={o.id} />
                       <SubmitButton variant="danger" pendingLabel="…">
@@ -400,12 +400,12 @@ export default async function PredictPage() {
             {data.snapshots.length ? (
               data.snapshots.map((s) => (
                 <tr key={s.id}>
-                  <Td className="font-mono tabular-nums">{s.generated_for}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.routes_tracked ?? "—"}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.clusters_tracked ?? "—"}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.with_prediction ?? "—"}</Td>
-                  <Td className="font-mono text-xs text-gray-500">{fmtDate(s.created_at)}</Td>
-                  <Td className="text-gray-500">{s.created_by ?? "—"}</Td>
+                  <Td label="Gerado para" className="font-mono tabular-nums">{s.generated_for}</Td>
+                  <Td label="Rotas" className="text-right font-mono tabular-nums">{s.routes_tracked ?? "—"}</Td>
+                  <Td label="Programas" className="text-right font-mono tabular-nums">{s.clusters_tracked ?? "—"}</Td>
+                  <Td label="Com previsão" className="text-right font-mono tabular-nums">{s.with_prediction ?? "—"}</Td>
+                  <Td label="Quando" className="font-mono text-xs text-gray-500">{fmtDate(s.created_at)}</Td>
+                  <Td label="Por" className="text-gray-500">{s.created_by ?? "—"}</Td>
                 </tr>
               ))
             ) : (

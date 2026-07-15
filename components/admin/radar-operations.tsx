@@ -102,13 +102,13 @@ export function RadarAlertsPanel({ vm }: { vm: RadarViewModel }) {
           <tbody>
             {alerts.map((a) => (
               <tr key={a.id}>
-                <Td><Pill tone={SEV_TONE[a.severity]}>{a.severity}</Pill></Td>
-                <Td className="font-medium">{a.title}</Td>
-                <Td>{a.scope === "global" ? "global" : "por série"}</Td>
-                <Td className="text-right font-mono tabular-nums">{a.affected}</Td>
-                <Td className="text-xs text-gray-500">{a.impact}</Td>
-                <Td className="text-xs">{a.action}</Td>
-                <Td><a href={a.diagnosticHref} className="text-blue-600 hover:underline">abrir →</a></Td>
+                <Td label="Severidade"><Pill tone={SEV_TONE[a.severity]}>{a.severity}</Pill></Td>
+                <Td label="Alerta" className="font-medium">{a.title}</Td>
+                <Td label="Escopo">{a.scope === "global" ? "global" : "por série"}</Td>
+                <Td label="Afetadas" className="text-right font-mono tabular-nums">{a.affected}</Td>
+                <Td label="Impacto" className="text-xs text-gray-500">{a.impact}</Td>
+                <Td label="Ação" className="text-xs">{a.action}</Td>
+                <Td className="tl-cell-action"><a href={a.diagnosticHref} className="text-blue-600 hover:underline">abrir →</a></Td>
               </tr>
             ))}
           </tbody>
@@ -136,21 +136,21 @@ export function RadarQueueList({ queue, membership }: { queue: RadarQueue; membe
               const m = membership.get(`${s.scope}:${s.seriesKey}`) ?? 1;
               return (
                 <tr key={`${s.scope}:${s.seriesKey}`}>
-                  <Td className="font-medium">
+                  <Td label="Série" className="font-medium">
                     <a href={href(s)} className="text-blue-600 hover:underline">{s.seriesKey}</a>
                     {s.scope === "cluster" && <span className="ml-1 text-xs text-gray-500">(agregado)</span>}
                     {m > 1 && <span className="ml-1 text-xs text-gray-400">+{m - 1} fila{m - 1 > 1 ? "s" : ""}</span>}
                   </Td>
-                  <Td>{engineLabel(s)}</Td>
-                  <Td><Pill tone={PRODUCT_STATUS_TONE[s.productStatus]}>{productStatusLabel(s.productStatus)}</Pill></Td>
-                  <Td className="text-gray-700">{s.window ?? "—"}</Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td label="Motor">{engineLabel(s)}</Td>
+                  <Td label="Estado"><Pill tone={PRODUCT_STATUS_TONE[s.productStatus]}>{productStatusLabel(s.productStatus)}</Pill></Td>
+                  <Td label="Janela" className="text-gray-700">{s.window ?? "—"}</Td>
+                  <Td label="Chance" className="text-right font-mono tabular-nums">
                     {s.primaryProbability ? `${pct(s.primaryProbability.value)} / ${s.primaryProbability.horizonDays}d` : "—"}
                   </Td>
-                  <Td className="text-right font-mono tabular-nums">{bonus(s.bonus)}</Td>
-                  <Td>{s.modelConfidence}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.lastCampaignDate ?? "—"}</Td>
-                  <Td><a href={href(s)} className="text-blue-600 hover:underline">{queue.action} →</a></Td>
+                  <Td label="Bônus" className="text-right font-mono tabular-nums">{bonus(s.bonus)}</Td>
+                  <Td label="Confiança">{s.modelConfidence}</Td>
+                  <Td label="Última" className="text-right font-mono tabular-nums">{s.lastCampaignDate ?? "—"}</Td>
+                  <Td className="tl-cell-action"><a href={href(s)} className="text-blue-600 hover:underline">{queue.action} →</a></Td>
                 </tr>
               );
             })

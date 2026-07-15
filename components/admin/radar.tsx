@@ -262,15 +262,15 @@ export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
         ) : (
           series.map((s) => (
             <tr key={`${s.scope}:${s.seriesKey}`}>
-              <Td className="font-medium">
+              <Td label="Rota" className="font-medium">
                 <a href={`/admin/radar/${encodeURIComponent(s.seriesKey)}`} className="text-blue-600 hover:underline">
                   {s.seriesKey}
                 </a>
                 {s.scope === "cluster" && <span className="ml-1 text-xs text-gray-500">(agregado)</span>}
               </Td>
-              <Td><Pill tone={STATUS_TONE[s.productStatus]}>{productStatusLabel(s.productStatus)}</Pill></Td>
-              <Td className="text-gray-700">{s.window ?? "—"}</Td>
-              <Td className="text-right font-mono tabular-nums">
+              <Td label="Estado"><Pill tone={STATUS_TONE[s.productStatus]}>{productStatusLabel(s.productStatus)}</Pill></Td>
+              <Td label="Janela" className="text-gray-700">{s.window ?? "—"}</Td>
+              <Td label="Chance" className="text-right font-mono tabular-nums">
                 {s.primaryProbability ? (
                   <span>
                     {pct(s.primaryProbability.value)}
@@ -280,19 +280,19 @@ export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
                   "—"
                 )}
               </Td>
-              <Td className="text-right font-mono tabular-nums">{bonusLabel(s.bonus)}</Td>
-              <Td>{s.modelConfidence}</Td>
-              <Td>
+              <Td label="Bônus" className="text-right font-mono tabular-nums">{bonusLabel(s.bonus)}</Td>
+              <Td label="Confiança">{s.modelConfidence}</Td>
+              <Td label="Elegível">
                 {s.editorialEligible ? (
                   <Pill tone="green">elegível</Pill>
                 ) : (
                   <Pill tone="gray">{s.editorialBlockReasons[0] ?? "não"}</Pill>
                 )}
               </Td>
-              <Td className="text-right font-mono tabular-nums">{s.waves}</Td>
-              <Td className="text-right font-mono tabular-nums">{s.campaignsValid}</Td>
-              <Td className="text-right font-mono tabular-nums">{s.campaignsExcluded || "—"}</Td>
-              <Td className="text-right font-mono tabular-nums">{s.warnings.length || "—"}</Td>
+              <Td label="Ondas" className="text-right font-mono tabular-nums">{s.waves}</Td>
+              <Td label="Válidas" className="text-right font-mono tabular-nums">{s.campaignsValid}</Td>
+              <Td label="Excl." className="text-right font-mono tabular-nums">{s.campaignsExcluded || "—"}</Td>
+              <Td label="Warnings" className="text-right font-mono tabular-nums">{s.warnings.length || "—"}</Td>
             </tr>
           ))
         )}

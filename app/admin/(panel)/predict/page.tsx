@@ -58,18 +58,18 @@ function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: bo
   const blocked = p.blockReason != null;
   return (
     <tr className={blocked ? "bg-paper/40" : undefined}>
-      <Td className="whitespace-nowrap font-medium">
+      <Td label="Série" className="whitespace-nowrap font-medium">
         {p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`}
       </Td>
-      <Td className="text-right font-mono tabular-nums">{p.recordsTotal}</Td>
-      <Td className="text-right font-mono tabular-nums text-gray-500">
+      <Td label="Campanhas" className="text-right font-mono tabular-nums">{p.recordsTotal}</Td>
+      <Td label="Dias desde a última" className="text-right font-mono tabular-nums text-gray-500">
         {p.daysSinceLast ?? "—"}
       </Td>
-      <Td className="text-right font-mono tabular-nums text-gray-500">
+      <Td label="Cadência (dias)" className="text-right font-mono tabular-nums text-gray-500">
         {p.medianIntervalAll ?? "—"}
       </Td>
       {showHistory && (
-        <Td className="max-w-[260px] align-top leading-relaxed">
+        <Td label="Ondas (datas)" className="max-w-[260px] align-top leading-relaxed">
           <HistoryCell p={p} />
         </Td>
       )}
@@ -81,10 +81,10 @@ function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: bo
         </Td>
       ) : (
         <>
-          <Td className="text-right font-mono tabular-nums">{pct(p.probabilities?.p30)}</Td>
-          <Td className="text-right font-mono tabular-nums">{pct(p.probabilities?.p90)}</Td>
-          <Td className="font-mono tabular-nums">{bonusLabel(p)}</Td>
-          <Td>
+          <Td label="Prob. 30d" className="text-right font-mono tabular-nums">{pct(p.probabilities?.p30)}</Td>
+          <Td label="Prob. 90d" className="text-right font-mono tabular-nums">{pct(p.probabilities?.p90)}</Td>
+          <Td label="Bônus provável" className="font-mono tabular-nums">{bonusLabel(p)}</Td>
+          <Td label="Confiança">
             <Pill tone={confTone(p.confidence)}>{p.confidence}</Pill>
             {p.warnings.length > 0 && (
               <span className="mt-0.5 block text-[11px] text-gray-500" title={p.warnings.join(" · ")}>
