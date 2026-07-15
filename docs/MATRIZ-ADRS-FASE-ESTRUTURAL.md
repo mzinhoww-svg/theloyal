@@ -39,6 +39,28 @@
 
 ---
 
+## 2.1 Baseline do PR #64 (A1) e os ADRs — correção, não aprovação
+
+O PR #64 (A1, **implementado e validado, pendente de integração**) introduz
+`lib/ledger-select.ts` com `LEDGER_QUALITY_SELECT` como **fonte única** das colunas de
+qualidade lidas do ledger, compartilhada por Forecast e Radar, com a proveniência do
+Forecast corrigida e o caso 943 contido também no Forecast legado.
+
+- **ADRs de identidade, proveniência e qualidade — 002, 009, 010 (e 004)** — passam a
+  considerar `lib/ledger-select.ts`/`LEDGER_QUALITY_SELECT` como o **baseline** de
+  leitura de proveniência/qualidade. O modelo de identidade (009), a política de datas
+  (002) e a validação temporal (010) devem **partir** dessa fonte única, não de um
+  SELECT paralelo.
+- **ADR-009 e ADR-010 continuam os primeiros candidatos à promoção** (regra-mãe §27f);
+  o baseline do #64 **não** altera essa ordem.
+- **O PR #64 não promove nenhum ADR automaticamente.** É uma **correção corretiva
+  compatível** com os princípios `proposed` (proveniência valida; contenção do 943),
+  **não** uma aprovação arquitetural. Todos os ADRs seguem `proposed`.
+- **Predict continua pendente** no escopo estrutural — o A1 não o toca; sua paridade
+  fica para revisão separada em S6.
+
+---
+
 ## 3. Ordem de promoção recomendada (não automática)
 
 ```

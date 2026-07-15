@@ -18,19 +18,30 @@
 
 Objetivo: destravar a fase com segurança. Não toca banco.
 
-### E0-1 — Ler o relatório pós-merge e o estado do A1
-- **Problema:** o relatório pós-merge e o fechamento da dívida A1 não estão
-  disponíveis no repositório; sem eles, a fase parte de premissa incompleta.
-- **Valor:** confirma que o P1 mergeado se comporta em produção como o esperado
-  (943 contido; nenhuma série stale/inválida publicada) antes de mexer no banco.
-- **Dependência:** disponibilização do relatório pós-merge; inventário do A1
-  (`VERIFICACAO-FINAL-P1-RADAR.md §15`).
-- **Risco:** avançar sem o relatório = construir sobre premissa não verificada.
+### E0-1 — Consumir a rodada 1 do pós-merge (PR #63) e o estado do A1 (PR #64)
+- **Problema:** a fase precisa partir do diagnóstico real, não de premissa. A rodada 1
+  do pós-merge está no PR #63 (`docs/VALIDACAO-POS-MERGE-RADAR.md`); a correção A1 está
+  no PR #64 — **nenhum dos dois integrado à base** ainda.
+- **Valor:** ancora S0 nos findings classificados e no baseline do A1 antes do banco.
+- **Dependência:** PR #63 (rodada 1) e PR #64 (A1) — ambos abertos/draft/verdes.
+- **Consumir da rodada 1 (#63):** **F1, F2, F3 classificados**; **F4 `blocked`**
+  (dado vivo em ambiente permitido) e **F5 `not_confirmed`** ficam **pendentes** para a
+  **rodada 2**.
+- **Verificar o A1 (#64):** confirmar o **estado final** do PR #64 (implementado e
+  validado; `lib/ledger-select.ts`/`LEDGER_QUALITY_SELECT`; Predict fora do escopo).
+- **Risco:** iniciar implementação estrutural antes da **integração ou aceitação
+  formal do A1** = construir sobre baseline não integrado.
 - **Migration:** nenhuma.
 - **Rollback:** n/a (documental).
-- **Aceite:** relatório pós-merge lido e sumarizado; lacunas registradas; se ausente,
-  a onda **para** aqui e sinaliza o bloqueio.
+- **Aceite:** rodada 1 sumarizada (F1–F3 classificados; F4/F5 pendentes); estado do #64
+  verificado; **a implementação estrutural fica impedida até a integração ou aceitação
+  formal do A1**. O fechamento de S0 depende de **revisão humana, F4, F5 e consolidação
+  do A1**.
 - **Testes:** n/a.
+
+> **Gate A1 (enquanto o PR #64 não estiver mergeado):** *A1 implementado e validado.
+> Gate provisoriamente satisfeito, pendente de integração.* **Após o merge:** *A1
+> integrado. Gate concluído.*
 
 ### E0-2 — Congelar as Decisões H1–H12 e promover ADRs
 - **Problema:** limiares, chave natural e política de merge ainda são propostas.
@@ -269,7 +280,7 @@ Objetivo: destravar a fase com segurança. Não toca banco.
 
 ## Onda S6 — Integrações editoriais (migration parcial)
 
-*(D9, D11, D12, §20, §25 · Decisão H10 · fecha a dívida A1)*
+*(D9, D11, D12, §20, §25 · Decisão H10 · parte do baseline A1 do PR #64, não o recria)*
 
 ### E6-1 — Editorial Score persistido e versionado
 - **Problema:** priorização da fila é manual/implícita.
@@ -295,18 +306,27 @@ Objetivo: destravar a fase com segurança. Não toca banco.
 - **Testes:** Daily=Weekly sem contradição; ausência → texto honesto;
   `presentation_version` reproduz a edição.
 
-### E6-3 — Admin consolidado (fecha A1)
-- **Problema:** `/admin/forecast` legado (7 colunas, sem proveniência) ainda pode
-  exibir o 943; três telas divergentes.
+### E6-3 — Admin consolidado (unificação ampla, sobre o baseline A1)
+- **Problema:** três telas técnicas ainda divergem; a **unificação estrutural ampla**
+  (abas sobre o snapshot) é maior que a correção mínima do A1. A1 já resolve a paridade
+  de proveniência do Forecast; S6 unifica as telas.
 - **Valor:** uma fonte; a mesma rota nunca aparece com duas janelas.
-- **Dependência:** S3/S4; dívida A1 (`VERIFICACAO-FINAL §15`).
-- **Risco:** remover capacidade das telas técnicas.
+- **Dependência:** S3/S4; **Gate A1 (#64) integrado** — S6 **parte do estado integrado
+  do PR #64**.
+- **Baseline A1 (não recriar, não duplicar, não substituir):** tratar
+  `lib/ledger-select.ts` como **baseline**; **preservar** `LEDGER_QUALITY_SELECT`;
+  **não duplicar** os SELECTs de Forecast e Radar (fonte única compartilhada).
+- **Predict:** **revisar separadamente** (fora do escopo do A1) — sua paridade de
+  proveniência é item próprio de S6, não do #64.
+- **Risco:** remover capacidade das telas técnicas; recriar/duplicar o SELECT do A1.
 - **Migration:** nenhuma (consolidação de UI sobre snapshot).
-- **Rollback:** manter telas técnicas paralelas (estado P1).
+- **Rollback:** manter telas técnicas paralelas (estado P1) + baseline A1.
 - **Aceite:** abas Editorial/Análise/Qualidade/Operação/Configuração sobre o snapshot;
-  paridade de colunas resolve A1; **nenhuma** capacidade removida.
-- **Testes:** paridade de colunas; 943 ausente em todas as telas; telas técnicas
-  preservadas.
+  **paridade provada** entre as superfícies (Forecast × Radar × Predict); `LEDGER_
+  QUALITY_SELECT` preservado como fonte única; **nenhuma** capacidade removida.
+- **Testes:** **regressão partindo do estado integrado do A1**; paridade entre
+  superfícies; SELECT não duplicado; **943 não reaberto** (permanece contido); telas
+  técnicas preservadas.
 
 ---
 
