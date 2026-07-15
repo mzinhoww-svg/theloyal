@@ -26,17 +26,21 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    label: "Inteligência",
+    label: "Radar",
     links: [
-      { href: "/admin/radar", label: "Radar", hint: "Visão unificada · Forecast + Predict" },
-      { href: "/admin/forecast", label: "Forecast", hint: "Recorrência · baseline/fallback" },
-      { href: "/admin/predict", label: "Predict", hint: "Preditivo v2 · hazard/backtest" },
-      { href: "/admin/shopping-vpm", label: "Radar VPM", hint: "Valor por milheiro" },
+      { href: "/admin/radar", label: "Visão geral", hint: "Saúde, séries e filtros" },
+      { href: "/admin/radar?view=oportunidades", label: "Oportunidades", hint: "Elegíveis para pauta" },
+      { href: "/admin/radar?view=revisoes", label: "Revisões", hint: "Divergência e ressalvas" },
+      { href: "/admin/radar?view=bloqueios", label: "Bloqueios", hint: "Globais e por série" },
+      { href: "/admin/radar?view=operacao", label: "Operação", hint: "Alertas e o que mudou" },
     ],
   },
   {
-    label: "Sistema",
+    label: "Análise técnica",
     links: [
+      { href: "/admin/forecast", label: "Forecast", hint: "Recorrência · baseline/fallback" },
+      { href: "/admin/predict", label: "Predict", hint: "Preditivo v2 · hazard/backtest" },
+      { href: "/admin/shopping-vpm", label: "Radar VPM", hint: "Valor por milheiro" },
       { href: "/admin/observability", label: "Observabilidade", hint: "Derivados do ledger" },
     ],
   },
