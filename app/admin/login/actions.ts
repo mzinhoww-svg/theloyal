@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ADMIN_COOKIE, tokenHash } from "@/lib/admin-auth";
+import { ADMIN_COOKIE, tokenHash, safeEqual, issueSession } from "@/lib/admin-auth";
 
 export type LoginState = { error: string | null };
 
@@ -15,17 +15,22 @@ export async function login(
   if (!token) return { error: "ADMIN_TOKEN não configurado no servidor." };
 
   const senha = String(formData.get("senha") || "");
-  if (senha !== token) return { error: "Senha incorreta." };
+  // BKL-08: comparação em tempo constante (hash dos dois lados iguala o
+  // comprimento e o safeEqual não vaza por timing).
+  const ok = safeEqual(await tokenHash(senha), await tokenHash(token));
+  if (!ok) return { error: "Senha incorreta." };
 
   const next = String(formData.get("next") || "/admin");
   const dest = next.startsWith("/admin") ? next : "/admin";
 
-  cookies().set(ADMIN_COOKIE, await tokenHash(token), {
+  // Sessão assinada com expiração — rotacionada a cada login (BKL-08).
+  const session = await issueSession(token);
+  cookies().set(ADMIN_COOKIE, session.value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: session.maxAge,
   });
   redirect(dest);
 }

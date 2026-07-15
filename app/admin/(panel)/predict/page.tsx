@@ -130,7 +130,7 @@ function SeriesRow({ p, showHistory = false }: { p: PredictSeriesView; showHisto
           <Td label="Confiança">
             <Pill tone={confTone(p.confidence)}>{p.confidence}</Pill>
             {p.warnings.length > 0 && (
-              <span className="mt-0.5 block text-[11px] text-gray-500" title={p.warnings.join(" · ")}>
+              <span className="mt-0.5 block text-xs text-gray-500" title={p.warnings.join(" · ")}>
                 {p.warnings.join(" · ")}
               </span>
             )}
@@ -279,12 +279,19 @@ const PAGE_SIZE = 30;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
 // BKL-07: leitura que FALHOU não é vazio — o operador precisa saber.
-function LoadWarningsBanner({ warnings }: { warnings: string[] }) {
+// role="alert" anuncia a leitores de tela no momento em que monta; o link é a
+// ação de recuperação real (não só a instrução).
+function LoadWarningsBanner({ warnings, path }: { warnings: string[]; path: string }) {
   if (!warnings.length) return null;
   return (
-    <div className="mb-4 rounded-lg border border-yellow-500 bg-yellow-100 p-3 text-sm text-ink">
-      Falha ao ler: {warnings.join(" · ")}. Os blocos afetados podem aparecer vazios sem estar —
-      recarregue a página.
+    <div
+      role="alert"
+      className="mb-4 rounded-lg border border-yellow-500 bg-yellow-100 p-3 text-sm text-ink"
+    >
+      Falha ao ler: {warnings.join(" · ")}. Os blocos afetados podem aparecer vazios sem estar.{" "}
+      <a href={path} className="font-semibold underline">
+        Recarregar página
+      </a>
     </div>
   );
 }
@@ -373,12 +380,15 @@ export default async function PredictPage({
       />
 
       {!datasetComplete && (
-        <div className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700"
+        >
           Leitura do ledger incompleta — as séries abaixo podem estar parciais. Gere o snapshot
           apenas após a carga completar.
         </div>
       )}
-      <LoadWarningsBanner warnings={loadWarnings} />
+      <LoadWarningsBanner warnings={loadWarnings} path={PATH} />
 
       <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
         <StatCard label="Séries" value={series.length} sub={`${result.clusters.length} programas · ${result.routes.length} rotas`} tone="gray" />

@@ -4,8 +4,9 @@
 // RLS e habilita as RPCs admin_*; por isso este modulo e server-only e nunca
 // pode ser importado por um Client Component.
 
-const SUPABASE_URL =
-  process.env.SUPABASE_URL?.trim() || "https://qjqnqcsdnpvvmyzkavoq.supabase.co";
+// BKL-03: URL SÓ de env — sem fallback hardcoded apontando para produção.
+// Ambiente sem env → modo mock explícito (nunca produção silenciosa).
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim() || "";
 // Aceita os dois nomes que convivem no deploy: SUPABASE_SERVICE_ROLE_KEY (novo)
 // e SUPABASE_SERVICE_KEY (usado pelo Radar/lib/admin.ts). Mesma chave.
 const SERVICE_KEY =
@@ -13,7 +14,7 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_KEY?.trim();
 
 export function adminConfigured(): boolean {
-  return !!SERVICE_KEY;
+  return !!SERVICE_KEY && !!SUPABASE_URL;
 }
 
 function headers(extra?: Record<string, string>): Record<string, string> {
@@ -32,7 +33,7 @@ export type RestResult<T> = { rows: T[]; error: string | null };
 export async function restResult<T = Record<string, unknown>>(
   path: string,
 ): Promise<RestResult<T>> {
-  if (!SERVICE_KEY) return { rows: [], error: "SERVICE_KEY ausente (modo mock)" };
+  if (!adminConfigured()) return { rows: [], error: "SUPABASE_URL/SERVICE_KEY ausentes (modo mock)" };
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       headers: headers(),
@@ -67,7 +68,7 @@ export async function fetchAllRows<T = Record<string, unknown>>(
   const pageSize = opts.pageSize ?? 1000;
   const maxPages = opts.maxPages ?? 50;
   const order = opts.order ?? "id.asc";
-  if (!SERVICE_KEY) return { rows: [], complete: false, pages: 0 };
+  if (!adminConfigured()) return { rows: [], complete: false, pages: 0 };
   const rows: T[] = [];
   let pages = 0;
   for (let offset = 0; ; offset += pageSize) {
@@ -95,7 +96,7 @@ export async function rpc<T = unknown>(
   fn: string,
   args: Record<string, unknown> = {},
 ): Promise<T | null> {
-  if (!SERVICE_KEY) return null;
+  if (!adminConfigured()) return null;
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
       method: "POST",
@@ -117,7 +118,7 @@ export async function patch(
   filter: string,
   body: Record<string, unknown>,
 ): Promise<void> {
-  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  if (!adminConfigured()) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
     method: "PATCH",
     headers: headers({ prefer: "return=minimal" }),
@@ -137,7 +138,7 @@ export async function insert(
   rows: Record<string, unknown> | Record<string, unknown>[],
   opts: { onConflict?: string } = {},
 ): Promise<void> {
-  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  if (!adminConfigured()) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
   const prefer = opts.onConflict
     ? "return=minimal,resolution=merge-duplicates"
     : "return=minimal";
@@ -156,7 +157,7 @@ export async function insert(
 
 // Remove linhas por filtro PostgREST (ex.: "id=eq.<uuid>"). Server-only.
 export async function del(table: string, filter: string): Promise<void> {
-  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  if (!adminConfigured()) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
     method: "DELETE",
     headers: headers({ prefer: "return=minimal" }),
