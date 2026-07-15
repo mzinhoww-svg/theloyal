@@ -52,12 +52,14 @@ Marcadores de tempo de `created_at`/`merged_at` dos PRs [DOC/PR]. Todos em 2026-
 | ~18:14 | **#66** criado — redesign mobile-first (landing), base `main` | [DOC/PR] |
 | 18:26:51 | **#64 MERGED** em `claude/loyalty-landing-page-v1-7vbjq7` (A1 corrigido) | [DOC/PR] |
 | 18:35:22 | **#65 MERGED** em `claude/loyalty-landing-page-v1-7vbjq7` (arquitetura estrutural) | [DOC/PR] |
+| <18:43 | **#66 MERGED** em `main` (`e487d93`) — landing em produção (é a base de #67/#69) | [DOC/PR][CÓDIGO] |
 | ~18:43 | **#67** criado — auditoria de motion (fase 1, read-only), base `main`, **draft** | [DOC/PR] |
 | ~18:45 | **#68** criado — registro H1–H12, base `loyalty-landing-page-v1`, **draft** | [DOC/PR] |
 | ~19:07 | **#69** criado — implementação de motion (fase 2), base `main` | [DOC/PR] |
-| ~19:xx | **#66 MERGED** em `main` (`e487d93`) | [DOC/PR][CÓDIGO] |
 | ~19:27 | **#69** re-deploy do polish (`27e1361`), Vercel Preview **Ready** | [CI/DEPLOY] |
 | ~19:30 | **#69** marcado **ready for review** (deixou de ser draft) pelo autor | webhook + [DOC/PR] |
+| 19:37 | **#69 MERGED** em `main` (`a673f0b`) — implementação de motion em produção | [DOC/PR][CÓDIGO] |
+| ~19:38 | **#67 MERGED** em `main` (`7e035cb`) — docs de auditoria de motion em produção | [DOC/PR][CÓDIGO] |
 
 **Ordem lógica das frentes de Radar (por dependência, conforme corpos dos PRs):** Post-Merge Validation (#63, diagnóstico) → A1 Forecast Parity (#64, correção) → Structural Architecture (#65, plano+ADRs+backlog, S0–S7) → Decisões H1–H12 (#68, gate 2). **Structural Implementation permanece bloqueada** [DOC/PR §7].
 
@@ -129,8 +131,8 @@ Estados **verificados via GitHub API nesta sessão** (2026-07-15) [DOC/PR].
 | Frente | PR | Branch (head) | Base | Estado | Merged? | Próximos passos / bloqueios |
 |---|---|---|---|---|---|---|
 | Landing redesign | **#66** | `claude/theloyal-mobile-redesign-clean` | `main` | fechado | **SIM** (`e487d93`) | — (em produção na linha `main`) |
-| Motion audit (fase 1) | **#67** | `claude/theloyal-motion-audit` | `main` | aberto, **draft** | não | Revisão humana; base para a fase 2 |
-| Motion implementation | **#69** | `claude/theloyal-motion-impl` (`27e1361`) | `main` | aberto, **ready for review** | **NÃO** | Revisão/merge humano. **Ver nota de divergência abaixo.** |
+| Motion audit (fase 1) | **#67** | `claude/theloyal-motion-audit` | `main` | **fechado** | **SIM** (`7e035cb`) | — (docs de auditoria de motion em `main`) |
+| Motion implementation | **#69** | `claude/theloyal-motion-impl` (`27e1361`) | `main` | **fechado** | **SIM** (`a673f0b`, 19:37 UTC) | — (**motion em produção** na linha `main`) |
 | Post-Merge Validation | **#63** | `claude/radar-post-merge-validation-mdd4ou` | `loyalty-landing-page-v1` | aberto, **draft** | não | **Rodada 2 bloqueada por ambiente (F4)**; decisão do coordenador sobre versionar |
 | A1 Forecast Parity | **#64** | `claude/radar-a1-forecast-provenance-ybmgmi` | `loyalty-landing-page-v1` | fechado | **SIM** (18:26 UTC) | — (A1 corrigido na linha canônica; **não** em `main`) |
 | Structural Architecture | **#65** | `docs/radar-structural-architecture` | `loyalty-landing-page-v1` | fechado | **SIM** (18:35 UTC) | Insumo para gates 3/4/5 |
@@ -138,7 +140,7 @@ Estados **verificados via GitHub API nesta sessão** (2026-07-15) [DOC/PR].
 | Structural Implementation | — | — | — | **BLOCKED** | não | Depende de gates 3, 4 e 5 (§7) |
 | Consistency audit (este doc) | — | `docs/consistency-audit-radar-motion` | `main` | doc-only | — | — |
 
-> **NOTA DE DIVERGÊNCIA (#69):** foi comunicado verbalmente "merged", mas o **fetch fresco via GitHub API nesta sessão retornou `state: open`, `draft: false`, `merged: false`** para o #69. Registrado o **estado verificado (não mergeado)**; a divergência deve ser reconciliada por um check fresco no GitHub antes de qualquer conclusão que dependa de #69 estar em produção. Nenhuma suposição de merge foi feita.
+> **NOTA DE DIVERGÊNCIA (#69) — RESOLVIDA:** houve uma janela nesta sessão em que o #69 foi comunicado como "merged" enquanto o fetch via API ainda retornava `open`/não-mergeado (defasagem temporal, verificação **antes** do merge). O **#69 foi efetivamente mergeado às 19:37 UTC** (`merged_at`, `merged_by: mzinhoww-svg`), confirmado por API e por `origin/main` contê-lo (`a673f0b`; HEAD subsequente `7e035cb` após #67). Era divergência de **timing**, não de fato — **resolvida**. Lição (§9): verificar sempre com fetch fresco antes de concluir.
 
 ---
 
@@ -180,10 +182,10 @@ Registrado a partir do corpo do PR #68 e #65 [DOC/PR]:
 **Não consultado por restrição:**
 - Produção/banco vivo (regra explícita de não usar produção).
 
-**Divergências abertas (para o auditor futuro reconciliar):**
-1. **#69 "merged" (reportado) × open/não-merged (verificado via API).**
-2. **Gate 4 "fechado conceitualmente" (reportado) × "ainda não fechado" (corpo do #68).**
-3. **Duas linhas de integração** (`main` × `loyalty-landing-page-v1`) — A1/estrutural fora de `main`.
+**Divergências (para o auditor futuro):**
+1. ~~#69 "merged" × open~~ — **RESOLVIDA:** #69 mergeado às 19:37 UTC (confirmado por API e por `origin/main`); era defasagem de timing. #67 também mergeado logo depois (`7e035cb`).
+2. **[ABERTA] Gate 4** "fechado conceitualmente" (reportado) × "ainda não fechado" (corpo do #68).
+3. **[ABERTA] Duas linhas de integração** (`main` × `loyalty-landing-page-v1`) — A1/estrutural fora de `main`.
 
 ---
 
@@ -202,8 +204,8 @@ Registrado a partir do corpo do PR #68 e #65 [DOC/PR]:
 
 ## 10. Conclusão executiva
 
-- **Entregue (verificado):** landing redesign (**#66, em `main`, mergeado**); correção **A1 Forecast Parity (#64, mergeado** na linha `loyalty-landing-page-v1`)**; arquitetura estrutural documental (**#65, mergeado** na mesma linha); implementação de motion (**#69, verde, ready-for-review, NÃO mergeado**).
-- **Em produção (linha `main`):** apenas a **landing redesign (#66)**. O **motion (#69) ainda não está mergeado**; A1/estrutural (#64/#65) estão na **outra** linha, **não em `main`**.
+- **Entregue (verificado):** landing redesign (**#66, em `main`**); auditoria de motion (**#67, em `main`**); implementação de motion (**#69, em `main`**); correção **A1 Forecast Parity (#64)** e arquitetura estrutural documental (**#65**), ambas mergeadas na linha `loyalty-landing-page-v1` (**não em `main`**).
+- **Em produção (linha `main`, HEAD `7e035cb`):** **landing redesign (#66) + motion completo (#67 docs de auditoria + #69 implementação)**. A1/estrutural (#64/#65) estão na **outra** linha, **não em `main`**.
 - **Ainda bloqueado:** **Structural Implementation** (`blocked` até gates 3, 4 e 5); **rodada 2 de validação do Radar** (F4, ambiente); **promoção de ADRs** (gate 3, nenhum promovido).
 - **Próxima dependência real para continuar:**
   1. **Reconciliar as duas linhas de integração** (`main` × `loyalty-landing-page-v1`) — decidir o baseline canônico e portar A1/estrutural ou o motion conforme.
@@ -220,9 +222,9 @@ Registrado a partir do corpo do PR #68 e #65 [DOC/PR]:
 | #64 | fix(forecast): paridade A1 — Forecast legado consome proveniência | **merged** | loyalty-landing-page-v1 |
 | #65 | docs(radar): plano, matriz de ADRs e backlog da fase estrutural | **merged** | loyalty-landing-page-v1 |
 | #66 | (landing) redesign mobile-first | **merged** | main |
-| #67 | docs(motion): auditoria de motion — fase 1 (read-only) | draft/open | main |
+| #67 | docs(motion): auditoria de motion — fase 1 (read-only) | **merged** | main |
 | #68 | docs(radar): registro das decisões H1–H12 da fase estrutural | draft/open | loyalty-landing-page-v1 |
-| #69 | feat(motion): implementação de motion (lotes 1–7) | open/ready-for-review | main |
+| #69 | feat(motion): implementação de motion (lotes 1–7) | **merged** | main |
 
 ## Apêndice B — Branches canônicos e por frente
 
