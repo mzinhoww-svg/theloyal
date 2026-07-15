@@ -45,6 +45,11 @@ produção como parte de um merge — vão como arquivo + revisão + passo de de
 
 ## FASE A — Sem migration (destravável já)
 
+> **Status de execução (2026-07-15):** A1 **feito** · A2 **feito** · A5 **já estava
+> feito** (PR #76) · **A3 e A4 reclassificados** como modelagem probabilística que
+> NÃO deve entrar por auto-merge num motor voltado ao leitor sem um design com
+> backtest — ver nota abaixo.
+
 Alto valor, baixo risco, sem tocar banco. Cada item reusa o que existe.
 
 ### A1 — Daily lê o radar canônico (hoje é só cross-check)
@@ -68,6 +73,15 @@ Alto valor, baixo risco, sem tocar banco. Cada item reusa o que existe.
 - **Reusa:** `readerSurface`/`radarMonitoringWeekly`, vocabulário TL.
 - **Arquivos:** render (email/web/plain), `components/` do veredito. **Risco:** baixo
   (render-only). **Aceite:** chip presente, cor semântica correta, sem promessa.
+
+> **Nota A3/A4 (por que não entram por auto-merge agora):** ambos mudam a
+> **matemática de um motor voltado ao leitor**. A nota de corte + backtest protegem
+> contra publicar confiança baixa, mas um **bug de calibração** (ex.: pooling ou
+> sazonal que ELEVA a confiança sem suporte real) pode passar o corte e publicar uma
+> janela errada. Isso exige um design com **backtest walk-forward validado sobre o
+> ledger real** antes de ligar — não um heurístico rápido. Recomendação: cada um vira
+> um design doc + implementação atrás de flag (default off, paridade provada), ligado
+> só após o backtest não piorar. A3 é explicitamente "modelo v3" (RFC-009).
 
 ### A3 — Componente sazonal no Predict
 - **Problema (diag.):** hazard não modela sazonalidade; séries sazonais saem com
