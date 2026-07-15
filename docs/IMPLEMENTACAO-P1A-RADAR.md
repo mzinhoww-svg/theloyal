@@ -54,8 +54,18 @@ não recalculam gate, qualidade nem probabilidade.
 `metadata` (generatedAt do artefato, asOf, datasetComplete, rowsRead, pagesRead,
 freshnessStatus) · `health` (12 contadores) · `series[]` (chave, escopo,
 `productStatus`, `forecast`, `predict`, `quality`, elegibilidade, warnings,
-válidas/excluídas, ondas, última, maior intervalo, janela, P30/P90, bônus,
-divergência) · `filters` (origens, destinos, estados, confianças, motivos).
+válidas/excluídas, ondas, última, maior intervalo, janela, `primaryProbability`
+(UMA probabilidade — P30/P60 + horizonte, §16), bônus, divergência) · `filters`
+(origens, destinos, estados, confianças, motivos).
+
+**Probabilidade principal (§16):** a listagem mostra **uma só** probabilidade —
+`selectPrimaryProbability(predict)` retorna P30 quando a data central prevista é de
+curto prazo (≤30 dias do `asOf`), senão P60, sempre com o horizonte explícito e
+arredondado. Nunca P30 e P90 juntos como headline; o fallback Forecast não inventa
+probabilidade (retorna `null`). A curva completa (P7…P180) segue no detalhe P1-B.
+Faixas de divergência (§12) têm testes unitários isolados sobre `computeDivergence`
+(`tests/radar-divergence.test.mjs`); a regra de probabilidade em
+`tests/radar-primary-probability.test.mjs`.
 
 Casamento por chave canônica `origem→destino` / `→destino` (idêntica a
 `Forecast.route`), via `normProgram`.

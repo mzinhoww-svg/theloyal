@@ -255,8 +255,7 @@ export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
           <Th>Rota</Th>
           <Th>Estado</Th>
           <Th>Janela</Th>
-          <Th className="text-right">P30</Th>
-          <Th className="text-right">P90</Th>
+          <Th className="text-right">Chance</Th>
           <Th className="text-right">Bônus</Th>
           <Th>Confiança</Th>
           <Th>Elegível</Th>
@@ -268,7 +267,7 @@ export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
       </thead>
       <tbody>
         {series.length === 0 ? (
-          <EmptyRow cols={12} label="Nenhum resultado após filtros." hint="Ajuste ou limpe os filtros para ver as séries." />
+          <EmptyRow cols={11} label="Nenhum resultado após filtros." hint="Ajuste ou limpe os filtros para ver as séries." />
         ) : (
           series.map((s) => (
             <tr key={`${s.scope}:${s.seriesKey}`}>
@@ -280,8 +279,16 @@ export function RadarSeriesTable({ series }: { series: RadarSeries[] }) {
               </Td>
               <Td><Pill tone={STATUS_TONE[s.productStatus]}>{productStatusLabel(s.productStatus)}</Pill></Td>
               <Td className="text-gray-700">{s.window ?? "—"}</Td>
-              <Td className="text-right font-mono tabular-nums">{pct(s.p30)}</Td>
-              <Td className="text-right font-mono tabular-nums">{pct(s.p90)}</Td>
+              <Td className="text-right font-mono tabular-nums">
+                {s.primaryProbability ? (
+                  <span>
+                    {pct(s.primaryProbability.value)}
+                    <span className="ml-1 text-xs text-gray-500">/ {s.primaryProbability.horizonDays}d</span>
+                  </span>
+                ) : (
+                  "—"
+                )}
+              </Td>
               <Td className="text-right font-mono tabular-nums">{bonusLabel(s.bonus)}</Td>
               <Td>{s.modelConfidence}</Td>
               <Td>

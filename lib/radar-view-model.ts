@@ -76,8 +76,7 @@ export interface RadarSeries {
   // Campos de apresentação (derivados; linguagem de produto).
   modelConfidence: string; // rótulo traduzido (§13)
   window: string | null; // formatWindow do motor canônico
-  p30: number | null;
-  p90: number | null;
+  primaryProbability: PrimaryProbability | null; // §16 — UMA probabilidade (P30/P60) + horizonte
   bonus: number | null; // bônus provável (Predict candidato[0] ou Forecast típico)
   divergenceDays: number | null;
   divergenceLevel: DivergenceLevel;
@@ -178,6 +177,24 @@ const BLOCKING_STATUSES = new Set<ProductStatus>([
   "insufficient_history",
   "no_prediction",
 ]);
+
+// Probabilidade principal da listagem (§16): UM só horizonte, nunca P30 e P90
+// juntos como headline. P30 quando a data central prevista é de curto prazo
+// (≤30 dias do asOf); senão P60, porque a janela está longe demais para o P30
+// representá-la. Fallback Forecast (sem probabilidades) → null (nunca inventa).
+// As demais probabilidades seguem disponíveis no detalhe P1-B (predict.probabilities).
+export interface PrimaryProbability {
+  value: number; // 0..1
+  horizonDays: 30 | 60;
+}
+export function selectPrimaryProbability(predict: Prediction | null): PrimaryProbability | null {
+  const probs = predict?.probabilities;
+  if (!probs) return null;
+  const central = iso(predict!.centralDate);
+  const asOf = iso(predict!.asOf);
+  const daysToCentral = central && asOf ? daysBetween(asOf, central) : 0;
+  return daysToCentral <= 30 ? { value: probs.p30, horizonDays: 30 } : { value: probs.p60, horizonDays: 60 };
+}
 
 // Divergência entre motores (D6): faixas sobre |central Predict − centro Forecast|,
 // atenuada uma faixa quando as janelas se sobrepõem.
@@ -352,8 +369,7 @@ export function composeRadarViewModel(rows: CampaignRow[], opts: ComposeOpts): R
       datasetComplete: opts.datasetComplete,
       modelConfidence,
       window,
-      p30: predict?.probabilities?.p30 ?? null,
-      p90: predict?.probabilities?.p90 ?? null,
+      primaryProbability: selectPrimaryProbability(predict),
       bonus: predict?.bonusCandidates?.[0]?.value ?? forecast?.typicalPercent ?? null,
       divergenceDays: div.days,
       divergenceLevel: div.level,
