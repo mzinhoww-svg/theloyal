@@ -18,30 +18,30 @@
 
 Objetivo: destravar a fase com segurança. Não toca banco.
 
-### E0-1 — Consumir a rodada 1 do pós-merge (PR #63) e o estado do A1 (PR #64)
+### E0-1 — Consumir a rodada 1 do pós-merge (PR #63) e o A1 integrado (PR #64)
 - **Problema:** a fase precisa partir do diagnóstico real, não de premissa. A rodada 1
-  do pós-merge está no PR #63 (`docs/VALIDACAO-POS-MERGE-RADAR.md`); a correção A1 está
-  no PR #64 — **nenhum dos dois integrado à base** ainda.
-- **Valor:** ancora S0 nos findings classificados e no baseline do A1 antes do banco.
-- **Dependência:** PR #63 (rodada 1) e PR #64 (A1) — ambos abertos/draft/verdes.
+  do pós-merge está no PR #63 (`docs/VALIDACAO-POS-MERGE-RADAR.md`); a correção A1 do
+  PR #64 **já está integrada na base** (`e7c98ba`).
+- **Valor:** ancora S0 nos findings classificados e no baseline A1 **já integrado**.
+- **Dependência:** PR #63 (rodada 1, aberto/draft/verde); A1 (#64) **mergeado**.
 - **Consumir da rodada 1 (#63):** **F1, F2, F3 classificados**; **F4 `blocked`**
   (dado vivo em ambiente permitido) e **F5 `not_confirmed`** ficam **pendentes** para a
   **rodada 2**.
-- **Verificar o A1 (#64):** confirmar o **estado final** do PR #64 (implementado e
-  validado; `lib/ledger-select.ts`/`LEDGER_QUALITY_SELECT`; Predict fora do escopo).
-- **Risco:** iniciar implementação estrutural antes da **integração ou aceitação
-  formal do A1** = construir sobre baseline não integrado.
+- **A1 (#64) integrado:** `lib/ledger-select.ts`/`LEDGER_QUALITY_SELECT` **presentes na
+  base**; Forecast e Radar partilham o SELECT de qualidade; 943 resolvido; Predict fora
+  do escopo (pendente em S6).
+- **Risco:** iniciar implementação estrutural antes de **F4/F5 e revisão humana** = base
+  ainda não validada ao vivo (o A1 já não é bloqueio).
 - **Migration:** nenhuma.
 - **Rollback:** n/a (documental).
-- **Aceite:** rodada 1 sumarizada (F1–F3 classificados; F4/F5 pendentes); estado do #64
-  verificado; **a implementação estrutural fica impedida até a integração ou aceitação
-  formal do A1**. O fechamento de S0 depende de **revisão humana, F4, F5 e consolidação
-  do A1**.
+- **Aceite:** rodada 1 sumarizada (F1–F3 classificados; F4/F5 pendentes); **A1
+  integrado (Gate A1 concluído)**. Com o A1 fechado, o fechamento de S0 depende de
+  **revisão humana, F4 e F5**.
 - **Testes:** n/a.
 
-> **Gate A1 (enquanto o PR #64 não estiver mergeado):** *A1 implementado e validado.
-> Gate provisoriamente satisfeito, pendente de integração.* **Após o merge:** *A1
-> integrado. Gate concluído.*
+> **Gate A1 — estado atual:** *A1 integrado. Gate concluído.* (Merge do PR #64 na base
+> `e7c98ba`, com `lib/ledger-select.ts` presente — integração verificada, não apenas
+> PR verde.)
 
 ### E0-2 — Congelar as Decisões H1–H12 e promover ADRs
 - **Problema:** limiares, chave natural e política de merge ainda são propostas.
@@ -311,11 +311,12 @@ Objetivo: destravar a fase com segurança. Não toca banco.
   (abas sobre o snapshot) é maior que a correção mínima do A1. A1 já resolve a paridade
   de proveniência do Forecast; S6 unifica as telas.
 - **Valor:** uma fonte; a mesma rota nunca aparece com duas janelas.
-- **Dependência:** S3/S4; **Gate A1 (#64) integrado** — S6 **parte do estado integrado
-  do PR #64**.
+- **Dependência:** S3/S4; **Gate A1 (#64) concluído** — A1 já **integrado na base**
+  (`e7c98ba`); S6 **parte do estado integrado do PR #64**.
 - **Baseline A1 (não recriar, não duplicar, não substituir):** tratar
-  `lib/ledger-select.ts` como **baseline**; **preservar** `LEDGER_QUALITY_SELECT`;
-  **não duplicar** os SELECTs de Forecast e Radar (fonte única compartilhada).
+  `lib/ledger-select.ts` (**já na base**) como **baseline de S6**; **preservar**
+  `LEDGER_QUALITY_SELECT`; **não duplicar** os SELECTs de Forecast e Radar (fonte única
+  compartilhada).
 - **Predict:** **revisar separadamente** (fora do escopo do A1) — sua paridade de
   proveniência é item próprio de S6, não do #64.
 - **Risco:** remover capacidade das telas técnicas; recriar/duplicar o SELECT do A1.

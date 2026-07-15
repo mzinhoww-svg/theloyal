@@ -395,10 +395,12 @@ service_role** (revisitado na Decisão H12).
 | PR | Escopo | Estado | Base | CI |
 |---|---|---|---|---|
 | **#63** | Relatório de validação pós-merge — rodada 1 (`docs/VALIDACAO-POS-MERGE-RADAR.md`) | aberto, **draft**, **não mergeado** | `claude/loyalty-landing-page-v1-7vbjq7` | verde |
-| **#64** | Correção A1 — paridade de proveniência Forecast (`lib/ledger-select.ts`) | aberto, **draft**, **não mergeado** | `claude/loyalty-landing-page-v1-7vbjq7` | verde |
+| **#64** | Correção A1 — paridade de proveniência Forecast (`lib/ledger-select.ts`) | **MERGEADO** na base | `claude/loyalty-landing-page-v1-7vbjq7` | verde |
 | **#65** | Este plano estrutural (documentação) | aberto, **draft** | `claude/loyalty-landing-page-v1-7vbjq7` | verde |
 
-Nenhum dos três está mergeado; a base de integração **ainda não** contém #63 nem #64.
+O **PR #64 (A1) foi mergeado** na base de integração (`e7c98ba`, merge do #64):
+`lib/ledger-select.ts` e `LEDGER_QUALITY_SELECT` **estão presentes na base**. O PR #63
+(rodada 1) segue aberto/draft; o #65 (este) segue em draft.
 
 ### 5.2 Relatório pós-merge — rodada 1 (PR #63)
 
@@ -416,22 +418,23 @@ contido). Findings classificados:
 
 **A rodada 2 (staging com dados vivos) ainda está pendente.** F4 e F5 só fecham nela.
 
-### 5.3 Correção A1 (PR #64) — implementada e validada, pendente de integração
+### 5.3 Correção A1 (PR #64) — integrada na base
 
-O PR #64 **implementa e valida** a correção mínima do A1. **Não está mergeado → não
-disponível na base.** Introduz:
+O PR #64 **foi mergeado** na base de integração (`e7c98ba`). A correção mínima do A1
+está **disponível na base**. Introduz:
 
-- `lib/ledger-select.ts` — novo; `LEDGER_QUALITY_SELECT` como **fonte única** de
-  colunas de qualidade;
+- `lib/ledger-select.ts` — **presente na base**; `LEDGER_QUALITY_SELECT` como **fonte
+  única** de colunas de qualidade;
 - proveniência no loader do Forecast (`lib/admin-forecast.ts`);
-- reutilização do mesmo SELECT no Radar (`lib/admin-radar.ts`);
-- paridade Forecast × Radar; correção do caso 943 no Forecast legado (sem 943, sem 2029);
-- **Predict permanece fora do escopo** do A1.
+- reutilização do mesmo SELECT no Radar (`lib/admin-radar.ts`) — Forecast e Radar
+  **compartilham** o SELECT de qualidade;
+- paridade Forecast × Radar; caso 943 **permanece resolvido** no Forecast legado
+  (sem 943, sem 2029);
+- **Predict permanece fora do escopo** do A1 (pendente em S6).
 
-> **Gate A1 (pré-requisito de S6) — estado atual:** *A1 implementado e validado. Gate
-> provisoriamente satisfeito, pendente de integração.* **Não** é marcado como concluído
-> só porque o PR está verde — o gate só fecha com o **merge** do #64 na base
-> (então: *"A1 integrado. Gate concluído."*).
+> **Gate A1 (pré-requisito de S6) — estado atual:** *A1 integrado. Gate concluído.*
+> O merge do #64 na base (`e7c98ba`) com `lib/ledger-select.ts` presente satisfaz o
+> gate — não por PR verde, mas por integração verificada na base.
 
 ### 5.4 Outras dependências
 
@@ -439,8 +442,9 @@ disponível na base.** Introduz:
 |---|---|---|
 | Survey da implementação atual | Levantado nesta fase (módulos puros + schema) | Base do §1.4 e das migrations conceituais |
 
-Enquanto o PR #64 (A1) não for **integrado** e a **rodada 2** do pós-merge (F4, F5)
-não for concluída, a implementação estrutural permanece **bloqueada** (ver Handoff).
+O PR #64 (A1) **já está integrado** (Gate A1 concluído). A implementação estrutural
+segue **bloqueada** pelas demais dependências: **rodada 2** do pós-merge (F4, F5),
+revisão humana, Decisões H1–H12 e promoção dos ADRs (ver Handoff).
 
 ---
 
@@ -451,7 +455,7 @@ aceite e testes — em `BACKLOG-FASE-ESTRUTURAL-RADAR.md`.
 
 | Onda | Nome | Entrega estrutural | Migration? | Depende de |
 |---|---|---|---|---|
-| **S0** | Preparação | consumir a rodada 1 do pós-merge (#63, F1–F3); manter F4/F5 pendentes; verificar/consolidar o A1 (#64); congelar decisões H; promover ADRs aprovados; ambiente de branch de dados | não | rodada 1 disponível (#63) + **revisão humana + F4 + F5 + consolidação do A1** (#64) |
+| **S0** | Preparação | consumir a rodada 1 do pós-merge (#63, F1–F3); manter F4/F5 pendentes; **A1 (#64) integrado — Gate A1 concluído**; congelar decisões H; promover ADRs aprovados; ambiente de branch de dados | não | rodada 1 disponível (#63) + **revisão humana + F4 + F5** (A1 já integrado) |
 | **S1** | Identidade e observações | `campaign_identity`, `source_observation`, `campaign_version`; validação temporal na origem (ADR-010) | sim | H1, H4; ADR-009/010/002 |
 | **S2** | Deduplicação | `duplicate_link`, `merge_audit`; merge manual + unmerge auditável | sim | S1; H2, H3 |
 | **S3** | Snapshots | `prediction_snapshots` + `usages`; `dataset_hash`; reconciler persistido | sim | S1; H5, H6, H9 |
@@ -467,18 +471,20 @@ Ordem inviolável: **S1/validação temporal antes de tudo** (regra-mãe §27f).
 
 Não confundir a correção A1 com a onda estrutural S6:
 
-- **A1 (PR #64) — correção mínima de paridade e proveniência.** Já implementada e
-  validada; unificação **parcial** do SELECT de qualidade (`LEDGER_QUALITY_SELECT` em
-  `lib/ledger-select.ts`), compartilhado por Forecast e Radar; proveniência do Forecast
-  corrigida; caso 943 corrigido no Forecast legado. **Predict segue pendente.**
+- **A1 (PR #64) — correção mínima de paridade e proveniência.** **Integrada na base**
+  (`e7c98ba`); unificação **parcial** do SELECT de qualidade (`LEDGER_QUALITY_SELECT`
+  em `lib/ledger-select.ts`, presente na base), compartilhado por Forecast e Radar;
+  proveniência do Forecast corrigida; caso 943 **permanece resolvido** no Forecast
+  legado. **Predict segue pendente.**
 - **S6 — unificação estrutural ampla das telas técnicas.** Consolida
   `/admin/forecast` + `/admin/predict` + parte de `/admin/observability` em abas sobre
   o snapshot canônico, com Editorial Score e Daily/Weekly/Pro.
 
-**Ponto de partida de S6:** o **estado integrado do PR #64** — Forecast e Radar já
-partilham `LEDGER_QUALITY_SELECT`. S6 **preserva** essa fonte única; **não recria, não
-duplica e não substitui** a solução do A1. S6 apenas **estende** o baseline (revisando
-o Predict à parte) e prova paridade entre as superfícies.
+**Ponto de partida de S6:** o **estado integrado do PR #64** (já na base) — Forecast e
+Radar já partilham `LEDGER_QUALITY_SELECT`, que é o **baseline de S6**. S6 **preserva**
+essa fonte única; **não recria, não duplica e não substitui** a solução do A1. S6
+apenas **estende** o baseline (revisando o **Predict** à parte, ainda pendente) e prova
+paridade entre as superfícies.
 
 ---
 
@@ -518,9 +524,9 @@ fase estrutural**, mais finas (persistência, limiares, esquema).
 - **Snapshot stale persistido** — mitigado por `expires_at` + freshness gate + re-
   expiração por evento.
 - **Outcome herdando lixo** — mitigado por só resolver com onda `valid`+deduplicada (H11).
-- **Corrida com a dívida A1** — a correção mínima está no PR #64 (implementada/validada,
-  **pendente de integração**); até o merge, o Forecast legado só fica em paridade nessa
-  branch. Enquanto não integrado, o Radar continua a superfície correta e S6 não inicia.
+- **Corrida com a dívida A1** — **resolvida:** a correção mínima do PR #64 está
+  **integrada na base** (`e7c98ba`); Forecast e Radar partilham `LEDGER_QUALITY_SELECT`
+  e o caso 943 segue resolvido. S6 parte desse baseline sem recriá-lo.
 - **Score confundido com probabilidade** — interno, rotulado, nunca ao leitor.
 - **Expor acurácia baixa cedo** — outcomes ao Pro só depois de amostra suficiente (S7).
 
@@ -549,23 +555,23 @@ fase estrutural**, mais finas (persistência, limiares, esquema).
 - **Ondas:** S0 preparação → S1 identidade/observações → S2 deduplicação → S3 snapshots
   → S4 aprovação → S5 outcomes → S6 integrações editoriais (parte do baseline A1 #64)
   → S7 Pro e automação assistida.
-- **Dependências do A1:** correção mínima de paridade/proveniência **implementada e
-  validada no PR #64, pendente de integração** (`lib/ledger-select.ts`,
-  `LEDGER_QUALITY_SELECT`, proveniência do Forecast, reuso no Radar, caso 943 corrigido;
-  Predict fora do escopo). **Gate A1:** *provisoriamente satisfeito, pendente de
-  integração* — fecha só com o merge do #64. S6 parte do baseline A1 e não o recria.
+- **Dependências do A1:** correção mínima de paridade/proveniência **integrada na base**
+  pelo PR #64 (`lib/ledger-select.ts`/`LEDGER_QUALITY_SELECT` presentes; proveniência do
+  Forecast; reuso no Radar; caso 943 resolvido; Predict fora do escopo). **Gate A1:**
+  *A1 integrado. Gate concluído.* S6 parte do baseline A1 e não o recria.
 - **Dependências da validação pós-merge:** **rodada 1 disponível** no PR #63
   (`docs/VALIDACAO-POS-MERGE-RADAR.md`); F1–F3 classificados, **F4 blocked**, **F5
-  not_confirmed**, **rodada 2 pendente**. O fechamento de S0 depende de **revisão
-  humana, F4, F5 e consolidação do A1**.
+  not_confirmed**, **rodada 2 pendente**. Com o A1 já integrado, o fechamento de S0
+  depende de **revisão humana, F4 e F5**.
 - **Riscos:** §8 (mutabilidade de chave, merge indevido, backfill autocorrigindo,
   snapshot stale, outcome com lixo, corrida A1, score×probabilidade, acurácia cedo).
 - **Implementação autorizada:** **NÃO.** Permanece **bloqueada** até aprovação humana
   explícita das Decisões H1–H12 e da promoção dos ADRs relevantes.
 - **Recomendação:** aprovar primeiro **H1, H3, H4** (identidade + merge + temporal) e
-  promover **ADR-010 e ADR-009**; **integrar o PR #64 (A1) e concluir a rodada 2 do
-  pós-merge (F4/F5)** antes de fechar S0; tratar S1/validação temporal como
-  pré-requisito de todas as ondas seguintes; S6 parte do baseline A1 sem recriá-lo;
-  manter merge sempre manual/reversível e backfill sem autocorreção.
+  promover **ADR-010 e ADR-009**; com o **A1 já integrado (Gate concluído)**, concluir a
+  **rodada 2 do pós-merge (F4/F5)** e a revisão humana antes de fechar S0; tratar
+  S1/validação temporal como pré-requisito de todas as ondas seguintes; S6 parte do
+  baseline A1 sem recriá-lo; manter merge sempre manual/reversível e backfill sem
+  autocorreção.
 
 > **A implementação deve permanecer bloqueada até aprovação humana explícita.**

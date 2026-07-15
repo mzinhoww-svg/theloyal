@@ -41,10 +41,10 @@
 
 ## 2.1 Baseline do PR #64 (A1) e os ADRs — correção, não aprovação
 
-O PR #64 (A1, **implementado e validado, pendente de integração**) introduz
-`lib/ledger-select.ts` com `LEDGER_QUALITY_SELECT` como **fonte única** das colunas de
-qualidade lidas do ledger, compartilhada por Forecast e Radar, com a proveniência do
-Forecast corrigida e o caso 943 contido também no Forecast legado.
+O PR #64 (A1) foi **integrado na base** (`e7c98ba`): `lib/ledger-select.ts` com
+`LEDGER_QUALITY_SELECT` como **fonte única** das colunas de qualidade lidas do ledger
+está **presente na base**, compartilhada por Forecast e Radar, com a proveniência do
+Forecast corrigida e o caso 943 **resolvido** também no Forecast legado.
 
 - **ADRs de identidade, proveniência e qualidade — 002, 009, 010 (e 004)** — passam a
   considerar `lib/ledger-select.ts`/`LEDGER_QUALITY_SELECT` como o **baseline** de
