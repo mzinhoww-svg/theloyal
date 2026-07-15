@@ -37,6 +37,10 @@ const FIXTURES = {
     tf("livelo", "connectmiles", "2023-12-12", 40),
     tf("livelo", "connectmiles", "2026-07-12", 40),
   ],
+  "943 real (fim fabricada, início null) — deve excluir A": [
+    { id: "livelo-connectmiles-transferencia-2023-12-12", origem: "livelo", destino: "connectmiles", tipo: "transferencia", percentual: 40, vigencia_inicio: null, vigencia_fim: "2023-12-12", first_seen: "2026-07-12", observed_at: "2026-07-13", origin: "auto" },
+    { id: "livelo-connectmiles-transferencia-2026-07-12", origem: "livelo", destino: "connectmiles", tipo: "transferencia", percentual: 40, vigencia_inicio: null, vigencia_fim: "2026-07-12", first_seen: "2026-07-10", observed_at: "2026-07-12", origin: "daily" },
+  ],
   "datas duplicadas": [
     tf("a", "b", "2026-01-01"),
     tf("a", "b", "2026-01-01", 30),
@@ -90,8 +94,32 @@ for (const [name, rows] of Object.entries(FIXTURES)) {
     // Elegibilidade editorial idêntica (o gate que decide o que chega ao leitor).
     assert.deepEqual(ts.radarItems(a.routes), mjs.radarItems(b.routes), "radarItems divergem");
     assert.deepEqual(ts.radarItems(a.clusters), mjs.radarItems(b.clusters), "radar clusters divergem");
+    // Fase C0.2 — qualidade temporal + duplicidade idênticas nos dois caminhos.
+    assert.deepEqual(a.quality.counters, b.quality.counters, "counters de qualidade divergem");
+    assert.deepEqual(
+      a.quality.eligibleRows.map((r) => r.id),
+      b.quality.eligibleRows.map((r) => r.id),
+      "conjunto elegível diverge",
+    );
+    assert.deepEqual(
+      a.quality.excluded.map((e) => ({ id: e.id, reason: e.reason })),
+      b.quality.excluded.map((e) => ({ id: e.id, reason: e.reason })),
+      "campanhas excluídas divergem",
+    );
+    assert.deepEqual(a.quality.duplicateGroups, b.quality.duplicateGroups, "grupos de duplicidade divergem");
   });
 }
+
+test("943 real: A excluída e intervalo de 943 ausente (TS e MJS)", () => {
+  const rows = FIXTURES["943 real (fim fabricada, início null) — deve excluir A"];
+  for (const build of [ts.buildForecast, mjs.buildForecast]) {
+    const fc = build(rows, { now: NOW });
+    assert.ok(!fc.quality.eligibleRows.some((r) => r.id.endsWith("2023-12-12")), "A deveria ter sido excluída");
+    const route = fc.routes.find((r) => r.route === "livelo→connectmiles");
+    assert.deepEqual(route.intervals, [], "943 não pode ser formado");
+    assert.equal(route.windowStart, null, "não pode prever 2029");
+  }
+});
 
 test("paridade TS×MJS — editorialGate", () => {
   const cases = [
