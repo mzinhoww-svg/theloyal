@@ -12,7 +12,8 @@
 //
 // Reaproveita normalização e a data-real-da-janela do forecast (lib/forecast).
 
-import { windowDate, normProgram, type CampaignRow } from "./forecast";
+import { windowDate, normProgram, type CampaignRow } from "./forecast.ts";
+import { assessCampaignQuality, type CampaignQualityAssessment } from "./campaign-quality.ts";
 
 export type Confidence = "alta" | "media" | "baixa" | "insuficiente";
 export type Readiness =
@@ -509,6 +510,7 @@ export interface PredictResult {
   backtestVersion: string;
   clusters: Prediction[]; // por destino (→programa)
   routes: Prediction[]; // por origem→destino
+  quality: CampaignQualityAssessment; // Fase C0.2 — MESMO conjunto elegível do Forecast
 }
 
 // Constrói previsões para TODAS as séries de transferência do ledger. Genérico:
@@ -520,7 +522,11 @@ export function buildPredict(
   const cfg = { ...DEFAULT_PREDICT_CONFIG, ...(opts.config ?? {}) };
   const asOf = opts.asOf;
 
-  const transf = campaigns.filter((c) => (c.tipo ?? "").toLowerCase() === "transferencia");
+  // Fase C0.2 — MESMA avaliação de qualidade do Forecast (normProgram compartilhado).
+  // O Predict recebe exatamente o conjunto elegível: nenhuma campanha temporalmente
+  // crítica, duplicata provável (membro crítico), placeholder ou permanente entra.
+  const quality = assessCampaignQuality(campaigns, { normalize: normProgram });
+  const transf = quality.eligibleRows;
 
   // Agrupa por destino (cluster) e por origem→destino (route).
   const byCluster = new Map<string, CampaignRow[]>();
@@ -543,5 +549,5 @@ export function buildPredict(
     .map(({ origem, destino, rows }) => predictOne("route", origem, destino, rows, asOf, cfg))
     .sort((a, b) => b.recordsTotal - a.recordsTotal);
 
-  return { asOf, modelVersion: MODEL_VERSION, backtestVersion: BACKTEST_VERSION, clusters, routes };
+  return { asOf, modelVersion: MODEL_VERSION, backtestVersion: BACKTEST_VERSION, clusters, routes, quality };
 }

@@ -4,7 +4,17 @@
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { DISCLAIMER, EMOJI_RE, URGENCY_RE, collectStrings, listEditionFiles, loadEdition } from "./lib.mjs";
-import { validateEdition } from "./validate.mjs";
+import { validateEdition, validateRadarConsistency } from "./validate.mjs";
+
+const FORECAST_PATH = "content/forecast.json";
+function loadForecastArtifact() {
+  if (!existsSync(FORECAST_PATH)) return null;
+  try {
+    return JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
+  } catch {
+    return null;
+  }
+}
 
 const blocks = [];
 const warns = [];
@@ -70,11 +80,16 @@ function auditSource() {
 function auditEditions() {
   const files = listEditionFiles();
   if (!files.length) { warn("Nenhuma edição em content/editions/"); return; }
+  const forecastArtifact = loadForecastArtifact();
   for (const f of files) {
     const ed = loadEdition(`content/editions/${f}`);
     const r = validateEdition(ed);
     if (r.errors.length) r.errors.forEach((m) => block(`JSON Nº ${ed.number}: ${m}`));
     else pass(`JSON Nº ${ed.number}: validação editorial OK`);
+    // Contenção C0: Radar do Daily não pode contradizer o forecast automático.
+    const rc = validateRadarConsistency(ed, forecastArtifact);
+    rc.errors.forEach((m) => block(`Radar Nº ${ed.number}: ${m}`));
+    rc.warnings.forEach((m) => warn(`Radar Nº ${ed.number}: ${m}`));
   }
 }
 

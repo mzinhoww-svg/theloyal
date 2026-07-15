@@ -2,7 +2,7 @@
 // o motor (lib/forecast) e aplica os overrides do operador. Server-only
 // (usa admin-db, que carrega a SERVICE_ROLE_KEY). Funções puras onde possível.
 
-import { rest } from "./admin-db";
+import { rest, fetchAllRows } from "./admin-db";
 import {
   buildForecast,
   radarItems,
@@ -94,6 +94,7 @@ export type PredictView = Forecast & {
   muted: boolean;
   overriddenConfidence: Confidence | null;
   note: string | null;
+  editorialOverridden: boolean; // um override com nota liberou a elegibilidade
 };
 
 const keyOf = (scope: string, route: string) => `${scope}:${route}`;
@@ -109,7 +110,26 @@ function decorate(f: Forecast, ov: Map<string, OverrideRow>): PredictView {
     muted: o?.action === "mute",
     overriddenConfidence,
     note: o?.note ?? null,
+    editorialOverridden: (f as Forecast & { editorialOverridden?: boolean }).editorialOverridden === true,
   };
+}
+
+// Um override de pin/confidence COM nota não-vazia pode liberar a elegibilidade
+// editorial de uma série bloqueada por amostra/intervalo/horizonte (nunca por
+// dataset incompleto ou artefato stale — esses são tratados fora do motor).
+// Registra editorialOverridden no objeto para exibição/auditoria. Fase C0.
+function applyEditorialOverrides(list: Forecast[], overrides: OverrideRow[]): void {
+  const grants = new Map(
+    overrides
+      .filter((o) => (o.action === "pin" || o.action === "confidence") && !!o.note && o.note.trim().length > 0)
+      .map((o) => [keyOf(o.scope, o.route), o]),
+  );
+  for (const f of list) {
+    if (!f.editorialEligible && grants.has(keyOf(f.scope, f.route))) {
+      f.editorialEligible = true;
+      (f as Forecast & { editorialOverridden?: boolean }).editorialOverridden = true;
+    }
+  }
 }
 
 export type Distribution = Record<Confidence, number>;
@@ -135,6 +155,8 @@ export type PredictData = {
   snapshots: SnapshotRow[];
   ledgerRows: number;
   generatedFor: string;
+  datasetComplete: boolean; // leitura paginada completa? se false, radar é bloqueado
+  radarBlockedReason: string | null; // por que os radares saíram vazios (se saíram)
 };
 
 // Aplica pin/mute/confidence e ordena: fixados primeiro, depois silenciados por
@@ -150,18 +172,21 @@ function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): Predict
 
 // Carrega tudo para a página. `now` injetável para testes determinísticos.
 export async function loadPredict(now?: string): Promise<PredictData> {
-  const [{ config, row }, overrides, snapshots, campaigns] = await Promise.all([
+  const [{ config, row }, overrides, snapshots, loaded] = await Promise.all([
     getConfig(),
     getOverrides(),
     getSnapshots(),
-    rest<CampaignRow>(
-      "campaigns?select=id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim&limit=2000",
-    ),
+    // Leitura COMPLETA e paginada — sem o limite silencioso de 2000. Fase C0.
+    fetchAllRows<CampaignRow>("campaigns", "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim"),
   ]);
+  const campaigns = loaded.rows;
+  const datasetComplete = loaded.complete;
 
   const result = buildForecast(campaigns, { now, config });
-  const ov = new Map(overrides.map((o) => [keyOf(o.scope, o.route), o]));
+  // Overrides com nota podem liberar elegibilidade (antes de fatiar os radares).
+  applyEditorialOverrides([...result.routes, ...result.clusters], overrides);
 
+  const ov = new Map(overrides.map((o) => [keyOf(o.scope, o.route), o]));
   const routes = applyOverrides(result.routes, ov);
   const clusters = applyOverrides(result.clusters, ov);
 
@@ -179,6 +204,12 @@ export async function loadPredict(now?: string): Promise<PredictData> {
     minConfidence: "baixa",
   }).filter(notMuted);
 
+  // Gate de contenção: dataset incompleto NÃO gera números editoriais (nem pin
+  // ignora isso). Os radares saem vazios com motivo explícito.
+  const radarBlockedReason = datasetComplete
+    ? null
+    : "leitura do ledger incompleta — radar bloqueado até a carga completar";
+
   return {
     configured: campaigns.length > 0 || row != null,
     config,
@@ -189,10 +220,12 @@ export async function loadPredict(now?: string): Promise<PredictData> {
     clusters,
     distributionRoutes: distribution(routes),
     distributionClusters: distribution(clusters),
-    radarDaily: radarItems(daily),
-    radarWeekly: radarItems(weekly),
+    radarDaily: datasetComplete ? radarItems(daily) : [],
+    radarWeekly: datasetComplete ? radarItems(weekly) : [],
     snapshots,
     ledgerRows: campaigns.length,
     generatedFor: result.generatedFor,
+    datasetComplete,
+    radarBlockedReason,
   };
 }
