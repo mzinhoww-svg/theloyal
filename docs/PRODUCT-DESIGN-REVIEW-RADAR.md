@@ -11,6 +11,9 @@
 > `IMPLEMENTACAO-FASE-C0-RADAR.md`, `docs/auditoria/*`,
 > `docs/architecture/adr/ADR-RADAR-001..010`, e o código do PR #54.
 
+> **P1 executável:** o detalhamento da fase P1 (visão unificada `/admin/radar`) está em
+> [`BACKLOG-P1-RADAR-UNIFICADO.md`](./BACKLOG-P1-RADAR-UNIFICADO.md).
+
 ---
 
 ## Tese central
