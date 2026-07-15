@@ -300,6 +300,11 @@ Instrumentar por `utm_source` é o que revela onde investir a energia agressiva.
 
 ## Seção 4 — Calendário de 30 dias + banco de posts
 
+> **O calendário fechado e o banco completo de posts prontos** (22 dias úteis,
+> com Método M1–M12, Mito V1–V12, Ponto P1–P10, Ensaios E1–E15 e Recaps R1–R4,
+> diversificados por vertical de loyalty) estão em
+> [`GTM-CONTENT-30D.md`](./GTM-CONTENT-30D.md). O resumo abaixo é a visão de topo.
+
 Regra de leitura do calendário: **Sinal do dia** e **Deal Desk** são
 `[preencher]` diariamente com o deal verificado da edição (risco alto = aprovar).
 Os slots **Método / Mito / Ponto / Ensaio** já vêm prontos no banco abaixo — são
