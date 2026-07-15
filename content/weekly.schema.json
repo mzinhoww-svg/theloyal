@@ -30,26 +30,56 @@
     },
     "movements": {
       "type": "object",
-      "description": "Movimentos do ledger na semana.",
+      "description": "Movimentos do ledger na semana, por Fio. Itens aceitam string (legado) ou objeto com lineage (consolidação automática).",
       "additionalProperties": false,
       "properties": {
-        "novas": { "type": "array", "items": { "type": "string" }, "description": "Campanhas que abriram" },
-        "venceram": { "type": "array", "items": { "type": "string" }, "description": "Campanhas que encerraram" },
-        "seguem": { "type": "array", "items": { "type": "string" }, "description": "Campanhas que continuam" }
+        "novas": { "type": "array", "items": { "$ref": "#/$defs/movementItem" }, "description": "Fios que abriram (ou reabriram)" },
+        "venceram": { "type": "array", "items": { "$ref": "#/$defs/movementItem" }, "description": "Fios que encerraram ou viraram" },
+        "seguem": { "type": "array", "items": { "$ref": "#/$defs/movementItem" }, "description": "Fios que continuam vigentes" }
+      }
+    },
+    "ranking": {
+      "type": "array",
+      "description": "Onde está o valor na semana — Fios vivos e confirmados, ordenados por chave auditável. Sugerido pela máquina, aprovado por humano.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rank", "fio", "verdict"],
+        "properties": {
+          "rank": { "type": "integer", "minimum": 1 },
+          "fio": { "type": "string", "description": "Chave do Fio (routeKey/entityKey)." },
+          "label": { "type": "string", "description": "Rótulo humano do Fio (ex: Transferência bonificada · Esfera → Latam Pass)." },
+          "anchor": { "type": "string", "description": "Número-âncora da semana (ex: CPM R$ 12,00). Em mono no render." },
+          "verdict": { "type": "string", "enum": ["vale-agir", "vale-olhar", "casos-especificos", "esperaria", "evitaria", "nao-confirmado"] },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "lineage": { "$ref": "#/$defs/lineage" }
+        }
       }
     },
     "highlights": {
       "type": "array",
-      "description": "Destaques do período (opcional).",
+      "description": "Destaques do período (opcional) — os Fios que mudaram a foto.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["title", "note"],
         "properties": {
+          "fio": { "type": "string", "description": "Chave do Fio — usada na dedup de saída (um Fio, um bloco)." },
           "title": { "type": "string" },
           "note": { "type": "string" },
           "verdict": { "type": "string", "enum": ["vale-agir", "vale-olhar", "casos-especificos", "esperaria", "evitaria", "nao-confirmado"] },
-          "score": { "type": "integer", "minimum": 0, "maximum": 100 }
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "transition": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "description": "Transição de veredito na semana (VIROU).",
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" }
+            }
+          },
+          "lineage": { "$ref": "#/$defs/lineage" }
         }
       }
     },
@@ -61,6 +91,31 @@
     }
   },
   "$defs": {
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edition", "deal"],
+      "description": "Proveniência até a Daily de origem (padrão derivedFrom do Pro).",
+      "properties": {
+        "edition": { "type": "integer", "minimum": 1 },
+        "deal": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "movementItem": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "text": { "type": "string" },
+            "fio": { "type": "string" },
+            "lineage": { "$ref": "#/$defs/lineage" }
+          }
+        }
+      ]
+    },
     "radarWindow": {
       "type": "object",
       "additionalProperties": false,

@@ -36,3 +36,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts.timestamp
+
+# Rascunhos transientes da consolidação Weekly (weekly:draft) — não versionar
+content/weekly/*.draft.json

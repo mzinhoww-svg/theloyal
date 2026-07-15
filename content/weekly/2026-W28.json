@@ -1,0 +1,41 @@
+{
+  "number": 28,
+  "period": "Semana de 6 a 12 de julho de 2026",
+  "dateStart": "2026-07-06",
+  "dateEnd": "2026-07-12",
+  "publishTime": "9H00",
+  "readingMinutes": 5,
+  "illustrative": true,
+  "subject": "A semana em que as janelas casaram e fecharam juntas",
+  "preheader": "Duas transferências abriram e encerraram na mesma semana. O que ficou foi a régua da conta.",
+  "slug": "weekly-2026-w28",
+  "signal": "As duas janelas que mais importaram na semana abriram e fecharam dentro dela mesma. Quando a vigência é curta, o que separa quem agiu bem de quem agiu tarde não é a manchete do bônus — é a conta feita no dia. A semana fecha sem oportunidade viva, mas com o padrão claro: bônus alto casado com origem em desconto vale para quem já é do clube, e pouco mais.",
+  "movements": {
+    "novas": [],
+    "seguem": [],
+    "venceram": [
+      {
+        "fio": "esfera->latam-pass",
+        "text": "Transferência bonificada Esfera para Latam Pass encerrou — vigência até 10/07.",
+        "lineage": { "edition": 28, "deal": 0 }
+      },
+      {
+        "fio": "livelo->smiles",
+        "text": "Transferência bonificada Livelo para Smiles encerrou — vigência até 09/07.",
+        "lineage": { "edition": 27, "deal": 0 }
+      }
+    ]
+  },
+  "watch": [
+    "Se a compra de pontos de origem que circulou sem regulamento oficial se confirma na próxima semana.",
+    "Publicação do regulamento das próximas transferências para Latam Pass, onde a recorrência do histórico se concentra.",
+    "Prazo de crédito das origens após o encerramento das duas janelas da semana."
+  ],
+  "sources": [
+    { "label": "Regulamento oficial Smiles (exemplo)", "url": "https://www.smiles.com.br" },
+    { "label": "Portal Livelo (exemplo)", "url": "https://www.livelo.com.br" },
+    { "label": "Regulamento oficial Latam Pass (exemplo)", "url": "https://www.latampass.latam.com" },
+    { "label": "Portal Esfera (exemplo)", "url": "https://www.esfera.com.vc" }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."
+}

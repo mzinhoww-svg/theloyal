@@ -4,7 +4,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import {
   DISCLAIMER, EMOJI_RE, URGENCY_RE, INTERNAL_RE, VERDICTS, TL_WEIGHTS,
-  collectStrings, editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, verdictForScore,
+  collectStrings, editionSlug, entityKeySet, isExpired, isValidLink, listEditionFiles,
+  loadEdition, parseRouteKey, verdictForScore,
 } from "./lib.mjs";
 
 const REQUIRED = ["number", "date", "weekday", "publishTime", "readingMinutes", "signal", "deals", "sources", "disclaimer"];
@@ -12,13 +13,16 @@ const REQUIRED = ["number", "date", "weekday", "publishTime", "readingMinutes", 
 const REQUIRED_BLOCKS = ["signal", "deals", "sources", "disclaimer"];
 const DEAL_REQUIRED = ["category", "title", "context", "conta", "verdict", "source"];
 
-export function validateEdition(ed) {
+export function validateEdition(ed, opts = {}) {
   const errors = [];
   const warnings = [];
   const ok = [];
   const err = (m) => errors.push(m);
   const warn = (m) => warnings.push(m);
   const pass = (m) => ok.push(m);
+  // Identidade canônica (Fase 0): conjunto de entity keys conhecidas. Injetável
+  // em teste; por padrão lê content/entities/index.json.
+  const knownEntities = opts.entityKeys ?? entityKeySet();
 
   // 1. Campos obrigatórios da estrutura do Daily.
   const missing = REQUIRED.filter((k) => ed[k] === undefined || ed[k] === null || ed[k] === "");
@@ -62,6 +66,25 @@ export function validateEdition(ed) {
     // Estrutura do bloco: todos os campos obrigatórios do deal.
     const dealMissing = DEAL_REQUIRED.filter((k) => d[k] === undefined || d[k] === null || d[k] === "");
     if (dealMissing.length) err(`${tag}: campos obrigatórios ausentes: ${dealMissing.join(", ")}`);
+
+    // Identidade canônica (Fase 0 — contrato de dados p/ consolidação Weekly).
+    // entityKey ausente ⇒ aviso (não rastreável), não erro (edições legadas ok).
+    if (d.entityKey !== undefined) {
+      if (!knownEntities.has(d.entityKey)) err(`${tag}: entityKey "${d.entityKey}" não existe em content/entities`);
+    } else {
+      warn(`${tag}: sem entityKey — não será rastreável na consolidação Weekly`);
+    }
+    if (d.routeKey !== undefined) {
+      const parts = parseRouteKey(d.routeKey);
+      if (!parts) err(`${tag}: routeKey "${d.routeKey}" fora do formato origem->destino`);
+      else {
+        if (!knownEntities.has(parts.origem)) warn(`${tag}: origem "${parts.origem}" do routeKey não está em content/entities`);
+        if (!knownEntities.has(parts.destino)) warn(`${tag}: destino "${parts.destino}" do routeKey não está em content/entities`);
+      }
+    }
+    if (d.firstSeen !== undefined && Number.isNaN(Date.parse(d.firstSeen))) {
+      err(`${tag}: firstSeen "${d.firstSeen}" inválido (ISO date)`);
+    }
 
     if (!d.source) err(`${tag}: sem fonte — sem fonte confiável não entra no Deal Desk (overrule)`);
     // Integridade do Conta Block: linhas + resultado completo.
