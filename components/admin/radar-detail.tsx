@@ -268,7 +268,7 @@ export function RadarEngineComparison({ series }: { series: RadarSeries }) {
         <thead><tr><Th>Dimensão</Th><Th>Forecast</Th><Th>Predict</Th></tr></thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.k}><Td className="font-medium">{r.k}</Td><Td>{r.forecast}</Td><Td>{r.predict}</Td></tr>
+            <tr key={r.k}><Td label="Dimensão" className="font-medium">{r.k}</Td><Td label="Forecast">{r.forecast}</Td><Td label="Predict">{r.predict}</Td></tr>
           ))}
         </tbody>
       </Table>
@@ -324,15 +324,15 @@ export function RadarCampaignsUsed({ series }: { series: RadarSeries }) {
           ) : (
             used.map((r) => (
               <tr key={String(r.id)}>
-                <Td className="font-mono text-xs">{r.id ?? NA}</Td>
-                <Td className="font-mono tabular-nums">{eventDateOfRow(r) ?? NA}</Td>
-                <Td>{r.origem ?? NA}</Td>
-                <Td>{r.destino ?? NA}</Td>
-                <Td className="text-right font-mono tabular-nums">{r.percentual != null ? `${r.percentual}%` : NA}</Td>
-                <Td className="text-xs">{domainOf(r.source_url)}</Td>
-                <Td>{r.origin ?? NA}</Td>
-                <Td className="text-right font-mono tabular-nums">{waveIndexOf(series, r) ?? "—"}</Td>
-                <Td className="text-xs text-gray-500">elegível: temporal ok, sem duplicidade</Td>
+                <Td label="ID" className="font-mono text-xs">{r.id ?? NA}</Td>
+                <Td label="Data do evento" className="font-mono tabular-nums">{eventDateOfRow(r) ?? NA}</Td>
+                <Td label="Origem">{r.origem ?? NA}</Td>
+                <Td label="Destino">{r.destino ?? NA}</Td>
+                <Td label="Bônus" className="text-right font-mono tabular-nums">{r.percentual != null ? `${r.percentual}%` : NA}</Td>
+                <Td label="Fonte" className="text-xs">{domainOf(r.source_url)}</Td>
+                <Td label="Registro">{r.origin ?? NA}</Td>
+                <Td label="Onda" className="text-right font-mono tabular-nums">{waveIndexOf(series, r) ?? "—"}</Td>
+                <Td label="Inclusão" className="text-xs text-gray-500">elegível: temporal ok, sem duplicidade</Td>
               </tr>
             ))
           )}
@@ -360,18 +360,18 @@ export function RadarCampaignsExcluded({ series }: { series: RadarSeries }) {
           <tbody>
             {ex.map((e) => (
               <tr key={e.id}>
-                <Td className="font-mono text-xs">{e.id}</Td>
-                <Td className="font-mono tabular-nums">{e.temporal.eventDate ?? NA}</Td>
-                <Td className="font-mono tabular-nums">{e.temporal.provenanceDate ?? NA}</Td>
-                <Td className="text-right font-mono tabular-nums">{e.temporal.dayDifference ?? "—"}</Td>
-                <Td>{temporalStatusLabel(e.temporal.status)}{e.temporal.flags.length > 1 && <span className="ml-1 text-xs text-gray-500">({e.temporal.flags.map(temporalStatusLabel).join(", ")})</span>}</Td>
-                <Td><Pill tone={SEV_TONE[e.temporal.severity]}>{e.temporal.severity}</Pill></Td>
-                <Td>
+                <Td label="ID" className="font-mono text-xs">{e.id}</Td>
+                <Td label="Data candidata" className="font-mono tabular-nums">{e.temporal.eventDate ?? NA}</Td>
+                <Td label="Proveniência" className="font-mono tabular-nums">{e.temporal.provenanceDate ?? NA}</Td>
+                <Td label="Δ dias" className="text-right font-mono tabular-nums">{e.temporal.dayDifference ?? "—"}</Td>
+                <Td label="Status temporal">{temporalStatusLabel(e.temporal.status)}{e.temporal.flags.length > 1 && <span className="ml-1 text-xs text-gray-500">({e.temporal.flags.map(temporalStatusLabel).join(", ")})</span>}</Td>
+                <Td label="Severidade"><Pill tone={SEV_TONE[e.temporal.severity]}>{e.temporal.severity}</Pill></Td>
+                <Td label="Duplicidade">
                   {duplicateStatusLabel(e.duplicate.status)}
                   {e.duplicate.relatedCampaignIds.length > 0 && <span className="ml-1 text-xs text-gray-500">rel.: {e.duplicate.relatedCampaignIds.length}</span>}
                 </Td>
-                <Td className="text-xs">{exclusionReasonLabel(e.reason)}</Td>
-                <Td className="text-xs text-gray-500">{action(e.reason, e.temporal.severity)}</Td>
+                <Td label="Motivo" className="text-xs">{exclusionReasonLabel(e.reason)}</Td>
+                <Td label="Ação" className="text-xs text-gray-500">{action(e.reason, e.temporal.severity)}</Td>
               </tr>
             ))}
           </tbody>

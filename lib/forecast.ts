@@ -17,24 +17,26 @@
 // render (Node ESM puro, sem build). Ao alterar o algoritmo aqui, replique lá.
 
 import { assessCampaignQuality, type CampaignQualityAssessment } from "./campaign-quality.ts";
+import {
+  windowDate,
+  normProgram,
+  collapseWaves,
+  daysBetween,
+  addDays,
+  isValidISODate,
+  groupTransferSeries,
+  groupWaveInputs,
+  type CampaignRow,
+} from "./series-builder.ts";
+
+// Formação de séries extraída para lib/series-builder.ts (ADR-SERIES-001);
+// re-exportada aqui para manter a API pública (espelho MJS, radar, testes).
+export { windowDate, normProgram, collapseWaves } from "./series-builder.ts";
+export type { CampaignRow } from "./series-builder.ts";
 
 export type Confidence = "alta" | "media" | "baixa" | "em-formacao";
 export type Cadence = "mensal" | "irregular" | "esparsa" | null;
 export type Scope = "route" | "cluster";
-
-// Linha crua da tabela `campaigns` do Supabase (campos usados aqui).
-export interface CampaignRow {
-  id?: string | null;
-  tipo?: string | null;
-  origem?: string | null;
-  destino?: string | null;
-  percentual?: number | string | null;
-  vigencia_inicio?: string | null;
-  vigencia_fim?: string | null;
-  observed_at?: string | null;
-  first_seen?: string | null;
-  status?: string | null;
-}
 
 export interface Forecast {
   scope: Scope;
@@ -76,9 +78,6 @@ export interface ForecastResult {
 // Normalização de datas e programas
 // ---------------------------------------------------------------------------
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const TRAILING_DATE = /(\d{4}-\d{2}-\d{2})$/;
-const DAY_MS = 86_400_000;
 const WAVE_EPSILON_DAYS = 3; // janelas ≤ 3 dias entre si = mesma onda (default)
 
 // Parâmetros ajustáveis do motor. Defaults = constantes históricas. O admin
@@ -119,51 +118,10 @@ export function resolveConfig(partial?: Partial<ForecastConfig> | null): Forecas
   return { ...DEFAULT_FORECAST_CONFIG, ...(partial ?? {}) };
 }
 
-function isValidISODate(s: unknown): s is string {
-  if (typeof s !== "string" || !ISO_DATE.test(s.slice(0, 10))) return false;
-  return Number.isFinite(Date.parse(s.slice(0, 10) + "T00:00:00Z"));
-}
-
-// Data REAL da janela — nunca observed_at/first_seen (artefatos de ingestão do
-// backfill, que destroem a recorrência). Ordem de confiança:
-//   vigencia_inicio > data no id (…-YYYY-MM-DD) > vigencia_fim válido.
-export function windowDate(row: CampaignRow): string | null {
-  if (isValidISODate(row.vigencia_inicio)) return String(row.vigencia_inicio).slice(0, 10);
-  const idMatch = typeof row.id === "string" ? row.id.match(TRAILING_DATE) : null;
-  if (idMatch && isValidISODate(idMatch[1])) return idMatch[1];
-  if (isValidISODate(row.vigencia_fim)) return String(row.vigencia_fim).slice(0, 10);
-  return null;
-}
-
-// bb ≠ bb-empresas (programas distintos) permanecem separados de propósito.
-const PROGRAM_ALIASES: Record<string, string> = {
-  "azul fidelidade": "azul",
-  "latam pass": "latampass",
-  "latam-pass": "latampass",
-  tudoazul: "azul",
-  "smiles gol": "smiles",
-  "connect miles": "connectmiles",
-  "life miles": "lifemiles",
-  "amex mr": "amex-mr",
-  "membership rewards": "amex-mr",
-};
-
-export function normProgram(s: unknown): string {
-  const base = String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-  return PROGRAM_ALIASES[base] ?? base;
-}
-
 // ---------------------------------------------------------------------------
-// Aritmética de datas e estatística
+// Estatística (semântica própria deste motor: arredonda e devolve 0 em vazio —
+// diferente do Predict, que devolve null; por isso NÃO vive no series-builder)
 // ---------------------------------------------------------------------------
-
-function daysBetween(a: string, b: string): number {
-  return Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / DAY_MS);
-}
-
-function addDays(iso: string, n: number): string {
-  return new Date(Date.parse(iso + "T00:00:00Z") + n * DAY_MS).toISOString().slice(0, 10);
-}
 
 function median(xs: number[]): number {
   if (!xs.length) return 0;
@@ -180,15 +138,6 @@ function stdev(xs: number[]): number {
   if (xs.length < 2) return 0;
   const m = mean(xs);
   return Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1));
-}
-
-// Colapsa datas ≤ epsilon dias entre si na mais antiga da onda.
-export function collapseWaves(sortedDates: string[], epsilon: number): string[] {
-  const out: string[] = [];
-  for (const d of sortedDates) {
-    if (!out.length || daysBetween(out[out.length - 1], d) > epsilon) out.push(d);
-  }
-  return out;
 }
 
 function todayISO(now?: string): string {
@@ -360,41 +309,22 @@ export function buildForecast(
   // placeholder/permanente) entram na série. Mesmo conjunto usado pelo Predict.
   const quality = assessCampaignQuality(rows, { normalize: normProgram });
 
-  const routeGroups = new Map<string, { origem: string; destino: string; dates: Set<string>; percents: number[] }>();
-  const destGroups = new Map<string, { destino: string; dates: Set<string>; percents: number[] }>();
-
-  for (const row of quality.eligibleRows) {
-    const d = windowDate(row);
-    if (!d) continue;
-    const origem = normProgram(row.origem);
-    const destino = normProgram(row.destino);
-    if (!origem || !destino) continue;
-    const pct = typeof row.percentual === "number" ? row.percentual : Number(row.percentual);
-    const validPct = Number.isFinite(pct) && pct > 0 ? pct : null;
-
-    const rk = `${origem}→${destino}`;
-    let rg = routeGroups.get(rk);
-    if (!rg) routeGroups.set(rk, (rg = { origem, destino, dates: new Set(), percents: [] }));
-    rg.dates.add(d);
-    if (validPct != null) rg.percents.push(validPct);
-
-    let dg = destGroups.get(destino);
-    if (!dg) destGroups.set(destino, (dg = { destino, dates: new Set(), percents: [] }));
-    dg.dates.add(d);
-    if (validPct != null) dg.percents.push(validPct);
-  }
+  // Particionamento rota/cluster compartilhado com o Predict (series-builder).
+  const groups = groupTransferSeries(quality.eligibleRows, normProgram);
 
   const routes: Forecast[] = [];
-  for (const [route, g] of Array.from(routeGroups.entries())) {
-    const waves = collapseWaves(Array.from(g.dates).sort(), cfg.waveEpsilonDays);
-    routes.push(analyze("route", route, g.origem, g.destino, waves, g.percents, now, cfg));
+  for (const [route, g] of Array.from(groups.routes.entries())) {
+    const { waves, percents } = groupWaveInputs(g, cfg.waveEpsilonDays);
+    if (!waves.length) continue; // sem data de janela → série não existe (pré-C0.2)
+    routes.push(analyze("route", route, g.origem, g.destino, waves, percents, now, cfg));
   }
   routes.sort(sortForecasts);
 
   const clusters: Forecast[] = [];
-  for (const [destino, g] of Array.from(destGroups.entries())) {
-    const waves = collapseWaves(Array.from(g.dates).sort(), cfg.waveEpsilonDays);
-    clusters.push(analyze("cluster", `→${destino}`, null, destino, waves, g.percents, now, cfg));
+  for (const [destino, g] of Array.from(groups.clusters.entries())) {
+    const { waves, percents } = groupWaveInputs(g, cfg.waveEpsilonDays);
+    if (!waves.length) continue;
+    clusters.push(analyze("cluster", `→${destino}`, null, destino, waves, percents, now, cfg));
   }
   clusters.sort(sortForecasts);
 

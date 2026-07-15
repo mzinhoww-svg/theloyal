@@ -1,4 +1,12 @@
-import { loadPredict, type Prediction } from "@/lib/admin-predict";
+import {
+  loadPredict,
+  getSeriesTrends,
+  type Prediction,
+  type PredictSeriesView,
+  type TrendPoint,
+} from "@/lib/admin-predict";
+import { overrideRouteKey } from "@/lib/predict-overrides";
+import { p30Series, calibrationFromTrend, type Calibration } from "@/lib/predict-trends";
 import {
   StatCard,
   PageHeader,
@@ -8,12 +16,27 @@ import {
   Th,
   Td,
   EmptyRow,
+  EmptyState,
+  Sparkline,
   type Tone,
 } from "@/components/admin/ui";
+import {
+  Disclosure,
+  SegmentBar,
+  HorizonHeatmap,
+  OpportunityCard,
+  ProbBar,
+  FilterChips,
+  SearchForm,
+  ClearFilters,
+  Pagination,
+  type Segment,
+  type FilterParams,
+} from "@/components/admin/dashboard";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
-import { snapshotAllAction } from "./actions";
-import { MODEL_VERSION } from "@/lib/predict-engine";
+import { snapshotAllAction, setOverrideAction } from "./actions";
+import { MODEL_VERSION, HORIZONS } from "@/lib/predict-engine";
 import { QualityPanel } from "@/components/admin/QualityPanel";
 
 function confTone(c: string): Tone {
@@ -22,6 +45,7 @@ function confTone(c: string): Tone {
 const pct = (n: number | null | undefined) => (n == null ? "—" : `${Math.round(n * 100)}%`);
 const bonusLabel = (p: Prediction) =>
   p.bonusCandidates[0] ? `${p.bonusCandidates[0].value}% (${pct(p.bonusCandidates[0].probability)})` : "—";
+const seriesLabel = (p: Prediction) => (p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`);
 
 // dd/mm/aa a partir de ISO (sem new Date, determinístico).
 const shortDate = (iso: string) => {
@@ -54,22 +78,41 @@ function HistoryCell({ p }: { p: Prediction }) {
   );
 }
 
-function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: boolean }) {
+// Fixar/silenciar direto da linha ou do card (mesma tabela de overrides do
+// Forecast; remoção pela tabela de overrides de lá).
+function QuickOverride({ p, action, label }: { p: Prediction; action: "pin" | "mute"; label: string }) {
+  return (
+    <ActionForm action={setOverrideAction}>
+      <input type="hidden" name="scope" value={p.scope} />
+      <input type="hidden" name="route" value={overrideRouteKey(p)} />
+      <input type="hidden" name="action" value={action} />
+      <SubmitButton variant="ghost" pendingLabel="…">
+        {label}
+      </SubmitButton>
+    </ActionForm>
+  );
+}
+
+function SeriesRow({ p, showHistory = false }: { p: PredictSeriesView; showHistory?: boolean }) {
   const blocked = p.blockReason != null;
   return (
-    <tr className={blocked ? "bg-paper/40" : undefined}>
-      <Td className="whitespace-nowrap font-medium">
-        {p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`}
+    <tr className={blocked || p.muted ? "bg-paper/40 opacity-70" : undefined}>
+      <Td label="Série" className="whitespace-nowrap font-medium">
+        <span className="inline-flex items-center gap-1.5">
+          {p.pinned && <Pill tone="blue">fixado</Pill>}
+          {p.muted && <Pill tone="gray">silenciado</Pill>}
+          {seriesLabel(p)}
+        </span>
       </Td>
-      <Td className="text-right font-mono tabular-nums">{p.recordsTotal}</Td>
-      <Td className="text-right font-mono tabular-nums text-gray-500">
+      <Td label="Campanhas" className="text-right font-mono tabular-nums">{p.recordsTotal}</Td>
+      <Td label="Dias desde a última" className="text-right font-mono tabular-nums text-gray-500">
         {p.daysSinceLast ?? "—"}
       </Td>
-      <Td className="text-right font-mono tabular-nums text-gray-500">
+      <Td label="Cadência (dias)" className="text-right font-mono tabular-nums text-gray-500">
         {p.medianIntervalAll ?? "—"}
       </Td>
       {showHistory && (
-        <Td className="max-w-[260px] align-top leading-relaxed">
+        <Td label="Ondas (datas)" className="max-w-[260px] align-top leading-relaxed">
           <HistoryCell p={p} />
         </Td>
       )}
@@ -81,10 +124,10 @@ function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: bo
         </Td>
       ) : (
         <>
-          <Td className="text-right font-mono tabular-nums">{pct(p.probabilities?.p30)}</Td>
-          <Td className="text-right font-mono tabular-nums">{pct(p.probabilities?.p90)}</Td>
-          <Td className="font-mono tabular-nums">{bonusLabel(p)}</Td>
-          <Td>
+          <Td label="Prob. 30d" className="text-right font-mono tabular-nums">{pct(p.probabilities?.p30)}</Td>
+          <Td label="Prob. 90d" className="text-right font-mono tabular-nums">{pct(p.probabilities?.p90)}</Td>
+          <Td label="Bônus provável" className="font-mono tabular-nums">{bonusLabel(p)}</Td>
+          <Td label="Confiança">
             <Pill tone={confTone(p.confidence)}>{p.confidence}</Pill>
             {p.warnings.length > 0 && (
               <span className="mt-0.5 block text-[11px] text-gray-500" title={p.warnings.join(" · ")}>
@@ -94,36 +137,24 @@ function SeriesRow({ p, showHistory = false }: { p: Prediction; showHistory?: bo
           </Td>
         </>
       )}
+      <Td className="tl-cell-action">
+        <div className="flex items-center gap-1">
+          <QuickOverride p={p} action="pin" label={p.pinned ? "—" : "fixar"} />
+          <QuickOverride p={p} action="mute" label={p.muted ? "—" : "silenciar"} />
+        </div>
+      </Td>
     </tr>
   );
 }
 
-function ProbBar({ label, v, tone }: { label: string; v: number; tone: Tone }) {
-  const bg: Record<Tone, string> = {
-    green: "bg-green-600",
-    blue: "bg-blue-600",
-    yellow: "bg-yellow-500",
-    red: "bg-red-600",
-    gray: "bg-gray-400",
-  };
-  return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="w-10 flex-none font-mono tabular-nums text-gray-500">{label}</span>
-      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-paper-dark">
-        <div className={`h-full rounded-full ${bg[tone]}`} style={{ width: `${Math.round(v * 100)}%` }} />
-      </div>
-      <span className="w-10 flex-none text-right font-mono tabular-nums">{pct(v)}</span>
-    </div>
-  );
-}
-
-function DetailCard({ p }: { p: Prediction }) {
+function DetailCard({ p, trend }: { p: Prediction; trend?: TrendPoint[] }) {
   const t = confTone(p.confidence);
+  const spark = p30Series(trend);
   return (
     <div className="rounded-lg border border-line bg-surface p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-display text-base font-semibold">
-          {p.origem ? `${p.origem} → ${p.destino}` : `→ ${p.destino}`}
+          {seriesLabel(p)}
           <span className="ml-2 align-middle">
             <Pill tone={t}>{p.confidence}</Pill>
           </span>
@@ -155,6 +186,16 @@ function DetailCard({ p }: { p: Prediction }) {
             <div className="mt-2 font-mono text-xs text-gray-500">
               janela {p.windowStart} … {p.windowEnd} · central {p.centralDate}
             </div>
+            {spark && (
+              <div className="mt-3">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+                  Evolução da prob. 30d (snapshots)
+                </div>
+                <div className="max-w-[240px]">
+                  <Sparkline data={spark} tone={t} height={24} />
+                </div>
+              </div>
+            )}
           </div>
           <div>
             <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
@@ -194,12 +235,116 @@ function DetailCard({ p }: { p: Prediction }) {
 
 const isReady = (p: Prediction) => p.readiness === "ready" || p.readiness === "ready_with_warnings";
 
-export default async function PredictPage() {
-  const { result, ledgerRows, asOf, datasetComplete } = await loadPredict();
-  const series = [...result.clusters, ...result.routes];
+// Distribuição de confiança de uma lista de séries → segmentos da barra.
+function confSegments(list: Prediction[]): Segment[] {
+  const count = (f: (p: Prediction) => boolean) => list.filter(f).length;
+  return [
+    { label: "alta", value: count((p) => !p.blockReason && p.confidence === "alta"), tone: "green" },
+    { label: "média", value: count((p) => !p.blockReason && p.confidence === "media"), tone: "blue" },
+    { label: "baixa", value: count((p) => !p.blockReason && p.confidence === "baixa"), tone: "yellow" },
+    { label: "bloqueada", value: count((p) => p.blockReason != null), tone: "gray" },
+  ];
+}
+
+function SeriesTable({ rows, empty }: { rows: PredictSeriesView[]; empty: string }) {
+  return (
+    <Table>
+      <thead>
+        <tr>
+          <Th>Série</Th>
+          <Th className="text-right">Campanhas</Th>
+          <Th className="text-right">Dias desde a última</Th>
+          <Th className="text-right">Cadência (dias)</Th>
+          <Th>Ondas (datas)</Th>
+          <Th className="text-right">Prob. 30d</Th>
+          <Th className="text-right">Prob. 90d</Th>
+          <Th>Bônus provável</Th>
+          <Th>Confiança</Th>
+          <Th>Ações</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.length ? (
+          rows.map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
+        ) : (
+          <EmptyRow cols={10} label={empty} />
+        )}
+      </tbody>
+    </Table>
+  );
+}
+
+const PATH = "/admin/predict";
+const PAGE_SIZE = 30;
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+
+export default async function PredictPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  // Filtros por URL (compartilháveis): conf, q, bloqueadas=0, pagina.
+  const params: FilterParams = {};
+  for (const k of ["conf", "q", "bloqueadas", "pagina"]) {
+    const v = first(searchParams?.[k]).trim();
+    if (v) params[k] = v;
+  }
+  const hasFilters = !!(params.conf || params.q || params.bloqueadas);
+  const matches = (p: PredictSeriesView) => {
+    if (params.conf && p.confidence !== params.conf) return false;
+    if (params.bloqueadas === "0" && p.blockReason != null) return false;
+    if (params.q && !seriesLabel(p).toLowerCase().includes(params.q.toLowerCase())) return false;
+    return true;
+  };
+
+  const { result, clusters, routes, ledgerRows, asOf, datasetComplete } = await loadPredict();
+  const series = [...clusters, ...routes];
   const ready = series.filter(isReady).length;
   const blocked = series.filter((p) => p.blockReason != null).length;
-  const topReadyCluster = result.clusters.find(isReady) ?? result.clusters[0];
+  const topReadyCluster = clusters.find((p) => isReady(p) && !p.muted) ?? clusters[0];
+
+  // Dashboard: séries prontas com probabilidade, ranqueadas pelo curto prazo.
+  // Silenciadas ficam fora do ranking e do heatmap (aparecem só nas tabelas);
+  // fixadas vêm primeiro.
+  const ranked = series
+    .filter((p) => isReady(p) && p.probabilities && !p.muted)
+    .sort((a, b) =>
+      a.pinned !== b.pinned
+        ? a.pinned
+          ? -1
+          : 1
+        : (b.probabilities?.p30 ?? 0) - (a.probabilities?.p30 ?? 0),
+    );
+  const opportunities = ranked.slice(0, 6);
+  const heatRows = ranked.slice(0, 10).map((p) => {
+    const pr = p.probabilities;
+    return {
+      label: seriesLabel(p),
+      values: pr
+        ? [pr.p7, pr.p15, pr.p30, pr.p60, pr.p90, pr.p180]
+        : HORIZONS.map((): number | null => null),
+    };
+  });
+
+  // Tendência: uma query pelos snapshots das séries em destaque (últimos 90d).
+  const trendKeys = Array.from(
+    new Set([
+      ...ranked.slice(0, 10).map((p) => p.seriesKey),
+      ...(topReadyCluster ? [topReadyCluster.seriesKey] : []),
+    ]),
+  );
+  // Tabelas: filtro + paginação das rotas.
+  const clustersF = clusters.filter(matches);
+  const routesF = routes.filter(matches);
+  const pageCount = Math.max(1, Math.ceil(routesF.length / PAGE_SIZE));
+  const page = Math.min(Math.max(1, Number(params.pagina) || 1), pageCount);
+  const routesPage = routesF.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const trends = await getSeriesTrends(trendKeys);
+  const calibrations = trendKeys
+    .map((k) => ({ key: k, cal: calibrationFromTrend(trends.get(k)) }))
+    .filter((c): c is { key: string; cal: Calibration } => c.cal != null);
+  const labelByKey = new Map(series.map((p) => [p.seriesKey, seriesLabel(p)]));
 
   return (
     <>
@@ -229,7 +374,7 @@ export default async function PredictPage() {
         <StatCard label="As of" value={<span className="text-lg">{asOf}</span>} sub={datasetComplete ? "carga completa" : "carga PARCIAL"} tone={datasetComplete ? undefined : "red"} />
       </section>
 
-      <div className="mb-4 mt-4">
+      <div className="mb-6 mt-4">
         <Legend
           items={[
             { tone: "green", label: "alta" },
@@ -240,17 +385,152 @@ export default async function PredictPage() {
         />
       </div>
 
-      <QualityPanel quality={result.quality} />
+      <section className="mb-8">
+        <h2 className="mb-1 font-display text-lg font-semibold">Oportunidades — maior chance em 30 dias</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Séries prontas ranqueadas pela probabilidade de nova campanha no curto prazo. Projeção
+          estatística da recorrência — nunca veredito nem garantia.
+        </p>
+        {opportunities.length ? (
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
+            {opportunities.map((p) => (
+              <OpportunityCard
+                key={p.seriesKey}
+                label={seriesLabel(p)}
+                confidence={p.confidence}
+                tone={confTone(p.confidence)}
+                pinned={p.pinned}
+                p30={p.probabilities?.p30 ?? 0}
+                p90={p.probabilities?.p90 ?? 0}
+                bonus={p.bonusCandidates[0] ? bonusLabel(p) : null}
+                cadenceDays={p.medianIntervalAll}
+                daysSinceLast={p.daysSinceLast}
+                window={p.centralDate ? shortDate(p.centralDate) : null}
+                trend={p30Series(trends.get(p.seriesKey)) ?? undefined}
+                actions={
+                  <>
+                    <QuickOverride p={p} action="pin" label={p.pinned ? "—" : "fixar"} />
+                    <QuickOverride p={p} action="mute" label="silenciar" />
+                  </>
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            label="nenhuma série pronta com probabilidade calculada"
+            hint="Séries entram aqui quando acumulam histórico suficiente (≥3 campanhas) e passam nos gates de qualidade."
+          />
+        )}
+      </section>
+
+      {heatRows.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-1 font-display text-lg font-semibold">Mapa de probabilidade por horizonte</h2>
+          <p className="mb-3 text-sm text-gray-500">
+            As {heatRows.length} séries de maior probabilidade em 30d, abertas por prazo (7 a 180
+            dias). Quanto mais escura a célula, maior a chance de nova campanha até aquele prazo.
+          </p>
+          <HorizonHeatmap horizons={[...HORIZONS]} rows={heatRows} />
+        </section>
+      )}
+
+      <section className="mb-8 grid gap-3 md:grid-cols-2">
+        <SegmentBar title="Confiança · programas" segments={confSegments(result.clusters)} />
+        <SegmentBar title="Confiança · rotas" segments={confSegments(result.routes)} />
+      </section>
 
       {topReadyCluster && (
         <section className="mb-8">
           <h2 className="mb-2 font-display text-lg font-semibold">Detalhe — programa com mais histórico</h2>
-          <DetailCard p={topReadyCluster} />
+          <DetailCard p={topReadyCluster} trend={trends.get(topReadyCluster.seriesKey)} />
         </section>
       )}
 
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Programas (cluster → destino)</h2>
+      <Disclosure
+        title="Calibração do motor"
+        count={calibrations.length}
+        sub="primeiro vs último snapshot por série — o backtest está melhorando?"
+      >
+        {calibrations.length ? (
+          <Table>
+            <thead>
+              <tr>
+                <Th>Série</Th>
+                <Th className="text-right">Snapshots</Th>
+                <Th>Período</Th>
+                <Th className="text-right">Prob. 30d</Th>
+                <Th className="text-right">Acerto de janela</Th>
+                <Th className="text-right">Erro mediano</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {calibrations.map(({ key, cal }) => (
+                <tr key={key}>
+                  <Td label="Série" className="font-medium">{labelByKey.get(key) ?? key}</Td>
+                  <Td label="Snapshots" className="text-right font-mono tabular-nums">{cal.snapshots}</Td>
+                  <Td label="Período" className="font-mono text-xs tabular-nums text-gray-500">
+                    {shortDate(cal.firstAsOf)} … {shortDate(cal.lastAsOf)}
+                  </Td>
+                  <Td label="Prob. 30d" className="text-right font-mono tabular-nums">
+                    {pct(cal.p30First)} → {pct(cal.p30Last)}
+                  </Td>
+                  <Td label="Acerto de janela" className="text-right font-mono tabular-nums">
+                    {pct(cal.hitRateFirst)} → {pct(cal.hitRateLast)}
+                  </Td>
+                  <Td label="Erro mediano" className="text-right font-mono tabular-nums">
+                    {cal.errorFirst != null ? `${cal.errorFirst}d` : "—"} →{" "}
+                    {cal.errorLast != null ? `${cal.errorLast}d` : "—"}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        ) : (
+          <EmptyState
+            label="ainda não há snapshots suficientes para medir tendência"
+            hint="A tendência precisa de ≥2 snapshots por série. Gere um agora no botão acima — e o cron diário (/api/predict-snapshot) acumula o histórico automaticamente."
+          />
+        )}
+      </Disclosure>
+
+      <Disclosure
+        title="Qualidade do ledger (C0.2)"
+        count={result.quality.excluded.length}
+        sub="campanhas excluídas antes da formação das séries"
+      >
+        <QualityPanel quality={result.quality} embedded />
+      </Disclosure>
+
+      <section className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <FilterChips
+          path={PATH}
+          params={params}
+          param="conf"
+          label="Confiança"
+          options={[
+            { label: "alta", value: "alta" },
+            { label: "média", value: "media" },
+            { label: "baixa", value: "baixa" },
+          ]}
+        />
+        <FilterChips
+          path={PATH}
+          params={params}
+          param="bloqueadas"
+          label="Bloqueadas"
+          options={[{ label: "ocultar", value: "0" }]}
+        />
+        <SearchForm path={PATH} params={params} placeholder="buscar série (ex.: smiles)" />
+        <ClearFilters path={PATH} active={hasFilters} />
+      </section>
+
+      <Disclosure
+        title="Programas (cluster → destino)"
+        count={clustersF.length}
+        sub={hasFilters ? `filtrado de ${clusters.length} séries` : "todas as séries por programa"}
+        open
+      >
         <p className="mb-3 text-sm text-gray-500">
           Cada linha é uma série de transferência bonificada para o programa. <strong>Campanhas</strong> = quantas
           já ocorreram no histórico; <strong>Dias desde a última</strong> = há quanto tempo foi a mais recente;{" "}
@@ -260,62 +540,35 @@ export default async function PredictPage() {
           elas — a prova da cadência. Séries com menos de 3 campanhas ficam bloqueadas — sem previsão até acumular
           histórico.
         </p>
-        <Table>
-          <thead>
-            <tr>
-              <Th>Série</Th>
-              <Th className="text-right">Campanhas</Th>
-              <Th className="text-right">Dias desde a última</Th>
-              <Th className="text-right">Cadência (dias)</Th>
-              <Th>Ondas (datas)</Th>
-              <Th className="text-right">Prob. 30d</Th>
-              <Th className="text-right">Prob. 90d</Th>
-              <Th>Bônus provável</Th>
-              <Th>Confiança</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.clusters.length ? (
-              result.clusters.map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
-            ) : (
-              <EmptyRow cols={9} label="sem séries de transferência" />
-            )}
-          </tbody>
-        </Table>
-      </section>
+        <SeriesTable
+          rows={clustersF}
+          empty={hasFilters ? "nenhum programa passa nos filtros" : "sem séries de transferência"}
+        />
+      </Disclosure>
 
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Rotas (origem → destino)</h2>
+      <Disclosure
+        title="Rotas (origem → destino)"
+        count={routesF.length}
+        sub={hasFilters ? `filtrado de ${routes.length} rotas` : "todas as séries por rota específica"}
+        open={hasFilters}
+      >
         <p className="mb-3 text-sm text-gray-500">
-          Mesma leitura das colunas, agora por rota específica (origem → destino). <strong>Cadência</strong> em
-          dias entre campanhas; <strong>Prob. 30d/90d</strong> = chance de nova janela no prazo. A coluna{" "}
-          <strong>Ondas (datas)</strong> lista as campanhas que compõem o histórico, com o intervalo em dias entre
-          elas — é a prova da cadência (ex.: duas ondas separadas por 943 dias). Rotas com menos de 3 campanhas
-          ficam bloqueadas.
+          Mesma leitura das colunas dos programas, agora por rota específica (origem → destino).
+          A coluna <strong>Ondas (datas)</strong> lista as campanhas que compõem o histórico, com o
+          intervalo em dias entre elas — é a prova da cadência (ex.: duas ondas separadas por 943
+          dias). Rotas com menos de 3 campanhas ficam bloqueadas.
         </p>
-        <Table>
-          <thead>
-            <tr>
-              <Th>Série</Th>
-              <Th className="text-right">Campanhas</Th>
-              <Th className="text-right">Dias desde a última</Th>
-              <Th className="text-right">Cadência (dias)</Th>
-              <Th>Ondas (datas)</Th>
-              <Th className="text-right">Prob. 30d</Th>
-              <Th className="text-right">Prob. 90d</Th>
-              <Th>Bônus provável</Th>
-              <Th>Confiança</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {result.routes.length ? (
-              result.routes.slice(0, 60).map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
-            ) : (
-              <EmptyRow cols={9} label="sem rotas" />
-            )}
-          </tbody>
-        </Table>
-      </section>
+        <SeriesTable
+          rows={routesPage}
+          empty={hasFilters ? "nenhuma rota passa nos filtros" : "sem rotas"}
+        />
+        <Pagination path={PATH} params={params} page={page} pageCount={pageCount} />
+      </Disclosure>
+
+      <p className="mt-8 border-t border-line pt-4 text-xs text-gray-400">
+        Projeção estatística a partir da recorrência do histórico do ledger — nunca veredito nem
+        garantia. Séries sem base suficiente ficam bloqueadas; o motor nunca chuta uma data.
+      </p>
     </>
   );
 }

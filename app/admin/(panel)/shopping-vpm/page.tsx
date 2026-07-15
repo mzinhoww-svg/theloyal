@@ -76,13 +76,13 @@ export default async function ShoppingVpmPage() {
           <tbody>
             {d.skuRows.length ? d.skuRows.map((r) => (
               <tr key={r.productId}>
-                <Td className="font-medium">{r.name}</Td>
-                <Td className="text-gray-500">{r.category}</Td>
+                <Td className="font-medium" label="Produto">{r.name}</Td>
+                <Td className="text-gray-500" label="Categoria">{r.category}</Td>
                 {PROGRAMS.map((p) => {
                   const c = r.cells[p];
                   const best = r.bestStandardProgram === p;
                   return (
-                    <Td key={p} className="text-right font-mono tabular-nums">
+                    <Td key={p} className="text-right font-mono tabular-nums" label={PROGRAM_LABEL[p]}>
                       {c?.vpmStandard != null ? (
                         <span className={best ? "font-semibold text-green-700" : ""}>{fmtVpm(c.vpmStandard)}</span>
                       ) : (
@@ -91,8 +91,8 @@ export default async function ShoppingVpmPage() {
                     </Td>
                   );
                 })}
-                <Td>{r.bestStandardProgram ? <Pill tone="green">{PROGRAM_LABEL[r.bestStandardProgram]}</Pill> : "—"}</Td>
-                <Td><Pill tone={r.status === "complete" ? "green" : "yellow"}>{r.status}</Pill></Td>
+                <Td label="Melhor">{r.bestStandardProgram ? <Pill tone="green">{PROGRAM_LABEL[r.bestStandardProgram]}</Pill> : "—"}</Td>
+                <Td label="Status"><Pill tone={r.status === "complete" ? "green" : "yellow"}>{r.status}</Pill></Td>
               </tr>
             )) : <EmptyRow cols={PROGRAMS.length + 4} label="sem comparações — rode Recalcular após coletar" />}
           </tbody>
@@ -113,14 +113,14 @@ export default async function ShoppingVpmPage() {
           <tbody>
             {d.categories.length ? d.categories.map((b, i) => (
               <tr key={i}>
-                <Td className="font-medium">{b.category_code}</Td>
-                <Td>{PROGRAM_LABEL[b.program_code] ?? b.program_code}</Td>
-                <Td className="text-right font-mono tabular-nums">{b.valid_products}/{b.total_products}</Td>
-                <Td className="text-right font-mono tabular-nums">{b.coverage_rate != null ? Math.round(Number(b.coverage_rate) * 100) + "%" : "—"}</Td>
-                <Td className="text-right font-mono tabular-nums">{fmtVpm(b.vpm_standard_p25)}</Td>
-                <Td className="text-right font-mono tabular-nums font-semibold">{fmtVpm(b.vpm_standard_median)}</Td>
-                <Td className="text-right font-mono tabular-nums">{fmtVpm(b.vpm_standard_p75)}</Td>
-                <Td><Pill tone={QUALITY_TONE[b.sample_quality] ?? "gray"}>{b.sample_quality}</Pill></Td>
+                <Td className="font-medium" label="Categoria">{b.category_code}</Td>
+                <Td label="Programa">{PROGRAM_LABEL[b.program_code] ?? b.program_code}</Td>
+                <Td className="text-right font-mono tabular-nums" label="Válidos">{b.valid_products}/{b.total_products}</Td>
+                <Td className="text-right font-mono tabular-nums" label="Cobertura">{b.coverage_rate != null ? Math.round(Number(b.coverage_rate) * 100) + "%" : "—"}</Td>
+                <Td className="text-right font-mono tabular-nums" label="P25">{fmtVpm(b.vpm_standard_p25)}</Td>
+                <Td className="text-right font-mono tabular-nums font-semibold" label="Mediana">{fmtVpm(b.vpm_standard_median)}</Td>
+                <Td className="text-right font-mono tabular-nums" label="P75">{fmtVpm(b.vpm_standard_p75)}</Td>
+                <Td label="Amostra"><Pill tone={QUALITY_TONE[b.sample_quality] ?? "gray"}>{b.sample_quality}</Pill></Td>
               </tr>
             )) : <EmptyRow cols={8} label="sem benchmarks" />}
           </tbody>
@@ -138,12 +138,12 @@ export default async function ShoppingVpmPage() {
           <tbody>
             {d.catalog.map((c) => (
               <tr key={c.id}>
-                <Td className="font-medium">{c.name}</Td>
-                <Td className="text-gray-500">{c.category}</Td>
-                <Td className="text-right font-mono tabular-nums">{c.sources}</Td>
-                <Td className="text-right font-mono tabular-nums">{c.productUrls}</Td>
-                <Td className="text-gray-500">{c.programs.map((p) => PROGRAM_LABEL[p] ?? p).join(", ") || "—"}</Td>
-                <Td><Pill tone={c.status === "active" ? "green" : "gray"}>{c.status}</Pill></Td>
+                <Td className="font-medium" label="Produto">{c.name}</Td>
+                <Td className="text-gray-500" label="Categoria">{c.category}</Td>
+                <Td className="text-right font-mono tabular-nums" label="Fontes">{c.sources}</Td>
+                <Td className="text-right font-mono tabular-nums" label="URLs de produto">{c.productUrls}</Td>
+                <Td className="text-gray-500" label="Programas">{c.programs.map((p) => PROGRAM_LABEL[p] ?? p).join(", ") || "—"}</Td>
+                <Td label="Status"><Pill tone={c.status === "active" ? "green" : "gray"}>{c.status}</Pill></Td>
               </tr>
             ))}
           </tbody>
@@ -158,7 +158,7 @@ export default async function ShoppingVpmPage() {
           <thead><tr><Th>Produto</Th><Th>Programa</Th><Th>Lacuna</Th></tr></thead>
           <tbody>
             {d.gaps.length ? d.gaps.slice(0, 60).map((g, i) => (
-              <tr key={i}><Td className="font-medium">{g.name}</Td><Td className="text-gray-500">{g.program}</Td><Td><Pill tone="yellow">{g.issue}</Pill></Td></tr>
+              <tr key={i}><Td className="font-medium" label="Produto">{g.name}</Td><Td className="text-gray-500" label="Programa">{g.program}</Td><Td label="Lacuna"><Pill tone="yellow">{g.issue}</Pill></Td></tr>
             )) : <EmptyRow cols={3} label="sem lacunas" />}
           </tbody>
         </Table>
@@ -173,13 +173,13 @@ export default async function ShoppingVpmPage() {
           <tbody>
             {d.runs.length ? d.runs.map((r) => (
               <tr key={r.id}>
-                <Td className="font-mono text-xs text-gray-500">{fmtDate(r.started_at ?? r.created_at)}</Td>
-                <Td>{r.trigger_type}</Td>
-                <Td><Pill tone={r.status === "success" ? "green" : r.status === "failed" ? "red" : r.status === "partial" ? "yellow" : "gray"}>{r.status}</Pill></Td>
-                <Td className="text-right font-mono tabular-nums">{r.selected_sources}</Td>
-                <Td className="text-right font-mono tabular-nums">{r.successful_sources}</Td>
-                <Td className="text-right font-mono tabular-nums">{r.failed_sources}</Td>
-                <Td className="text-right font-mono tabular-nums">{r.observations_created}</Td>
+                <Td className="font-mono text-xs text-gray-500" label="Início">{fmtDate(r.started_at ?? r.created_at)}</Td>
+                <Td label="Gatilho">{r.trigger_type}</Td>
+                <Td label="Status"><Pill tone={r.status === "success" ? "green" : r.status === "failed" ? "red" : r.status === "partial" ? "yellow" : "gray"}>{r.status}</Pill></Td>
+                <Td className="text-right font-mono tabular-nums" label="Fontes">{r.selected_sources}</Td>
+                <Td className="text-right font-mono tabular-nums" label="OK">{r.successful_sources}</Td>
+                <Td className="text-right font-mono tabular-nums" label="Falhas">{r.failed_sources}</Td>
+                <Td className="text-right font-mono tabular-nums" label="Observações">{r.observations_created}</Td>
               </tr>
             )) : <EmptyRow cols={7} label="nenhuma rodada de coleta ainda (dados atuais = seed histórico validado)" />}
           </tbody>

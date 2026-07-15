@@ -161,8 +161,8 @@ export default async function BackfillPage({
             {filteredQueue.length > 0 ? (
               filteredQueue.map((q) => (
                 <tr key={q.id}>
-                  <Td className="whitespace-nowrap text-gray-500">{q.source}</Td>
-                  <Td className="max-w-[420px]">
+                  <Td label="Fonte" className="whitespace-nowrap text-gray-500">{q.source}</Td>
+                  <Td label="URL" className="max-w-[420px]">
                     <a
                       href={q.url}
                       target="_blank"
@@ -178,15 +178,15 @@ export default async function BackfillPage({
                       </span>
                     )}
                   </Td>
-                  <Td>
+                  <Td label="Status">
                     <Pill tone={toneForStatus(q.status)}>
                       {q.status ?? "—"}
                     </Pill>
                   </Td>
-                  <Td className="font-mono tabular-nums text-gray-500">
+                  <Td label="Processado" className="font-mono tabular-nums text-gray-500">
                     {fmtDate(q.processed_at)}
                   </Td>
-                  <Td className="text-right">
+                  <Td className="text-right tl-cell-action">
                     <ActionForm action={reprocessAction} className="flex justify-end">
                       <input type="hidden" name="id" value={q.id} />
                       <SubmitButton variant="default" pendingLabel="…">
@@ -221,8 +221,8 @@ export default async function BackfillPage({
             {tracker.length > 0 ? (
               tracker.slice(0, 200).map((t) => (
                 <tr key={t.id}>
-                  <Td className="whitespace-nowrap text-gray-500">{t.source}</Td>
-                  <Td className="max-w-[420px]">
+                  <Td label="Fonte" className="whitespace-nowrap text-gray-500">{t.source}</Td>
+                  <Td label="Sitemap" className="max-w-[420px]">
                     <span
                       className="block truncate"
                       title={t.sitemap_url}
@@ -235,15 +235,15 @@ export default async function BackfillPage({
                       </span>
                     )}
                   </Td>
-                  <Td>
+                  <Td label="Status">
                     <Pill tone={toneForStatus(t.status)}>
                       {t.status ?? "—"}
                     </Pill>
                   </Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td label="Encontradas" className="text-right font-mono tabular-nums">
                     {t.urls_found ?? 0}
                   </Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td label="Inseridas" className="text-right font-mono tabular-nums">
                     {t.urls_inserted ?? 0}
                   </Td>
                 </tr>
