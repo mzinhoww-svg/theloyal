@@ -8,11 +8,11 @@ import { Reveal, SectionLabel } from "./ui";
 
 export function Problema() {
   return (
-    <section className="tl-section border-b border-line">
+    <section className="tl-section">
       <div className="tl-container">
         <Reveal>
           <SectionLabel>O problema</SectionLabel>
-          <div className="grid gap-10 lg:grid-cols-12">
+          <div className="grid gap-6 lg:grid-cols-12 lg:gap-10">
             <h2 className="font-display text-3xl font-semibold leading-tight md:text-4xl lg:col-span-5">
               No título, toda promoção parece ótima.
             </h2>
@@ -31,7 +31,7 @@ export function Problema() {
             </div>
           </div>
         </Reveal>
-        <Reveal className="mt-12">
+        <Reveal className="mt-8 md:mt-12">
           <CompareBanner />
           <p className="mt-4 max-w-content text-sm leading-relaxed text-gray-500">
             Exemplo real: a mesma promoção pode sair por R$ 34, R$ 24 ou R$ 16 a cada
@@ -68,28 +68,26 @@ const METODO = [
 
 export function Metodo() {
   return (
-    <section id="metodo" className="tl-section border-b border-line">
+    <section id="metodo" className="tl-section">
       <div className="tl-container">
         <Reveal>
           <SectionLabel>Como funciona cada edição</SectionLabel>
-          <h2 className="max-w-content font-display text-3xl font-semibold leading-tight md:text-4xl">
+          <h2 className="max-w-content font-display text-[26px] font-semibold leading-tight md:text-4xl">
             Quatro passos. Todo dia. Na mesma ordem.
           </h2>
         </Reveal>
-        <div className="mt-12 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-x-8 gap-y-8 sm:grid-cols-2 md:mt-12 lg:grid-cols-4">
           {METODO.map((m, i) => (
-            <Reveal key={m.titulo}>
-              <div className="h-full border-t-2 border-ink pt-5">
-                <span className="font-mono text-sm text-gray-400">0{i + 1}</span>
-                <h3 className="mt-2 font-display text-2xl font-semibold">{m.titulo}</h3>
-                <p className="mt-3 text-base leading-relaxed text-gray-500">{m.texto}</p>
-                {m.formula && (
-                  <p className="mt-4 inline-block rounded-sm bg-paper-dark px-3 py-1.5 font-mono text-[13px] text-gray-700">
-                    {m.formula}
-                  </p>
-                )}
-              </div>
-            </Reveal>
+            <div key={m.titulo} className="h-full border-t-2 border-ink pt-5">
+              <span className="font-mono text-sm text-gray-400">0{i + 1}</span>
+              <h3 className="mt-2 font-display text-2xl font-semibold">{m.titulo}</h3>
+              <p className="mt-3 text-base leading-relaxed text-gray-500">{m.texto}</p>
+              {m.formula && (
+                <p className="mt-4 inline-block rounded-sm bg-paper-dark px-3 py-1.5 font-mono text-[13px] text-gray-700">
+                  {m.formula}
+                </p>
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -136,15 +134,17 @@ const PRODUTOS: {
 
 export function Recebe() {
   return (
-    <section className="tl-section border-b border-line">
+    <section className="tl-section">
       <div className="tl-container">
         <Reveal>
           <SectionLabel>O que você recebe</SectionLabel>
+          <h2 className="max-w-content font-display text-[26px] font-semibold leading-tight md:text-4xl">
+            Uma assinatura, quatro entregas.
+          </h2>
         </Reveal>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="mt-8 grid gap-x-8 gap-y-8 sm:grid-cols-2">
           {PRODUTOS.map((p) => (
-            <Reveal key={p.nome}>
-              <div className="flex h-full flex-col rounded border border-line bg-surface p-6">
+            <div key={p.nome} className="flex h-full flex-col border-t-2 border-ink pt-5">
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="font-display text-xl font-semibold">{p.nome}</h3>
                   <span
@@ -171,7 +171,6 @@ export function Recebe() {
                   </a>
                 )}
               </div>
-            </Reveal>
           ))}
         </div>
       </div>
@@ -188,22 +187,20 @@ const PERFIS = [
 
 export function ParaQuem() {
   return (
-    <section id="para-quem" className="tl-section border-b border-line">
+    <section id="para-quem" className="tl-section bg-paper-dark">
       <div className="tl-container">
         <Reveal>
           <SectionLabel>Para quem é</SectionLabel>
-          <h2 className="max-w-content font-display text-3xl font-semibold leading-tight md:text-4xl">
+          <h2 className="max-w-content font-display text-[26px] font-semibold leading-tight md:text-4xl">
             Feito pra quatro tipos de leitor. Veja se você é um deles.
           </h2>
         </Reveal>
-        <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {PERFIS.map(([nome, desc]) => (
-            <Reveal key={nome}>
-              <div className="border-t-2 border-ink pt-4">
-                <h3 className="text-base font-semibold">{nome}</h3>
-                <p className="mt-2 text-base leading-relaxed text-gray-500">{desc}</p>
-              </div>
-            </Reveal>
+            <div key={nome} className="border-t-2 border-ink pt-4">
+              <h3 className="text-base font-semibold">{nome}</h3>
+              <p className="mt-2 text-base leading-relaxed text-gray-500">{desc}</p>
+            </div>
           ))}
         </div>
       </div>
@@ -222,27 +219,25 @@ const PRINCIPIOS = [
 
 export function ComoAnalisamos() {
   return (
-    <section id="como-analisamos" className="tl-section border-b border-line">
+    <section id="como-analisamos" className="tl-section bg-paper-dark">
       <div className="tl-container">
         <Reveal>
           <SectionLabel>Por que confiar</SectionLabel>
-          <h2 className="max-w-content font-display text-3xl font-semibold leading-tight md:text-4xl">
+          <h2 className="max-w-content font-display text-[26px] font-semibold leading-tight md:text-4xl">
             A conta é aberta. As fontes são públicas.
           </h2>
         </Reveal>
-        <div className="mt-10 grid gap-12 lg:grid-cols-12">
+        <div className="mt-8 grid gap-8 md:mt-10 md:gap-12 lg:grid-cols-12">
           <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:col-span-8">
             {PRINCIPIOS.map(([titulo, texto]) => (
-              <Reveal key={titulo}>
-                <div>
-                  <h3 className="text-base font-semibold">{titulo}</h3>
-                  <p className="mt-2 text-base leading-relaxed text-gray-500">{texto}</p>
-                </div>
-              </Reveal>
+              <div key={titulo}>
+                <h3 className="text-base font-semibold">{titulo}</h3>
+                <p className="mt-2 text-base leading-relaxed text-gray-500">{texto}</p>
+              </div>
             ))}
           </div>
           <Reveal className="lg:col-span-4">
-            <div className="flex h-full flex-col items-center justify-center rounded border border-line bg-paper-dark p-8 text-center">
+            <div className="flex h-full flex-col items-center justify-center rounded-lg border border-line bg-surface p-6 text-center md:p-8">
               <PontoReadingScene className="w-full max-w-[320px]" />
               <p className="mt-4 text-sm leading-relaxed text-gray-500">
                 Ponto confere o regulamento antes de abanar o rabo. Quando falta
@@ -251,23 +246,19 @@ export function ComoAnalisamos() {
             </div>
           </Reveal>
         </div>
-        <Reveal>
-          <div className="mt-12 rounded bg-ink px-5 py-4 font-mono text-[13px] leading-7 text-paper sm:px-6 sm:text-sm">
-            <span className="text-gray-400">TL Score = </span>
-            25·valor + 15·regra + 15·vigência + 10·fricção + 10·aplicabilidade +
-            10·liquidez + 10·estoque + 5·fontes
-            <span className="block text-green-500">
-              sem vigência confirmada → Não confirmado, sempre
-            </span>
-          </div>
-        </Reveal>
-        <Reveal>
-          <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-paper-dark py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">
-            Promoções podem mudar sem aviso. Confira sempre as regras no site
-            oficial antes de comprar, transferir ou resgatar. O The Loyal não faz
-            recomendação financeira individual: a decisão final é sempre sua.
-          </p>
-        </Reveal>
+        <div className="mt-8 rounded bg-ink px-5 py-4 font-mono text-[13px] leading-7 text-paper sm:px-6 sm:text-sm md:mt-12">
+          <span className="text-gray-400">TL Score = </span>
+          25·valor + 15·regra + 15·vigência + 10·fricção + 10·aplicabilidade +
+          10·liquidez + 10·estoque + 5·fontes
+          <span className="block text-green-500">
+            sem vigência confirmada → Não confirmado, sempre
+          </span>
+        </div>
+        <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-surface py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">
+          Promoções podem mudar sem aviso. Confira sempre as regras no site
+          oficial antes de comprar, transferir ou resgatar. O The Loyal não faz
+          recomendação financeira individual: a decisão final é sempre sua.
+        </p>
       </div>
     </section>
   );
@@ -276,24 +267,32 @@ export function ComoAnalisamos() {
 export function CTAFinal() {
   const [celebrate, setCelebrate] = useState(false);
   return (
-    <section className="tl-section">
+    // Fechamento invertido: banda Ink encerra a narrativa. O form vive num painel
+    // Paper para manter todo o contraste interno (verde, microcopy, erro) valido.
+    <section id="cta-final" className="tl-section bg-ink text-paper">
       <div className="tl-container">
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-3xl font-bold leading-tight md:text-5xl">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-paper">
+              <PontoMascot
+                celebrate={celebrate}
+                className="h-auto w-16"
+                label={
+                  celebrate
+                    ? "Ponto comemorando com as orelhas em pé"
+                    : "Ponto, cético, esperando a próxima conta"
+                }
+              />
+            </div>
+            <h2 className="font-display text-[34px] font-bold leading-[1.05] md:text-5xl">
               Amanhã, às 8h, a conta chega pronta na sua caixa de entrada.
             </h2>
-            <p className="mt-4 text-lg text-gray-500">
+            <p className="mt-4 text-lg text-gray-400">
               5 minutos de leitura. De graça. Cancela em um clique.
             </p>
-            <div className="mx-auto mt-8 max-w-xl text-left">
+            <div className="mx-auto mt-8 max-w-xl rounded-lg bg-paper p-5 text-left text-ink sm:p-6">
               <SubscribeForm submitLabel="Quero receber por e-mail" source="cta-final" onSuccess={() => setCelebrate(true)} />
             </div>
-            {celebrate && (
-              <div className="mx-auto mt-6 w-28">
-                <PontoMascot celebrate className="w-full" label="Ponto comemorando com as orelhas em pé" />
-              </div>
-            )}
           </div>
         </Reveal>
       </div>

@@ -1,19 +1,9 @@
 name: CI
 
-# Gate de qualidade do The Loyalty. Roda em push e pull request.
-# Cobre: lint, typecheck, validate, render, qa, build e publish (indices locais).
-# Nenhum job envia e-mail nem toca a API do Beehiiv — publicacao real e manual
-# (ver .github/workflows/beehiiv.yml).
-
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
-    branches: ["**"]
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -23,78 +13,36 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
-  lint:
-    name: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "24"
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-
-  typecheck:
-    name: typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "24"
-          cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-
-  test:
-    # Testes unitarios das funcoes puras editoriais (CPM/VPM/spread, mapa
-    # Score->Verdict, taxonomia, gates de emoji/urgencia/dado interno). Zero
-    # dependencia: node:test. Blindam o calculo, que nunca passa pelo LLM.
-    name: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "24"
-          cache: npm
-      - run: npm ci
-      - run: npm test
-
-  editorial:
-    # validate -> render -> qa -> publish compartilham o diretorio out/ e por isso
-    # rodam como passos sequenciais no mesmo job (o render precede o qa, que audita
-    # o HTML gerado). Cada passo bloqueia o pipeline em erro.
-    name: editorial-gate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "24"
-          cache: npm
-      - run: npm ci
-      - name: validate
-        run: npm run validate
-      - name: render
-        run: npm run render
-      - name: render web (archive) — para o QA auditar a superfície web
-        run: npm run render:web
-      - name: qa
-        run: npm run qa
-      - name: publish (indices locais, nao envia e-mail)
-        run: npm run publish
-
   build:
-    name: build
-    needs: [lint, typecheck]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npm run build
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test (unit)
+        run: npm test
+
+      - name: Validate editions (QA gate)
+        run: npm run validate
+
+      - name: Render (email + plain + web + QA + manifest)
+        run: npm run render
+
+      - name: QA global
+        run: npm run qa
+
+      - name: Build (Next.js static)
+        run: npm run build

@@ -50,6 +50,11 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${inter.variable} ${jetbrains.variable}`}
       >
+        {/* Sem JS o IntersectionObserver nao dispara: garante que o conteudo
+            revelado por scroll nunca fique oculto. */}
+        <noscript>
+          <style>{`.tl-reveal{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         <a
           href="#conteudo"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-ink focus:px-4 focus:py-2 focus:font-semibold focus:text-paper"
