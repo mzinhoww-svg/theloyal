@@ -38,6 +38,15 @@ export type ProductStatus =
 // sobreposição de janela rebaixa uma faixa (tratado no cálculo).
 export type DivergenceLevel = "none" | "compatible" | "warning" | "review" | "block";
 
+// Política canônica do Radar (docs/POLITICA-CANONICA-RADAR.md §1.3–§1.5, §7).
+// Motor selecionado como fonte da série e superfície ao leitor após a nota de corte.
+// Predict é canônico quando pronto; Forecast é fallback rotulado; nenhum → sem previsão.
+export type CanonicalEngine = "predict" | "forecast" | null;
+// prediction: passa a nota de corte automática (ainda exige aprovação editorial a jusante).
+// monitoring: série real sem previsão publicável — "em observação", nunca número.
+// hidden: problema de dado / sem série — não vai ao leitor como série (fica no admin).
+export type ReaderSurface = "prediction" | "monitoring" | "hidden";
+
 export interface RadarSeriesQuality {
   campaignsValid: number;
   campaignsExcluded: number;
@@ -80,6 +89,16 @@ export interface RadarSeries {
   bonus: number | null; // bônus provável (Predict candidato[0] ou Forecast típico)
   divergenceDays: number | null;
   divergenceLevel: DivergenceLevel;
+
+  // Política canônica (docs/POLITICA-CANONICA-RADAR.md). Campos DERIVADOS, aditivos:
+  // nenhum motor novo, nenhum gate recalculado — etiqueta de produto sobre saídas
+  // que já existem. `readerPublishable` é a nota de corte AUTOMÁTICA; a aprovação
+  // editorial não é computável em runtime (sem persistência) e é gate à parte.
+  canonicalEngine: CanonicalEngine; // motor que serve de fonte (proveniência)
+  fallbackUsed: boolean; // Forecast servindo de fallback rotulado "cadência aproximada"
+  readerPublishable: boolean; // passa a nota de corte automática (falta só aprovação)
+  readerSurface: ReaderSurface; // como a série chega (ou não) ao leitor
+  readerBlockReasons: string[]; // por que NÃO é publicável (honestidade + auditoria)
 }
 
 export interface RadarHealth {
@@ -270,6 +289,75 @@ function deriveStatus(
   return "monitoring";
 }
 
+// Estados de produto que representam PROBLEMA DE DADO — não vão ao leitor como
+// série (ficam no admin/fila do operador). Precedem a nota de corte.
+const READER_HARD_HIDDEN = new Set<ProductStatus>([
+  "dataset_incomplete",
+  "data_quality_blocked",
+  "duplicate_review",
+]);
+
+export interface ReaderDecision {
+  canonicalEngine: CanonicalEngine;
+  fallbackUsed: boolean;
+  readerPublishable: boolean;
+  readerSurface: ReaderSurface;
+  readerBlockReasons: string[];
+}
+
+// Nota de corte de publicação (POLITICA-CANONICA-RADAR.md §7.4). PURA e determinística:
+// não recalcula gate, só compõe os sinais que os motores/qualidade já produziram.
+// A aprovação editorial (§7.4) NÃO é verificada aqui — não é computável em runtime;
+// `readerPublishable=true` significa "passou a nota de corte automática; falta só a
+// aprovação humana vigente". O Forecast só chega ao leitor como FALLBACK rotulado.
+export function deriveReaderDecision(
+  forecast: Forecast | null,
+  predict: Prediction | null,
+  productStatus: ProductStatus,
+  divergence: DivergenceLevel,
+  ctx: { datasetComplete: boolean; fresh: boolean },
+): ReaderDecision {
+  // Motor canônico: Predict quando pronto (probabilities != null ⟺ readiness
+  // ready/ready_with_warnings, ver predict-engine); senão Forecast como fallback
+  // quando editorialmente elegível; senão nenhum.
+  const predictReady = predict?.probabilities != null;
+  const forecastEligible = forecast?.editorialEligible === true;
+  const canonicalEngine: CanonicalEngine = predictReady ? "predict" : forecastEligible ? "forecast" : null;
+  const fallbackUsed = canonicalEngine === "forecast";
+
+  const reasons: string[] = [];
+  if (!ctx.datasetComplete) reasons.push("base_incompleta");
+  if (!ctx.fresh) reasons.push("artefato_stale");
+  if (READER_HARD_HIDDEN.has(productStatus)) reasons.push("qualidade_de_dado");
+  if (canonicalEngine === null) reasons.push("sem_motor_pronto");
+
+  // Confiança do motor canônico ≥ média (alta ou media). Forecast "em-formacao" e
+  // Predict "insuficiente"/"baixa" reprovam.
+  const conf = canonicalEngine === "predict" ? predict!.confidence : canonicalEngine === "forecast" ? forecast!.confidence : null;
+  if (!(conf === "alta" || conf === "media")) reasons.push("confianca_abaixo_de_media");
+
+  // Divergência entre motores não pode estar em revisão/bloqueio.
+  if (divergence === "review" || divergence === "block") reasons.push(`divergencia_${divergence}`);
+
+  // Backtest do Predict: com ≥3 observações, exige acerto de janela ≥ 0,5.
+  if (canonicalEngine === "predict") {
+    const bt = predict!.backtest;
+    if (bt && bt.observations >= 3 && (bt.windowHitRate == null || bt.windowHitRate < 0.5)) reasons.push("backtest_fraco");
+  }
+
+  const readerPublishable = reasons.length === 0;
+
+  // Superfície ao leitor (degradação honesta §4): problema de dado → hidden;
+  // publicável → prediction; série real sem previsão publicável → monitoring.
+  const readerSurface: ReaderSurface = readerPublishable
+    ? "prediction"
+    : READER_HARD_HIDDEN.has(productStatus)
+      ? "hidden"
+      : "monitoring";
+
+  return { canonicalEngine, fallbackUsed, readerPublishable, readerSurface, readerBlockReasons: reasons };
+}
+
 // --------------------------------------------------------------------------- compose
 export function composeRadarViewModel(rows: CampaignRow[], opts: ComposeOpts): RadarViewModel {
   const now = opts.now;
@@ -335,6 +423,10 @@ export function composeRadarViewModel(rows: CampaignRow[], opts: ComposeOpts): R
       datasetComplete: opts.datasetComplete,
       opportunityHorizonDays,
     });
+    const reader = deriveReaderDecision(forecast, predict, productStatus, div.level, {
+      datasetComplete: opts.datasetComplete,
+      fresh: opts.freshness.status === "fresh",
+    });
 
     const warnings = Array.from(new Set([...(forecast?.warnings ?? []), ...(predict?.warnings ?? [])]));
     const editorialBlockReasons = [forecast?.editorialBlockReason, predict?.blockReason].filter(
@@ -373,6 +465,11 @@ export function composeRadarViewModel(rows: CampaignRow[], opts: ComposeOpts): R
       bonus: predict?.bonusCandidates?.[0]?.value ?? forecast?.typicalPercent ?? null,
       divergenceDays: div.days,
       divergenceLevel: div.level,
+      canonicalEngine: reader.canonicalEngine,
+      fallbackUsed: reader.fallbackUsed,
+      readerPublishable: reader.readerPublishable,
+      readerSurface: reader.readerSurface,
+      readerBlockReasons: reader.readerBlockReasons,
     });
   }
 
