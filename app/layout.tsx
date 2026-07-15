@@ -21,6 +21,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.theloyal.com.br"),
   title: "The Loyal | Pontos e milhas sem pegadinha",
   description:
     "A gente faz a conta das promoções de pontos, milhas e cashback e diz, em reais, se vale a pena. E-mail grátis de 5 minutos, todo dia útil às 8h.",

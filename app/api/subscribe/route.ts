@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  let body: { email?: string; empresa?: string };
+  let body: { email?: string; empresa?: string; source?: string; perfil?: string };
   try {
     body = await req.json();
   } catch {
@@ -72,6 +72,20 @@ export async function POST(req: NextRequest) {
     ? publicationId
     : `pub_${publicationId}`;
 
+  // Origem do cadastro (landing, cta-final, pro-waitlist, guia-cpm...): vira
+  // utm_source no Beehiiv para segmentar a regua depois. Default "landing".
+  const source =
+    typeof body.source === "string" && body.source.trim()
+      ? body.source.trim().slice(0, 60)
+      : "landing";
+
+  // Perfil declarado (consumidor / heavy-user / profissional) na waitlist do
+  // Pro. Vai como custom field para segmentar o upsell. Opcional.
+  const perfil =
+    typeof body.perfil === "string" && body.perfil.trim()
+      ? body.perfil.trim().slice(0, 40)
+      : undefined;
+
   try {
     const res = await fetch(
       `https://api.beehiiv.com/v2/publications/${pubId}/subscriptions`,
@@ -85,7 +99,10 @@ export async function POST(req: NextRequest) {
           email,
           reactivate_existing: false,
           send_welcome_email: true,
-          utm_source: "landing",
+          utm_source: source,
+          ...(perfil
+            ? { custom_fields: [{ name: "perfil", value: perfil }] }
+            : {}),
         }),
       },
     );
