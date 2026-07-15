@@ -8,6 +8,7 @@ import {
   Td,
   EmptyRow,
   toneForStatus,
+  statusLabel,
   fmtDate,
 } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/SubmitButton";
@@ -62,7 +63,7 @@ function GroupTable({ jobs }: { jobs: Job[] }) {
                 <span className="inline-flex items-center gap-2">
                   <StatusDot tone={toneForStatus(j.last_status)} />
                   <span className="text-gray-500">
-                    {j.last_status ?? "nunca"}
+                    {j.last_status ? statusLabel(j.last_status) : "nunca rodou"}
                     {j.last_start ? ` · ${fmtDate(j.last_start)}` : ""}
                   </span>
                 </span>
@@ -85,6 +86,7 @@ function GroupTable({ jobs }: { jobs: Job[] }) {
                   <SubmitButton
                     variant={j.active ? "danger" : "default"}
                     pendingLabel="…"
+                    confirm={j.active ? "Confirmar pausa" : undefined}
                   >
                     {j.active ? "Pausar" : "Ativar"}
                   </SubmitButton>
@@ -136,7 +138,11 @@ export default async function JobsPage() {
                     <ActionForm action={bulkToggleGroupAction}>
                       <input type="hidden" name="grupo" value={g.grupo} />
                       <input type="hidden" name="active" value="false" />
-                      <SubmitButton variant="danger" pendingLabel="…">
+                      <SubmitButton
+                        variant="danger"
+                        pendingLabel="…"
+                        confirm="Pausar todo o grupo?"
+                      >
                         Pausar todos
                       </SubmitButton>
                     </ActionForm>

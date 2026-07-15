@@ -44,7 +44,7 @@ export function LiveRefresh({ renderedAt }: { renderedAt: string }) {
       <button
         type="button"
         onClick={() => startTransition(() => router.refresh())}
-        className="min-h-[32px] rounded border border-line bg-surface px-2 font-semibold text-ink hover:bg-paper-dark"
+        className="min-h-[44px] rounded border border-line bg-surface px-2 font-semibold text-ink hover:bg-paper-dark"
       >
         Atualizar
       </button>
@@ -53,7 +53,7 @@ export function LiveRefresh({ renderedAt }: { renderedAt: string }) {
         onClick={() => setAuto((a) => !a)}
         aria-pressed={auto}
         title={auto ? "Auto-refresh ligado (30s)" : "Auto-refresh desligado"}
-        className={`min-h-[32px] rounded border px-2 font-semibold ${
+        className={`min-h-[44px] rounded border px-2 font-semibold ${
           auto
             ? "border-green-600 text-green-700"
             : "border-line text-gray-500 hover:bg-paper-dark"

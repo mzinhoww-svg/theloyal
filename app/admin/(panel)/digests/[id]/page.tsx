@@ -127,7 +127,7 @@ export default async function DigestDetailPage({ params }: { params: { id: strin
               href={e.beehiiv_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-[36px] items-center rounded border border-line bg-surface px-3 py-1.5 text-sm font-semibold text-blue-600 hover:bg-paper-dark"
+              className="inline-flex min-h-[44px] items-center rounded border border-line bg-surface px-3 py-1.5 text-sm font-semibold text-blue-600 hover:bg-paper-dark"
             >
               Abrir no Beehiiv →
             </a>

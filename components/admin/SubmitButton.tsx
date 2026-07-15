@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 // Botao de Server Action com estado pendente. Client Component minimo —
 // nenhuma chave/segredo trafega aqui; so dispara o form para o servidor.
@@ -15,26 +15,54 @@ const VARIANT: Record<Variant, string> = {
   ghost: "bg-transparent text-blue-600 border border-transparent hover:underline",
 };
 
+// Alvo de toque ≥44px (gate de a11y da marca) + feedback tátil no press
+// (active:scale, transform apenas — reduced-motion global neutraliza).
+const BASE =
+  "inline-flex min-h-[44px] items-center justify-center gap-1 rounded px-3 py-1.5 text-sm font-semibold transition-[colors,transform] duration-150 ease-standard active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60";
+
 export function SubmitButton({
   children,
   pendingLabel,
   variant = "default",
   title,
+  confirm,
 }: {
   children: ReactNode;
   pendingLabel?: string;
   variant?: Variant;
   title?: string;
+  // Quando setado, exige um segundo clique inline antes de submeter (ações
+  // destrutivas). Sem modal — o próprio botão vira "Confirmar?".
+  confirm?: string;
 }) {
   const { pending } = useFormStatus();
+  const [armed, setArmed] = useState(false);
+
+  const label = pending && pendingLabel ? pendingLabel : children;
+
+  if (confirm && !armed) {
+    return (
+      <button
+        type="button"
+        title={title}
+        onClick={() => setArmed(true)}
+        className={`${BASE} ${VARIANT[variant]}`}
+      >
+        {children}
+      </button>
+    );
+  }
+
   return (
     <button
       type="submit"
       disabled={pending}
       title={title}
-      className={`inline-flex min-h-[36px] items-center justify-center gap-1 rounded px-3 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT[variant]}`}
+      onBlur={() => armed && setArmed(false)}
+      aria-live={armed ? "polite" : undefined}
+      className={`${BASE} ${confirm ? VARIANT.danger : VARIANT[variant]}`}
     >
-      {pending && pendingLabel ? pendingLabel : children}
+      {confirm && !pending ? confirm : label}
     </button>
   );
 }
