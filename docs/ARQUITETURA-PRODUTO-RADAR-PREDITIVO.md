@@ -912,6 +912,11 @@ Prioridades: **P0** integridade · **P1** fundação · **P2** modelo · **P3** 
 Fase **anterior** à migração estrutural. São guardrails sobre o comportamento
 atual — todos implementáveis **antes** do novo modelo de dados.
 
+> **Status: implementada** (PR #54). Detalhes do que foi entregue, arquivos,
+> parâmetros, testes e limitações em `docs/IMPLEMENTACAO-FASE-C0-RADAR.md`. As 10
+> contenções C0-1…C0-10 abaixo foram atendidas sobre o schema atual, sem migração
+> nem dados alterados.
+
 | # | Contenção | Impacto | Risco | Mudança de comportamento | Critério de aceite | Antes do novo modelo? |
 |---|---|---|---|---|---|---|
 | C0-1 | Bloquear Forecast editorial com 2 ondas | some previsão de 1 intervalo | baixo | rota de 2 ondas → "em formação", não publica | nenhuma janela publicada abaixo do gate de publicação (§27d.1) | **Sim** |
