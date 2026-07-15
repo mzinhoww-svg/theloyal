@@ -126,7 +126,7 @@ export default async function DigestsPage() {
         actions={
           <a
             href="/admin/digests/new"
-            className="inline-flex min-h-[36px] items-center rounded border border-green-600 bg-green-600 px-3 py-1.5 text-sm font-semibold text-paper hover:bg-green-700"
+            className="inline-flex min-h-[44px] items-center rounded border border-green-600 bg-green-600 px-3 py-1.5 text-sm font-semibold text-paper hover:bg-green-700"
           >
             Curar nova edição
           </a>

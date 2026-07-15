@@ -83,7 +83,7 @@ export default async function NoticiasPage({
             <select
               name="status"
               defaultValue={statusFilter}
-              className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+              className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
             >
               <option value="">status: todos</option>
               <option value="processada">processada</option>
@@ -93,7 +93,7 @@ export default async function NoticiasPage({
             <select
               name="source"
               defaultValue={sourceFilter}
-              className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+              className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
             >
               <option value="">fonte: todas</option>
               {sources.map((s) => (
@@ -169,11 +169,15 @@ export default async function NoticiasPage({
                 );
               })
             ) : (
-              <EmptyRow cols={7} label="nenhuma notícia para este filtro" />
+              <EmptyRow
+                cols={7}
+                label="Nenhuma notícia para este filtro"
+                hint="Ajuste os filtros acima ou rode a coleta (ingest) em Crons para trazer novas fontes."
+              />
             )}
           </tbody>
         </Table>
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-gray-500">
           Lista: {Math.min(filtered.length, 200)} de {filtered.length} (amostra das 500 mais recentes).
           No banco: {total.toLocaleString("pt-BR")} no total · {processadas.toLocaleString("pt-BR")} lidas ·{" "}
           {pendentes.toLocaleString("pt-BR")} na fila · {erros.toLocaleString("pt-BR")} com erro.

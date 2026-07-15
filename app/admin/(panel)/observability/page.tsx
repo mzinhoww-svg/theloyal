@@ -5,6 +5,7 @@ import { buildForecast, formatWindow, type CampaignRow } from "@/lib/forecast";
 import {
   PageHeader,
   Pill,
+  GateChips,
   Table,
   Th,
   Td,
@@ -112,7 +113,7 @@ export default async function ObservabilityPage() {
               );
             })
           ) : (
-            <p className="text-sm text-gray-400">sem campanhas no mês</p>
+            <p className="text-sm text-gray-500">Sem campanhas com vigência neste mês.</p>
           )}
         </div>
       </section>
@@ -151,7 +152,7 @@ export default async function ObservabilityPage() {
           </tbody>
         </Table>
         {forming.length > 0 && (
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="mt-2 text-xs text-gray-500">
             + {forming.length} rotas ainda em formação (menos de 3 janelas
             observadas) — sem previsão até acumular histórico.
           </p>
@@ -216,8 +217,8 @@ export default async function ObservabilityPage() {
                   <Td className="font-mono tabular-nums text-gray-500">
                     {e.date ?? "—"}
                   </Td>
-                  <Td className="font-mono">
-                    {e.gate_validate ? "✓" : "✗"} {e.gate_audit ? "✓" : "✗"}
+                  <Td>
+                    <GateChips validate={e.gate_validate} audit={e.gate_audit} />
                   </Td>
                   <Td className="text-right font-mono tabular-nums">
                     {e.quality_score ?? "—"}

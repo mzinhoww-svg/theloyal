@@ -58,7 +58,7 @@ export default async function CampanhasPage({
           <select
             name="status"
             defaultValue={status}
-            className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+            className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
           >
             <option value="">status: todos</option>
             {STATUS_OPTS.map((s) => (
@@ -70,7 +70,7 @@ export default async function CampanhasPage({
           <select
             name="origin"
             defaultValue={origin}
-            className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+            className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
           >
             <option value="">origem: todas</option>
             {ORIGIN_OPTS.map((o) => (
@@ -82,7 +82,7 @@ export default async function CampanhasPage({
           <select
             name="tipo"
             defaultValue={tipo}
-            className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+            className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
           >
             <option value="">tipo: todos</option>
             {tipos.map((t) => (
@@ -176,7 +176,7 @@ export default async function CampanhasPage({
                         name="verdict"
                         defaultValue={c.verdict ?? ""}
                         aria-label="Veredito"
-                        className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+                        className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
                       >
                         <option value="">—</option>
                         {VERDICTS.map((v) => (
@@ -192,7 +192,7 @@ export default async function CampanhasPage({
                         max={100}
                         defaultValue={c.tl_score ?? ""}
                         aria-label="TL Score"
-                        className="min-h-[36px] w-16 rounded border border-line bg-surface px-2 text-right font-mono text-sm tabular-nums text-ink"
+                        className="min-h-[44px] w-16 rounded border border-line bg-surface px-2 text-right font-mono text-sm tabular-nums text-ink"
                       />
                       <SubmitButton variant="primary" pendingLabel="…">
                         Salvar
@@ -203,7 +203,11 @@ export default async function CampanhasPage({
               );
             })
           ) : (
-            <EmptyRow cols={7} label="nenhuma campanha para este filtro" />
+            <EmptyRow
+              cols={7}
+              label="Nenhuma campanha para este filtro"
+              hint="Limpe os filtros acima ou rode a análise em Crons para extrair campanhas das notícias coletadas."
+            />
           )}
         </tbody>
       </Table>
