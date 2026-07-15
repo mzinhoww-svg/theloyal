@@ -16,6 +16,7 @@ import {
   type RadarSeries,
   type RadarViewModel,
 } from "@/lib/radar-view-model";
+import { deriveFilterFacets, CAUSE_LABEL, CLUSTER_ORIGIN } from "@/lib/radar-filters";
 
 const STATUS_TONE: Record<ProductStatus, Tone> = {
   dataset_incomplete: "red",
@@ -109,9 +110,37 @@ export function RadarKpis({ vm }: { vm: RadarViewModel }) {
   );
 }
 
-// Filtros e busca (§6.5) — GET form; sem estado de cliente.
+// Select rotulado reutilizável (novos filtros). Todo campo tem label e opção "Todos".
+function Sel({
+  name,
+  label,
+  value,
+  children,
+}: {
+  name: string;
+  label: string;
+  value: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-xs text-gray-500">{label}</span>
+      <select
+        name={name}
+        defaultValue={value ?? ""}
+        className="min-h-[36px] rounded border border-line bg-paper px-2 py-1 text-ink"
+      >
+        {children}
+      </select>
+    </label>
+  );
+}
+
+// Filtros e busca (§6.5) — GET form; sem estado de cliente. Opções derivadas do
+// View Model; combinação por AND; estado refletido nos query params.
 export function RadarFilters({ vm, current }: { vm: RadarViewModel; current: Record<string, string> }) {
   const opt = (v: string) => <option key={v} value={v}>{v}</option>;
+  const facets = deriveFilterFacets(vm.series);
   return (
     <form method="get" className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border border-line bg-surface p-3 text-sm">
       <label className="flex flex-col gap-1">
@@ -155,6 +184,58 @@ export function RadarFilters({ vm, current }: { vm: RadarViewModel; current: Rec
           {vm.filters.destinations.map(opt)}
         </select>
       </label>
+      <Sel name="origin" label="Origem" value={current.origin}>
+        <option value="">todas</option>
+        <option value={CLUSTER_ORIGIN}>cluster (agregado)</option>
+        {vm.filters.origins.map(opt)}
+      </Sel>
+      <Sel name="eligible" label="Elegibilidade" value={current.eligible}>
+        <option value="">todas</option>
+        <option value="yes">apta</option>
+        <option value="no">bloqueada</option>
+      </Sel>
+      <Sel name="cause" label="Motivo de bloqueio" value={current.cause}>
+        <option value="">todos</option>
+        {facets.causes.map((c) => (
+          <option key={c} value={c}>{CAUSE_LABEL[c] ?? c}</option>
+        ))}
+      </Sel>
+      <Sel name="freshness" label="Frescor" value={current.freshness}>
+        <option value="">todos</option>
+        <option value="fresh">atual</option>
+        <option value="stale">desatualizado</option>
+        <option value="incomplete">incompleto</option>
+        <option value="invalid">inválido</option>
+        <option value="missing">indisponível</option>
+      </Sel>
+      <Sel name="duplicate" label="Duplicidade" value={current.duplicate}>
+        <option value="">todas</option>
+        <option value="none">sem duplicidade</option>
+        <option value="possible">possível</option>
+        <option value="probable">provável</option>
+      </Sel>
+      <Sel name="quality" label="Qualidade" value={current.quality}>
+        <option value="">todas</option>
+        <option value="valida">válida</option>
+        <option value="atencao">atenção</option>
+        <option value="bloqueada">bloqueada</option>
+      </Sel>
+      <Sel name="engine" label="Motor principal" value={current.engine}>
+        <option value="">todos</option>
+        <option value="predict">Predict</option>
+        <option value="forecast">Forecast (fallback)</option>
+        <option value="none">nenhum</option>
+      </Sel>
+      <Sel name="predict" label="Predict disp." value={current.predict}>
+        <option value="">todos</option>
+        <option value="yes">disponível</option>
+        <option value="no">indisponível</option>
+      </Sel>
+      <Sel name="forecast" label="Forecast disp." value={current.forecast}>
+        <option value="">todos</option>
+        <option value="yes">disponível</option>
+        <option value="no">indisponível</option>
+      </Sel>
       <button type="submit" className="min-h-[36px] rounded bg-ink px-3 py-1 font-semibold text-paper">
         Filtrar
       </button>

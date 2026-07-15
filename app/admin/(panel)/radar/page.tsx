@@ -10,24 +10,12 @@ import {
   RadarSeriesTable,
 } from "@/components/admin/radar";
 import { loadRadar } from "@/lib/admin-radar";
-import type { RadarSeries } from "@/lib/radar-view-model";
+import { applyRadarFilters, RADAR_FILTER_KEYS, type RadarFilterValues } from "@/lib/radar-filters";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
 function str(v: string | string[] | undefined): string {
   return Array.isArray(v) ? (v[0] ?? "") : (v ?? "");
-}
-
-function applyFilters(series: RadarSeries[], f: Record<string, string>): RadarSeries[] {
-  const q = f.q.trim().toLowerCase();
-  return series.filter((s) => {
-    if (q && !s.seriesKey.toLowerCase().includes(q)) return false;
-    if (f.status && s.productStatus !== f.status) return false;
-    if (f.confidence && s.modelConfidence !== f.confidence) return false;
-    if (f.scope && s.scope !== f.scope) return false;
-    if (f.destination && s.destination !== f.destination) return false;
-    return true;
-  });
 }
 
 export default async function RadarPage({
@@ -36,16 +24,12 @@ export default async function RadarPage({
   searchParams?: SearchParams;
 }) {
   const sp = searchParams ?? {};
-  const current = {
-    q: str(sp.q),
-    status: str(sp.status),
-    confidence: str(sp.confidence),
-    scope: str(sp.scope),
-    destination: str(sp.destination),
-  };
+  // Estado dos filtros vindo dos query params (preservado na URL ao recarregar).
+  const current: Record<string, string> = {};
+  for (const k of RADAR_FILTER_KEYS) current[k] = str(sp[k]);
 
   const vm = await loadRadar();
-  const filtered = applyFilters(vm.series, current);
+  const filtered = applyRadarFilters(vm.series, current as RadarFilterValues);
 
   return (
     <>

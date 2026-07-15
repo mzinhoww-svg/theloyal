@@ -118,3 +118,47 @@ persistidas, Predict na Digest, reconciliação canônica — tudo conforme
 Reverter o commit remove a rota, os módulos e o link do Sidebar; nada mais é
 tocado (sem banco, sem migration, sem dados, sem artefato). As telas atuais
 permanecem exatamente como estavam.
+
+## 9. Filtros completos (complemento P1-A)
+
+O `applyFilters` inline da página foi consolidado no **único** módulo puro
+`lib/radar-filters.ts` (não há segundo sistema de filtros) e expandido para cobrir
+todo o conjunto do backlog §14. Todos leem **apenas campos já existentes** no
+`RadarViewModel` — nenhum recálculo, nenhuma leitura do ledger, nenhuma escrita.
+
+Filtros (query params, combinação por **AND**, estado preservado na URL):
+`q` (busca na chave) · `status` · `confidence` · `scope` · `destination`
+(existentes, preservados 1:1) · **`origin`** (programa de origem; valor especial
+`__cluster__` para agregados) · **`eligible`** (`editorialEligible`) · **`cause`**
+(motivo de bloqueio derivado) · **`freshness`** (`freshnessStatus`) · **`duplicate`**
+(estado da série) · **`quality`** · **`engine`** (motor principal) · **`predict`** /
+**`forecast`** (disponibilidade de cada motor).
+
+**Motor principal × disponibilidade** (distintos): principal = Predict quando
+`readiness ∈ {ready, ready_with_warnings}` e há `probabilities`; senão Forecast
+como fallback rotulado quando `editorialEligible` com janela; senão nenhum.
+Disponibilidade é independente: Predict disponível = `probabilities != null`;
+Forecast disponível = janela e `confidence ≠ em-formacao`.
+
+**Duplicidade da série** (não o total global): `probable` quando
+`quality.probableDuplicate > 0`; `possible` quando alguma excluída da série tem
+`duplicate.status = possible_duplicate`; senão `none`.
+
+**Classe de qualidade — campos exatos que determinam cada opção:**
+- `bloqueada`: `quality.temporalCritical > 0` **ou** `quality.placeholder > 0`
+  **ou** `quality.probableDuplicate > 0`;
+- `atenção`: (não bloqueada) e `warnings.length > 0` **ou** `campaignsExcluded > 0`
+  **ou** duplicidade possível **ou** `divergenceLevel ∈ {warning, review, block}`;
+- `válida`: nenhum dos acima.
+
+**Motivo de bloqueio** — opções **derivadas** dos motivos realmente presentes
+(`deriveFilterFacets`), nunca lista fixa: `base_incompleta` (productStatus),
+`qualidade_temporal` (`quality.temporalCritical`), `duplicidade`
+(`quality.probableDuplicate`), `historico_insuficiente` / `sem_motor` (productStatus),
+`intervalo_extremo` / `horizonte_excedido` (de `editorialBlockReasons`),
+`desatualizado` (`freshnessStatus ≠ fresh`).
+
+Testes: `tests/radar-filters.test.mjs` (27 casos) — cada filtro, combinações de três,
+combinação com busca, params vazios/limpar, nenhum resultado, cluster agregado,
+regressão dos filtros existentes e do View Model, e as invariantes "sem leitura do
+ledger" / "sem escrita no banco". Suíte total: **149 testes, 0 falhas**.
