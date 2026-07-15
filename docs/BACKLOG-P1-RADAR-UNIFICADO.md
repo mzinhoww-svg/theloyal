@@ -556,7 +556,15 @@ testes · fora de escopo.
 
 ### Onda P1-A — Fundação da visão
 
-**P1-001 — Rota `/admin/radar` e navegação.**
+> ✅ **Concluída** (P1-001…P1-005). Implementação: `lib/radar-view-model.ts`
+> (composição pura), `lib/admin-radar.ts` (leitura única do ledger),
+> `components/admin/radar.tsx` (saúde, KPIs, filtros, tabela),
+> `app/admin/(panel)/radar/page.tsx` (rota), `components/admin/Sidebar.tsx` (nav).
+> Testes: `tests/radar-view-model.test.mjs` + `tests/radar-view-model-status.test.mjs`.
+> Documentação: `docs/IMPLEMENTACAO-P1A-RADAR.md`. Telas atuais preservadas; sem
+> persistência; test/lint/typecheck/build verdes.
+
+**P1-001 — Rota `/admin/radar` e navegação.** ✅ concluído
 Problema: previsão dispersa em 3 telas. Persona: todas. Comportamento: nova rota
 renderiza o shell (cabeçalho + KPIs + filas + tabela) sem remover telas atuais.
 Reutiliza: layout admin (`app/admin/(panel)/layout.tsx`, `Sidebar`). Dependências:
@@ -564,7 +572,7 @@ nenhuma. Áreas: `app/admin/(panel)/radar/page.tsx` (nova), `Sidebar`. Risco: ba
 Aceite: `/admin/radar` acessível, no menu, protegida pelo cookie admin. Testes: rota
 responde 200 autenticada / redireciona sem cookie. Fora de escopo: remover telas.
 
-**P1-002 — Radar View Model em runtime (uma leitura do ledger).**
+**P1-002 — Radar View Model em runtime (uma leitura do ledger).** ✅ concluído
 Problema: 2–3 leituras independentes e resultados concorrentes. Persona: todas.
 Comportamento: um loader único lê o ledger uma vez (`fetchAllRows`), roda
 `assessCampaignQuality`, `buildForecast`, `buildPredict`, casa por `seriesKey` e devolve
@@ -574,7 +582,7 @@ o view model (§12). Reutiliza: `campaign-quality`, `forecast.ts`, `predict-engi
 por série batem com `/admin/forecast` e `/admin/predict`. Testes: paridade de séries e
 campos vs loaders atuais. Fora de escopo: reconciliação canônica, persistência.
 
-**P1-003 — `RadarHealthSummary` (semáforo de saúde).**
+**P1-003 — `RadarHealthSummary` (semáforo de saúde).** ✅ concluído
 Problema: números aparecem sem contexto de confiabilidade. Persona: operador/editor.
 Comportamento: cabeçalho com frescor, base completa/parcial, totais, alertas — **acima**
 dos KPIs. Reutiliza: `assessForecastArtifact`, `fetchAllRows.complete`, `quality.counters`.
@@ -583,7 +591,7 @@ Dependências: P1-002. Áreas: componente + `radar/page.tsx`. Risco: baixo. Acei
 render dos três cenários (fresh/stale/incompleto). Fora de escopo: seis camadas de
 completude (ADR-007).
 
-**P1-004 — `RadarSeriesTable` + KPIs.**
+**P1-004 — `RadarSeriesTable` + KPIs.** ✅ concluído
 Problema: sem lista única em linguagem de produto. Persona: todas. Comportamento:
 tabela com os campos §6.4 e ≤8 KPIs §6.2; métricas técnicas ausentes da visão
 principal. Reutiliza: view model P1-002. Dependências: P1-002/003. Áreas: componentes +
@@ -591,7 +599,7 @@ página. Risco: baixo. Aceite: toda série listada com estado, previsão, janela
 elegibilidade; CV/desvio ausentes. Testes: colunas presentes/ausentes. Fora de escopo:
 detalhe da série.
 
-**P1-005 — Filtros e busca.**
+**P1-005 — Filtros e busca.** ✅ concluído
 Problema: não dá para chegar a uma série. Persona: todas. Comportamento: filtros §6.5 +
 busca por rota/programa, com defaults. Reutiliza: view model. Dependências: P1-004.
 Áreas: página. Risco: baixo. Aceite: combinações §6.5 funcionam; "nenhum resultado
