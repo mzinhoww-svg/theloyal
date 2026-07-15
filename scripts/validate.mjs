@@ -3,8 +3,8 @@
 // Uso: node scripts/validate.mjs [caminho-da-edicao.json]
 import { mkdirSync, writeFileSync } from "node:fs";
 import {
-  DISCLAIMER, EMOJI_RE, URGENCY_RE, INTERNAL_RE, VERDICTS, TL_WEIGHTS,
-  collectStrings, editionSlug, entityKeySet, isExpired, isValidLink, listEditionFiles,
+  VERDICTS, TL_WEIGHTS, assertEditorialRules,
+  editionSlug, entityKeySet, isExpired, isValidLink, listEditionFiles,
   loadEdition, parseRouteKey, verdictForScore,
 } from "./lib.mjs";
 
@@ -29,25 +29,11 @@ export function validateEdition(ed, opts = {}) {
   if (missing.length) err(`Campos obrigatórios ausentes: ${missing.join(", ")}`);
   else pass("Estrutura do Daily completa (todos os campos obrigatórios presentes)");
 
-  // 2. Disclaimer obrigatório (regra inviolável 10).
-  if (typeof ed.disclaimer === "string" && ed.disclaimer.includes(DISCLAIMER)) pass("Disclaimer presente e íntegro");
-  else err("Disclaimer ausente ou alterado — deve conter a frase oficial completa");
-
-  // 3. Sem emoji no corpo (regra inviolável 5).
-  const strings = collectStrings(ed);
-  const withEmoji = strings.filter((s) => EMOJI_RE.test(s));
-  if (withEmoji.length) err(`Emoji proibido no corpo editorial: ${withEmoji.slice(0, 2).map((s) => JSON.stringify(s.slice(0, 40))).join(", ")}`);
-  else pass("Zero emoji no corpo editorial");
-
-  // 4. Sem urgência artificial (regra inviolável 4).
-  const withUrgency = strings.filter((s) => URGENCY_RE.test(s));
-  if (withUrgency.length) err(`Urgência artificial proibida: ${withUrgency.slice(0, 2).map((s) => JSON.stringify(s.slice(0, 50))).join(", ")}`);
-  else pass("Sem urgência artificial (imperdível/corra/última chance…)");
-
-  // 4b. Sem dado interno / CMI / métrica proprietária (regra inviolável 1).
-  const withInternal = strings.filter((s) => INTERNAL_RE.test(s));
-  if (withInternal.length) err(`Dado interno/CMI proibido no corpo editorial: ${withInternal.slice(0, 2).map((s) => JSON.stringify(s.slice(0, 50))).join(", ")}`);
-  else pass("Sem dado interno / CMI / métrica proprietária");
+  // 2–4b. Regras invioláveis de string (disclaimer, emoji, urgência, dado
+  // interno/CMI) — fonte única em lib.mjs, partilhada com Weekly e Pro.
+  const gate = assertEditorialRules(ed, { label: "corpo editorial", disclaimer: ed.disclaimer, disclaimerMode: "includes" });
+  gate.errors.forEach(err);
+  gate.ok.forEach(pass);
 
   // 4c. Blocos obrigatórios presentes e não-vazios.
   const emptyBlocks = REQUIRED_BLOCKS.filter((b) => {
