@@ -28,6 +28,7 @@ export const NAV: NavGroup[] = [
   {
     label: "Inteligência",
     links: [
+      { href: "/admin/radar", label: "Radar", hint: "Visão unificada · Forecast + Predict" },
       { href: "/admin/forecast", label: "Forecast", hint: "Recorrência · baseline/fallback" },
       { href: "/admin/predict", label: "Predict", hint: "Preditivo v2 · hazard/backtest" },
       { href: "/admin/shopping-vpm", label: "Radar VPM", hint: "Valor por milheiro" },
