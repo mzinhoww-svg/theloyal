@@ -240,7 +240,9 @@ export default async function PredictPage() {
           já ocorreram no histórico; <strong>Dias desde a última</strong> = há quanto tempo foi a mais recente;{" "}
           <strong>Cadência</strong> = intervalo mediano em dias entre elas; <strong>Prob. 30d/90d</strong> = chance
           de nova janela nesse prazo; <strong>Bônus provável</strong> = valor mais provável e sua probabilidade.
-          Séries com menos de 3 campanhas ficam bloqueadas — sem previsão até acumular histórico.
+          A coluna <strong>Ondas (datas)</strong> lista as campanhas do histórico com o intervalo em dias entre
+          elas — a prova da cadência. Séries com menos de 3 campanhas ficam bloqueadas — sem previsão até acumular
+          histórico.
         </p>
         <Table>
           <thead>
@@ -249,6 +251,7 @@ export default async function PredictPage() {
               <Th className="text-right">Campanhas</Th>
               <Th className="text-right">Dias desde a última</Th>
               <Th className="text-right">Cadência (dias)</Th>
+              <Th>Ondas (datas)</Th>
               <Th className="text-right">Prob. 30d</Th>
               <Th className="text-right">Prob. 90d</Th>
               <Th>Bônus provável</Th>
@@ -257,9 +260,9 @@ export default async function PredictPage() {
           </thead>
           <tbody>
             {result.clusters.length ? (
-              result.clusters.map((p) => <SeriesRow key={p.seriesKey} p={p} />)
+              result.clusters.map((p) => <SeriesRow key={p.seriesKey} p={p} showHistory />)
             ) : (
-              <EmptyRow cols={8} label="sem séries de transferência" />
+              <EmptyRow cols={9} label="sem séries de transferência" />
             )}
           </tbody>
         </Table>
