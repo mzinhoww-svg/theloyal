@@ -40,6 +40,17 @@ export const CONFIDENCE = {
 export const RADAR_NOTE_DEFAULT =
   "Projeção por recorrência do histórico do ledger. Não é veredito nem garantia — confira sempre as regras oficiais.";
 
+// Linha honesta de monitoramento (A2, POLITICA-CANONICA-RADAR §4/§5.4). Séries
+// reais sem janela confiável: o Radar diz a verdade menor em vez de sumir.
+// Nunca número, nunca promessa. Fonte única usada por Daily e Weekly.
+export function monitoringLine(count) {
+  const n = Number(count) || 0;
+  if (!n) return "";
+  return n === 1
+    ? "Monitorando 1 série sem janela confiável ainda."
+    : `Monitorando ${n} séries sem janela confiável ainda.`;
+}
+
 export function verdictForScore(score) {
   for (const [key, v] of Object.entries(VERDICTS)) {
     if (v.min == null) continue;
