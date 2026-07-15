@@ -4,6 +4,8 @@
 
 import { rest, fetchAllRows } from "./admin-db";
 import { LEDGER_QUALITY_SELECT } from "./ledger-select";
+import { proposeDateCorrections, type DateCorrectionProposal } from "./date-review";
+import { getDateReviews } from "./admin-date-reviews";
 import {
   buildForecast,
   radarItems,
@@ -168,6 +170,7 @@ export type ForecastData = {
   generatedFor: string;
   datasetComplete: boolean; // leitura paginada completa? se false, radar é bloqueado
   radarBlockedReason: string | null; // por que os radares saíram vazios (se saíram)
+  dateProposals: DateCorrectionProposal[]; // Trilha D — correções pendentes de decisão
 };
 
 // Aplica pin/mute/confidence e ordena: fixados primeiro, depois silenciados por
@@ -183,13 +186,14 @@ function applyOverrides(list: Forecast[], ov: Map<string, OverrideRow>): Forecas
 
 // Carrega tudo para a página. `now` injetável para testes determinísticos.
 export async function loadForecast(now?: string): Promise<ForecastData> {
-  const [{ config, row }, overrides, snapshots, loaded] = await Promise.all([
+  const [{ config, row }, overrides, snapshots, loaded, dateReviews] = await Promise.all([
     getConfig(),
     getOverrides(),
     getSnapshots(),
     // Leitura COMPLETA e paginada — sem o limite silencioso de 2000. Fase C0.
     // Colunas COM proveniência (Fase A1) — mesma amostra elegível do Radar.
     fetchAllRows<CampaignRow>("campaigns", FORECAST_LEDGER_SELECT),
+    getDateReviews(),
   ]);
   const campaigns = loaded.rows;
   const datasetComplete = loaded.complete;
@@ -239,5 +243,9 @@ export async function loadForecast(now?: string): Promise<ForecastData> {
     generatedFor: result.generatedFor,
     datasetComplete,
     radarBlockedReason,
+    // Trilha D: propostas de correção de data ainda sem decisão do operador.
+    dateProposals: proposeDateCorrections(campaigns, result.quality).filter(
+      (p) => !dateReviews.some((r) => r.campaign_id === p.campaignId),
+    ),
   };
 }

@@ -26,11 +26,14 @@ import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
 import { DistributionBar, WindowTimeline, Field } from "@/components/admin/forecast-charts";
 import { QualityPanel } from "@/components/admin/QualityPanel";
+import { DateReviewQueue } from "@/components/admin/DateReviewQueue";
 import {
   saveConfigAction,
   setOverrideAction,
   removeOverrideAction,
   recalcSnapshotAction,
+  applyDateCorrectionAction,
+  rejectDateCorrectionAction,
 } from "./actions";
 
 const CONF_TONE: Record<Confidence, Tone> = {
@@ -376,6 +379,25 @@ export default async function ForecastPage({
       >
         <ForecastTable columnLabel="Rota" rows={routesPage} />
         <Pagination path={PATH} params={params} page={page} pageCount={pageCount} />
+      </Disclosure>
+
+      <Disclosure
+        title="Revisão de datas"
+        count={data.dateProposals.length}
+        sub="correções propostas para anos fabricados pela extração — decisão sempre do operador"
+        open={data.dateProposals.length > 0}
+      >
+        <p className="mb-3 text-sm text-gray-500">
+          Campanhas bloqueadas por <span className="font-mono text-xs">suspect_year</span> cujo gap
+          evento→proveniência casa com o padrão de ano fabricado. Aplicar corrige{" "}
+          <span className="font-mono text-xs">vigencia_inicio</span> (o id fica intacto) e libera a
+          campanha para as séries no próximo recálculo; rejeitar mantém o bloqueio. Tudo auditado.
+        </p>
+        <DateReviewQueue
+          proposals={data.dateProposals}
+          applyAction={applyDateCorrectionAction}
+          rejectAction={rejectDateCorrectionAction}
+        />
       </Disclosure>
 
       <Disclosure

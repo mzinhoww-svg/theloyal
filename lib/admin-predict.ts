@@ -3,6 +3,7 @@
 // Usa admin-db (SERVICE_ROLE_KEY) — nunca importado por Client Component.
 
 import { rest, insert, fetchAllRows } from "./admin-db";
+import { LEDGER_QUALITY_SELECT } from "./ledger-select";
 import { buildPredict, type Prediction, type PredictResult } from "./predict-engine";
 import { getOverrides, type OverrideRow } from "./admin-forecast";
 import { applyPredictOverrides, type WithOverrides } from "./predict-overrides";
@@ -44,11 +45,11 @@ export async function loadPredict(now?: string): Promise<{
 }> {
   const asOf = (now ?? new Date().toISOString()).slice(0, 10);
   // Leitura COMPLETA e paginada — sem o limite silencioso de 2000. Fase C0.
+  // Colunas COM proveniência (LEDGER_QUALITY_SELECT): sem first_seen/observed
+  // o gate suspect_year nunca dispararia aqui e o Predict partiria de uma
+  // amostra DIFERENTE da do Forecast/Radar — quebrando o contrato C0.2.
   const [loaded, overrides] = await Promise.all([
-    fetchAllRows<CampaignRow>(
-      "campaigns",
-      "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim",
-    ),
+    fetchAllRows<CampaignRow>("campaigns", LEDGER_QUALITY_SELECT),
     getOverrides(),
   ]);
   const campaigns = loaded.rows;
