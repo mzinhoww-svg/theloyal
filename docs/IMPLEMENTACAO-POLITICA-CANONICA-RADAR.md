@@ -116,14 +116,35 @@ editorial→aviso, média→ok; QA da 0028 = 0 erros.
 
 ---
 
-### F3 — Fase estrutural (com migration; depende de ADRs `accepted`)
+### F3-00 — Predict→leitor no artefato (sem migration) — **CONCLUÍDA**
 
-Fecha D5 e a auditoria de acurácia real. Cada item exige ADR promovido e migration —
-**não** neste PR.
+**Fecha a premissa 4 / D4:** o motor que MEDE (Predict, com backtest) passa a ser o
+que PUBLICA. Resolvido pela via **`.ts` no pipeline** (Node ≥22.18 / CI Node 24 fazem
+type-stripping nativo) — sem espelhar o hazard em `.mjs`, sem tocar no banco.
+
+- `lib/reader-radar.ts`: `buildReaderRadar()` puro — RadarSeries → itens do artefato,
+  só `readerSurface="prediction"` (nota de corte), proveniência do motor, fallback
+  rotulado "cadência aproximada", contagem de monitoramento.
+- `scripts/forecast.mjs`: `digest.radarDaily/Weekly` agora vêm do **resultado
+  canônico reconciliado** (`composeRadarViewModel` + `buildReaderRadar`), com overrides
+  reaplicados na reconciliação. Novo `digest.radarMonitoringWeekly` (base do texto
+  "monitorando N séries").
+- `content/forecast.schema.json`: `radarItem` +`source`/`engine`/`seriesKey`;
+  `digest` +`radarMonitoringWeekly`.
+- Testes: `reader-radar.test.mjs` (6). Verificado end-to-end contra o ledger real:
+  o pipeline roda com os imports `.ts`, e hoje **0 séries** passam a nota de corte
+  (37 em monitoramento) — o leitor recebe honestidade, não janela "baixa".
+
+**Consequência de produto (esperada):** com os dados atuais, o radar do leitor fica
+**vazio** até haver séries com confiança ≥ média — menos e verdadeiro > mais e frágil.
+
+### F3 estrutural (com migration) — **track separado, fora deste PR**
+
+Exigem ADR promovido, migration e aplicação no banco. **Não** cabem em auto-merge
+sem revisão — devem entrar como PRs próprios após promover as ADRs.
 
 | Item | Fecha | Estrutura | ADR |
 |---|---|---|---|
-| **F3-00** Predict→leitor no artefato | **D4** — o motor que mede passa a ser o que publica; exige espelho ESM de predict/reconciliação **ou** migração do pipeline para `.ts` | decisão de build do pipeline | ADR-001/008 |
 | **F3-01** Snapshot canônico + aprovação persistida com TTL | nota de corte com "aprovação vigente"; Daily/Weekly do mesmo snapshot | `prediction_snapshots`, `editorial_approval`, `usages` | ADR-006 |
 | **F3-02** Consolidação rastreável Weekly←Daily | **D5** — Weekly consolida a semana de Dailies por diff de snapshot | snapshots versionados + "o que mudou" (13 eventos) | ADR-006 |
 | **F3-03** `prediction_outcome` (previsto × realizado, Brier) | **D4 definitivo** — motor canônico auditado contra a realidade, não só backtest | entidade de outcome | ADR-006 |
