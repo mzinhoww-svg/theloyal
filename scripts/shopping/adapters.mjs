@@ -12,7 +12,9 @@ function parseNum(s) {
 }
 
 async function priceFromJsonLd(page) {
-  const blocks = await page.$$eval('script[type="application/ld+json"]', (els) => els.map((e) => e.textContent || ""));
+  const blocks = await page
+    .$$eval('script[type="application/ld+json"]', (els) => els.map((e) => e.textContent || ""))
+    .catch(() => []);
   for (const b of blocks) {
     try {
       const j = JSON.parse(b);
@@ -29,11 +31,70 @@ async function priceFromJsonLd(page) {
   return null;
 }
 
+// Metatags de preço comuns em e-commerce (OpenGraph/Schema.org microdata).
+async function priceFromMeta(page) {
+  const raw = await page
+    .evaluate(() => {
+      const pick = (sel, attr) => {
+        const el = document.querySelector(sel);
+        return el ? el.getAttribute(attr) || el.textContent : null;
+      };
+      return (
+        pick('meta[property="product:price:amount"]', "content") ||
+        pick('meta[itemprop="price"]', "content") ||
+        pick('[itemprop="price"]', "content") ||
+        pick('[itemprop="price"]', "data-price") ||
+        pick("[data-price]", "data-price") ||
+        null
+      );
+    })
+    .catch(() => null);
+  return parseNum(raw);
+}
+
+// SPAs de resgate normalmente embutem o estado (Next/Nuxt/Apollo) num <script>.
+// Varre esses blobs por chaves de preço numéricas plausíveis.
+async function priceFromState(page) {
+  const blobs = await page
+    .$$eval(
+      'script#__NEXT_DATA__, script[type="application/json"], script:not([src])',
+      (els) => els.map((e) => e.textContent || "").filter((t) => t.length > 40 && t.length < 500000),
+    )
+    .catch(() => []);
+  const re = /"(?:price|preco|valor|amount|cashPrice|price_brl|referencePrice)"\s*:\s*"?(\d{1,7}(?:[.,]\d{2})?)"?/gi;
+  for (const b of blobs) {
+    if (!/price|preco|valor|amount/i.test(b)) continue;
+    let m;
+    while ((m = re.exec(b))) {
+      const n = parseNum(m[1]);
+      if (n && n >= 1 && n < 1000000) return n;
+    }
+  }
+  return null;
+}
+
+// Fallback de texto: primeiro "R$ X" próximo de contexto de preço no corpo.
+function priceFromText(body) {
+  const m = body.match(/R\$\s*([\d.]{1,3}(?:[.,]\d{2,3})*)/);
+  return m ? parseNum(m[1]) : null;
+}
+
+// Cascata de estratégias — para na primeira que resolver. JSON-LD é o mais
+// confiável; texto é o último recurso.
+async function priceFromPage(page, body) {
+  return (
+    (await priceFromJsonLd(page)) ??
+    (await priceFromMeta(page)) ??
+    (await priceFromState(page)) ??
+    priceFromText(body)
+  );
+}
+
 // Extração genérica (mesma base para os 3 programas; difere só por afinação).
 async function extractGeneric(page, program) {
   const title = await page.title().catch(() => null);
   const body = await page.evaluate(() => document.body.innerText).catch(() => "");
-  const price = await priceFromJsonLd(page);
+  const price = await priceFromPage(page, body);
 
   // Pontos padrão: primeiro número grande junto de "pontos"/"milhas".
   const std = matchPoints(body, /([\d.]{4,})\s*(?:pontos|milhas)/i);
@@ -72,7 +133,7 @@ export const ADAPTERS = {
   smiles: (page) => extractGeneric(page, "smiles"),
 };
 
-export const ADAPTER_VERSION = "headless_v1";
+export const ADAPTER_VERSION = "headless_v2";
 
 // Coleta de diagnóstico: além do resultado do adapter, devolve os "candidatos"
 // que a página renderizada expõe, para afinar os seletores por portal. Não
