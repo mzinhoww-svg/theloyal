@@ -1,0 +1,97 @@
+name: Publish digest
+
+# Gera a saida do digest, atualiza os artefatos e prepara um PR (ou um
+# rascunho no Beehiiv). NUNCA dispara envio de e-mail automaticamente: o
+# Publisher roda sempre em modo rascunho (--draft, default). O envio real
+# (--publish / --schedule) e um passo manual, feito fora deste workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: "Caminho da edicao (vazio = ultima)"
+        required: false
+        default: ""
+      beehiiv_draft:
+        description: "Criar/atualizar rascunho no Beehiiv (nunca envia)"
+        type: boolean
+        default: false
+  schedule:
+    # 07:00 America/Sao_Paulo (10:00 UTC), dias uteis. Apenas render + artefatos.
+    # Nao abre PR nem toca no Beehiiv — passo de seguranca contra envio automatico.
+    - cron: "0 10 * * 1-5"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: publish-digest
+  cancel-in-progress: false
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Validate + render + QA (gate)
+        run: |
+          npm run validate
+          npm run render
+          npm run qa
+
+      - name: Refresh indices (content/latest.json, content/index.json)
+        run: npm run publish
+
+      - name: Beehiiv DRAFT (opcional; nunca envia)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.beehiiv_draft }}
+        env:
+          BEEHIIV_API_KEY: ${{ secrets.BEEHIIV_API_KEY }}
+          BEEHIIV_PUBLICATION_ID: ${{ secrets.BEEHIIV_PUBLICATION_ID }}
+        # Sem flag de envio: o Publisher cria apenas rascunho e e idempotente.
+        run: node scripts/beehiiv-publish.mjs ${{ inputs.edition }}
+
+      - name: Upload artefatos do digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ github.run_id }}
+          if-no-files-found: warn
+          path: |
+            out/email
+            out/plain
+            out/web
+            out/qa
+            out/manifest
+            out/beehiiv
+
+      - name: Abrir PR com os artefatos regenerados
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: digest/refresh-${{ github.run_id }}
+          title: "Digest: regenerar artefatos"
+          commit-message: "chore(digest): regenerar artefatos do digest"
+          body: |
+            Artefatos regenerados pelo workflow **Publish digest**
+            (validate -> render -> QA -> publish).
+
+            - Envio de e-mail NAO e disparado automaticamente.
+            - Rascunho no Beehiiv so quando `beehiiv_draft = true` e com secrets configurados.
+            - Revisar `out/qa/` antes de aprovar.
+          add-paths: |
+            content/latest.json
+            content/index.json
+            content/beehiiv-status.json
+            out/**
