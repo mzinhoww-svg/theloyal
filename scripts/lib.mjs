@@ -55,7 +55,10 @@ export const DISCLAIMER =
 export const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F1E6}-\u{1F1FF}️]/u;
 
 // Termos de urgência artificial banidos (regra inviolável 4).
-export const URGENCY_RE = /\b(imperd[ií]vel|corra|corre|garanta j[áa]|[úu]ltima chance|milhas gr[áa]tis)\b/iu;
+// Fronteiras Unicode (\p{L}\p{N}) em vez de \b ASCII: sem elas, um termo que
+// começa com acento ("última chance") não é pego, pois \b não vê boundary antes
+// de "ú". Prazos factuais ("vence quinta") continuam livres.
+export const URGENCY_RE = /(?<![\p{L}\p{N}])(imperd[ií]vel|corra|corre|garanta j[áa]|[úu]ltima chance|milhas gr[áa]tis)(?![\p{L}\p{N}])/iu;
 
 // Dado interno de empresa / CMI / métrica proprietária (regra inviolável 1).
 // Termos que só existiriam com acesso interno a um programa.

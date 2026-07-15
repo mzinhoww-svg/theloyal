@@ -47,6 +47,21 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
 
+  test:
+    # Testes unitarios das funcoes puras editoriais (CPM/VPM/spread, mapa
+    # Score->Verdict, taxonomia, gates de emoji/urgencia/dado interno). Zero
+    # dependencia: node:test. Blindam o calculo, que nunca passa pelo LLM.
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
   editorial:
     # validate -> render -> qa -> publish compartilham o diretorio out/ e por isso
     # rodam como passos sequenciais no mesmo job (o render precede o qa, que audita
