@@ -3,6 +3,7 @@
 // (usa admin-db, que carrega a SERVICE_ROLE_KEY). Funções puras onde possível.
 
 import { rest, fetchAllRows } from "./admin-db";
+import { LEDGER_QUALITY_SELECT } from "./ledger-select";
 import {
   buildForecast,
   radarItems,
@@ -68,6 +69,16 @@ export type OverrideRow = {
 
 export const getOverrides = () =>
   rest<OverrideRow>("forecast_overrides?select=*&order=created_at.desc");
+
+// Colunas lidas do ledger para o Forecast legado. Inclui as datas de
+// PROVENIÊNCIA (first_seen/last_seen/observed_at/created_at) e o source_url —
+// os mesmos campos que `assessCampaignQuality`/`resolveEventDateCandidate` já
+// esperam para aplicar a contenção temporal C0.2 (ex.: `suspect_year` do caso
+// livelo → connectmiles). Sem essas colunas, o motor recebia proveniência
+// undefined e nunca disparava a exclusão — então o Forecast divergia do Radar.
+// Reusa a fonte ÚNICA de seleção (lib/ledger-select), IDÊNTICA à do Radar, para
+// garantir a MESMA amostra elegível. Explícito (não `*`). Fase A1.
+export const FORECAST_LEDGER_SELECT = LEDGER_QUALITY_SELECT;
 
 // ---- Snapshots (forecast_snapshots) ----
 
@@ -177,7 +188,8 @@ export async function loadPredict(now?: string): Promise<PredictData> {
     getOverrides(),
     getSnapshots(),
     // Leitura COMPLETA e paginada — sem o limite silencioso de 2000. Fase C0.
-    fetchAllRows<CampaignRow>("campaigns", "id,tipo,origem,destino,percentual,vigencia_inicio,vigencia_fim"),
+    // Colunas COM proveniência (Fase A1) — mesma amostra elegível do Radar.
+    fetchAllRows<CampaignRow>("campaigns", FORECAST_LEDGER_SELECT),
   ]);
   const campaigns = loaded.rows;
   const datasetComplete = loaded.complete;
