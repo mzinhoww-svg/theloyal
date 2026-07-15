@@ -13,8 +13,13 @@ const block = (m) => blocks.push(m);
 const warn = (m) => warns.push(m);
 const pass = (m) => passes.push(m);
 
-// Componentes onde hex é permitido (exceção do mascote/gráficos).
-const HEX_EXEMPT = new Set(["PontoMascot.tsx", "graphics.tsx"]);
+// Componentes onde hex é permitido (exceção do mascote/gráficos e do card OG,
+// asset visual gerado via Satori/next-og que não aceita classes do tema).
+const HEX_EXEMPT = new Set([
+  "PontoMascot.tsx",
+  "graphics.tsx",
+  "opengraph-image.tsx",
+]);
 // Cores default do Tailwind proibidas. gray/green/blue/yellow/red são tokens
 // redefinidos da marca — permitidos.
 const DEFAULT_COLOR_RE = /\b(?:bg|text|border|from|to|via|ring|fill|stroke|divide|placeholder|decoration|accent|outline)-(?:white|black|slate|zinc|neutral|stone|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose|amber|orange|lime)(?:-\d{2,3})?\b/;
@@ -39,7 +44,7 @@ function auditSource() {
     if (!HEX_EXEMPT.has(base) && HEX_RE.test(src)) { block(`Hex hardcoded em componente: ${f}`); hexHits++; }
     if (DEFAULT_COLOR_RE.test(src)) { block(`Cor default do Tailwind em ${f}: ${src.match(DEFAULT_COLOR_RE)[0]}`); defaultHits++; }
   }
-  if (!hexHits) pass("Nenhum hex hardcoded fora de PontoMascot/graphics");
+  if (!hexHits) pass("Nenhum hex hardcoded fora de PontoMascot/graphics/opengraph-image");
   if (!defaultHits) pass("Nenhuma cor default do Tailwind (bg-white/slate/indigo…)");
 
   // Disclaimer obrigatório no footer e na metodologia. Check semântico
