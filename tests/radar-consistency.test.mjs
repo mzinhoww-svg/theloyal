@@ -36,6 +36,22 @@ test("radar: janela automática ausente do forecast → erro", () => {
   assert.match(r.errors[0], /não está no forecast atual/);
 });
 
+test("nota de corte: janela automática 'baixa' → erro (abaixo de média)", () => {
+  const r = validateRadarConsistency(ed([{ label: "Latam Pass", window: "17 a 24 jul", source: "forecast", confidence: "baixa" }]), artifact);
+  assert.ok(r.errors.some((e) => /abaixo da nota de corte/.test(e)));
+});
+
+test("nota de corte: janela editorial 'baixa' → apenas aviso (vira monitoramento)", () => {
+  const r = validateRadarConsistency(ed([{ label: "Esfera", window: "17 a 24 jul", confidence: "baixa" }]), artifact);
+  assert.ok(!r.errors.some((e) => /nota de corte/.test(e)));
+  assert.ok(r.warnings.some((e) => /abaixo da nota de corte/.test(e)));
+});
+
+test("nota de corte: janela 'media' automática não dispara o corte", () => {
+  const r = validateRadarConsistency(ed([{ label: "Latam Pass", window: "17 a 24 jul", source: "forecast", confidence: "media" }]), artifact);
+  assert.ok(!r.errors.some((e) => /nota de corte/.test(e)));
+});
+
 test("radar: manual (sem proveniência) divergente → apenas AVISO, nunca erro", () => {
   const r = validateRadarConsistency(ed([{ label: "Latam Pass", window: "1 a 8 ago" }]), artifact);
   assert.equal(r.errors.length, 0);

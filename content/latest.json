@@ -123,6 +123,25 @@
       "source": "Amostra insuficiente hoje (catálogo público)"
     }
   ],
+  "radar": {
+    "note": "Projeção por recorrência do histórico do ledger. Não é veredito nem garantia — confira sempre as regras oficiais. Números ilustrativos.",
+    "windows": [
+      {
+        "label": "Latam Pass",
+        "confidence": "baixa",
+        "window": "17 jul a 10 ago",
+        "basis": "5 janelas · cadência irregular ~21 dias · última 08/07",
+        "bonus": "~23%"
+      },
+      {
+        "label": "Itaú → Latam Pass",
+        "confidence": "baixa",
+        "window": "23 jul a 16 ago",
+        "basis": "4 janelas · cadência irregular ~34 dias · última 01/07",
+        "bonus": "~23%"
+      }
+    ]
+  },
   "sources": [
     {
       "label": "Regulamento oficial Latam Pass (exemplo)",
@@ -134,5 +153,5 @@
     }
   ],
   "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar.",
-  "generatedAt": "2026-07-14T02:54:37.719Z"
+  "generatedAt": "2026-07-14T11:31:09.831Z"
 }

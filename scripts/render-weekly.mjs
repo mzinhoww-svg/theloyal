@@ -7,10 +7,22 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
-  CONFIDENCE, DISCLAIMER, EMOJI_RE, INTERNAL_RE, RADAR_NOTE_DEFAULT, TOKENS, URGENCY_RE, VERDICTS,
-  collectStrings,
+  CONFIDENCE, DISCLAIMER, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS,
+  assertEditorialRules, editorialRuleMessage, listEditionFiles, loadEdition, loadEntities,
 } from "./lib.mjs";
 import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
+import { consolidatedHighlights } from "./lib/weekly-consolidate.mjs";
+
+// Consolidação Weekly ← Daily (Fase 2.1 / P2.14). Só age quando o JSON pede
+// (consolidateFromDaily:true): lê as edições do Daily no período e substitui os
+// highlights pelos consolidados (rastreáveis via sourceEditions, sem subir a
+// régua). Sem a flag, o weekly segue manual — saída inalterada.
+export function prepareWeekly(wk, opts = {}) {
+  if (!wk || wk.consolidateFromDaily !== true) return wk;
+  const editions = (opts.editions ?? listEditionFiles().map((f) => loadEdition(`content/editions/${f}`)));
+  const entities = opts.entities ?? loadEntities();
+  return { ...wk, highlights: consolidatedHighlights(wk, editions, { entities }) };
+}
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
@@ -61,19 +73,27 @@ export function validateWeekly(wk) {
   if (typeof wk.disclaimer === "string" && wk.disclaimer.includes(DISCLAIMER)) ok.push("Disclaimer íntegro");
   else errors.push("Disclaimer ausente ou alterado");
 
-  const strings = collectStrings(wk);
-  if (strings.some((s) => EMOJI_RE.test(s))) errors.push("Emoji no corpo do weekly");
-  else ok.push("Zero emoji");
-  if (strings.some((s) => URGENCY_RE.test(s))) errors.push("Urgência artificial no weekly");
-  else ok.push("Sem urgência artificial");
-  if (strings.some((s) => INTERNAL_RE.test(s))) errors.push("Possível dado interno/CMI no weekly");
-  else ok.push("Sem dado interno/CMI");
+  // Regras invioláveis de texto — fonte única (assertEditorialRules), mesma que Daily/Pro.
+  const wkViolations = assertEditorialRules(wk);
+  for (const v of wkViolations) errors.push(editorialRuleMessage(v));
+  if (!wkViolations.some((v) => v.rule === "emoji")) ok.push("Zero emoji");
+  if (!wkViolations.some((v) => v.rule === "urgencia")) ok.push("Sem urgência artificial");
+  if (!wkViolations.some((v) => v.rule === "interno")) ok.push("Sem dado interno/CMI");
 
   const radar = wk.radar;
   if (radar) {
     (radar.windows ?? []).forEach((w, i) => {
       if (!w.label || !w.window) errors.push(`Radar ${i + 1}: label/window ausente`);
       if (!["alta", "media", "baixa"].includes(w.confidence)) errors.push(`Radar ${i + 1}: confiança "${w.confidence}" inválida (em-formacao nunca vira radar)`);
+      // Nota de corte da política canônica (§7.4): o leitor só recebe PREVISÃO com
+      // confiança ≥ média. Item automático (source:forecast) abaixo disso bloqueia;
+      // item editorial abaixo disso vira aviso (deveria ser monitoramento, não janela).
+      if (w.confidence === "baixa") {
+        const automatic = w.source === "forecast" || w.seriesKey != null || w.generatedAt != null;
+        const msg = `Radar ${i + 1} (${w.label ?? "sem rótulo"}): confiança "baixa" está abaixo da nota de corte (≥ média) — publique como monitoramento, não como janela`;
+        if (automatic) errors.push(msg);
+        else warnings.push(msg);
+      }
     });
     if (!errors.some((e) => e.startsWith("Radar"))) ok.push(`Radar coerente (${(radar.windows ?? []).length} janela(s), sem veredito)`);
   }
@@ -338,7 +358,7 @@ function main() {
   mkdirSync("out/weekly-web", { recursive: true });
   let failed = false;
   for (const path of files) {
-    const wk = JSON.parse(readFileSync(path, "utf8"));
+    const wk = prepareWeekly(JSON.parse(readFileSync(path, "utf8")));
     const result = validateWeekly(wk);
     result.errors.forEach((m) => console.error(`  ✗ ${m}`));
     if (result.errors.length) { failed = true; console.error(`[weekly] Nº ${wk.number}: FALHOU — ${result.errors.length} erro(s)`); continue; }

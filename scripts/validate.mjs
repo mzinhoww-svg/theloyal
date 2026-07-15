@@ -3,16 +3,17 @@
 // Uso: node scripts/validate.mjs [caminho-da-edicao.json]
 import { mkdirSync, writeFileSync } from "node:fs";
 import {
-  DISCLAIMER, EMOJI_RE, URGENCY_RE, INTERNAL_RE, VERDICTS, TL_WEIGHTS,
-  collectStrings, editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, verdictForScore,
+  DISCLAIMER, VERDICTS, TL_WEIGHTS, assertEditorialRules, editorialRuleMessage,
+  editionSlug, isExpired, isValidLink, listEditionFiles, loadEdition, loadEntities, loadRulerConfig, verdictForScore,
 } from "./lib.mjs";
+import { computeDisposition } from "./lib/disposition.mjs";
 
 const REQUIRED = ["number", "date", "weekday", "publishTime", "readingMinutes", "signal", "deals", "sources", "disclaimer"];
 // Blocos obrigatórios da estrutura editorial (não só campos escalares).
 const REQUIRED_BLOCKS = ["signal", "deals", "sources", "disclaimer"];
 const DEAL_REQUIRED = ["category", "title", "context", "conta", "verdict", "source"];
 
-export function validateEdition(ed) {
+export function validateEdition(ed, opts = {}) {
   const errors = [];
   const warnings = [];
   const ok = [];
@@ -29,21 +30,13 @@ export function validateEdition(ed) {
   if (typeof ed.disclaimer === "string" && ed.disclaimer.includes(DISCLAIMER)) pass("Disclaimer presente e íntegro");
   else err("Disclaimer ausente ou alterado — deve conter a frase oficial completa");
 
-  // 3. Sem emoji no corpo (regra inviolável 5).
-  const strings = collectStrings(ed);
-  const withEmoji = strings.filter((s) => EMOJI_RE.test(s));
-  if (withEmoji.length) err(`Emoji proibido no corpo editorial: ${withEmoji.slice(0, 2).map((s) => JSON.stringify(s.slice(0, 40))).join(", ")}`);
-  else pass("Zero emoji no corpo editorial");
-
-  // 4. Sem urgência artificial (regra inviolável 4).
-  const withUrgency = strings.filter((s) => URGENCY_RE.test(s));
-  if (withUrgency.length) err(`Urgência artificial proibida: ${withUrgency.slice(0, 2).map((s) => JSON.stringify(s.slice(0, 50))).join(", ")}`);
-  else pass("Sem urgência artificial (imperdível/corra/última chance…)");
-
-  // 4b. Sem dado interno / CMI / métrica proprietária (regra inviolável 1).
-  const withInternal = strings.filter((s) => INTERNAL_RE.test(s));
-  if (withInternal.length) err(`Dado interno/CMI proibido no corpo editorial: ${withInternal.slice(0, 2).map((s) => JSON.stringify(s.slice(0, 50))).join(", ")}`);
-  else pass("Sem dado interno / CMI / métrica proprietária");
+  // 3–4. Regras invioláveis de texto (emoji, urgência, dado interno/CMI) — fonte
+  // ÚNICA em lib.mjs (assertEditorialRules), a mesma que Weekly e Pro chamam.
+  const ruleViolations = assertEditorialRules(ed);
+  for (const v of ruleViolations) err(editorialRuleMessage(v));
+  if (!ruleViolations.some((v) => v.rule === "emoji")) pass("Zero emoji no corpo editorial");
+  if (!ruleViolations.some((v) => v.rule === "urgencia")) pass("Sem urgência artificial (imperdível/corra/última chance…)");
+  if (!ruleViolations.some((v) => v.rule === "interno")) pass("Sem dado interno / CMI / métrica proprietária");
 
   // 4c. Blocos obrigatórios presentes e não-vazios.
   const emptyBlocks = REQUIRED_BLOCKS.filter((b) => {
@@ -108,6 +101,27 @@ export function validateEdition(ed) {
     }
   });
 
+  // 5b. Régua de publicação: disposição por deal (faixa A–E). Não substitui os
+  // checks de integridade acima (que já emitem os erros); adiciona os sinais NOVOS
+  // da régua como AVISOS — verdicto de ação sem breakdown (rebaixa p/
+  // monitoramento) e ação de fonte fraca — e expõe as disposições ao publisher.
+  const entities = opts.entities ?? loadEntities();
+  const config = opts.config ?? loadRulerConfig();
+  const dispositions = deals.map((d, i) => {
+    const disposition = computeDisposition(d, { now: ed.date, entities, config });
+    const tag = `Deal ${i + 1} (${d.title ?? "sem título"})`;
+    if (disposition.faixa === "D" && disposition.reasons.some((r) => /sem scoreBreakdown/.test(r))) {
+      warn(`${tag}: verdicto de ação sem scoreBreakdown completo — a régua rebaixa para monitoramento (faixa D)`);
+    } else if (disposition.faixa === "D" && disposition.downgradeTo === "monitoramento") {
+      warn(`${tag}: fonte fraca (${disposition.tier}) com pedido de ação — a régua rebaixa para monitoramento (faixa D)`);
+    } else if (disposition.faixa === "C") {
+      warn(`${tag}: verdicto de ação — exige revisão e assinatura de score (faixa C) antes de auto-publicar`);
+    } else if (disposition.faixa === "B") {
+      warn(`${tag}: ação baixa — revisão leve (faixa B) antes de auto-publicar`);
+    }
+    return { index: i, title: d.title ?? null, disposition };
+  });
+
   // 6. Fontes com URL.
   const sources = Array.isArray(ed.sources) ? ed.sources : [];
   if (!sources.length) err("Nenhuma fonte listada na edição");
@@ -155,7 +169,7 @@ export function validateEdition(ed) {
   });
   if (shopping.length) pass(`Shopping · VPM observado: ${shopping.length} leitura(s) de catálogo público`);
 
-  return { errors, warnings, ok };
+  return { errors, warnings, ok, dispositions };
 }
 
 // Contenção Fase C0 — impede que o Radar manual do Daily contradiga a fonte
@@ -182,6 +196,15 @@ export function validateRadarConsistency(ed, forecastArtifact) {
     const tag = `Radar ${i + 1} (${w.label ?? "sem rótulo"})`;
     const isAutomatic = w.source === "forecast" || w.seriesKey != null || w.generatedAt != null;
     const match = byLabel.get(normLabel(w.label));
+
+    // Nota de corte da política canônica (§7.4): o leitor só recebe PREVISÃO com
+    // confiança ≥ média. Automático abaixo disso bloqueia; editorial abaixo disso
+    // vira aviso (deveria ser monitoramento). em-formacao já é barrado pelo schema.
+    if (w.confidence === "baixa") {
+      const msg = `${tag}: confiança "baixa" está abaixo da nota de corte (≥ média) — publique como monitoramento, não como janela`;
+      if (isAutomatic) errors.push(msg);
+      else warnings.push(msg);
+    }
 
     if (isAutomatic) {
       if (!match) {
