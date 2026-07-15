@@ -52,6 +52,12 @@ export interface Forecast {
   basis: string;
   windows: string[]; // datas (ondas) históricas, ordenadas
   intervals: number[]; // dias entre ondas consecutivas (série de cadência)
+  // --- Contenção Fase C0 ---
+  maxIntervalDays: number | null; // maior intervalo observado (para alerta de outlier)
+  warnings: string[]; // alertas legíveis (intervalo longo/extremo, horizonte, etc.)
+  editorialEligible: boolean; // pode chegar ao leitor? (gate separado do cálculo interno)
+  editorialBlockReason: string | null; // motivo primário do bloqueio (código legível)
+  requiresEditorialReview: boolean; // janela além do horizonte editorial → revisar
 }
 
 export interface ForecastResult {
@@ -76,13 +82,18 @@ const WAVE_EPSILON_DAYS = 3; // janelas ≤ 3 dias entre si = mesma onda (defaul
 // persiste overrides no Supabase (forecast_config) e passa via opts.config.
 export interface ForecastConfig {
   waveEpsilonDays: number; // ondas ≤ N dias = mesma campanha
-  minSamples: number; // < N janelas → em-formacao (sem previsão)
+  minSamples: number; // < N janelas → em-formacao (sem previsão INTERNA)
   samplesAlta: number; // mínimo de janelas p/ confiança alta
   samplesMedia: number; // mínimo de janelas p/ confiança media
   cvAlta: number; // coef. de variação máx. p/ alta
   cvMedia: number; // coef. de variação máx. p/ media
   horizonDaily: number; // horizonte (dias) do radar do daily
   horizonWeekly: number; // horizonte (dias) do radar do weekly
+  // --- Contenção Fase C0 (defaults versionados em código; NÃO vêm do banco) ---
+  minEditorialWaves: number; // < N ondas → inelegível p/ publicação (mesmo que calcule)
+  longIntervalWarningDays: number; // intervalo acima disso → warning
+  extremeIntervalDays: number; // intervalo acima disso → warning crítico + bloqueia publicação
+  maxEditorialHorizonDays: number; // janela além disso → exige revisão + bloqueia publicação
 }
 
 export const DEFAULT_FORECAST_CONFIG: ForecastConfig = {
@@ -94,6 +105,11 @@ export const DEFAULT_FORECAST_CONFIG: ForecastConfig = {
   cvMedia: 0.6,
   horizonDaily: 10,
   horizonWeekly: 21,
+  // Contenção Fase C0 (ver docs/ARQUITETURA-PRODUTO-RADAR-PREDITIVO.md §27c).
+  minEditorialWaves: 5,
+  longIntervalWarningDays: 365,
+  extremeIntervalDays: 540,
+  maxEditorialHorizonDays: 180,
 };
 
 export function resolveConfig(partial?: Partial<ForecastConfig> | null): ForecastConfig {
@@ -164,7 +180,7 @@ function stdev(xs: number[]): number {
 }
 
 // Colapsa datas ≤ epsilon dias entre si na mais antiga da onda.
-function collapseWaves(sortedDates: string[], epsilon: number): string[] {
+export function collapseWaves(sortedDates: string[], epsilon: number): string[] {
   const out: string[] = [];
   for (const d of sortedDates) {
     if (!out.length || daysBetween(out[out.length - 1], d) > epsilon) out.push(d);
@@ -222,6 +238,11 @@ function analyze(
       lastWindow: last, cadence: null, typicalPercent,
       basis: `${samples} janela(s) — histórico insuficiente para prever`,
       windows: waves, intervals: [],
+      maxIntervalDays: null,
+      warnings: [],
+      editorialEligible: false,
+      editorialBlockReason: `em_formacao (${samples}<${cfg.minSamples} ondas)`,
+      requiresEditorialReview: false,
     };
   }
 
@@ -244,6 +265,8 @@ function analyze(
   const cadenceLabel =
     cadence === "mensal" ? "cadência mensal" : cadence === "esparsa" ? "cadência esparsa" : "cadência irregular";
 
+  const gate = editorialGate(samples, intervals, daysBetween(now, center), cfg);
+
   return {
     scope, route, origem, destino, confidence,
     windowStart: addDays(center, -half),
@@ -252,7 +275,62 @@ function analyze(
     lastWindow: last, cadence, typicalPercent,
     basis: `${samples} janelas · ${cadenceLabel} ~${med} dias (média ${mn}, desvio ${sd}) · última ${last}`,
     windows: waves, intervals,
+    maxIntervalDays: gate.maxIntervalDays,
+    warnings: gate.warnings,
+    editorialEligible: gate.editorialEligible,
+    editorialBlockReason: gate.editorialBlockReason,
+    requiresEditorialReview: gate.requiresEditorialReview,
   };
+}
+
+// Gate de contenção Fase C0: separa cálculo interno de elegibilidade editorial.
+// NÃO altera a matemática — só decide se um resultado calculado pode ser
+// publicado, preservando e sinalizando intervalos anômalos (nunca apaga).
+export interface EditorialGate {
+  maxIntervalDays: number | null;
+  warnings: string[];
+  editorialEligible: boolean;
+  editorialBlockReason: string | null;
+  requiresEditorialReview: boolean;
+}
+
+export function editorialGate(
+  samples: number,
+  intervals: number[],
+  daysToCenter: number,
+  cfg: ForecastConfig,
+): EditorialGate {
+  const warnings: string[] = [];
+  const maxIntervalDays = intervals.length ? Math.max(...intervals) : null;
+
+  if (maxIntervalDays != null) {
+    if (maxIntervalDays > 900)
+      warnings.push(`intervalo extremo de ${maxIntervalDays} dias (>900) — possível lacuna de cobertura do backfill; revisar antes de publicar`);
+    else if (maxIntervalDays >= cfg.extremeIntervalDays)
+      warnings.push(`intervalo extremo de ${maxIntervalDays} dias (≥${cfg.extremeIntervalDays})`);
+    else if (maxIntervalDays >= cfg.longIntervalWarningDays)
+      warnings.push(`intervalo longo de ${maxIntervalDays} dias (≥${cfg.longIntervalWarningDays})`);
+  }
+
+  const beyondHorizon = daysToCenter > cfg.maxEditorialHorizonDays;
+  if (beyondHorizon)
+    warnings.push(`janela prevista a ${daysToCenter} dias (>${cfg.maxEditorialHorizonDays}) — exige revisão editorial`);
+  if (daysToCenter > 365) warnings.push(`previsão a mais de 365 dias — revisão crítica`);
+
+  let editorialEligible = true;
+  let editorialBlockReason: string | null = null;
+  if (samples < cfg.minEditorialWaves) {
+    editorialEligible = false;
+    editorialBlockReason = `historico_insuficiente_para_publicacao (${samples}<${cfg.minEditorialWaves} ondas)`;
+  } else if (maxIntervalDays != null && maxIntervalDays >= cfg.extremeIntervalDays) {
+    editorialEligible = false;
+    editorialBlockReason = `intervalo_extremo (${maxIntervalDays}d ≥ ${cfg.extremeIntervalDays})`;
+  } else if (beyondHorizon) {
+    editorialEligible = false;
+    editorialBlockReason = `horizonte_excedido (${daysToCenter}d > ${cfg.maxEditorialHorizonDays})`;
+  }
+
+  return { maxIntervalDays, warnings, editorialEligible, editorialBlockReason, requiresEditorialReview: beyondHorizon };
 }
 
 const RANK: Record<Confidence, number> = { alta: 0, media: 1, baixa: 2, "em-formacao": 3 };
@@ -369,7 +447,10 @@ export interface RadarItem {
 // já em pt-BR). em-formacao é descartado (nunca vira linha de radar).
 export function radarItems(forecasts: Forecast[]): RadarItem[] {
   return forecasts
-    .filter((f) => f.confidence !== "em-formacao" && f.windowStart)
+    // Gate C0: só séries editorialmente elegíveis viram item de radar. Séries
+    // bloqueadas (amostra curta, intervalo extremo, horizonte excedido) NUNCA
+    // saem como item editorial comum, mesmo que o motor tenha calculado janela.
+    .filter((f) => f.confidence !== "em-formacao" && f.windowStart && f.editorialEligible)
     .map((f) => ({
       label:
         f.scope === "cluster"
@@ -401,6 +482,7 @@ export function upcomingWindows(
     .filter((r) => {
       if (RANK[r.confidence] > floor) return false;
       if (!r.windowStart || !r.windowEnd) return false;
+      if (!r.editorialEligible) return false; // gate C0: bloqueadas não entram no digest
       return daysBetween(now, r.windowStart) <= horizon && daysBetween(now, r.windowEnd) >= 0;
     })
     .sort(sortForecasts);
