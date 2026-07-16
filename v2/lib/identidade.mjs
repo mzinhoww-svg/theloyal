@@ -20,6 +20,8 @@ export const REQUER_DESTINO = new Set(['transferencia_bonificada']);
 
 // Sentinela de destino ausente numa identidade de lado único.
 export const SEM_DESTINO = 'sem_destino';
+// Sentinela de origem multi-banco legítima (transferência de "qualquer cartão / todos os parceiros").
+export const MULTIPLOS_CARTOES = 'multiplos_cartoes';
 
 export const MAPA_TIPO = {
   transferencia: 'transferencia_bonificada', transferencia_bonificada: 'transferencia_bonificada',
@@ -177,18 +179,30 @@ export function resolverCampanha(campanha, indices, ref) {
   if (!tipo) return { resolvido: false, revisao: 'tipo_indefinido', tipo: null, ...base };
 
   const lo = classificarLado(campanha.origem, indices);
-  // origem é sempre obrigatória. Dois sub-motivos de revisão (nunca descarte):
-  //  - origem_generica_recuperavel: extração perdeu o banco/cartão específico (bancos, cartao...).
-  //    Erro RECUPERÁVEL -> insumo do golden set p/ treinar a extração.
-  //  - origem_nao_resolvida: ruído puro / cidade / blog / vazio.
+  const ld = classificarLado(campanha.destino, indices);
+  const destinoReal = ld.tipo === 'programa' || ld.tipo === 'bucket';
+
+  // origem genérica: distinguir multi-banco LEGÍTIMO de erro recuperável (reaudit 2026-07-16).
+  //  - transferência genérica ("qualquer cartão / todos os parceiros") p/ destino real
+  //    -> origem canônica válida `multiplos_cartoes` (publico=cartao), RESOLVIDO.
+  //  - demais casos genéricos (ex.: cartão/estrutural sem destino real) -> revisão recuperável
+  //    (extração perdeu o banco específico; insumo do golden set).
   if (lo.tipo === 'generico') {
+    if (tipo === 'transferencia_bonificada' && destinoReal) {
+      return {
+        resolvido: true, tipo, origemCode: MULTIPLOS_CARTOES, destinoCode: ld.code, publico: 'cartao',
+        identity_key: identityKey(tipo, MULTIPLOS_CARTOES, ld.code, 'cartao'),
+        lado_unico: false, bucketed: ld.tipo === 'bucket', multi_banco: true,
+        origem_kind: 'multi', destino_kind: ld.kind,
+        ...base, publico: 'cartao',
+      };
+    }
     return { resolvido: false, revisao: 'origem_generica_recuperavel', tipo, origemCode: null, ...base };
   }
   if (lo.tipo === 'ruido' || lo.tipo === 'vazio') {
     return { resolvido: false, revisao: 'origem_nao_resolvida', origem_ruido_tipo: lo.tipo, tipo, origemCode: null, ...base };
   }
 
-  const ld = classificarLado(campanha.destino, indices);
   let destinoCode, ladoUnico = false, destinoBucket = false;
   if (ld.tipo === 'programa' || ld.tipo === 'bucket') {
     destinoCode = ld.code;
