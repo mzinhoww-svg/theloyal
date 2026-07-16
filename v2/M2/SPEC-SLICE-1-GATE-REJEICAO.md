@@ -40,6 +40,21 @@ Camada A **só rejeita com regra explícita**; na dúvida, **passa para B**, nun
 
 **Registro obrigatório em ambas:** qual camada decidiu (`deterministica|llm`), o `motivo`, a `evidencia` (trecho/domínio) e `confidence`.
 
+### 2.1 Desempate na abstenção (D-016) — erra a favor de reter
+
+Quando o gate ficar entre **rejeitar e passar**, ele **passa e manda para revisão** — nunca rejeita no escuro. Falso-positivo de rejeição (derrubar campanha boa) é **pior** que falso-negativo: a não-campanha ainda é pega depois pela revisão humana e pelo gate de auditoria da publicação, mas **campanha boa derrubada some do produto**. Portanto:
+- Camada A **só rejeita com regra nomeada**; qualquer dúvida → sobe para B.
+- Camada B com `confidence` abaixo do limiar → **`status='revisao'`**, não `rejeitada`.
+- Revisão **não conta como rejeição** (não infla precision de rejeição) e **não conta como campanha perdida** (não fere recall de campanha). É o escape seguro.
+
+### 2.2 Golden files da camada determinística (D-017) — não-regressão
+
+As rejeições determinísticas (precision ~1,0) são **congeladas em golden files** e viram teste de CI, igual ao matcher do M1. Regra que classifica hoje classifica igual amanhã: o **LLM evolui, a camada A não drifta**. Duas asserções no CI:
+1. cada caso determinístico rejeitado mantém `motivo` estável;
+2. **zero** das campanhas reais do golden é rejeitada pela camada A (precision de A = 1,0 é invariante, não meta).
+
+Se um caso que sobe para B revelar **regra escondida** (padrão determinístico ainda não escrito), ela **desce para A por INSERT em `motivos_rejeicao`** — B julga só julgamento genuíno.
+
 ## 3. Contrato de auditabilidade (rejeição silenciosa é bug)
 
 Tabela nova `rejeicoes`:

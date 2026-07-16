@@ -1,0 +1,144 @@
+{
+  "gerado_em": "2026-07-16",
+  "total": 86,
+  "campanhas": 55,
+  "negativos": 31,
+  "alvo": {
+    "rej_precision": 0.9,
+    "camp_recall": 0.95,
+    "rej_recall_secundario": 0.7
+  },
+  "resultado": {
+    "rejeitadas": 30,
+    "em_revisao": 1,
+    "passaram_como_campanha": 55,
+    "rejeicao_precision": 1,
+    "rejeicao_recall": 0.968,
+    "campanha_recall": 1,
+    "campanhas_derrubadas": [],
+    "por_motivo": {
+      "cupom_varejo": 13,
+      "perk_sem_pontos": 8,
+      "stunt_rp": 3,
+      "exemplo_resgate": 1,
+      "tarifa_pacote_dinheiro": 4,
+      "produto_blog": 1
+    },
+    "por_camada": {
+      "deterministica": 24,
+      "llm": 6
+    },
+    "split_camada_b": {
+      "ambiguo_real": [
+        "azul-desconhecido-estrutural-2030-12-31",
+        "delta-desconhecido-estrutural-2024-12-31",
+        "latampass-desconhecido-compra-2024-09-29",
+        "qatar-desconhecido-estrutural-na",
+        "smiles-melhores destinos-compra-na"
+      ],
+      "regra_faltante": [
+        "livelo-magalu-compra-na",
+        "mastercard-azul-compra-2024-11-26"
+      ]
+    },
+    "deterministicas_travadas": [
+      {
+        "id": "allianz-desconhecido-compra-2024-10-03",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "amazon eua-desconhecido-compra-na",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "americanexpress-ifood-cartao-na",
+        "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "c6-desconhecido-clube-na",
+        "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "c6-desconhecido-estrutural-na",
+        "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "desconhecido-desconhecido-compra-2024-09-16",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "itau-google-clube-na",
+        "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "mastercard-uber-cartao-na",
+        "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "meli-disney-clube-2024-05-05",
+        "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "mercadolivre-desconhecido-compra-2024-06-25",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "mercadolivre-desconhecido-compra-2024-07-13",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "mercadolivre-desconhecido-compra-2024-08-05",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "mercadolivre-desconhecido-compra-2024-09-18",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "mercadolivre-desconhecido-compra-2026-07-04",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "mercadopago-desconhecido-clube-2024-09-28",
+        "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "na-na-compra-na",
+        "motivo": "tarifa_pacote_dinheiro"
+      },
+      {
+        "id": "null-grandpalladiumimbassai-hotelaria-na",
+        "motivo": "tarifa_pacote_dinheiro"
+      },
+      {
+        "id": "pp-hoteis.com-compra-2026-05-31",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "resortstaua-desconhecido-hotelaria-na",
+        "motivo": "tarifa_pacote_dinheiro"
+      },
+      {
+        "id": "shell-desconhecido-compra-2024-08-20",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "shellbox-desconhecido-compra-2026-02-25",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "uber-desconhecido-hotelaria-na",
+        "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "udm-desconhecido-compra-na",
+        "motivo": "produto_blog"
+      },
+      {
+        "id": "vilagale-desconhecido-hotelaria-na",
+        "motivo": "tarifa_pacote_dinheiro"
+      }
+    ]
+  },
+  "bate_portao": true
+}
