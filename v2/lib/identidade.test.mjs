@@ -101,10 +101,25 @@ test('origem ruído/vazio -> revisão com flag origem_nao_resolvida', () => {
 });
 
 test('origem genérica recuperável -> sub-motivo distinto do lixo', () => {
-  const g = resolverCampanha({ origem: 'bancos', destino: 'Smiles', tipo: 'transferencia' }, IX, '2026-07-16');
+  // genérico NÃO-transferência (cartão sem destino real) -> recuperável (banco específico perdido)
+  const g = resolverCampanha({ origem: 'cartao', destino: 'desconhecido', tipo: 'cartao' }, IX, '2026-07-16');
   assert.equal(g.revisao, 'origem_generica_recuperavel');
   const j = resolverCampanha({ origem: 'fgts', destino: 'Smiles', tipo: 'transferencia' }, IX, '2026-07-16');
   assert.equal(j.revisao, 'origem_nao_resolvida');
+});
+
+test('multi-banco: origem genérica + transferência + destino real -> multiplos_cartoes', () => {
+  // "até 90% na transferência do cartão de crédito -> Smiles" (genérico legítimo)
+  const m = resolverCampanha({ origem: 'cartoes', destino: 'Smiles', tipo: 'transferencia', vigencia_fim: '2026-09-01' }, IX, '2026-07-16');
+  assert.equal(m.resolvido, true);
+  assert.equal(m.origemCode, 'multiplos_cartoes');
+  assert.equal(m.publico, 'cartao');
+  assert.equal(m.multi_banco, true);
+  assert.equal(m.identity_key, 'transferencia_bonificada|multiplos_cartoes|smiles|cartao');
+  // genérico NÃO-transferência (ex.: cartão sem destino real) -> continua recuperável
+  const r = resolverCampanha({ origem: 'cartao', destino: 'desconhecido', tipo: 'cartao' }, IX, '2026-07-16');
+  assert.equal(r.resolvido, false);
+  assert.equal(r.revisao, 'origem_generica_recuperavel');
 });
 
 test('cauda -> bucket, marcado bucketed', () => {
