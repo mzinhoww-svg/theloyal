@@ -50,8 +50,10 @@ const CONF_LABEL: Record<Confidence, string> = {
 };
 
 const INPUT = "rounded border border-line bg-surface px-2 py-1 text-sm text-ink";
-// Grade de cards padrão da página (um só lugar para ajustar o minmax).
+// Grades da página (um só lugar para ajustar cada minmax): cards compactos vs
+// campos de formulário com hint longo (precisam de coluna mais larga).
 const GRID_CARDS = "[grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]";
+const GRID_FIELDS = "[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]";
 
 // Dias entre duas datas ISO (UTC, sem fuso).
 const daysBetweenISO = (a: string, b: string) =>
@@ -444,7 +446,7 @@ export default async function ForecastPage({
           )}
         </p>
         <ActionForm action={saveConfigAction} className="rounded-lg border border-line bg-paper p-4">
-          <div className={`grid gap-4 ${GRID_CARDS}`}>
+          <div className={`grid gap-4 ${GRID_FIELDS}`}>
             {cfgField("wave_epsilon_days", "Janela de onda (dias)", "Janelas ≤ N dias contam como a mesma campanha.", config.waveEpsilonDays)}
             {cfgField("min_samples", "Mínimo de janelas", "Abaixo disso, fica em formação (sem previsão).", config.minSamples)}
             {cfgField("samples_media", "Amostras p/ média", "Mín. de janelas para confiança média.", config.samplesMedia)}

@@ -379,7 +379,7 @@ export function OpportunityCard({
       </dl>
       {trend && trend.length >= 2 && (
         <div className="mt-2 border-t border-line pt-2">
-          <div className="mb-1 text-xs text-gray-400">prob. 30d ao longo dos snapshots</div>
+          <div className="mb-1 text-xs text-gray-500">prob. 30d ao longo dos snapshots</div>
           <Sparkline data={trend} tone={tone} height={20} />
         </div>
       )}

@@ -26,6 +26,7 @@ export function SubmitButton({
   variant = "default",
   title,
   confirm,
+  disabled = false,
 }: {
   children: ReactNode;
   pendingLabel?: string;
@@ -34,6 +35,8 @@ export function SubmitButton({
   // Quando setado, exige um segundo clique inline antes de submeter (ações
   // destrutivas). Sem modal — o próprio botão vira "Confirmar?".
   confirm?: string;
+  // Desabilita externamente (ex.: ação que não faz sentido com dado parcial).
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
   const [armed, setArmed] = useState(false);
@@ -45,6 +48,7 @@ export function SubmitButton({
       <button
         type="button"
         title={title}
+        disabled={disabled}
         onClick={() => setArmed(true)}
         className={`${BASE} ${VARIANT[variant]}`}
       >
@@ -56,7 +60,7 @@ export function SubmitButton({
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       title={title}
       onBlur={() => armed && setArmed(false)}
       aria-live={armed ? "polite" : undefined}
