@@ -84,8 +84,7 @@ function EngineBoxHeader({ label, confidence }: { label: string; confidence: str
     <div className="mb-1 flex items-center justify-between gap-2">
       <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</span>
       <span className="font-mono text-xs text-gray-500">
-        <span className="sr-only">confiança: </span>
-        {confidence ?? "sem série"}
+        {confidence ? `confiança ${confidence}` : "sem série"}
       </span>
     </div>
   );
@@ -143,7 +142,9 @@ function EngineCell({ p }: { p: ProgramView }) {
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
             <div>
               <dt className="text-gray-500">Janela prevista</dt>
-              <dd className="font-mono tabular-nums text-ink">{p.forecastWindow ?? "—"}</dd>
+              <dd className="font-mono text-base font-semibold tabular-nums text-ink">
+                {p.forecastWindow ?? "—"}
+              </dd>
             </div>
             <div>
               <dt className="text-gray-500">Ondas</dt>

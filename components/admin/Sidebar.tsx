@@ -267,7 +267,7 @@ export function MobileNav() {
               <span
                 aria-hidden="true"
                 className={`h-1 w-6 rounded-full transition-colors ${
-                  active ? "bg-green-600" : "bg-transparent"
+                  active ? "bg-ink" : "bg-transparent"
                 }`}
               />
               <span className="truncate">{l.label}</span>
