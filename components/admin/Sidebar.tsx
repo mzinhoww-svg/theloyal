@@ -41,6 +41,7 @@ export const NAV: NavGroup[] = [
   {
     label: "Análise técnica",
     links: [
+      { href: "/admin/programas", label: "Programas", hint: "Promoções + saúde por programa" },
       { href: "/admin/forecast", label: "Forecast", hint: "Recorrência · baseline/fallback" },
       { href: "/admin/predict", label: "Predict", hint: "Preditivo v2 · hazard/backtest" },
       { href: "/admin/shopping-vpm", label: "Radar VPM", hint: "Valor por milheiro" },
