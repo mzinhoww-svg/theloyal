@@ -41,10 +41,10 @@ export const NAV: NavGroup[] = [
   {
     label: "Análise técnica",
     links: [
-      { href: "/admin/programas", label: "Programas", hint: "Promoções + saúde por programa" },
-      { href: "/admin/forecast", label: "Forecast", hint: "Recorrência · baseline/fallback" },
-      { href: "/admin/predict", label: "Predict", hint: "Preditivo v2 · hazard/backtest" },
-      { href: "/admin/shopping-vpm", label: "Radar VPM", hint: "Valor por milheiro" },
+      { href: "/admin/programas", label: "Programas", hint: "Promoções e saúde por programa" },
+      { href: "/admin/forecast", label: "Forecast", hint: "Recorrência, baseline e fallback" },
+      { href: "/admin/predict", label: "Predict", hint: "Modelo preditivo, hazard e backtest" },
+      { href: "/admin/shopping-vpm", label: "VPM", hint: "Valor por milheiro" },
       { href: "/admin/observability", label: "Observabilidade", hint: "Derivados do ledger" },
     ],
   },
@@ -68,7 +68,7 @@ export function Sidebar() {
     <nav aria-label="Seções do admin" className="flex flex-col gap-4">
       {NAV.map((group) => (
         <div key={group.label} className="flex flex-col gap-0.5">
-          <span className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400">
+          <span className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
             {group.label}
           </span>
           {group.links.map((l) => (
@@ -204,7 +204,7 @@ export function MobileNav() {
           >
             {NAV.map((group) => (
               <div key={group.label} className="flex flex-col gap-1">
-                <span className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400">
+                <span className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.1em] text-gray-400">
                   {group.label}
                 </span>
                 {group.links.map((l) => (
@@ -260,7 +260,7 @@ export function MobileNav() {
               key={l.href}
               href={l.href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-semibold transition-colors ${
+              className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-xs font-semibold transition-colors ${
                 active ? "text-ink" : "text-gray-400 hover:text-gray-700"
               }`}
             >
@@ -279,7 +279,7 @@ export function MobileNav() {
           onClick={() => setOpen(true)}
           aria-label="Abrir menu completo"
           aria-expanded={open}
-          className="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-semibold text-gray-400 transition-colors hover:text-gray-700"
+          className="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-xs font-semibold text-gray-400 transition-colors hover:text-gray-700"
         >
           <span
             aria-hidden="true"

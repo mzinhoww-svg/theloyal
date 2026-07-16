@@ -93,7 +93,7 @@ function EngineCell({ p }: { p: ProgramView }) {
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="rounded border border-line bg-paper p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">Predict</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Predict</span>
           {eng ? (
             <Pill tone={CONF_TONE[eng.confidence] ?? "gray"}>{eng.confidence}</Pill>
           ) : (
@@ -141,7 +141,7 @@ function EngineCell({ p }: { p: ProgramView }) {
       </div>
       <div className="rounded border border-line bg-paper p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">Forecast</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Forecast</span>
           {f ? (
             <Pill tone={CONF_TONE[f.confidence] ?? "gray"}>{f.confidence}</Pill>
           ) : (
@@ -193,12 +193,12 @@ function ProgramCard({ p }: { p: ProgramView }) {
         </span>
       </div>
 
-      <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+      <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
         Principais promoções
       </div>
       <PromoList p={p} />
 
-      <div className="mb-1 mt-4 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+      <div className="mb-1 mt-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
         Saúde dos motores
       </div>
       <EngineCell p={p} />
@@ -274,7 +274,7 @@ export default async function ProgramasPage({
         />
       )}
 
-      <p className="mt-8 border-t border-line pt-4 text-xs text-gray-400">
+      <p className="mt-8 border-t border-line pt-4 text-xs text-gray-500">
         Promoções vêm do ledger (status continua/vence-72h/nova). Saúde compõe os sinais reais dos
         motores — readiness, confiança, backtest e divergência; sem base suficiente o programa fica
         &ldquo;sem base&rdquo;, nunca um número chutado. Promoções podem mudar sem aviso. Confira
