@@ -39,6 +39,12 @@ O matcher e a FSM já tratam os três casos corretamente (testado).
 2. **Registro de programas** precisa crescer de ~17 para ~150–250, com `kind` expandido: `aereo | bancario | varejo | hotel | combustivel | ecommerce | streaming | servico | outro`.
 3. **Profundidade da cauda** é decisão de escopo: hotéis/resorts individuais (n=1) e marcas de varejo n=1 — entram como `programas` ou ficam agrupados (`hotel_individual`, `varejo_outro`) até terem volume?
 
+## Decisões aplicadas (2026-07-16)
+
+1. **Destino desconhecido → regra por tipo.** Implementado: origem resolvida + tipo sem destino → identidade de lado único; `transferencia` sem destino → revisão.
+2. **Head + buckets.** Seed expandido para **103 programas** (39 bancário, 23 varejo, 20 aéreo, 9 serviço, 6 hotel, 4 combustível, 2 streaming); cauda → bucket por kind com `origem_bruto`/`destino_bruto` preservados.
+3. **Curadoria minha → sua revisão.** Registro em `v2/db/seed-aliases.json` (versionado, revisável no PR #84).
+
 ## Próximo passo
 
-Nada aplicado ao banco (D-006: snapshot antes; e MCP instável nesta sessão). Preciso de 3 decisões de escopo do operador (abaixo) antes de hand-curar o registro de ~200 entidades e rodar o `--apply`.
+Nada aplicado ao banco (D-006: snapshot antes; MCP instável nesta sessão). Quando a conexão estabilizar: aplicar migration 001 + rodar `canonicalizar.mjs --dry-run` para os **números finais exatos** (resolvidas/lado-único/bucket/revisão por motivo) sobre as 3.600 linhas, e devolver o relatório para sua aprovação antes do `--apply`.

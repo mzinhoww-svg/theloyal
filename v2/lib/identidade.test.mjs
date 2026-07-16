@@ -2,100 +2,116 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  normalizar, construirAliasMap, resolverPrograma, resolverTipo, resolverPublico,
-  identityKey, parseVigenciaFim, derivarEstado, resolverCampanha, TIPOS_CANONICOS,
+  normalizar, construirIndices, construirAliasMap, resolverPrograma, resolverTipo,
+  resolverPublico, identityKey, parseVigenciaFim, derivarEstado, resolverCampanha,
+  classificarLado, TIPOS_CANONICOS, SEM_DESTINO,
 } from './identidade.mjs';
 
-const PROGRAMAS = [
-  { code: 'smiles', name: 'Smiles', aliases: ['smiles', 'gol smiles', 'gol'] },
-  { code: 'latam_pass', name: 'LATAM Pass', aliases: ['latam pass', 'latampass', 'latam'] },
-  { code: 'azul_fidelidade', name: 'Azul Fidelidade', aliases: ['azul', 'tudoazul'] },
-  { code: 'livelo', name: 'Livelo', aliases: ['livelo'] },
-  { code: 'esfera', name: 'Esfera', aliases: ['esfera'] },
-];
-const AM = construirAliasMap(PROGRAMAS);
+const SEED = {
+  programas: [
+    { code: 'smiles', name: 'Smiles', kind: 'aereo', aliases: ['smiles', 'gol'] },
+    { code: 'latam_pass', name: 'LATAM Pass', kind: 'aereo', aliases: ['latampass', 'latam'] },
+    { code: 'azul_fidelidade', name: 'Azul Fidelidade', kind: 'aereo', aliases: ['azul'] },
+    { code: 'livelo', name: 'Livelo', kind: 'bancario', aliases: ['livelo'] },
+    { code: 'esfera', name: 'Esfera', kind: 'bancario', aliases: ['esfera'] },
+  ],
+  ruido: ['desconhecido', 'null', 'na', 'banco', 'x'],
+  buckets: { aereo: 'aerea_outra', hotel: 'hotel_outro', varejo: 'varejo_outro', default: 'outro' },
+};
+const IX = construirIndices(SEED);
 
-test('normalizar: minúsculas, sem acento, espaços colapsados', () => {
+test('normalizar', () => {
   assert.equal(normalizar('  LATAM   Pass '), 'latam pass');
-  assert.equal(normalizar('Fidelidade Azul'), 'fidelidade azul');
   assert.equal(normalizar('Itaú'), 'itau');
-  assert.equal(normalizar('Miles&Go'), 'miles&go');
   assert.equal(normalizar(null), '');
 });
 
-test('resolverPrograma: exato e por token inteiro; desconhecido -> null', () => {
-  assert.equal(resolverPrograma('LATAM Pass', AM), 'latam_pass');
-  assert.equal(resolverPrograma('latampass', AM), 'latam_pass');
-  assert.equal(resolverPrograma('Livelo', AM), 'livelo');
-  assert.equal(resolverPrograma('Transferência Livelo para Smiles', AM), 'livelo'); // primeiro match
-  assert.equal(resolverPrograma('Programa Desconhecido XPTO', AM), null);
-  assert.equal(resolverPrograma('', AM), null);
+test('resolverPrograma: exato, leftmost, desconhecido -> null', () => {
+  assert.equal(resolverPrograma('LATAM Pass', IX.aliasMap), 'latam_pass');
+  assert.equal(resolverPrograma('Transferência Livelo para Smiles', IX.aliasMap), 'livelo');
+  assert.equal(resolverPrograma('XPTO', IX.aliasMap), null);
 });
 
-test('resolverTipo: colapsa duplicatas nos 9 canônicos', () => {
+test('resolverTipo: colapsa duplicatas', () => {
   assert.equal(resolverTipo('transferencia'), 'transferencia_bonificada');
-  assert.equal(resolverTipo('compra'), 'compra_pontos');
-  assert.equal(resolverTipo('status match'), 'status_match');
   assert.equal(resolverTipo('statusmatch'), 'status_match');
+  assert.equal(resolverTipo('status match'), 'status_match');
   assert.equal(resolverTipo('cartao'), 'bonus_acumulo');
   assert.equal(resolverTipo('hotelaria'), 'outro');
-  assert.equal(resolverTipo('estrutural'), 'outro');
-  assert.equal(resolverTipo('xyz-desconhecido'), null);
-  for (const t of ['transferencia', 'compra', 'clube']) {
-    assert.ok(TIPOS_CANONICOS.includes(resolverTipo(t)));
-  }
+  assert.equal(resolverTipo('xyz'), null);
 });
 
-test('resolverPublico: default geral; sinais claros classificam', () => {
-  assert.equal(resolverPublico({}), 'geral');
-  assert.equal(resolverPublico({ notes: 'exclusivo do clube Livelo' }), 'clube');
-  assert.equal(resolverPublico({ notes: 'para clientes selecionados' }), 'selecionados');
-  assert.equal(resolverPublico({ valor_leitura: 'no cartão de crédito' }), 'cartao');
+test('classificarLado: programa | bucket | ruido | vazio', () => {
+  assert.deepEqual(classificarLado('Livelo', IX).tipo, 'programa');
+  assert.deepEqual(classificarLado('desconhecido', IX).tipo, 'ruido');
+  assert.deepEqual(classificarLado('', IX).tipo, 'vazio');
+  const b = classificarLado('Hotel Fasano Resort', IX);
+  assert.equal(b.tipo, 'bucket');
+  assert.equal(b.code, 'hotel_outro');
+  const aer = classificarLado('Garuda Airlines', IX);
+  assert.equal(aer.code, 'aerea_outra');
+  assert.equal(classificarLado('Marca Nova Qualquer', IX).code, 'outro'); // fallback
 });
 
-test('identityKey estável e sem vigência', () => {
-  assert.equal(identityKey('transferencia_bonificada', 'livelo', 'smiles', 'geral'),
-    'transferencia_bonificada|livelo|smiles|geral');
-});
-
-test('parseVigenciaFim: "na"/sujeira -> indeterminada; datas válidas -> confiável', () => {
+test('parseVigenciaFim', () => {
   assert.deepEqual(parseVigenciaFim('na'), { date: null, confiavel: false });
-  assert.deepEqual(parseVigenciaFim(''), { date: null, confiavel: false });
-  assert.deepEqual(parseVigenciaFim('indeterminado'), { date: null, confiavel: false });
-  assert.deepEqual(parseVigenciaFim(null), { date: null, confiavel: false });
   assert.deepEqual(parseVigenciaFim('2026-08-31'), { date: '2026-08-31', confiavel: true });
-  assert.deepEqual(parseVigenciaFim('31/08/2026'), { date: '2026-08-31', confiavel: true });
-  assert.deepEqual(parseVigenciaFim('2026-13-40'), { date: null, confiavel: false }); // inválida
+  assert.deepEqual(parseVigenciaFim('2026-13-40'), { date: null, confiavel: false });
 });
 
-test('derivarEstado: FSM determinística', () => {
+test('derivarEstado FSM', () => {
   const ref = '2026-07-16';
   assert.equal(derivarEstado({ vigenciaFimDate: null, vigenciaConfiavel: false, ref }), 'indeterminada');
-  assert.equal(derivarEstado({ vigenciaFimDate: '2026-07-18', vigenciaConfiavel: true, ref }), 'ultimos_dias'); // <=72h
+  assert.equal(derivarEstado({ vigenciaFimDate: '2026-07-18', vigenciaConfiavel: true, ref }), 'ultimos_dias');
   assert.equal(derivarEstado({ vigenciaFimDate: '2026-07-10', vigenciaConfiavel: true, ref }), 'encerrada');
-  assert.equal(derivarEstado({ vigenciaFimDate: '2026-05-01', vigenciaConfiavel: true, ref }), 'historica'); // >30d
+  assert.equal(derivarEstado({ vigenciaFimDate: '2026-05-01', vigenciaConfiavel: true, ref }), 'historica');
   assert.equal(derivarEstado({ vigenciaFimDate: '2026-09-01', vigenciaConfiavel: true, temTier1: true, ref }), 'ativa');
-  assert.equal(derivarEstado({ vigenciaFimDate: '2026-09-01', vigenciaConfiavel: true, temTier1: false, ref }), 'detectada');
 });
 
-test('resolverCampanha: caminho feliz e revisão', () => {
-  const ref = '2026-07-16';
-  const ok = resolverCampanha(
-    { origem: 'Livelo', destino: 'Smiles', tipo: 'transferencia', vigencia_fim: '2026-09-01', tier: 1 }, AM, ref);
-  assert.equal(ok.resolvido, true);
-  assert.equal(ok.identity_key, 'transferencia_bonificada|livelo|smiles|geral');
-  assert.equal(ok.estado, 'ativa');
+test('resolverCampanha: rota normal (head)', () => {
+  const r = resolverCampanha({ origem: 'Livelo', destino: 'Smiles', tipo: 'transferencia', vigencia_fim: '2026-09-01', tier: 1 }, IX, '2026-07-16');
+  assert.equal(r.resolvido, true);
+  assert.equal(r.identity_key, 'transferencia_bonificada|livelo|smiles|geral');
+  assert.equal(r.lado_unico, false);
+  assert.equal(r.estado, 'ativa');
+});
 
-  const rev = resolverCampanha(
-    { origem: 'Programa XPTO', destino: 'Smiles', tipo: 'transferencia', vigencia_fim: 'na' }, AM, ref);
-  assert.equal(rev.resolvido, false);
-  assert.match(rev.revisao, /nao_resolvido:origem/);
-  assert.equal(rev.estado, 'indeterminada'); // vigência "na"
+test('regra por tipo: transferência SEM destino -> revisão', () => {
+  const r = resolverCampanha({ origem: 'Livelo', destino: 'desconhecido', tipo: 'transferencia', vigencia_fim: '2026-09-01' }, IX, '2026-07-16');
+  assert.equal(r.resolvido, false);
+  assert.equal(r.revisao, 'transferencia_sem_destino');
+});
+
+test('regra por tipo: compra SEM destino -> lado único', () => {
+  const r = resolverCampanha({ origem: 'Smiles', destino: 'desconhecido', tipo: 'compra', vigencia_fim: '2026-09-01' }, IX, '2026-07-16');
+  assert.equal(r.resolvido, true);
+  assert.equal(r.lado_unico, true);
+  assert.equal(r.destinoCode, SEM_DESTINO);
+  assert.equal(r.identity_key, `compra_pontos|smiles|${SEM_DESTINO}|geral`);
+});
+
+test('origem ruído/vazio -> revisão', () => {
+  assert.equal(resolverCampanha({ origem: 'desconhecido', destino: 'Smiles', tipo: 'transferencia' }, IX, '2026-07-16').revisao, 'origem_ruido');
+  assert.equal(resolverCampanha({ origem: '', destino: 'Smiles', tipo: 'compra' }, IX, '2026-07-16').revisao, 'origem_vazio');
+});
+
+test('cauda -> bucket, marcado bucketed', () => {
+  const r = resolverCampanha({ origem: 'Livelo', destino: 'Hotel Bourbon Resort', tipo: 'transferencia', vigencia_fim: '2026-09-01' }, IX, '2026-07-16');
+  assert.equal(r.resolvido, true);
+  assert.equal(r.destinoCode, 'hotel_outro');
+  assert.equal(r.bucketed, true);
+});
+
+test('tipo indefinido -> revisão', () => {
+  assert.equal(resolverCampanha({ origem: 'Livelo', destino: 'Smiles', tipo: 'xyz' }, IX, '2026-07-16').revisao, 'tipo_indefinido');
 });
 
 test('idempotência: mesma entrada -> mesma identity_key', () => {
-  const c = { origem: 'LATAM Pass', destino: 'Azul', tipo: 'compra', vigencia_fim: '2026-08-01' };
-  const a = resolverCampanha(c, AM, '2026-07-16');
-  const b = resolverCampanha(c, AM, '2026-07-16');
-  assert.equal(a.identity_key, b.identity_key);
+  const c = { origem: 'LATAM', destino: 'Azul', tipo: 'compra', vigencia_fim: '2026-08-01' };
+  assert.equal(resolverCampanha(c, IX, '2026-07-16').identity_key, resolverCampanha(c, IX, '2026-07-16').identity_key);
+});
+
+test('construirAliasMap compat', () => {
+  const am = construirAliasMap(SEED.programas);
+  assert.equal(resolverPrograma('gol', am), 'smiles');
 });

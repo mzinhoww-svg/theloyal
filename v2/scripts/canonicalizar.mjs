@@ -8,18 +8,18 @@
 //   node v2/scripts/canonicalizar.mjs --apply       # escreve (após snapshot D-006)
 //   flags: --limit N  --offset N  --batch N (default 500)
 //
-// ENV: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Sem elas -> aborta (não faz mock
-// silencioso). Pré-requisito para --apply: migration 001 aplicada + snapshot.
+// ENV: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. Sem elas -> aborta (sem mock).
+// Pré-requisito p/ --apply: migration 001 aplicada + snapshot (D-006).
 // =====================================================================
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { construirAliasMap, resolverCampanha } from '../lib/identidade.mjs';
+import { construirIndices, resolverCampanha } from '../lib/identidade.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const SEED = JSON.parse(readFileSync(join(__dir, '..', 'db', 'seed-aliases.json'), 'utf8'));
-const ALIAS_MAP = construirAliasMap(SEED.programas);
+const IX = construirIndices(SEED);
 
 const args = process.argv.slice(2);
 const has = (f) => args.includes(f);
@@ -35,7 +35,7 @@ if (!URL || !KEY) {
   console.error('ERRO: defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY. Abortando (sem mock silencioso).');
   process.exit(1);
 }
-const REF = (process.env.REF_DATE || new Date().toISOString().slice(0, 10));
+const REF = process.env.REF_DATE || new Date().toISOString().slice(0, 10);
 
 async function rest(path, { method = 'GET', body, headers = {} } = {}) {
   const res = await fetch(`${URL}/rest/v1/${path}`, {
@@ -48,9 +48,9 @@ async function rest(path, { method = 'GET', body, headers = {} } = {}) {
 }
 
 const stats = {
-  lidas: 0, resolvidas: 0, revisao: 0, identidades: new Set(),
-  porTipo: {}, programas: new Set(), vigConfiavel: 0, vigIndeterminada: 0,
-  revisaoMotivos: {},
+  lidas: 0, resolvidas: 0, revisao: 0, lado_unico: 0, bucketed: 0,
+  identidades: new Set(), porTipo: {}, programas: new Set(),
+  vigConfiavel: 0, vigIndeterminada: 0, revisaoMotivos: {},
 };
 
 function contabiliza(r) {
@@ -58,13 +58,19 @@ function contabiliza(r) {
   if (r.vigencia_confiavel) stats.vigConfiavel++; else stats.vigIndeterminada++;
   if (r.tipo) stats.porTipo[r.tipo] = (stats.porTipo[r.tipo] || 0) + 1;
   if (r.origemCode) stats.programas.add(r.origemCode);
-  if (r.destinoCode) stats.programas.add(r.destinoCode);
-  if (r.resolvido) { stats.resolvidas++; stats.identidades.add(r.identity_key); }
-  else { stats.revisao++; stats.revisaoMotivos[r.revisao] = (stats.revisaoMotivos[r.revisao] || 0) + 1; }
+  if (r.destinoCode && r.destinoCode !== 'sem_destino') stats.programas.add(r.destinoCode);
+  if (r.resolvido) {
+    stats.resolvidas++;
+    stats.identidades.add(r.identity_key);
+    if (r.lado_unico) stats.lado_unico++;
+    if (r.bucketed) stats.bucketed++;
+  } else {
+    stats.revisao++;
+    stats.revisaoMotivos[r.revisao] = (stats.revisaoMotivos[r.revisao] || 0) + 1;
+  }
 }
 
 async function upsertIdentidade(r) {
-  // idempotente: on conflict identity_key
   const rows = await rest('campanha_identidade?on_conflict=identity_key', {
     method: 'POST',
     headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
@@ -78,10 +84,19 @@ async function jaTemVersao(campaignId, identityKey) {
   return rows?.[0]?.payload_depois?.identity_key === identityKey;
 }
 
+function patchCampaign(r) {
+  return {
+    origem_code: r.origemCode ?? null, destino_code: r.destinoCode ?? null, publico: r.publico,
+    origem_bruto: r.origem_bruto, destino_bruto: r.destino_bruto,
+    lado_unico: r.lado_unico ?? null, bucketed: r.bucketed ?? null,
+    vigencia_fim_date: r.vigencia_fim_date, vigencia_confiavel: r.vigencia_confiavel,
+    estado: r.estado, canonicalizado_em: new Date().toISOString(),
+  };
+}
+
 async function aplicar(camp, r) {
   const identidadeId = await upsertIdentidade(r);
-  const depois = { identity_key: r.identity_key, tipo: r.tipo, origem_code: r.origemCode, destino_code: r.destinoCode, publico: r.publico, estado: r.estado, vigencia_fim_date: r.vigencia_fim_date, vigencia_confiavel: r.vigencia_confiavel };
-  // idempotência: só grava evento se mudou
+  const depois = { identity_key: r.identity_key, tipo: r.tipo, origem_code: r.origemCode, destino_code: r.destinoCode, publico: r.publico, estado: r.estado, lado_unico: r.lado_unico, bucketed: r.bucketed, vigencia_fim_date: r.vigencia_fim_date, vigencia_confiavel: r.vigencia_confiavel };
   if (!(await jaTemVersao(camp.id, r.identity_key))) {
     await rest('campanha_versoes', {
       method: 'POST', headers: { Prefer: 'return=minimal' },
@@ -92,18 +107,14 @@ async function aplicar(camp, r) {
   }
   await rest(`campaigns?id=eq.${encodeURIComponent(camp.id)}`, {
     method: 'PATCH', headers: { Prefer: 'return=minimal' },
-    body: { identidade_id: identidadeId, origem_code: r.origemCode, destino_code: r.destinoCode,
-      publico: r.publico, vigencia_fim_date: r.vigencia_fim_date, vigencia_confiavel: r.vigencia_confiavel,
-      estado: r.estado, canonicalizado_em: new Date().toISOString() },
+    body: { identidade_id: identidadeId, ...patchCampaign(r) },
   });
 }
 
 async function aplicarRevisao(camp, r) {
-  // não resolvido: só marca estado (indeterminada) + registra na trilha, sem identidade
   await rest(`campaigns?id=eq.${encodeURIComponent(camp.id)}`, {
     method: 'PATCH', headers: { Prefer: 'return=minimal' },
-    body: { estado: r.estado, vigencia_fim_date: r.vigencia_fim_date, vigencia_confiavel: r.vigencia_confiavel,
-      canonicalizado_em: new Date().toISOString() },
+    body: patchCampaign(r),
   });
   await rest('campanha_versoes', {
     method: 'POST', headers: { Prefer: 'return=minimal' },
@@ -114,7 +125,7 @@ async function aplicarRevisao(camp, r) {
 }
 
 async function main() {
-  console.log(`[canonicalizar] modo=${DRY ? 'DRY-RUN' : 'APPLY'} ref=${REF} batch=${BATCH}`);
+  console.log(`[canonicalizar] modo=${DRY ? 'DRY-RUN' : 'APPLY'} ref=${REF} batch=${BATCH} programas_seed=${SEED.programas.length}`);
   let processadas = 0;
   for (;;) {
     if (LIMIT != null && processadas >= LIMIT) break;
@@ -122,20 +133,23 @@ async function main() {
     const camps = await rest(`campaigns?select=id,origem,destino,tipo,vigencia_fim,tier,notes,paridade,valor_leitura&order=id.asc&offset=${OFFSET}&limit=${take}`);
     if (!camps.length) break;
     for (const camp of camps) {
-      const r = resolverCampanha(camp, ALIAS_MAP, REF);
+      const r = resolverCampanha(camp, IX, REF);
       contabiliza(r);
       if (!DRY) { r.resolvido ? await aplicar(camp, r) : await aplicarRevisao(camp, r); }
     }
     processadas += camps.length; OFFSET += camps.length;
     process.stdout.write(`\r  processadas: ${processadas}`);
   }
+  const pct = (x) => stats.lidas ? `${((x / stats.lidas) * 100).toFixed(1)}%` : '0%';
   console.log('\n--- RELATÓRIO ---');
-  console.log(`lidas:            ${stats.lidas}`);
-  console.log(`resolvidas:       ${stats.resolvidas}`);
-  console.log(`em revisão:       ${stats.revisao}`);
-  console.log(`identidades únicas:${stats.identidades.size}`);
-  console.log(`programas usados: ${stats.programas.size} (${[...stats.programas].sort().join(', ')})`);
-  console.log(`vigência confiável/indeterminada: ${stats.vigConfiavel}/${stats.vigIndeterminada}`);
+  console.log(`lidas:              ${stats.lidas}`);
+  console.log(`resolvidas:         ${stats.resolvidas} (${pct(stats.resolvidas)})`);
+  console.log(`  lado único:       ${stats.lado_unico}`);
+  console.log(`  com bucket:       ${stats.bucketed}`);
+  console.log(`em revisão:         ${stats.revisao} (${pct(stats.revisao)})`);
+  console.log(`identidades únicas: ${stats.identidades.size}`);
+  console.log(`programas usados:   ${stats.programas.size}`);
+  console.log(`vig. confiável/indeterminada: ${stats.vigConfiavel}/${stats.vigIndeterminada}`);
   console.log('por tipo:', JSON.stringify(stats.porTipo));
   console.log('motivos de revisão:', JSON.stringify(stats.revisaoMotivos));
   if (DRY) console.log('\n(DRY-RUN: nada foi escrito. Rode --apply após snapshot + migration 001.)');

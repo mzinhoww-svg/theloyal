@@ -65,6 +65,11 @@ Regras de transição (derivadas, nunca por LLM — brief 5.4):
 5. `identityKey(tipo, origem_code, destino_code, publico)`.
 6. **Ambiguidade residual** → `tie_break` por LLM econômico, justificativa persistida em `campanha_versoes` (evento `tie_break_llm`). Fora do caminho feliz.
 
+**Regras aprovadas pelo operador (2026-07-16), já implementadas:**
+- **Destino desconhecido (regra por tipo):** se origem resolve e o tipo **não** exige destino (tudo exceto `transferencia_bonificada`) → identidade de **lado único** (`tipo|origem|sem_destino|publico`). `transferencia` sem destino → **revisão**.
+- **Head + buckets:** registro canônico de ~103 programas (head, ~73% do volume de origem). Cauda n=1–2 → **bucket por kind** (`aerea_outra`, `hotel_outro`, `varejo_outro`, `banco_outro`, `combustivel_outro`, `servico_outro`, `streaming_outro`, `outro`). `origem_bruto`/`destino_bruto` preservados p/ promoção lossless; `bucketed=true` marca para revisão. **Trade-off:** buckets agrupam entidades distintas de baixo volume sob um código; ao ganhar volume, promover a programa próprio.
+- **Ruído** (lista no seed) nunca vira programa → origem ruído/vazio = revisão.
+
 Script `v2/scripts/canonicalizar.mjs` (batch, idempotente, resumível — 8.1):
 - Lê `campaigns` em lotes; para cada linha resolve identidade; **upsert** em `campanha_identidade`; grava `campanha_versoes` (evento `canonicalizacao` com antes/depois); atualiza colunas aditivas de `campaigns` via UPDATE por `id`.
 - Idempotência: reprocessar a mesma linha não duplica versão se `payload_depois` idêntico ao último. Checkpoint por faixa de `id`.

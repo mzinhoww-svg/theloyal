@@ -94,8 +94,12 @@ create index if not exists campanha_versoes_campaign_idx on public.campanha_vers
 alter table public.campaigns
   add column if not exists identidade_id     uuid references public.campanha_identidade(id),
   add column if not exists origem_code       text,
-  add column if not exists destino_code      text,
+  add column if not exists destino_code      text,   -- 'sem_destino' em identidade de lado unico
   add column if not exists publico           text,
+  add column if not exists origem_bruto      text,   -- normalizado; preserva original p/ promocao lossless
+  add column if not exists destino_bruto     text,
+  add column if not exists lado_unico        boolean, -- destino ausente + tipo nao exige destino
+  add column if not exists bucketed          boolean, -- origem/destino caiu em bucket de cauda
   add column if not exists vigencia_fim_date date,
   add column if not exists vigencia_confiavel boolean,
   add column if not exists estado            text,   -- FSM (secao 5)
