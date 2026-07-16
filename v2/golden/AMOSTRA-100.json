@@ -1,0 +1,2144 @@
+[
+ {
+  "id": "all-qatarprivilege-statusmatch-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/parceria-entre-accor-e-qatar-airways-continua-valendo-em-2026/",
+  "estrato": "status_match",
+  "input": {
+   "titulo": "Status match e mais! Parceria entre Accor e Qatar Airways continua valendo em 2026 - Passageiro de Primeira",
+   "trecho": "Status match e mais! Parceria entre Accor e Qatar Airways continua valendo em 2026 - Passageiro de Primeira. A Accor e a Qatar Airways renovaram a parceria entre seus programas, o Privilege Club e o ALL Accor, com status match e mais benefí"
+  },
+  "extracao_atual": {
+   "tipo": "statusmatch",
+   "origem": "all",
+   "destino": "qatarprivilege",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "all-reward-assinatura-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/ultimas-horas-assine-o-all-signature-reserve-hoteis-com-ate-20-de-desconto-no-app-e-garanta-ate-1-000-pontos-reward-bonus/",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Assine o ALL Signature, reserve hotéis com até 20% de desconto no app e garanta até 1.000 pontos Reward bônus",
+   "trecho": "Assine o ALL Signature, reserve hotéis com até 20% de desconto no app e garanta até 1.000 pontos Reward bônus. O ALL Signature está oferecendo até 1.000 pontos Reward bônus para novos assinantes. Além disso, a Accor está oferecendo até 20% "
+  },
+  "extracao_atual": {
+   "tipo": "assinatura",
+   "origem": "all",
+   "destino": "reward",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "all-reward-assinatura-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/ultimas-horas-assine-o-all-signature-reserve-hoteis-com-ate-20-de-desconto-no-app-e-garanta-ate-1-000-pontos-reward-bonus/",
+  "estrato": "outro",
+  "input": {
+   "titulo": "Assine o ALL Signature, reserve hotéis com até 20% de desconto no app e garanta até 1.000 pontos Reward bônus",
+   "trecho": "Assine o ALL Signature, reserve hotéis com até 20% de desconto no app e garanta até 1.000 pontos Reward bônus. O ALL Signature está oferecendo até 1.000 pontos Reward bônus para novos assinantes. Além disso, a Accor está oferecendo até 20% "
+  },
+  "extracao_atual": {
+   "tipo": "assinatura",
+   "origem": "all",
+   "destino": "reward",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "allianz-desconhecido-compra-2024-10-03",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promo-seguro-viagem-abril-25.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Termina hoje! Seguro viagem da Allianz Travel com 70% de desconto!",
+   "trecho": "Termina hoje! Seguro viagem da Allianz Travel com 70% de desconto!. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "allianz",
+   "destino": "desconhecido",
+   "percentual": 70,
+   "vigencia_fim": "2024-10-03",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "amazon eua-desconhecido-compra-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/produtos-apple-com-ate-47-de-desconto-na-amazon-dos-eua/",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Produtos Apple com até 47% de desconto na Amazon dos EUA - Passageiro de Primeira",
+   "trecho": "Produtos Apple com até 47% de desconto na Amazon dos EUA - Passageiro de Primeira. Descontos espetaculares de até 34% na compra de AirPods, AirTags, iPads e muito mais na Amazon EUA. Confira e economize!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "amazon eua",
+   "destino": "desconhecido",
+   "percentual": 47,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "americanexpress-ifood-cartao-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/clube-ifood-gratis-cartao-american-express-out25.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Assine o Clube iFood grátis por um ano com o cartão American Express",
+   "trecho": "Assine o Clube iFood grátis por um ano com o cartão American Express. Mais um cartão de crédito está oferecendo assinatura grátis do Clube iFood por um ano! Depois da oferta dos cartões Elo (veja aqui), agora é a vez do"
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "americanexpress",
+   "destino": "ifood",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "azul-azul-cartao-2024-04-29",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/ultimas-horas-cartao-azul-100k-abr26.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Últimas horas! Peça o cartão Azul Skyline ou Visa Infinite e ganhe 100.000 pontos bônus",
+   "trecho": "Últimas horas! Peça o cartão Azul Skyline ou Visa Infinite e ganhe 100.000 pontos bônus. Termina hoje (29/04) a promoção dos cartões Azul para ganhar pontos bônus na adesão! Essa é uma super oportunidade de ganhar 100.000 pontos extras ao"
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "azul",
+   "destino": "azul",
+   "percentual": null,
+   "vigencia_fim": "2024-04-29",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "azul-azul-compra-2024-08-17",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/azul-fidelidade-oferece-ate-15-pontos-por-real-gasto-no-magalu/",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Azul oferece até 15 pontos por real gasto no Magalu",
+   "trecho": "Azul oferece até 15 pontos por real gasto no Magalu. Até sábado (17), o Azul Fidelidade está oferecendo até 15 pontos por real gasto em compras no Magalu. Confira!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "azul",
+   "destino": "azul",
+   "percentual": 15,
+   "vigencia_fim": "2024-08-17",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "azul-desconhecido-estrutural-2030-12-31",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/azul-anuncia-patrocinio-as-selecoes-brasileiras-de-futebol/",
+  "estrato": "outro",
+  "input": {
+   "titulo": "Azul anuncia patrocínio às Seleções Brasileiras de Futebol",
+   "trecho": "Azul anuncia patrocínio às Seleções Brasileiras de Futebol. Azul será patrocinadora da Seleção Brasileira de Futebol até 2030. Parceria inclui todas as seleções e grandes torneios internacionais"
+  },
+  "extracao_atual": {
+   "tipo": "estrutural",
+   "origem": "azul",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2030-12-31",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "banco-banco-estrutural-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/mudanca-programa-pontos-cartao-btg-jan25.html",
+  "estrato": "recuperavel",
+  "input": {
+   "titulo": "Vai mudar! Pontos dos cartões BTG serão creditados em programa próprio do banco",
+   "trecho": "Vai mudar! Pontos dos cartões BTG serão creditados em programa próprio do banco. Mudança começa a valer a partir do dia 20/02"
+  },
+  "extracao_atual": {
+   "tipo": "estrutural",
+   "origem": "banco",
+   "destino": "banco",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "banco-pontos-cartao-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/cartao-de-credito/ultrablue-btg-pactual-modalidade-cashback/",
+  "estrato": "recuperavel",
+  "input": {
+   "titulo": "Ultrablue BTG Pactual - Passageiro de Primeira",
+   "trecho": "Ultrablue BTG Pactual - Passageiro de Primeira. O Ultrablue BTG é um cartão direcionado para o público alta renda. Com design em metal, o cliente pode escolher entre pontos ou cashback."
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "banco",
+   "destino": "pontos",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "bancointer-desconhecido-compra-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/intershop-amazon-fev22.html",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Banco Inter oferece 8% de cashback em compras na Amazon 06/02",
+   "trecho": "Banco Inter oferece 8% de cashback em compras na Amazon 06/02. O Banco Inter está oferecendo 8% de cashback nas compras de qualquer produto na Amazon. Não é informado até qual data a campanha é válida, então a dica é"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "bancointer",
+   "destino": "desconhecido",
+   "percentual": 8,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "bancointer-desconhecido-compra-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/intershop-amazon-fev22.html",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "Banco Inter oferece 8% de cashback em compras na Amazon 06/02",
+   "trecho": "Banco Inter oferece 8% de cashback em compras na Amazon 06/02. O Banco Inter está oferecendo 8% de cashback nas compras de qualquer produto na Amazon. Não é informado até qual data a campanha é válida, então a dica é"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "bancointer",
+   "destino": "desconhecido",
+   "percentual": 8,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "bradesco-desconhecido-cartao-2024-06-30",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/oferta-anuidade-gratis-bradesco-amex-elo-visa-mai25.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Não perca! Bradesco oferece cartões American Express, Elo e Visa com anuidade grátis para sempre",
+   "trecho": "Não perca! Bradesco oferece cartões American Express, Elo e Visa com anuidade grátis para sempre. Promoção vai até 30/06. Confira as regras!"
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "bradesco",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2024-06-30",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "c6-azul-transferencia-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/azul-fidelidade-bonus-120-jun26",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Azul oferece até 120% de bônus na transferência de pontos do cartão de crédito - Melhores Destinos",
+   "trecho": "Azul oferece até 120% de bônus na transferência de pontos do cartão de crédito - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "c6",
+   "destino": "azul",
+   "percentual": 120,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "c6-desconhecido-clube-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/c6-carbon-nova-regra-loungekey-jun25.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "C6 Carbon amplia número de salas VIP com acesso grátis – conheça as regras",
+   "trecho": "C6 Carbon amplia número de salas VIP com acesso grátis – conheça as regras. Cartão passa a ter parceria com dois programas de sala VIP, mas é para poucos"
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "c6",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "c6-desconhecido-estrutural-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/gasto-minimo-cartao-c6-bank-sala-vip-mastercard.html",
+  "estrato": "outro",
+  "input": {
+   "titulo": "C6 Bank passa a exigir gasto mínimo para liberar acesso às salas VIP Mastercard Black",
+   "trecho": "C6 Bank passa a exigir gasto mínimo para liberar acesso às salas VIP Mastercard Black. O C6 Bank vai adotar a exigência de gasto mínimo no cartão para liberar o acesso gratuito às salas VIP Mastercard Black, no Aeroporto de Guarulhos, em Sã"
+  },
+  "extracao_atual": {
+   "tipo": "estrutural",
+   "origem": "c6",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "caixa-caixa-cartao-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/aumento-pontuacao-cartao-caixa-elo-diners-clube-jun26.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Até 4 pontos por dólar! Caixa aumenta pontuação do cartão Elo Diners Club",
+   "trecho": "Até 4 pontos por dólar! Caixa aumenta pontuação do cartão Elo Diners Club. Boa notícia para os clientes Caixa. O banco aumentou a pontuação do cartão Elo Diners Club, que agora oferece até 4 pontos por dólar! São 3 pontos por"
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "caixa",
+   "destino": "caixa",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "cartao azul-desconhecido-cartao-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/ultimas-horas-cartao-azul-100k-abr26",
+  "estrato": "recuperavel",
+  "input": {
+   "titulo": "Últimas horas! Cartão Azul Skyline ou Visa Infinite com 100 mil pontos bônus, status Diamante e passagem cortesia! - Melhores Destinos",
+   "trecho": "Últimas horas! Cartão Azul Skyline ou Visa Infinite com 100 mil pontos bônus, status Diamante e passagem cortesia! - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "cartao azul",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "crypto-livelo-cartao-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/ultimo-dia-para-ganhar-ate-150-000-pontos-livelo-ao-solicitar-o-cartao-crypto-com/",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Último dia para ganhar até 150.000 pontos Livelo ao solicitar o cartão Crypto.com - Passageiro de Primeira",
+   "trecho": "Último dia para ganhar até 150.000 pontos Livelo ao solicitar o cartão Crypto.com - Passageiro de Primeira. Peça seu Cartão Global Visa Crypto.com e garanta até 150.000 pontos Livelo e mais US$ 30 abrindo conta com o código ‘CRYPTOPP’ [sem "
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "crypto",
+   "destino": "livelo",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "delta-desconhecido-estrutural-2024-12-31",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/delta-passagens-ia.html",
+  "estrato": "outro",
+  "input": {
+   "titulo": "Delta quer definir preços de 20% de suas passagens com base em IA até o fim do ano",
+   "trecho": "Delta quer definir preços de 20% de suas passagens com base em IA até o fim do ano. "
+  },
+  "extracao_atual": {
+   "tipo": "estrutural",
+   "origem": "delta",
+   "destino": "desconhecido",
+   "percentual": 20,
+   "vigencia_fim": "2024-12-31",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "desconhecido-azul-status match-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/participe-do-status-match-da-azul-com-possibilidade-de-alcancar-o-diamante-unique/",
+  "estrato": "status_match",
+  "input": {
+   "titulo": "Participe do Status Match da Azul com possibilidade de alcançar o Diamante Unique - Passageiro de Primeira",
+   "trecho": "Participe do Status Match da Azul com possibilidade de alcançar o Diamante Unique - Passageiro de Primeira. O Status Match do Azul Fidelidade agora pode ser utilizada para alcançar a nova categoria do programa, Diamante Unique."
+  },
+  "extracao_atual": {
+   "tipo": "status match",
+   "origem": "desconhecido",
+   "destino": "azul",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "desconhecido-desconhecido-compra-2024-09-16",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/prorrogou-hoje-rentcars-19fev",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Prorrogou só até hoje! Aluguel de carro com até 45% OFF + cupom extra de 8% de desconto",
+   "trecho": "Prorrogou só até hoje! Aluguel de carro com até 45% OFF + cupom extra de 8% de desconto. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "desconhecido",
+   "destino": "desconhecido",
+   "percentual": 45,
+   "vigencia_fim": "2024-09-16",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "desconhecido-desconhecido-compra-2024-09-16",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/prorrogou-hoje-rentcars-19fev",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Prorrogou só até hoje! Aluguel de carro com até 45% OFF + cupom extra de 8% de desconto",
+   "trecho": "Prorrogou só até hoje! Aluguel de carro com até 45% OFF + cupom extra de 8% de desconto. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "desconhecido",
+   "destino": "desconhecido",
+   "percentual": 45,
+   "vigencia_fim": "2024-09-16",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "desconhecido-latampass-clube-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/ultimo-dia-milhas-gratis-cadastro-latam-pass-out25.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Último dia! Faça o cadastro no Latam Pass e ganhe 600 milhas grátis",
+   "trecho": "Último dia! Faça o cadastro no Latam Pass e ganhe 600 milhas grátis. Se você ainda não tem uma conta no Latam Pass, se liga nessa oportunidade que está terminando! Hoje é o último dia para você fazer o seu cadastro e ganhar"
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "desconhecido",
+   "destino": "latampass",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "diners-diners-cartao-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/ultimos-dias-campanha-pontos-extras-cartao-elo-diners-dez25.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Últimos dias de pontuação extra! Acumule até 5 pontos por dólar com o cartão Elo Diners",
+   "trecho": "Últimos dias de pontuação extra! Acumule até 5 pontos por dólar com o cartão Elo Diners. Últimos dias para você aproveitar a promoção de pontuação extra nos cartões Elo Diners Club! A campanha, que oferece acúmulo de até 5 pontos por dólar,"
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "diners",
+   "destino": "diners",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "esfera-airfranceklm-transferencia-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/esfera-flying-blue-air-france-klm-ihg-one",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Esfera ganha mais dois parceiros para transferência de pontos: IHG e Air France/KLM - Melhores Destinos",
+   "trecho": "Esfera ganha mais dois parceiros para transferência de pontos: IHG e Air France/KLM - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "esfera",
+   "destino": "airfranceklm",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "esfera-allaccor-transferencia-2024-09-17",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/prorrogado-esfera-all-accor-status-gold-mai26.html",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Prorrogado! Transfira pontos Esfera para o ALL Accor e garanta status Gold no programa de hotéis",
+   "trecho": "Prorrogado! Transfira pontos Esfera para o ALL Accor e garanta status Gold no programa de hotéis. Ainda dá tempo para você aproveitar a oferta na transferência de pontos Esfera para o ALL Accor! A promoção foi prorrogada até hoje e oferece "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "esfera",
+   "destino": "allaccor",
+   "percentual": null,
+   "vigencia_fim": "2024-09-17",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "esfera-azul-transferencia-2024-05-14",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/oferta-azul-esfera-80-mai25.html",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Ganhe até 80% de bônus na transferência de pontos Esfera para o Azul Fidelidade",
+   "trecho": "Ganhe até 80% de bônus na transferência de pontos Esfera para o Azul Fidelidade. Oferta é válida até 14/05"
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "esfera",
+   "destino": "azul",
+   "percentual": 80,
+   "vigencia_fim": "2024-05-14",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "esfera-esfera-clube-2024-04-19",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/oferta-clube-esfera-90k-abr26.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Ganhe até 90.000 pontos bônus ao assinar ou atualizar o Clube Esfera – milheiro a partir de R$ 26,17",
+   "trecho": "Ganhe até 90.000 pontos bônus ao assinar ou atualizar o Clube Esfera – milheiro a partir de R$ 26,17. A Esfera está oferecendo até 90.000 pontos bônus para quem assinar o Clube ou atualizaar para um plano superior. A promoção é válida até d"
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "esfera",
+   "destino": "esfera",
+   "percentual": null,
+   "vigencia_fim": "2024-04-19",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "esfera-esfera-clube-2024-09-17",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/clube-esfera-adesao-upgrade-out25.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Assine ou atualize o Clube Esfera com até 100.000 pontos bônus – milheiro a partir de R$ 25,40",
+   "trecho": "Assine ou atualize o Clube Esfera com até 100.000 pontos bônus – milheiro a partir de R$ 25,40. A Esfera está oferecendo até 100.000 pontos bônus para quem realizar a assinatura ou atualização do Clube Esfera. A promoção vale até as 23h59 d"
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "esfera",
+   "destino": "esfera",
+   "percentual": null,
+   "vigencia_fim": "2024-09-17",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "esfera-ihg-transferencia-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/esfera-flying-blue-air-france-klm-ihg-one",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Esfera ganha mais dois parceiros para transferência de pontos: IHG e Air France/KLM - Melhores Destinos",
+   "trecho": "Esfera ganha mais dois parceiros para transferência de pontos: IHG e Air France/KLM - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "esfera",
+   "destino": "ihg",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "inter-uber-compra-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cashback-uber-inter-19jun26.html",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Desconto na corrida! Compre créditos Uber com 10% de cashback",
+   "trecho": "Desconto na corrida! Compre créditos Uber com 10% de cashback. Que tal economizar em suas próximas corridas com a Uber? O Inter está com uma promoção que oferece 10% de cashback na compra de créditos Uber! O app não"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "inter",
+   "destino": "uber",
+   "percentual": 10,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "inter-uber-compra-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cashback-uber-inter-19jun26.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Desconto na corrida! Compre créditos Uber com 10% de cashback",
+   "trecho": "Desconto na corrida! Compre créditos Uber com 10% de cashback. Que tal economizar em suas próximas corridas com a Uber? O Inter está com uma promoção que oferece 10% de cashback na compra de créditos Uber! O app não"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "inter",
+   "destino": "uber",
+   "percentual": 10,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "ita-desconhecido-status match-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/ita-airways-anuncia-nova-campanha-de-status-match/",
+  "estrato": "status_match",
+  "input": {
+   "titulo": "ITA Airways anuncia nova campanha de status match - Passageiro de Primeira",
+   "trecho": "ITA Airways anuncia nova campanha de status match - Passageiro de Primeira. A companhia aérea italiana ITA Airways anunciou uma nova campanha de status match com diversas companhias. Saiba como aproveitar!"
+  },
+  "extracao_atual": {
+   "tipo": "status match",
+   "origem": "ita",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "itau-google-clube-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/itau-minhas-vantagens-gemini-gratis-jun26.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Itaú oferece até 12 meses grátis do Google Gemini pelo Minhas Vantagens - veja como resgatar",
+   "trecho": "Itaú oferece até 12 meses grátis do Google Gemini pelo Minhas Vantagens - veja como resgatar. O Itaú está oferecendo até 12 meses de assinatura grátis do Google AI Plus, que inclui o Gemini, para clientes Uniclass e Personnalité, por meio d"
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "itau",
+   "destino": "google",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "itau-latampass-transferencia-2024-11-14",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/latam-pass-itau-credicard-30-bonus-nov25.html",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Latam Pass oferece 30% de bônus no envio de pontos do Itaú e Credicard",
+   "trecho": "Latam Pass oferece 30% de bônus no envio de pontos do Itaú e Credicard. O Latam Pass está oferecendo 30% de bônus nas transferências de pontos do Itaú e Credicard para o programa. A oferta é válida até o dia 14/11, para TODOS"
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "itau",
+   "destino": "latampass",
+   "percentual": 30,
+   "vigencia_fim": "2024-11-14",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "latampass-desconhecido-compra-2024-09-29",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/ate-as-23h59-latam-oferece-trechos-nacionais-a-partir-de-r-148-ou-2-692-milhas-taxas/",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "LATAM oferece passagens a partir de R$ 148 ou 2.692 milhas",
+   "trecho": "LATAM oferece passagens a partir de R$ 148 ou 2.692 milhas. Apenas hoje (29), a LATAM oferece passagens aéreas a partir de R$ 148,54 já com taxas inclusas ou 2.692 Milhas + taxas por trecho."
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "latampass",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2024-09-29",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "latampass-latampass-compra-2024-03-11",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/ultimo-dia-compra-milhas-latam-pass-60-mar26.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Último dia! Compre milhas Latam Pass com até 60% de desconto parcelado no cartão",
+   "trecho": "Último dia! Compre milhas Latam Pass com até 60% de desconto parcelado no cartão. Hoje (11/03) é o último dia para comprar milhas Latam Pass com até 60% de desconto, parcelado no cartão de crédito. O desconto maior é para os portadores"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "latampass",
+   "destino": "latampass",
+   "percentual": 60,
+   "vigencia_fim": "2024-03-11",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "latampass-smiles-transferencia-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/pp-14-anos-smiles-oferece-ate-30-de-desconto-no-resgate-de-passagens-em-classe-executiva/",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "PP 14 anos! Smiles oferece até 30% de desconto no resgate de passagens em Classe Executiva - Passageiro de Primeira",
+   "trecho": "PP 14 anos! Smiles oferece até 30% de desconto no resgate de passagens em Classe Executiva - Passageiro de Primeira. Mais uma promoção do aniversário de 14 anos do PP! A Smiles está oferecendo até 30% de desconto no resgate de passagens em "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "latampass",
+   "destino": "smiles",
+   "percentual": 30,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-azul-transferencia-2025-09-29",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/livelo-azul-bonus-set25",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Azul Fidelidade oferece até 110% de bônus na transferência de pontos Livelo 29/09/25 - Melhores Destinos",
+   "trecho": "Azul Fidelidade oferece até 110% de bônus na transferência de pontos Livelo 29/09/25 - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "livelo",
+   "destino": "azul",
+   "percentual": 110,
+   "vigencia_fim": "2025-09-29",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-latampass-transferencia-2024-08-21",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/clube-week-latam-pass-bonus-transferencia-cartao-ago25.html",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Clube Week Latam Pass: ganhe 35% de bônus no envio de pontos do cartão – incluindo Livelo!",
+   "trecho": "Clube Week Latam Pass: ganhe 35% de bônus no envio de pontos do cartão – incluindo Livelo!. Oferta é válida até 21/08"
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "livelo",
+   "destino": "latampass",
+   "percentual": 35,
+   "vigencia_fim": "2024-08-21",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-latampass-transferencia-2025-03-24",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/latam-pass-livelo-35-mar25.html",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Só hoje! Ganhe até 35% de bônus na transferência de pontos Livelo para o Latam Pass",
+   "trecho": "Só hoje! Ganhe até 35% de bônus na transferência de pontos Livelo para o Latam Pass. Campanha vale somente nesta segunda-feira (24/03)."
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "livelo",
+   "destino": "latampass",
+   "percentual": 35,
+   "vigencia_fim": "2025-03-24",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-latampass-transferencia-2026-06-30",
+  "fonte": "pontospravoar",
+  "url": "https://pontospravoar.com/so-hoje-latam-pass-livelo-oferecem-25-porcento-bonus-transferencia-pontos/",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "sem titulo",
+   "trecho": "sem titulo. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "livelo",
+   "destino": "latampass",
+   "percentual": 25,
+   "vigencia_fim": "2026-06-30",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-livelo-clube-2024-07-12",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/ultimas-horas-para-receber-380-000-pontos-ao-assinar-o-clube-livelo-top-milheiro-a-partir-de-r-2273/",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Últimas horas para receber 380.000 pontos ao assinar o Clube Livelo Top",
+   "trecho": "Últimas horas para receber 380.000 pontos ao assinar o Clube Livelo Top. Últimas horas para receber 380.000 pontos bônus em novas assinaturas do Clube Livelo Top. A campanha é válida até hoje (12)."
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "livelo",
+   "destino": "livelo",
+   "percentual": null,
+   "vigencia_fim": "2024-07-12",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-livelo-clube-2024-09-07",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/so-hoje-assine-o-clube-livelo-top-e-receba-ate-378-mil-pontos-2/",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Só hoje! Assine o Clube Livelo Top e receba até 378 mil pontos",
+   "trecho": "Só hoje! Assine o Clube Livelo Top e receba até 378 mil pontos. Receba até 378.000 pontos bônus em novas assinaturas do Clube Livelo Top. A campanha é válida apenas hoje (7)."
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "livelo",
+   "destino": "livelo",
+   "percentual": null,
+   "vigencia_fim": "2024-09-07",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-livelo-clube-2024-10-10",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/clube-livelo-11k-primeiro-mes-out25.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Clube Livelo: assine o plano mais barato e acumule 11.000 pontos no primeiro mês",
+   "trecho": "Clube Livelo: assine o plano mais barato e acumule 11.000 pontos no primeiro mês. Oferta é válida somente hoje (10/10)"
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "livelo",
+   "destino": "livelo",
+   "percentual": null,
+   "vigencia_fim": "2024-10-10",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-livelo-compra-2024-05-09",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/oferta-livelo-petlove-mai25.html",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Só hoje! Ganhe até 10 pontos Livelo por real em compras na Petlove – vale no site todo!",
+   "trecho": "Só hoje! Ganhe até 10 pontos Livelo por real em compras na Petlove – vale no site todo!. Aproveite somente nesta sexta-feira (09/05)"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "livelo",
+   "destino": "livelo",
+   "percentual": 10,
+   "vigencia_fim": "2024-05-09",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-livelo-compra-2025-06-17",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/livelo-farmacia-15-pontos-jun25.html",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Só hoje! Livelo oferece até 15 pontos por real em compras na farmácia 17/06/25",
+   "trecho": "Só hoje! Livelo oferece até 15 pontos por real em compras na farmácia 17/06/25. Vale para produtos de skincare, higiene e beleza!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "livelo",
+   "destino": "livelo",
+   "percentual": 15,
+   "vigencia_fim": "2025-06-17",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-livelo-compra-2025-11-06",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/livelo-mercado-carrefour-nov25.html",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Ganhe até 6 pontos Livelo por real gasto em compras de mercado 06/11/25",
+   "trecho": "Ganhe até 6 pontos Livelo por real gasto em compras de mercado 06/11/25. A Livelo está oferecendo 6 pontos por real gasto na compra de produtos próprios do Carrefour Mercado, e 1:1 nos demais produtos. A oferta é válida até o"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "livelo",
+   "destino": "livelo",
+   "percentual": 6,
+   "vigencia_fim": "2025-11-06",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-magalu-compra-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupons-amazon-magalu-19h-14mai26.html",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Até R$ 300 de desconto! Aproveite os novos cupons na Amazon e no Magalu",
+   "trecho": "Até R$ 300 de desconto! Aproveite os novos cupons na Amazon e no Magalu. Aproveite, os cupons podem acabar a qualquer momento!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "livelo",
+   "destino": "magalu",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-magalu-compra-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupons-amazon-magalu-19h-14mai26.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Até R$ 300 de desconto! Aproveite os novos cupons na Amazon e no Magalu",
+   "trecho": "Até R$ 300 de desconto! Aproveite os novos cupons na Amazon e no Magalu. Aproveite, os cupons podem acabar a qualquer momento!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "livelo",
+   "destino": "magalu",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "livelo-smiles-transferencia-2024-09-27",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/promocoes-transferencia-bonus-terminam-hoje-9mai25.html",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Último dia! 3 promoções de transferência com até 90% de bônus que terminam hoje",
+   "trecho": "Último dia! 3 promoções de transferência com até 90% de bônus que terminam hoje. Sextou, e como de costume, tem promoção boa terminando hoje! Hoje são 3 ofertas de transferência de pontos com até 90% de bônus que vão se despedindo: da"
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "livelo",
+   "destino": "smiles",
+   "percentual": 90,
+   "vigencia_fim": "2024-09-27",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "marriott-desconhecido-hotelaria-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/marriott-bonvoy-oferece-15-000-pontos-de-bonus-em-estadias-na-america-latina/",
+  "estrato": "outro",
+  "input": {
+   "titulo": "Marriott oferece pontos bônus em estadias na América Latina",
+   "trecho": "Marriott oferece pontos bônus em estadias na América Latina. Marriott Bonvoy lançou sua nova promoção que oferece 15 mil pontos de bônus por estadia na América Latina. Confira os detalhes!"
+  },
+  "extracao_atual": {
+   "tipo": "hotelaria",
+   "origem": "marriott",
+   "destino": "desconhecido",
+   "percentual": 15000,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mastercard-azul-compra-2024-11-26",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mastercard-azul-viagens-25-off-nov25.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Voltou! Ganhe 25% de desconto no Azul Viagens com cupom do Mastercard Surpreenda",
+   "trecho": "Voltou! Ganhe 25% de desconto no Azul Viagens com cupom do Mastercard Surpreenda. A oferta do Mastercard Surpreenda voltou! Somente até hoje (26/11), o programa está oferecendo um cupom de 25% de desconto no Azul Viagens para reserva de"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mastercard",
+   "destino": "azul",
+   "percentual": 25,
+   "vigencia_fim": "2024-11-26",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mastercard-uber-cartao-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/novo-cartao-mastercard-debito-pro.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Mastercard anuncia novo cartão de débito com 3 meses de Uber One grátis e segurança reforçada",
+   "trecho": "Mastercard anuncia novo cartão de débito com 3 meses de Uber One grátis e segurança reforçada. A Mastercard acaba de lançar o Débito Pro, uma nova versão do cartão de débito da bandeira que oferece benefícios no Uber One e Mastercard Surpre"
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "mastercard",
+   "destino": "uber",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "meli-disney-clube-2024-05-05",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/oferta-assinatura-meli-52-off-abr25.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Oportunidade! Assine o Meli+ por apenas R$ 11,90 e tenha acesso grátis ao Disney+",
+   "trecho": "Oportunidade! Assine o Meli+ por apenas R$ 11,90 e tenha acesso grátis ao Disney+. Oferta é válida até 05/05"
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "meli",
+   "destino": "disney",
+   "percentual": null,
+   "vigencia_fim": "2024-05-05",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadolivre-desconhecido-compra-2024-06-25",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mercado-livre-tarde-20-off-jun25.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "cupom mercado livre tarde 20 off jun25.html",
+   "trecho": "cupom mercado livre tarde 20 off jun25.html. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mercadolivre",
+   "destino": "desconhecido",
+   "percentual": 20,
+   "vigencia_fim": "2024-06-25",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadolivre-desconhecido-compra-2024-07-13",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mercado-livre-novos-codigos-jul25.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "11 novos códigos! Ganhe até 15% OFF em compras com cupom Mercado Livre - até R$ 100 de desconto!",
+   "trecho": "11 novos códigos! Ganhe até 15% OFF em compras com cupom Mercado Livre - até R$ 100 de desconto!. Cupons são válidos até o dia 13/07 ou até atingir o limite de ativações"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mercadolivre",
+   "destino": "desconhecido",
+   "percentual": 15,
+   "vigencia_fim": "2024-07-13",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadolivre-desconhecido-compra-2024-08-05",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mercado-livre-100-off-ago25.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Cupom Mercado Livre - ganhe até R$ 100 de desconto em compras a partir de R$ 19 - vale para todos os produtos!",
+   "trecho": "Cupom Mercado Livre - ganhe até R$ 100 de desconto em compras a partir de R$ 19 - vale para todos os produtos!. O cupom vale somente hoje (05/08) e tem limite de ativações"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mercadolivre",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2024-08-05",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadolivre-desconhecido-compra-2024-08-05",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mercado-livre-100-off-ago25.html",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "Cupom Mercado Livre - ganhe até R$ 100 de desconto em compras a partir de R$ 19 - vale para todos os produtos!",
+   "trecho": "Cupom Mercado Livre - ganhe até R$ 100 de desconto em compras a partir de R$ 19 - vale para todos os produtos!. O cupom vale somente hoje (05/08) e tem limite de ativações"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mercadolivre",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2024-08-05",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadolivre-desconhecido-compra-2024-09-18",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mercado-livre-60-desconto-set25.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Ganhe até R$ 60 de desconto em compras com o novo cupom Mercado Livre",
+   "trecho": "Ganhe até R$ 60 de desconto em compras com o novo cupom Mercado Livre. Cupom é válido somente hoje (18/09) e tem limite de ativações"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mercadolivre",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2024-09-18",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadolivre-desconhecido-compra-2026-07-04",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mercado-livre-ate-20-off-04jul26.html",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "cupom mercado livre ate 20 off 04jul26.html",
+   "trecho": "cupom mercado livre ate 20 off 04jul26.html. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mercadolivre",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2026-07-04",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadolivre-desconhecido-compra-2026-07-04",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mercado-livre-ate-20-off-04jul26.html",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "cupom mercado livre ate 20 off 04jul26.html",
+   "trecho": "cupom mercado livre ate 20 off 04jul26.html. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mercadolivre",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2026-07-04",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadolivre-desconhecido-compra-2026-07-04",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-mercado-livre-ate-20-off-04jul26.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "cupom mercado livre ate 20 off 04jul26.html",
+   "trecho": "cupom mercado livre ate 20 off 04jul26.html. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "mercadolivre",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2026-07-04",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadopago-desconhecido-clube-2024-09-28",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/prorrogado-oferta-meli-mais-60-off-set25.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Prorrogado! Assine o Meli+ por apenas R$ 9,90 e tenha Disney+ grátis e rendimentos de 120% do CDI no Mercado Pago",
+   "trecho": "Prorrogado! Assine o Meli+ por apenas R$ 9,90 e tenha Disney+ grátis e rendimentos de 120% do CDI no Mercado Pago. A promoção é válida até o dia 28/09."
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "mercadopago",
+   "destino": "desconhecido",
+   "percentual": 120,
+   "vigencia_fim": "2024-09-28",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "mercadopago-desconhecido-clube-2024-09-28",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/prorrogado-oferta-meli-mais-60-off-set25.html",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "Prorrogado! Assine o Meli+ por apenas R$ 9,90 e tenha Disney+ grátis e rendimentos de 120% do CDI no Mercado Pago",
+   "trecho": "Prorrogado! Assine o Meli+ por apenas R$ 9,90 e tenha Disney+ grátis e rendimentos de 120% do CDI no Mercado Pago. A promoção é válida até o dia 28/09."
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "mercadopago",
+   "destino": "desconhecido",
+   "percentual": 120,
+   "vigencia_fim": "2024-09-28",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "na-na-compra-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/passagens-aereas-bahia-12-06-25",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Férias na Bahia! Passagens para Salvador, Porto Seguro ou Ilhéus a partir de R$ 395 saindo de 28 cidades brasileiras!",
+   "trecho": "Férias na Bahia! Passagens para Salvador, Porto Seguro ou Ilhéus a partir de R$ 395 saindo de 28 cidades brasileiras!. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "na",
+   "destino": "na",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "nomad-azul-cartao-2025-03-24",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/promocao-nomad-azul-mar25",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Últimas horas! Abra a conta digital Nomad e ganhe de 12 a 21 mil pontos Azul! 24/03/25 - Melhores Destinos",
+   "trecho": "Últimas horas! Abra a conta digital Nomad e ganhe de 12 a 21 mil pontos Azul! 24/03/25 - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "nomad",
+   "destino": "azul",
+   "percentual": null,
+   "vigencia_fim": "2025-03-24",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "nubank-desconhecido-cartao-2024-05-26",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/ofertas-cartoes-black-ativas-mai26.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Cartão Black com anuidade grátis: confira 4 ofertas válidas hoje!",
+   "trecho": "Cartão Black com anuidade grátis: confira 4 ofertas válidas hoje!. Procurando um cartão Black com anuidade grátis? A seguir, confira 4 ofertas ativas para você aproveitar hoje (26/05). 1) Promoção cartão Nubank"
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "nubank",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2024-05-26",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "nubank-smiles-transferencia-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/smiles-nubank-bonus-out25",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Smiles oferece até 70% de bônus no envio de pontos do Nubank Ultravioleta - Melhores Destinos",
+   "trecho": "Smiles oferece até 70% de bônus no envio de pontos do Nubank Ultravioleta - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "nubank",
+   "destino": "smiles",
+   "percentual": 70,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "null-grandpalladiumimbassai-hotelaria-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/nordeste-imbassai-diarias-alll-19fev",
+  "estrato": "outro",
+  "input": {
+   "titulo": "Bahia pé na areia! Diárias alll inclusive no Grand Palladium Imbassaí a partir de R$ 1.310 em até 12x",
+   "trecho": "Bahia pé na areia! Diárias alll inclusive no Grand Palladium Imbassaí a partir de R$ 1.310 em até 12x. "
+  },
+  "extracao_atual": {
+   "tipo": "hotelaria",
+   "origem": "null",
+   "destino": "grandpalladiumimbassai",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "null-smiles-transferencia-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/prorrogado-smiles-bonus-70-jul26",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Prorrogado! Smiles oferece até 70% de bônus na transferência de pontos de todos os parceiros - Melhores Destinos",
+   "trecho": "Prorrogado! Smiles oferece até 70% de bônus na transferência de pontos de todos os parceiros - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "null",
+   "destino": "smiles",
+   "percentual": 70,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "picpay-uber-compra-2026-03-23",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/uber-cashback-10-mar26.html",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Ganhe 10% de cashback na compra de créditos Uber 23/03/26",
+   "trecho": "Ganhe 10% de cashback na compra de créditos Uber 23/03/26. O PicPay está oferecendo 10% de cashback na compra de créditos da Uber. A oferta é válida por tempo limitado, para pagamentos com qualquer cartão de"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "picpay",
+   "destino": "uber",
+   "percentual": 10,
+   "vigencia_fim": "2026-03-23",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "pontofrio-smiles-transferencia-2026-05-26",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/smiles-pontofrio-9-milhas-mai26.html",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "smiles pontofrio 9 milhas mai26.html",
+   "trecho": "smiles pontofrio 9 milhas mai26.html. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "pontofrio",
+   "destino": "smiles",
+   "percentual": 9,
+   "vigencia_fim": "2026-05-26",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "pontos pra voar-revolut-cartao-na",
+  "fonte": "pontospravoar",
+  "url": "https://pontospravoar.com/abra-sua-conta-na-revolut-ganhe-3-000-pontos-bonus-e-converta-moeda-sem-iof-e-sem-spread/",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Abra sua conta na Revolut, ganhe 3.000 pontos bônus e converta moeda sem IOF e sem spread",
+   "trecho": "Abra sua conta na Revolut, ganhe 3.000 pontos bônus e converta moeda sem IOF e sem spread. A promoção voltou! Em parceria com o Pontos Pra Voar, a Revolut está oferecendo 3.000 RevPoints para quem gastar apenas R$ 150 no cartão. A oferta é "
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "pontos pra voar",
+   "destino": "revolut",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "pp-hoteis.com-compra-2026-05-31",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/ganhe-8-de-desconto-em-reservas-com-hoteis-com-2/",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "8% de desconto na Hoteis.com + 12x sem juros | Maio 2026",
+   "trecho": "8% de desconto na Hoteis.com + 12x sem juros | Maio 2026. Em parceria com o PP, a Hoteis.com disponibilizou um cupom exclusivo para garantir sua próxima hospedagem com 8% de desconto!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "pp",
+   "destino": "hoteis.com",
+   "percentual": 8,
+   "vigencia_fim": "2026-05-31",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "pp-hoteis.com-compra-2026-05-31",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/ganhe-8-de-desconto-em-reservas-com-hoteis-com-2/",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "8% de desconto na Hoteis.com + 12x sem juros | Maio 2026",
+   "trecho": "8% de desconto na Hoteis.com + 12x sem juros | Maio 2026. Em parceria com o PP, a Hoteis.com disponibilizou um cupom exclusivo para garantir sua próxima hospedagem com 8% de desconto!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "pp",
+   "destino": "hoteis.com",
+   "percentual": 8,
+   "vigencia_fim": "2026-05-31",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "qatar-desconhecido-estrutural-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/qatar-retoma-voos-aos-poucos-em-doha-e-facilita-status-no-privilege-club/",
+  "estrato": "outro",
+  "input": {
+   "titulo": "Qatar retoma voos aos poucos em Doha e facilita status",
+   "trecho": "Qatar retoma voos aos poucos em Doha e facilita status. A Qatar Airways está retomando aos poucos seus voos em Doha e está facilitando o status para seus passageiros no Privilege Club. Entenda!"
+  },
+  "extracao_atual": {
+   "tipo": "estrutural",
+   "origem": "qatar",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "resortstaua-desconhecido-hotelaria-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/resorts-taua-com-desconto-diarias-13mar",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "resorts taua com desconto diarias 13mar",
+   "trecho": "resorts taua com desconto diarias 13mar. "
+  },
+  "extracao_atual": {
+   "tipo": "hotelaria",
+   "origem": "resortstaua",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "resortstaua-desconhecido-hotelaria-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/resorts-taua-com-desconto-diarias-13mar",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "resorts taua com desconto diarias 13mar",
+   "trecho": "resorts taua com desconto diarias 13mar. "
+  },
+  "extracao_atual": {
+   "tipo": "hotelaria",
+   "origem": "resortstaua",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "resortstaua-desconhecido-hotelaria-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/resorts-taua-com-desconto-diarias-13mar",
+  "estrato": "outro",
+  "input": {
+   "titulo": "resorts taua com desconto diarias 13mar",
+   "trecho": "resorts taua com desconto diarias 13mar. "
+  },
+  "extracao_atual": {
+   "tipo": "hotelaria",
+   "origem": "resortstaua",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "revolut-lifemiles-transferencia-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/revolut-adiciona-lifemiles-parceiros",
+  "estrato": "transferencia",
+  "input": {
+   "titulo": "Revolut adiciona LifeMiles da Avianca aos programas parceiros para transferência de pontos - Melhores Destinos",
+   "trecho": "Revolut adiciona LifeMiles da Avianca aos programas parceiros para transferência de pontos - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "transferencia",
+   "origem": "revolut",
+   "destino": "lifemiles",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "santander-aadvantage-cartao-2026-03",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cartoes-santander-aadvantage-anuidade-gratis-mar26.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "cartoes santander aadvantage anuidade gratis mar26.html",
+   "trecho": "cartoes santander aadvantage anuidade gratis mar26.html. "
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "santander",
+   "destino": "aadvantage",
+   "percentual": null,
+   "vigencia_fim": "2026-03",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "shell-desconhecido-compra-2024-08-20",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-shell-box-7-off-20ago25.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Cupom Shell Box: ganhe até R$ 7 de desconto ao abastecer com gasolina ou etanol",
+   "trecho": "Cupom Shell Box: ganhe até R$ 7 de desconto ao abastecer com gasolina ou etanol. Aproveite somente hoje (20/08)"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "shell",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2024-08-20",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "shellbox-desconhecido-compra-2026-02-25",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cupom-shell-box-7-off-fev26.html",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "Cupom Shell Box oferece até R$ 7 de desconto no abastecimento 25/02/26",
+   "trecho": "Cupom Shell Box oferece até R$ 7 de desconto no abastecimento 25/02/26. Quarta-feira é dia de abastecer com cupom do Shell Box! O programa liberou o código SVPDAY, que oferece R$ 0,10 de desconto por litro no abastecimento com"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "shellbox",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "2026-02-25",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "shopee-livelo-compra-2024-08-08",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/8-8-da-shopee-faca-compras-com-ate-r-80-de-desconto-e-ganhando-ate-5-pontos-por-real-na-esfera-ou-livelo/",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "8.8 da Shopee! Faça compras com até R$ 80 de desconto e ganhando até 5 pontos por real na Esfera ou Livelo - Passageiro de Primeira",
+   "trecho": "8.8 da Shopee! Faça compras com até R$ 80 de desconto e ganhando até 5 pontos por real na Esfera ou Livelo - Passageiro de Primeira. A Esfera e a Livelo estão oferecendo até 5 pontos por real gasto em primeira compra feita na Shopee em uma "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "shopee",
+   "destino": "livelo",
+   "percentual": 5,
+   "vigencia_fim": "2024-08-08",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "smiles-melhores destinos-compra-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/passagens-africa-cidade-cabo-smiles-mar26",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "África do Sul! Voos diretos para a Cidade do Cabo com bagagem a partir de 62 mil milhas Smiles - Melhores Destinos",
+   "trecho": "África do Sul! Voos diretos para a Cidade do Cabo com bagagem a partir de 62 mil milhas Smiles - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "smiles",
+   "destino": "melhores destinos",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "smiles-melhores destinos-compra-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/milhas/passagens-africa-cidade-cabo-smiles-mar26",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "África do Sul! Voos diretos para a Cidade do Cabo com bagagem a partir de 62 mil milhas Smiles - Melhores Destinos",
+   "trecho": "África do Sul! Voos diretos para a Cidade do Cabo com bagagem a partir de 62 mil milhas Smiles - Melhores Destinos. "
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "smiles",
+   "destino": "melhores destinos",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "smiles-smiles-clube-2024-03-22",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/assine-o-clube-smiles-e-receba-36-mil-milhas-em-12-meses-milheiro-a-partir-de-r-1380/",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Receba 36 mil milhas assinando o Plano 1.000 do Clube Smiles",
+   "trecho": "Receba 36 mil milhas assinando o Plano 1.000 do Clube Smiles. Assine o Clube Smiles no plano 1.000 e receba 36 mil milhas ao longo de 12 meses. Oferta válida até a sexta-feira (22),"
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "smiles",
+   "destino": "smiles",
+   "percentual": null,
+   "vigencia_fim": "2024-03-22",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "smiles-smiles-clube-2026-07-20",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/clube-smiles-ate-50k-jul26.html",
+  "estrato": "clube",
+  "input": {
+   "titulo": "Assine o Clube Smiles e receba até 50.000 milhas na hora – milheiro a partir de R$ 13,80",
+   "trecho": "Assine o Clube Smiles e receba até 50.000 milhas na hora – milheiro a partir de R$ 13,80. O Clube Smiles está com uma nova oferta de adesão que oferece até 50.000 milhas bônus na hora para novos assinantes. Dessa vez, todos os planos fazem "
+  },
+  "extracao_atual": {
+   "tipo": "clube",
+   "origem": "smiles",
+   "destino": "smiles",
+   "percentual": null,
+   "vigencia_fim": "2026-07-20",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "surpreenda-stanley-compra-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/compre-uma-garrafa-stanley-e-ganhe-outra-com-o-mastercard-surpreenda/",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "Compre um produto Stanley e ganhe outro par com o Surpreenda",
+   "trecho": "Compre um produto Stanley e ganhe outro par com o Surpreenda. Troque 10 pontos do Mastercard Surpreenda e ganhe um produto Stanley grátis na promoção “Pague 1 Leve 2”. Saiba como participar!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "surpreenda",
+   "destino": "stanley",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "tap-desconhecido-estrutural-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/tap-vai-reajustar-precos-do-club-milesgo/",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "TAP vai reajustar preços do Club Miles&amp;Go - Passageiro de Primeira",
+   "trecho": "TAP vai reajustar preços do Club Miles&amp;Go - Passageiro de Primeira. A TAP anunciou um reajuste nos valores do Club Miles&amp;Go, com aumentos que chegam a até 15% dependendo do plano."
+  },
+  "extracao_atual": {
+   "tipo": "estrutural",
+   "origem": "tap",
+   "destino": "desconhecido",
+   "percentual": 15,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "tap-desconhecido-estrutural-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/tap-vai-reajustar-precos-do-club-milesgo/",
+  "estrato": "outro",
+  "input": {
+   "titulo": "TAP vai reajustar preços do Club Miles&amp;Go - Passageiro de Primeira",
+   "trecho": "TAP vai reajustar preços do Club Miles&amp;Go - Passageiro de Primeira. A TAP anunciou um reajuste nos valores do Club Miles&amp;Go, com aumentos que chegam a até 15% dependendo do plano."
+  },
+  "extracao_atual": {
+   "tipo": "estrutural",
+   "origem": "tap",
+   "destino": "desconhecido",
+   "percentual": 15,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "uber-desconhecido-hotelaria-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/uber-reservas-hoteis-novos-recursos/",
+  "estrato": "outro",
+  "input": {
+   "titulo": "Uber anuncia reservas de hotéis e novos recursos para viajantes - Passageiro de Primeira",
+   "trecho": "Uber anuncia reservas de hotéis e novos recursos para viajantes - Passageiro de Primeira. A Uber expande sua plataforma ao permitir reservas de hotéis diretamente no aplicativo, com descontos e benefícios para membros do Uber One."
+  },
+  "extracao_atual": {
+   "tipo": "hotelaria",
+   "origem": "uber",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "uber-inter-cashback-na",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cashback-uber-inter-8-jul25.html",
+  "estrato": "outro",
+  "input": {
+   "titulo": "cashback uber inter 8 jul25.html",
+   "trecho": "cashback uber inter 8 jul25.html. "
+  },
+  "extracao_atual": {
+   "tipo": "cashback",
+   "origem": "uber",
+   "destino": "inter",
+   "percentual": 8,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "udm-desconhecido-compra-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/voltou-black-da-udm/",
+  "estrato": "negativo_candidato",
+  "input": {
+   "titulo": "ÚLTIMAS HORAS! Black da UDM com até 60% OFF em todos os cursos",
+   "trecho": "ÚLTIMAS HORAS! Black da UDM com até 60% OFF em todos os cursos. A Black da UDM está de volta com até 60% OFF em todos os cursos! Aprenda sobre milhas com o time que mais entende do assunto no Brasil!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "udm",
+   "destino": "desconhecido",
+   "percentual": 60,
+   "vigencia_fim": "na",
+   "lado_unico": false
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "unitedmileageplus-desconhecido-compra-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/united-mileageplus-oferece-ate-80-de-bonus-na-compra-de-milhas/",
+  "estrato": "compra_pontos",
+  "input": {
+   "titulo": "United MileagePlus oferece até 80% de bônus na compra de milhas - Passageiro de Primeira",
+   "trecho": "United MileagePlus oferece até 80% de bônus na compra de milhas - Passageiro de Primeira. O MileagePlus, programa de fidelidade da United, está oferecendo até 80% de bônus na compra de milhas. Confira!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "unitedmileageplus",
+   "destino": "desconhecido",
+   "percentual": 80,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "unitedmileageplus-desconhecido-compra-na",
+  "fonte": "passageirodeprimeira",
+  "url": "https://passageirodeprimeira.com/united-mileageplus-oferece-ate-80-de-bonus-na-compra-de-milhas/",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "United MileagePlus oferece até 80% de bônus na compra de milhas - Passageiro de Primeira",
+   "trecho": "United MileagePlus oferece até 80% de bônus na compra de milhas - Passageiro de Primeira. O MileagePlus, programa de fidelidade da United, está oferecendo até 80% de bônus na compra de milhas. Confira!"
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "unitedmileageplus",
+   "destino": "desconhecido",
+   "percentual": 80,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "vilagale-desconhecido-hotelaria-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/pacotes-diarias-all-inclusive-nordeste-29-11-25",
+  "estrato": "outro",
+  "input": {
+   "titulo": "Vila Galé na Black Friday: voos + all inclusive no Nordeste a partir de R$ 3.242 por pessoa",
+   "trecho": "Vila Galé na Black Friday: voos + all inclusive no Nordeste a partir de R$ 3.242 por pessoa. "
+  },
+  "extracao_atual": {
+   "tipo": "hotelaria",
+   "origem": "vilagale",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "vilagale-desconhecido-hotelaria-na",
+  "fonte": "melhoresdestinos",
+  "url": "https://www.melhoresdestinos.com.br/promocao/pacotes-diarias-all-inclusive-nordeste-29-11-25",
+  "estrato": "lado_unico",
+  "input": {
+   "titulo": "Vila Galé na Black Friday: voos + all inclusive no Nordeste a partir de R$ 3.242 por pessoa",
+   "trecho": "Vila Galé na Black Friday: voos + all inclusive no Nordeste a partir de R$ 3.242 por pessoa. "
+  },
+  "extracao_atual": {
+   "tipo": "hotelaria",
+   "origem": "vilagale",
+   "destino": "desconhecido",
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "xp-desconhecido-cartao-2024-04-18",
+  "fonte": "melhorescartoes",
+  "url": "https://www.melhorescartoes.com.br/cartao-xp-adicional-investback-em-dobro.html",
+  "estrato": "bonus_acumulo",
+  "input": {
+   "titulo": "Oportunidade! XP oferece investback de 2% no cartão adicional",
+   "trecho": "Oportunidade! XP oferece investback de 2% no cartão adicional. Benefício é válido por 30 dias, mas somente para cartões adicionais emitidos até amanhã (19/03)"
+  },
+  "extracao_atual": {
+   "tipo": "cartao",
+   "origem": "xp",
+   "destino": "desconhecido",
+   "percentual": 2,
+   "vigencia_fim": "2024-04-18",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ }
+]
