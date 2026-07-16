@@ -12,7 +12,30 @@
 - **Script batch** — `v2/scripts/canonicalizar.mjs`: dry-run/apply, idempotente, resumível; aborta sem env (sem mock silencioso).
 - **Seed** — `v2/db/seed-aliases.json`: núcleo de programas BR + aliases.
 
-## Bloqueado (não aplicado ao banco)
+## APLICAÇÃO EXECUTADA — 2026-07-16 (aguardando aprovação do relatório)
+
+**Backup on-demand:** tabela `public.campaigns_bkp_prev2_20260716` (cópia integral de `campaigns`), criada 2026-07-16 17:37:12 UTC, **3.610 linhas = íntegra**. (Não há tool MCP de backup de projeto; a cópia de tabela cobre a única tabela com dados tocados.)
+
+**Sequência aplicada via MCP (execute_sql/apply_migration, privilégio elevado):**
+1. Migration `v2_001_canonical_identity` aplicada (aditiva).
+2. Domínio semeado: **191 programas** (com kind), **414 aliases**, **6 pares**.
+3. Canonicalização set-based (paridade EXATA com o dry-run JS — validada antes de escrever).
+
+**Relatório pós-apply:**
+
+| Métrica | Valor |
+|---|---|
+| campaigns (linhas) | 3.610 = backup 3.610 (**linhas inalteradas: sim** — aplicação aditiva, nada criado/apagado) |
+| canonicalizadas | 3.610 (100%) |
+| com identidade (rota+lado único) | **3.324** (= 2.104 rota + 1.220 lado único; bate com o dry-run) |
+| em revisão | 286 (251 origem_nao_resolvida + 22 origem_generica_recuperavel + 13 transferencia_sem_destino) |
+| identidades canônicas | 1.009 |
+| eventos campanha_versoes | 3.610 (1 por campanha; trilha completa) |
+| **idempotência (2ª passada)** | **0 eventos novos** — determinismo confirmado |
+
+**Colunas originais de `campaigns` intocadas** (só colunas novas preenchidas). Backup preservado para rollback.
+
+## Bloqueado (não aplicado ao banco) — RESOLVIDO ACIMA
 
 Durante esta sessão o **MCP Supabase ficou instável** (o stream de permissão fechava em toda chamada de escrita/leitura). Além disso, **D-006 exige snapshot antes de qualquer migration destrutiva**. Portanto, a aplicação ao banco vivo NÃO foi feita — por escolha segura, não por omissão.
 
