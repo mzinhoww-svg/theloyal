@@ -1,5 +1,18 @@
 # Auditoria Forense — Forecast e Predict
 
+> **⚠ STATUS (2026-07-15): retrato PRÉ-correções — vários achados já foram
+> corrigidos.** Já resolvidos desde a escrita: contenção temporal + duplicidade
+> C0.2 e paridade TS×MJS com testes (PR #54/C0.2); paridade de proveniência A1
+> (`CORRECAO-A1-FORECAST-PARITY.md`); política canônica Predict-como-motor +
+> Predict chegando ao leitor (PR #73); régua de publicação com gate unificado e
+> score calculado (PR #74); dashboards, overrides no Predict, tendência de
+> snapshots (write-only → lidos), filtros, series-builder único
+> (ADR-SERIES-001) e fila assistida de correção de datas com
+> `campaign_date_reviews` (PR #76). Itens que PERMANECEM abertos: correção do
+> dado na origem (edge function — validação de datas/dedup_key/origin), série
+> rica RFC-009, outlier genérico de intervalo, fase estrutural S1–S7 (gated
+> por H1–H12/ADRs). Ver `docs/architecture/plano-implementacao-consolidado.md`.
+>
 > Auditoria técnica, estatística, operacional e de produto dos motores **Forecast**
 > (`lib/forecast.ts`) e **Predict v2** (`lib/predict-engine.ts`), baseada na
 > **implementação real** e nos **dados reais** do Supabase `qjqnqcsdnpvvmyzkavoq`

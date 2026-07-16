@@ -2,19 +2,16 @@
 // (runtime nodejs), portanto nunca vão para o client.
 //
 // Leitura/escrita no Supabase: prefere a SERVICE key (server-only, ignora RLS)
-// para o admin gerir tudo; cai na ANON key só para leitura pública. A URL/anon
-// key ficam com fallback aos valores atuais para não quebrar o deploy vigente.
+// para o admin gerir tudo; cai na ANON key só para leitura pública.
+// BKL-03: URL e chaves SÓ de env — sem fallback hardcoded para produção.
 
-const FALLBACK_URL = "https://qjqnqcsdnpvvmyzkavoq.supabase.co";
-const FALLBACK_ANON = "sb_publishable_P8p6JOjLfCVwr6QqgLxjqw_NbqMHKV-";
-
-const SUPABASE_URL = process.env.SUPABASE_URL?.trim() || FALLBACK_URL;
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim() || "";
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY?.trim() || "";
-const ANON_KEY = process.env.SUPABASE_ANON_KEY?.trim() || FALLBACK_ANON;
+const ANON_KEY = process.env.SUPABASE_ANON_KEY?.trim() || "";
 const READ_KEY = SERVICE_KEY || ANON_KEY;
 
 export function supabaseWritable(): boolean {
-  return Boolean(SERVICE_KEY);
+  return Boolean(SERVICE_KEY && SUPABASE_URL);
 }
 
 // --- Basic Auth compartilhada por /admin (GET) e /admin/* (POST de escrita) ---
@@ -45,6 +42,7 @@ export function deny(): Response {
 // --- Supabase REST ---
 
 export async function sbSelect(path: string): Promise<any[]> {
+  if (!SUPABASE_URL || !READ_KEY) return [];
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       headers: { apikey: READ_KEY, authorization: `Bearer ${READ_KEY}` },
@@ -58,7 +56,7 @@ export async function sbSelect(path: string): Promise<any[]> {
 }
 
 export async function sbInsert(table: string, rows: unknown): Promise<{ ok: boolean; status: number }> {
-  if (!SERVICE_KEY) return { ok: false, status: 0 };
+  if (!supabaseWritable()) return { ok: false, status: 0 };
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: "POST",
     headers: {
@@ -74,7 +72,7 @@ export async function sbInsert(table: string, rows: unknown): Promise<{ ok: bool
 
 // Insert que retorna as linhas criadas (para pegar o id gerado e encadear FKs).
 export async function sbInsertReturning(table: string, rows: unknown): Promise<{ ok: boolean; status: number; data: any[] }> {
-  if (!SERVICE_KEY) return { ok: false, status: 0, data: [] };
+  if (!supabaseWritable()) return { ok: false, status: 0, data: [] };
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: "POST",
     headers: {
@@ -90,7 +88,7 @@ export async function sbInsertReturning(table: string, rows: unknown): Promise<{
 }
 
 export async function sbPatch(table: string, filter: string, body: unknown): Promise<{ ok: boolean; status: number }> {
-  if (!SERVICE_KEY) return { ok: false, status: 0 };
+  if (!supabaseWritable()) return { ok: false, status: 0 };
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
     method: "PATCH",
     headers: {

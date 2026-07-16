@@ -39,7 +39,8 @@ function esc(s) {
 // artefato estiver fresco e completo (Fase C0). Stale/incompleto/ausente/inválido
 // → radar automático NÃO usado (nunca publica números desatualizados em silêncio).
 function resolveRadar(wk) {
-  if (wk.radar && Array.isArray(wk.radar.windows) && wk.radar.windows.length) return wk.radar; // override manual
+  if (wk.radar && Array.isArray(wk.radar.windows) && wk.radar.windows.length)
+    return { monitoringCount: 0, ...wk.radar }; // override manual
   if (!existsSync(FORECAST_PATH)) return null;
   let fc;
   try {
@@ -58,6 +59,8 @@ function resolveRadar(wk) {
     return null;
   }
   const windows = fc?.digest?.radarWeekly ?? [];
+  // Linha de monitoramento (deferido 1.3 da régua): séries reais em observação
+  // que NÃO passam a nota de corte. Contagem honesta — nunca vira número/janela.
   const monitoringCount = Number(fc?.digest?.radarMonitoringWeekly) || 0;
   if (!windows.length && !monitoringCount) return null;
   return { note: RADAR_NOTE_DEFAULT, windows, monitoringCount };
@@ -274,7 +277,11 @@ function WeeklyArticle({ wk, radar }) {
                   h("span", { className: "mono tl-radar-window" }, w.window)),
                 h(ConfPill, { conf: w.confidence }),
                 w.basis ? h("div", { className: "tl-radar-basis" }, w.basis) : null))),
-          radar.monitoringCount ? h("p", { className: "tl-radar-note" }, monitoringLine(radar.monitoringCount)) : null)
+          radar.monitoringCount
+            ? h("p", { className: "tl-radar-monitoring" },
+                h("span", { className: "tl-monitoring-chip" }, "Monitoramento"),
+                ` ${monitoringLine(radar.monitoringCount)}`)
+            : null)
       : null,
     wk.movements
       ? h("section", null,
@@ -327,6 +334,8 @@ main{padding:48px 20px}
 .tl-radar-window{font-size:14px;white-space:nowrap}
 .tl-conf{display:inline-block;margin-top:6px;border-radius:9999px;padding:2px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
 .tl-radar-basis{margin-top:6px;font-size:12px;color:var(--g400)}
+.tl-radar-monitoring{border-top:1px solid var(--line);padding-top:12px;margin:12px 0 0;font-size:13px;color:var(--g500)}
+.tl-monitoring-chip{display:inline-block;border:1px dashed var(--g400);color:var(--g500);border-radius:9999px;padding:2px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-right:8px}
 .tl-mov{margin-top:10px}.tl-mov-title{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--g400)}
 .tl-mov ul,.tl-watch{margin:4px 0 0;padding-left:20px}
 .tl-deal{border:1px solid var(--line);border-radius:8px;padding:20px;margin-top:12px}

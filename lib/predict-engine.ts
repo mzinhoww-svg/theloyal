@@ -21,6 +21,7 @@ import {
   addDays,
   collapseWaves,
   groupTransferSeries,
+  intervalOutlierWarning,
   type CampaignRow,
 } from "./series-builder.ts";
 import { assessCampaignQuality, type CampaignQualityAssessment } from "./campaign-quality.ts";
@@ -303,11 +304,36 @@ function gate(
   intervals: number[],
   backtest: BacktestResult | null,
   cfg: PredictConfig,
+  ctx: { datasetComplete: boolean; excludedCount: number } = {
+    datasetComplete: true,
+    excludedCount: 0,
+  },
 ): { readiness: Readiness; confidence: Confidence; blockReason: string | null; warnings: string[] } {
   const n = events.length;
   const warnings: string[] = [];
 
+  // Leitura parcial do ledger → NENHUMA série publica número (o estado existia
+  // no tipo e nunca era atribuído; agora o gate o usa de fato).
+  if (!ctx.datasetComplete) {
+    return {
+      readiness: "backfill_incomplete",
+      confidence: "insuficiente",
+      blockReason: "backfill_incomplete (leitura do ledger incompleta — recalcule após a carga)",
+      warnings,
+    };
+  }
+
   if (n < cfg.minSamples) {
+    // Distingue "histórico curto" de "histórico consumido pela qualidade":
+    // se campanhas da série foram excluídas pelo C0.2, o bloqueio é de dado.
+    if (ctx.excludedCount > 0) {
+      return {
+        readiness: "data_quality_blocked",
+        confidence: "insuficiente",
+        blockReason: `data_quality_blocked (${n} válida(s) < ${cfg.minSamples}; ${ctx.excludedCount} excluída(s) por qualidade — revisar na fila de datas)`,
+        warnings,
+      };
+    }
     return {
       readiness: "insufficient_history",
       confidence: "insuficiente",
@@ -315,6 +341,10 @@ function gate(
       warnings,
     };
   }
+
+  // Outlier relativo à cadência (MAD) — sinaliza; rebaixe automático é decisão H4.
+  const outlier = intervalOutlierWarning(intervals);
+  if (outlier) warnings.push(outlier);
 
   const cv = coefVar(intervals);
   // Confiança base por tamanho de amostra.
@@ -438,6 +468,10 @@ function predictOne(
   rows: CampaignRow[],
   asOf: string,
   cfg: PredictConfig,
+  ctx: { datasetComplete: boolean; excludedCount: number } = {
+    datasetComplete: true,
+    excludedCount: 0,
+  },
 ): Prediction {
   const seriesKey = `${origem ?? "*"}|${destino}|transferencia|brasil|todos|percentual`;
   const evs = eventsFromRows(rows, cfg.waveEpsilonDays);
@@ -454,7 +488,7 @@ function predictOne(
   const daysSinceLast = n ? Math.max(0, daysBetween(dates[n - 1], asOf)) : null;
 
   const backtest = n >= cfg.minSamples + 1 ? backtestSeries(evs, cfg) : null;
-  const g = gate(evs, intervals, backtest, cfg);
+  const g = gate(evs, intervals, backtest, cfg, ctx);
 
   const blocked = g.blockReason != null;
   const timing = blocked ? null : computeTiming(evs, asOf, cfg);
@@ -504,10 +538,13 @@ export interface PredictResult {
 // nenhuma regra especial por programa. O chamador filtra por programa se quiser.
 export function buildPredict(
   campaigns: CampaignRow[],
-  opts: { asOf: string; config?: Partial<PredictConfig> } = { asOf: new Date().toISOString().slice(0, 10) },
+  opts: { asOf: string; config?: Partial<PredictConfig>; datasetComplete?: boolean } = {
+    asOf: new Date().toISOString().slice(0, 10),
+  },
 ): PredictResult {
   const cfg = { ...DEFAULT_PREDICT_CONFIG, ...(opts.config ?? {}) };
   const asOf = opts.asOf;
+  const datasetComplete = opts.datasetComplete !== false;
 
   // Fase C0.2 — MESMA avaliação de qualidade do Forecast (normProgram compartilhado).
   // O Predict recebe exatamente o conjunto elegível: nenhuma campanha temporalmente
@@ -518,11 +555,31 @@ export function buildPredict(
   // Particionamento rota/cluster compartilhado com o Forecast (series-builder).
   const groups = groupTransferSeries(transf, normProgram);
 
+  // Exclusões do C0.2 por série (route "origem→destino"): distingue histórico
+  // curto de histórico CONSUMIDO pela qualidade (→ data_quality_blocked).
+  const excludedByRoute = new Map<string, number>();
+  const excludedByCluster = new Map<string, number>();
+  for (const ex of quality.excluded) {
+    excludedByRoute.set(ex.route, (excludedByRoute.get(ex.route) ?? 0) + 1);
+    const destino = ex.route.split("→")[1] ?? "";
+    if (destino) excludedByCluster.set(destino, (excludedByCluster.get(destino) ?? 0) + 1);
+  }
+
   const clusters = Array.from(groups.clusters.values())
-    .map((g) => predictOne("cluster", null, g.destino, g.rows, asOf, cfg))
+    .map((g) =>
+      predictOne("cluster", null, g.destino, g.rows, asOf, cfg, {
+        datasetComplete,
+        excludedCount: excludedByCluster.get(g.destino) ?? 0,
+      }),
+    )
     .sort((a, b) => b.recordsTotal - a.recordsTotal);
   const routes = Array.from(groups.routes.values())
-    .map((g) => predictOne("route", g.origem as string, g.destino, g.rows, asOf, cfg))
+    .map((g) =>
+      predictOne("route", g.origem as string, g.destino, g.rows, asOf, cfg, {
+        datasetComplete,
+        excludedCount: excludedByRoute.get(`${g.origem}→${g.destino}`) ?? 0,
+      }),
+    )
     .sort((a, b) => b.recordsTotal - a.recordsTotal);
 
   return { asOf, modelVersion: MODEL_VERSION, backtestVersion: BACKTEST_VERSION, clusters, routes, quality };

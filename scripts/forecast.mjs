@@ -16,7 +16,13 @@ import { buildForecast, resolveConfig, upcomingWindows } from "./forecast-engine
 import { composeRadarViewModel } from "../lib/radar-view-model.ts";
 import { buildReaderRadar } from "../lib/reader-radar.ts";
 
-const SUPABASE_URL = (process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co").replace(/\/+$/, "");
+// BKL-03: sem fallback hardcoded — ambiente sem env falha alto, nunca aponta
+// para produção em silêncio.
+const SUPABASE_URL = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+if (!SUPABASE_URL) {
+  console.error("[forecast] SUPABASE_URL ausente — configure o ambiente antes de rodar.");
+  process.exit(1);
+}
 const SUPABASE_KEY =
   process.env.SUPABASE_ANON_KEY ||
   process.env.SUPABASE_SERVICE_ROLE_KEY ||

@@ -55,25 +55,25 @@ export function DateReviewQueue({
               </Td>
               <Td label="Proposta" className="font-mono tabular-nums text-ink">
                 {p.proposedDate}
-                <span className="block text-[11px] text-gray-400">+{p.yearsShifted} ano(s)</span>
+                <span className="mt-0.5 block text-xs text-gray-500">+{p.yearsShifted} ano(s)</span>
               </Td>
-              <Td label="Evidência" className="max-w-[280px] text-xs text-gray-500">
+              <Td label="Evidência" className="max-w-xs break-words text-xs text-gray-500">
                 {p.evidence.join(" · ")}
               </Td>
               <Td label="Confiança">
                 <Pill tone={p.confidence === "alta" ? "green" : "blue"}>{p.confidence}</Pill>
               </Td>
               <Td className="tl-cell-action">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-3">
                   <ActionForm action={applyAction}>
                     <input type="hidden" name="proposal" value={payload} />
-                    <SubmitButton variant="primary" pendingLabel="…">
+                    <SubmitButton variant="primary" pendingLabel="…" confirm="confirmar correção?">
                       aplicar
                     </SubmitButton>
                   </ActionForm>
                   <ActionForm action={rejectAction}>
                     <input type="hidden" name="proposal" value={payload} />
-                    <SubmitButton variant="danger" pendingLabel="…">
+                    <SubmitButton variant="danger" pendingLabel="…" confirm="confirmar rejeição?">
                       rejeitar
                     </SubmitButton>
                   </ActionForm>

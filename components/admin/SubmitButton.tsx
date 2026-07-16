@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 // Botao de Server Action com estado pendente. Client Component minimo —
 // nenhuma chave/segredo trafega aqui; so dispara o form para o servidor.
@@ -26,6 +26,8 @@ export function SubmitButton({
   variant = "default",
   title,
   confirm,
+  disabled = false,
+  ariaDescribedBy,
 }: {
   children: ReactNode;
   pendingLabel?: string;
@@ -34,9 +36,21 @@ export function SubmitButton({
   // Quando setado, exige um segundo clique inline antes de submeter (ações
   // destrutivas). Sem modal — o próprio botão vira "Confirmar?".
   confirm?: string;
+  // Desabilita externamente (ex.: ação que não faz sentido com dado parcial).
+  disabled?: boolean;
+  // Liga o botão a um texto visível/sr-only que explica por que está desabilitado.
+  ariaDescribedBy?: string;
 }) {
   const { pending } = useFormStatus();
   const [armed, setArmed] = useState(false);
+
+  // Auto-desarme em 4s: no touch (iOS) não há blur nem Escape — sem isso o
+  // botão ficaria armado em silêncio e o gate de segurança falharia lá.
+  useEffect(() => {
+    if (!armed) return;
+    const timer = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(timer);
+  }, [armed]);
 
   const label = pending && pendingLabel ? pendingLabel : children;
 
@@ -45,6 +59,8 @@ export function SubmitButton({
       <button
         type="button"
         title={title}
+        disabled={disabled}
+        aria-describedby={ariaDescribedBy}
         onClick={() => setArmed(true)}
         className={`${BASE} ${VARIANT[variant]}`}
       >
@@ -56,10 +72,15 @@ export function SubmitButton({
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       title={title}
+      aria-describedby={ariaDescribedBy}
       onBlur={() => armed && setArmed(false)}
-      aria-live={armed ? "polite" : undefined}
+      // Escape desarma a confirmação pendente (convenção padrão de cancelar).
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && armed) setArmed(false);
+      }}
+      aria-live="polite"
       className={`${BASE} ${confirm ? VARIANT.danger : VARIANT[variant]}`}
     >
       {confirm && !pending ? confirm : label}

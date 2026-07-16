@@ -50,6 +50,10 @@ const CONF_LABEL: Record<Confidence, string> = {
 };
 
 const INPUT = "rounded border border-line bg-surface px-2 py-1 text-sm text-ink";
+// Grades da página (um só lugar para ajustar cada minmax): cards compactos vs
+// campos de formulário com hint longo (precisam de coluna mais larga).
+const GRID_CARDS = "[grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]";
+const GRID_FIELDS = "[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]";
 
 // Dias entre duas datas ISO (UTC, sem fuso).
 const daysBetweenISO = (a: string, b: string) =>
@@ -60,7 +64,7 @@ function ConfCell({ v }: { v: ForecastView }) {
     <span className="inline-flex items-center gap-1.5">
       <Pill tone={CONF_TONE[v.confidence]}>{CONF_LABEL[v.confidence]}</Pill>
       {v.overriddenConfidence && (
-        <span className="text-[11px] text-gray-400" title="confiança sobrescrita pelo operador">
+        <span className="text-xs text-gray-400" title="confiança sobrescrita pelo operador">
           override
         </span>
       )}
@@ -74,7 +78,7 @@ function EligibilityCell({ v }: { v: ForecastView }) {
       <span className="inline-flex items-center gap-1">
         <Pill tone="green">elegível</Pill>
         {v.editorialOverridden && (
-          <span className="text-[11px] text-gray-400" title="liberada por override com nota">
+          <span className="text-xs text-gray-400" title="liberada por override com nota">
             override
           </span>
         )}
@@ -85,7 +89,7 @@ function EligibilityCell({ v }: { v: ForecastView }) {
     <span className="inline-flex flex-col gap-0.5">
       <Pill tone="gray">bloqueada</Pill>
       {v.editorialBlockReason && (
-        <span className="text-[11px] text-gray-500">{v.editorialBlockReason}</span>
+        <span className="text-xs text-gray-500">{v.editorialBlockReason}</span>
       )}
     </span>
   );
@@ -152,9 +156,20 @@ function ForecastTable({ columnLabel, rows }: { columnLabel: string; rows: Forec
               <Td label="Última" className="font-mono text-xs tabular-nums text-gray-500">{v.lastWindow ?? "—"}</Td>
               <Td label="Maior interv." className="text-right font-mono tabular-nums">
                 {v.maxIntervalDays != null ? (
-                  <span className={v.maxIntervalDays >= 540 ? "text-red-600" : v.maxIntervalDays >= 365 ? "text-yellow-500" : undefined}>
-                    {v.maxIntervalDays}d
-                  </span>
+                  // Nunca cor sozinha (a11y) — e amarelo NUNCA como texto
+                  // (regra 7 da marca): faixa de atenção usa fill yellow-100
+                  // com texto Ink + rótulo para leitores de tela.
+                  v.maxIntervalDays >= 540 ? (
+                    <span className="text-red-600">
+                      {v.maxIntervalDays}d<span className="sr-only"> (intervalo crítico)</span>
+                    </span>
+                  ) : v.maxIntervalDays >= 365 ? (
+                    <span className="rounded bg-yellow-100 px-1 text-ink">
+                      {v.maxIntervalDays}d<span className="sr-only"> (atenção)</span>
+                    </span>
+                  ) : (
+                    <span>{v.maxIntervalDays}d</span>
+                  )
                 ) : (
                   "—"
                 )}
@@ -279,14 +294,29 @@ export default async function ForecastPage({
       />
 
       {!data.datasetComplete && (
-        <div className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700"
+        >
           Leitura do ledger incompleta — {data.radarBlockedReason ?? "carga parcial"}. Os radares do
           daily/weekly estão bloqueados (nenhum número editorial é gerado) até a carga completar.
           Nenhum override ignora este bloqueio.
         </div>
       )}
+      {data.loadWarnings.length > 0 && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-yellow-500 bg-yellow-100 p-3 text-sm text-ink"
+        >
+          Falha ao ler: {data.loadWarnings.join(" · ")}. Os blocos afetados podem aparecer vazios
+          sem estar.{" "}
+          <a href={PATH} className="font-semibold underline">
+            Recarregar página
+          </a>
+        </div>
+      )}
 
-      <section className="mb-6 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
+      <section className={`mb-6 grid gap-3 ${GRID_CARDS}`}>
         <StatCard label="Séries rastreadas" value={result.routesTracked + result.clustersTracked} sub={`${result.routesTracked} rotas · ${result.clustersTracked} programas`} tone="blue" />
         <StatCard label="Com previsão" value={result.withPrediction} sub="base interna suficiente" tone="green" />
         <StatCard label="Elegíveis p/ digest" value={eligibleCount} sub={`gate editorial ≥${config.minEditorialWaves} ondas`} tone={eligibleCount > 0 ? "green" : "gray"} />
@@ -416,7 +446,7 @@ export default async function ForecastPage({
           )}
         </p>
         <ActionForm action={saveConfigAction} className="rounded-lg border border-line bg-paper p-4">
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
+          <div className={`grid gap-4 ${GRID_FIELDS}`}>
             {cfgField("wave_epsilon_days", "Janela de onda (dias)", "Janelas ≤ N dias contam como a mesma campanha.", config.waveEpsilonDays)}
             {cfgField("min_samples", "Mínimo de janelas", "Abaixo disso, fica em formação (sem previsão).", config.minSamples)}
             {cfgField("samples_media", "Amostras p/ média", "Mín. de janelas para confiança média.", config.samplesMedia)}
@@ -509,7 +539,7 @@ export default async function ForecastPage({
                   <Td className="tl-cell-action">
                     <ActionForm action={removeOverrideAction}>
                       <input type="hidden" name="id" value={o.id} />
-                      <SubmitButton variant="danger" pendingLabel="…">
+                      <SubmitButton variant="danger" pendingLabel="…" confirm="confirmar remoção?">
                         remover
                       </SubmitButton>
                     </ActionForm>

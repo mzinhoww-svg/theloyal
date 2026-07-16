@@ -2,8 +2,13 @@
 // Read-only: imprime a régua vigente + cobertura do banco D a partir da REST pública
 // do Supabase (mesma anon key do /admin). NÃO escreve nada. Para o ritual completo
 // (que pode mover a régua) use o conector Supabase conforme docs/VALUATIONS-RUNBOOK.md.
-const URL = process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co";
-const KEY = process.env.SUPABASE_ANON || "sb_publishable_P8p6JOjLfCVwr6QqgLxjqw_NbqMHKV-";
+// BKL-03: sem fallback hardcoded de URL/chave.
+const URL = process.env.SUPABASE_URL || "";
+const KEY = process.env.SUPABASE_ANON || "";
+if (!URL || !KEY) {
+  console.error("[valuations] SUPABASE_URL/SUPABASE_ANON ausentes — configure o ambiente.");
+  process.exit(1);
+}
 const h = { apikey: KEY, authorization: `Bearer ${KEY}` };
 const get = async (p) => {
   const r = await fetch(`${URL}/rest/v1/${p}`, { headers: h, cache: "no-store" });

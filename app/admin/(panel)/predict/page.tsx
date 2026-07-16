@@ -130,7 +130,7 @@ function SeriesRow({ p, showHistory = false }: { p: PredictSeriesView; showHisto
           <Td label="Confiança">
             <Pill tone={confTone(p.confidence)}>{p.confidence}</Pill>
             {p.warnings.length > 0 && (
-              <span className="mt-0.5 block text-[11px] text-gray-500" title={p.warnings.join(" · ")}>
+              <span className="mt-0.5 block text-xs text-gray-500" title={p.warnings.join(" · ")}>
                 {p.warnings.join(" · ")}
               </span>
             )}
@@ -278,6 +278,24 @@ const PATH = "/admin/predict";
 const PAGE_SIZE = 30;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
+// BKL-07: leitura que FALHOU não é vazio — o operador precisa saber.
+// role="alert" anuncia a leitores de tela no momento em que monta; o link é a
+// ação de recuperação real (não só a instrução).
+function LoadWarningsBanner({ warnings, path }: { warnings: string[]; path: string }) {
+  if (!warnings.length) return null;
+  return (
+    <div
+      role="alert"
+      className="mb-4 rounded-lg border border-yellow-500 bg-yellow-100 p-3 text-sm text-ink"
+    >
+      Falha ao ler: {warnings.join(" · ")}. Os blocos afetados podem aparecer vazios sem estar.{" "}
+      <a href={path} className="font-semibold underline">
+        Recarregar página
+      </a>
+    </div>
+  );
+}
+
 export default async function PredictPage({
   searchParams,
 }: {
@@ -297,7 +315,8 @@ export default async function PredictPage({
     return true;
   };
 
-  const { result, clusters, routes, ledgerRows, asOf, datasetComplete } = await loadPredict();
+  const { result, clusters, routes, ledgerRows, asOf, datasetComplete, loadWarnings } =
+    await loadPredict();
   const series = [...clusters, ...routes];
   const ready = series.filter(isReady).length;
   const blocked = series.filter((p) => p.blockReason != null).length;
@@ -353,7 +372,29 @@ export default async function PredictPage({
         sub={`Motor histórico & preditivo por série (${MODEL_VERSION}). ${ledgerRows} campanhas no ledger · as of ${asOf}.`}
         actions={
           <ActionForm action={snapshotAllAction}>
-            <SubmitButton variant="primary" pendingLabel="Salvando…">
+            {(!datasetComplete || loadWarnings.length > 0) && (
+              // Motivo do disabled acessível (title não alcança teclado/leitor).
+              <span id="snapshot-disabled-reason" className="sr-only">
+                {!datasetComplete
+                  ? "carga do ledger incompleta — recalcule antes de snapshotar"
+                  : "há falha de leitura — recarregue antes de snapshotar"}
+              </span>
+            )}
+            <SubmitButton
+              variant="primary"
+              pendingLabel="Salvando…"
+              disabled={!datasetComplete || loadWarnings.length > 0}
+              ariaDescribedBy={
+                !datasetComplete || loadWarnings.length > 0 ? "snapshot-disabled-reason" : undefined
+              }
+              title={
+                !datasetComplete
+                  ? "carga do ledger incompleta — recalcule antes de snapshotar"
+                  : loadWarnings.length
+                    ? "há falha de leitura — recarregue antes de snapshotar"
+                    : undefined
+              }
+            >
               Gerar snapshot
             </SubmitButton>
           </ActionForm>
@@ -361,17 +402,21 @@ export default async function PredictPage({
       />
 
       {!datasetComplete && (
-        <div className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700"
+        >
           Leitura do ledger incompleta — as séries abaixo podem estar parciais. Gere o snapshot
           apenas após a carga completar.
         </div>
       )}
+      <LoadWarningsBanner warnings={loadWarnings} path={PATH} />
 
-      <section className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Séries" value={series.length} sub={`${result.clusters.length} programas · ${result.routes.length} rotas`} tone="gray" />
         <StatCard label="Com previsão" value={ready} sub="ready / ready_with_warnings" tone={ready > 0 ? "green" : "gray"} />
-        <StatCard label="Bloqueadas" value={blocked} sub="histórico insuficiente" tone={blocked > 0 ? "yellow" : "green"} />
-        <StatCard label="As of" value={<span className="text-lg">{asOf}</span>} sub={datasetComplete ? "carga completa" : "carga PARCIAL"} tone={datasetComplete ? undefined : "red"} />
+        <StatCard label="Bloqueadas" value={blocked} sub="histórico insuficiente" tone={blocked > 0 ? "gray" : "green"} />
+        <StatCard label="As of" value={asOf} sub={datasetComplete ? "carga completa" : "carga PARCIAL"} tone={datasetComplete ? undefined : "red"} />
       </section>
 
       <div className="mb-6 mt-4">

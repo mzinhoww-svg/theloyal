@@ -1,5 +1,11 @@
 # Backlog P1 — Radar Unificado (`/admin/radar`)
 
+> **✅ STATUS (2026-07-15): P1 ENCERRADO.** Ondas A–E entregues — ver
+> `IMPLEMENTACAO-P1A..P1E-RADAR.md`, `ENCERRAMENTO-RADAR-P1.md` e
+> `VERIFICACAO-FINAL-P1-RADAR.md`. Este documento permanece como especificação
+> histórica; as dependências P2–P5 do §18 seguem na fase estrutural
+> (`BACKLOG-FASE-ESTRUTURAL-RADAR.md`).
+>
 > Especificação **executável** da fase **P1** do Radar Preditivo de Campanhas:
 > uma visão unificada para **editor, analista e operador**, reusando 100% das
 > capacidades já construídas (C0/C0.2 + motores Forecast e Predict). Nenhum motor

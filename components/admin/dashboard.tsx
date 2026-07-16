@@ -377,12 +377,18 @@ export function OpportunityCard({
           <dd className="font-mono tabular-nums text-ink">{window ?? "—"}</dd>
         </div>
       </dl>
-      {trend && trend.length >= 2 && (
-        <div className="mt-2 border-t border-line pt-2">
-          <div className="mb-1 text-[11px] text-gray-400">prob. 30d ao longo dos snapshots</div>
-          <Sparkline data={trend} tone={tone} height={20} />
-        </div>
-      )}
+      {/* Slot de altura fixa: a linha de ações alinha entre cards com e sem
+          tendência (grid não "quebra" quando só alguns têm snapshots). */}
+      <div className="mt-2 min-h-[52px] border-t border-line pt-2">
+        {trend && trend.length >= 2 ? (
+          <>
+            <div className="mb-1 text-xs text-gray-500">prob. 30d ao longo dos snapshots</div>
+            <Sparkline data={trend} tone={tone} height={20} />
+          </>
+        ) : (
+          <div className="text-xs text-gray-500">sem histórico de snapshots ainda</div>
+        )}
+      </div>
       {actions != null && (
         <div className="mt-2 flex items-center gap-1 border-t border-line pt-2">{actions}</div>
       )}

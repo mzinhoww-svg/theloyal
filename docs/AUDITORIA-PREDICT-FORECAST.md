@@ -1,5 +1,13 @@
 # Auditoria profunda — Forecast & Predict (The Loyal)
 
+> **✅ Adendo (2026-07-15, pós-PRs #73/#74/#76):** além das correções da
+> reconciliação abaixo, foram resolvidos: leitura paginada completa (fim do
+> limite 2000), snapshots do Predict lidos (tendência + calibração no admin),
+> pin/mute no Predict, hints do Sidebar e copy da Observability corrigidos,
+> testes de motores/paridade/caracterização, e fila assistida de correção de
+> datas. Pendências vivas consolidadas em
+> `docs/architecture/plano-implementacao-consolidado.md`.
+>
 > **⚠ Reconciliada e parcialmente corrigida (2026-07-15).** A evidência **canônica** é
 > `docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md` (+ `docs/auditoria/`). A reconciliação de
 > métricas e a correção de conclusões estão em `docs/RECONCILIACAO-AUDITORIAS-RADAR.md`.
