@@ -27,6 +27,7 @@ Estes não são metas de milestone; são condições que **todo código v2 prese
 | INV-13 | Ledger de predições íntegro: toda predição emitida é resolvida. | Job de resolução fecha toda predição no fim da janela. |
 | INV-14 | Nenhum job falho descartado silenciosamente; backfill sempre resumível e idempotente. | Dead-letter visível no admin; checkpoint por fonte/período. |
 | INV-15 | Entitlement Pro auditável: toda concessão/revogação logada. | Trilha de auditoria em `entitlements`. |
+| INV-16 | **Nenhuma data de vigência afirmada sem evidência de cada componente (dia, mês, ano).** Componente não justificado no texto/slug/publicação → indeterminado; data incompleta → `indeterminada`. Fabricar data é override bloqueante (envenena o FSM a jusante: `ultimos_dias`/`encerrada` falsos). Mesma família do INV-03 (nenhum número sem correspondente). | Parser de vigência bloqueia `overprecision`; golden files exigem os 3 componentes com proveniência; `overprecision=0` no CI. |
 
 ---
 

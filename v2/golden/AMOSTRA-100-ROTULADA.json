@@ -425,9 +425,10 @@
    "titulo": "Não perca! Bradesco oferece cartões American Express, Elo e Visa com anuidade grátis para sempre",
    "trecho": "Não perca! Bradesco oferece cartões American Express, Elo e Visa com anuidade grátis para sempre. Promoção vai até 30/06. Confira as regras!"
   },
-  "classe": "campanha",
+  "classe": "nao_campanha",
   "flags": [
-   "year_error"
+   "anuidade_sem_pontos",
+   "flip_D018"
   ],
   "extracao_atual": {
    "tipo": "cartao",
@@ -437,33 +438,8 @@
    "vigencia_fim": "2024-06-30",
    "lado_unico": true
   },
-  "gabarito": {
-   "tipo": "promocao_emissao",
-   "origem_programa": "bradesco",
-   "destino_programa": "sem_destino",
-   "publico": "cartao",
-   "percentual": null,
-   "vigencia_fim": "2025-06-30"
-  },
-  "proveniencia": "anuidade grátis para sempre ... até 30/06; slug mai25",
-  "match": {
-   "origem": {
-    "ok": true,
-    "kind": "match"
-   },
-   "destino": {
-    "ok": true,
-    "kind": "match"
-   },
-   "percentual": {
-    "ok": true,
-    "kind": "match_null"
-   },
-   "vigencia": {
-    "ok": false,
-    "kind": "year_error"
-   }
-  }
+  "gabarito": null,
+  "proveniencia": "anuidade grátis para sempre; cartão sem bônus de ponto/milha (regra-mãe D-018)"
  },
  {
   "id": "c6-azul-transferencia-na",
@@ -2315,10 +2291,10 @@
    "titulo": "Cartão Black com anuidade grátis: confira 4 ofertas válidas hoje!",
    "trecho": "Cartão Black com anuidade grátis: confira 4 ofertas válidas hoje!. Procurando um cartão Black com anuidade grátis? A seguir, confira 4 ofertas ativas para você aproveitar hoje (26/05). 1) Promoção cartão Nubank"
   },
-  "classe": "campanha",
+  "classe": "nao_campanha",
   "flags": [
-   "year_error",
-   "borderline"
+   "anuidade_sem_pontos",
+   "flip_D018"
   ],
   "extracao_atual": {
    "tipo": "cartao",
@@ -2328,33 +2304,8 @@
    "vigencia_fim": "2024-05-26",
    "lado_unico": true
   },
-  "gabarito": {
-   "tipo": "promocao_emissao",
-   "origem_programa": "nubank",
-   "destino_programa": "sem_destino",
-   "publico": "cartao",
-   "percentual": null,
-   "vigencia_fim": "2026-05-26"
-  },
-  "proveniencia": "Cartão Black anuidade grátis ... hoje (26/05) ... Nubank; slug mai26",
-  "match": {
-   "origem": {
-    "ok": true,
-    "kind": "match"
-   },
-   "destino": {
-    "ok": true,
-    "kind": "match"
-   },
-   "percentual": {
-    "ok": true,
-    "kind": "match_null"
-   },
-   "vigencia": {
-    "ok": false,
-    "kind": "year_error"
-   }
-  }
+  "gabarito": null,
+  "proveniencia": "Cartão Black anuidade grátis (roundup de ofertas); sem bônus de ponto/milha (regra-mãe D-018)"
  },
  {
   "id": "nubank-smiles-transferencia-na",
@@ -2734,8 +2685,10 @@
    "titulo": "cartoes santander aadvantage anuidade gratis mar26.html",
    "trecho": "cartoes santander aadvantage anuidade gratis mar26.html. "
   },
-  "classe": "campanha",
+  "classe": "nao_campanha",
   "flags": [
+   "anuidade_sem_pontos",
+   "flip_D018",
    "titleless"
   ],
   "extracao_atual": {
@@ -2746,33 +2699,8 @@
    "vigencia_fim": "2026-03",
    "lado_unico": false
   },
-  "gabarito": {
-   "tipo": "promocao_emissao",
-   "origem_programa": "santander",
-   "destino_programa": "aa_advantage",
-   "publico": "cartao",
-   "percentual": null,
-   "vigencia_fim": "indeterminada"
-  },
-  "proveniencia": "slug: cartoes-santander-aadvantage-anuidade-gratis-mar26 (trecho sem título)",
-  "match": {
-   "origem": {
-    "ok": true,
-    "kind": "match"
-   },
-   "destino": {
-    "ok": true,
-    "kind": "match"
-   },
-   "percentual": {
-    "ok": true,
-    "kind": "match_null"
-   },
-   "vigencia": {
-    "ok": false,
-    "kind": "overprecision"
-   }
-  }
+  "gabarito": null,
+  "proveniencia": "anuidade grátis (slug); oferta é isenção de anuidade, sem bônus de ponto/milha (regra-mãe D-018)"
  },
  {
   "id": "shell-desconhecido-compra-2024-08-20",

@@ -1,5 +1,7 @@
 # Run dedicada — golden set medido (M1 slice 4 → portão de milestone)
 
+> **Nota (M2, D-020):** este é o snapshot do **portão M1** (55 campanha / 31 negativos). Depois, a regra-mãe D-018 reclassificou 3 itens `anuidade grátis` para `nao_campanha` — o golden autoritativo passou a **52 / 34**. Os números abaixo são o registro histórico do M1; a medição corrente vive em `METRICAS.json` e `GATE-METRICAS.json`.
+
 > Rotulado no critério congelado (`CRITERIO-ROTULACAO.md`), sem reabrir decisões. Gabarito com proveniência em `AMOSTRA-100-ROTULADA.json`; métricas reprodutíveis por `node v2/golden/score.mjs` (grava `METRICAS.json`). Data de referência: 2026-07-16.
 
 ## 1. O que foi entregue

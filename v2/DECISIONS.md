@@ -93,5 +93,60 @@ Score preciso sobre base com 36% de não-campanha é "lixo com casas decimais". 
 
 **Diretriz da slice 1 (auditabilidade):** o gate usa LLM, mas **cada rejeição registra motivo** (`cupom | resgate | stunt | produto_blog | perk`) **e evidência**, como o gate de auditoria da publicação. **Rejeição silenciosa é tão ruim quanto falso-positivo:** campanha real derrubada vai para a **fila de revisão** com o porquê — não se descobre por ausência. Meta dupla medida contra os 86: **precision de rejeição alta com recall de campanha preservado**.
 
+## D-015 — Reconciliação golden↔canônico: ajuste de convenção aprovado
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2
+
+A revalidação pós-canonicalização (`v2/golden/REVALIDACAO-POSCANON.md`) expôs que o gabarito do golden e o modelo canônico divergiam em **representação**, não em verdade. Ajuste de **convenção**, com antes/depois visível (não é número inflado):
+- **Single-sided own-program:** golden colapsava Clube/acúmulo próprio em `sem_destino`; adota-se a convenção canônica de **self-loop** (`livelo→livelo`, `lado_unico=false`), reservando `sem_destino` para lado único genuíno (compra de milhas, bônus de emissão).
+- **`programa` medido:** cru 0,704/0,894 → pós-canon **0,788/0,830** (convenção) · 0,636/0,797 (strict). A queda de recall é **abstenção correta** (`null → revisão`), não regressão.
+- Pendente: convenção do **modelo shopping** (origem = merchant vs programa). Registrada, não resolvida.
+Reprodutível em `postcanon.mjs`. Reconciliar o gabarito à convenção canônica é manutenção do golden, separada do gate.
+
+## D-016 — Gate de rejeição: desempate erra a favor de reter (abstenção)
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice 1)
+
+Quando o gate ficar entre **rejeitar e passar**, ele **passa e manda para revisão** — nunca rejeita no escuro. Racional: **falso-positivo de rejeição (derrubar campanha boa) é pior que falso-negativo**, porque a não-campanha ainda é pega depois pela revisão humana e pelo gate de auditoria da publicação, mas **campanha boa derrubada some do produto**. A abstenção erra a favor de reter. Camada A só rejeita com regra nomeada; ambíguo sobe para B; B com confidence abaixo do limiar → revisão.
+
+## D-017 — Golden files da camada determinística (não-regressão)
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice 1)
+
+As rejeições determinísticas (precision ~1,0) viram **teste de não-regressão no CI**, igual ao matcher do M1. Regra que classifica hoje classifica igual amanhã. O **LLM evolui; a camada A não pode driftar**. Se um caso que sobe para o LLM revelar **regra escondida**, ela **desce para a camada A por INSERT em `motivos_rejeicao`** — o LLM julga só o que é julgamento genuíno.
+
+## D-018 — Regra-mãe: vantagem-de-ter-o-cartão sem ponto/milha/cashback = fora
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (política permanente)
+
+**Tudo que é "vantagem de ter o cartão" mas não é ponto, milha ou cashback transferível fica FORA do universo de campanha.** Anuidade grátis, perk (iFood/Disney/Gemini), sala VIP, seguro viagem, isenção de tarifa → `nao_campanha`. A unidade do The Loyal é o **ponto/milha/valor transferível**, não a economia genérica de ter um cartão. Se um dia virar seção própria ("benefícios de cartão"), é **outro produto com outra régua**. Generaliza e absorve D-012. O gate não decide caso a caso o que já é política:
+- **Ruling 1 (aplicado):** cupom forte (palavra "cupom/OFF") **vence o guard de emissor** — programa nunca chama sua promo de "cupom". Desce `livelo-magalu` e `mastercard-azul` para a camada A. Camada B encolhe de 7 → **5 ambíguo real** (patrocínio, IA, ops, tarifa, resgate).
+- **Ruling 2 (aplicado):** regra `anuidade_sem_pontos` na camada A (migration `005`), travada em golden.
+
+## D-019 — Caveat permanente do número do gate: público ≠ "precision 1,0"
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2
+
+O 1,0 de precision de rejeição é **métrica interna in-sample** (as regras da camada A vieram dos 86). **Nunca vai para fora com esse enquadramento.** O número público defensável é: **"a base saiu de rejeitar 0/34 para 33/34 dos não-campanha sem derrubar nenhuma campanha real, com trilha auditável e 1 caso honestamente em revisão".** Fora da amostra, o que protege o recall é **limiar de confidence + abstenção + fila de revisão**, não a suposição de que a camada A ou o LLM acertam sempre. Essa disciplina de enquadramento é regra fixa de comunicação do produto.
+
+## D-020 — Correção de gabarito: `anuidade grátis` → `nao_campanha` (antes/depois)
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2
+
+Aplicação de D-018 ao golden (ajuste de convenção, não maquiagem — com antes/depois visível). **3 itens** viram `nao_campanha`: `bradesco-...-cartao` (anuidade grátis para sempre), `nubank-...-cartao` (Black anuidade grátis, roundup), `santander-aadvantage-...` (anuidade grátis, sem bônus de milha). Fonte da verdade: `score.mjs` (regenerou `AMOSTRA-100-ROTULADA.json`).
+
+| medição | antes (55/31) | depois (52/34) |
+|---|---|---|
+| campanhas / negativos | 55 / 31 | **52 / 34** |
+| rejeição precision | 1,00 (30/30) | **1,00 (33/33)** |
+| campanha recall | 1,00 (55/55) | **1,00 (52/52)** |
+| rejeição recall | 0,968 (30/31) | **0,971 (33/34)** |
+| camada A / B (rejeições) | 24 / 6 | **29 / 4** |
+
+Os 3 flips + os 2 do ruling 1 entram na camada A determinística (lock em `gate.test.mjs`). Os números do M1 (`RUN-DEDICADA.md`) são o snapshot do portão M1 pré-flip; a medição corrente autoritativa é 52/34 (`GATE-METRICAS.json`, `METRICAS.json`).
+
+## D-021 — Vigência: `overprecision` é bloqueio (INV-16), inferência de ano com trava de virada
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice 3, fechada)
+
+Duas falhas de vigência são **naturezas diferentes**: **parsing** ("li a data certa?") é bug; **confiabilidade de fonte** ("confio nessa data?") é estado legítimo (TIER 2 → "Não confirmado" pelo FSM). A slice 3 conserta só o parsing; a confiabilidade já é resolvida pela migration `001`/`003`.
+- **`overprecision` = override bloqueante (INV-16), não meta numérica.** Sem evidência de **cada componente** (dia, mês, ano), o componente é indeterminado e a data incompleta vira `indeterminada`. Fabricar data envenena o FSM (`ultimos_dias`/`encerrada` falsos) — pior que não ter data. Mesma família do INV-03.
+- **Inferência de ano** (texto → slug `mmmAA`/`publicado_em` proxy → `indeterminada`) com **trava de virada**: alvo antes do mês de publicação → ano seguinte; ambíguo sem proxy → `indeterminada`. Testes sintéticos cobrem a virada.
+- **Achado:** o gold estrito pegou **5 overprecisions do próprio gabarito do M1** (datas do `id`/slug-sem-dia) → corrigidas para `indeterminada`. O invariante pega o erro do rotulador.
+- **Medido (in-sample):** overprecision 0, parsing precision/recall 1,0; confiabilidade 0/52 TIER 1, reportada à parte. O 1,0 é in-sample; o que vale fora é o **bloqueio estrutural** (INV-16) + a trava de virada, não o número.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** Backup `campaigns_bkp_prev2_20260716` retido **até o M2 confirmar que a canonicalização não precisa de rollback**.
