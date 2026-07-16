@@ -12,13 +12,6 @@ import { FilterChips, type FilterParams } from "@/components/admin/dashboard";
 const PATH = "/admin/programas";
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
-const CONF_TONE: Record<string, Tone> = {
-  alta: "green",
-  media: "blue",
-  baixa: "yellow",
-  "em-formacao": "gray",
-  insuficiente: "gray",
-};
 const STATUS_LABEL: Record<string, string> = {
   continua: "ativa",
   "vence-72h": "vence em 72h",
@@ -94,11 +87,10 @@ function EngineCell({ p }: { p: ProgramView }) {
       <div className="rounded border border-line bg-paper p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Predict</span>
-          {eng ? (
-<Pill tone={CONF_TONE[eng.confidence] ?? "gray"} className="opacity-90">{eng.confidence}</Pill>
-          ) : (
-            <Pill tone="gray">sem série</Pill>
-          )}
+          <span className="font-mono text-xs text-gray-500">
+            <span className="sr-only">confiança: </span>
+            {eng ? eng.confidence : "sem série"}
+          </span>
         </div>
         {eng && !eng.blockReason ? (
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
@@ -142,11 +134,10 @@ function EngineCell({ p }: { p: ProgramView }) {
       <div className="rounded border border-line bg-paper p-3">
         <div className="mb-1 flex items-center justify-between gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Forecast</span>
-          {f ? (
-            <Pill tone={CONF_TONE[f.confidence] ?? "gray"}>{f.confidence}</Pill>
-          ) : (
-            <Pill tone="gray">sem série</Pill>
-          )}
+          <span className="font-mono text-xs text-gray-500">
+            <span className="sr-only">confiança: </span>
+            {f ? f.confidence : "sem série"}
+          </span>
         </div>
         {f ? (
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
@@ -274,7 +265,7 @@ export default async function ProgramasPage({
         />
       )}
 
-      <p className="mt-8 border-t border-line pt-4 text-xs text-gray-500">
+      <p className="mt-8 max-w-prose border-t border-line pt-4 text-xs text-gray-500">
         Promoções vêm do ledger (status continua/vence-72h/nova). Saúde compõe os sinais reais dos
         motores — readiness, confiança, backtest e divergência; sem base suficiente o programa fica
         &ldquo;sem base&rdquo;, nunca um número chutado. Promoções podem mudar sem aviso. Confira
