@@ -6,24 +6,24 @@
 
 ---
 
-## Gate de entrada (antes do M1)
+## Gate de entrada (antes do M1) — ✅ RESOLVIDO
 
-Resolver as decisões de `PROJECT.md §5`:
-1. Ratificar a taxonomia canônica (§4.3) — em especial `cartao`/`hotelaria`.
-2. Autorizar extração do `schema.sql` canônico + re-versionação das 20 migrations.
-3. Priorizar as fontes TIER 1 (sem elas não há Deal Desk).
-4. Decidir a hierarquia de documentos fantasma.
-5. Confirmar coexistência v1/v2 (branch evolutiva vs. app paralelo).
-6. Confirmar reuso in-place do banco `qjqnqcsdnpvvmyzkavoq`.
-
-**Sem esse gate, o M1 não inicia.**
+As decisões estão registradas em `v2/DECISIONS.md` (D-001…D-008), aprovadas pelo operador em 2026-07-16. Resumo:
+1. Taxonomia dos 9 tipos (5.4) ratificada; duplicatas via aliases + `campanha_versoes` (D-001).
+2. Extração do `schema.sql` autorizada; snapshot antes de migration destrutiva (D-002).
+3. Fontes TIER 1 = primeira slice; regra interina de confirmação manual (D-003).
+4. Brief v2.1 é autoridade única; `METHODOLOGY.md` nasce no M2 (D-004).
+5. Coexistência v1/v2 confirmada; landing intocada até M3 (D-005).
+6. Reuso in-place do banco, com trilha em `campanha_versoes` (D-006).
+7. Re-score histórico vira slice do M2 (D-007).
+8. Segmentos Beehiiv viram slice do M2 (D-008).
 
 ---
 
-## M0 — Auditoria ✅ (este ciclo)
+## M0 — Auditoria ✅ (concluído, PR #83 mergeado)
 
 **Entregue:** `v2/PROJECT.md`, `v2/REQUIREMENTS.md`, `v2/ROADMAP.md`; matriz de compatibilidade v1→v2; verificação do Beehiiv MCP; extração do estado real do banco.
-**Must-have:** matriz de compatibilidade aprovada pelo operador — **pendente de aprovação.**
+**Must-have:** matriz de compatibilidade — **aprovada pelo operador.**
 
 ---
 
@@ -33,7 +33,8 @@ Objetivo: transformar o corpus grande e sujo já existente em base canônica con
 
 | Slice | Tarefas | Must-have verificável |
 |---|---|---|
-| **M1.1 Schema canônico** | Extrair `schema.sql` do banco vivo; re-versionar as 20 migrations linearmente; corrigir numeração duplicada; remover credenciais hardcoded (env-only); `verify_jwt`/rede nas edge functions. | Banco novo reprovisionável só das migrações; grep sem literais de credencial. |
+| **M1.0 Baseline do schema** ✅ | Extrair `schema.sql` real do banco vivo → `v2/db/schema-atual.sql`. | Feito (M1.0): 32 tabelas, RPCs, views, policies, crons documentados. |
+| **M1.1 Schema canônico** | Re-versionar as 20 migrations linearmente; corrigir numeração duplicada; remover credenciais hardcoded (env-only); `verify_jwt`/rede nas edge functions. | Banco novo reprovisionável só das migrações; grep sem literais de credencial. |
 | **M1.2 Domínios como tabela** | `programas`, `fontes`, `pares_transferencia`; seed dos programas do contrato; mapear as 4 fontes atuais + registrar tiers. | Novo programa/fonte por INSERT, sem migration. |
 | **M1.3 Resolução de identidade** | Matcher `(tipo, origem, destino, publico)` + janelas; normalizar 458 origens → programas reais; normalizar taxonomia (`statusmatch`→`status_match` etc.); `vigencia_fim` texto→date + `vigencia_confiavel`. | Amostra auditada de 50: zero duplicata canônica; nenhum valor não-data em `vigencia_fim`. |
 | **M1.4 Event sourcing + FSM** | `campanha_versoes` (mudança de % = evento); máquina de estados de vigência com transições por cron + trigger TIER 1. | Caso "80%→100%" = 1 campanha + 2 versões; recheck ativo `<72h`. |
@@ -53,7 +54,8 @@ Objetivo: transformar o corpus grande e sujo já existente em base canônica con
 | **M2.3 Contrato v2 do Daily** | Estender `edition.schema.json`: `schemaVersion`, `estado`, `tl_breakdown`, `fontes[]`, `predicoes[]` opcional + fallback; aposentar `renderer/edition.schema.json`. | Edições v1 permanecem válidas; `predicoes[]` vazio valida com fallback. |
 | **M2.4 Gate único** | Consolidar as 4 implementações de QA num gate bloqueante único, em contexto independente; lint de linguagem (INV-06). | Reexecuta todas as checagens do REQ-31; reprovado nunca envia. |
 | **M2.5 model_registry + custo** | `model_registry`, `llm_jobs`, `LLM_DAILY_BUDGET_USD`, painel de custo no admin. | Trocar modelo por UPDATE; meta de custo por edição medida. |
-| **M2.6 Beehiiv MCP + Daily** | Migrar publicação para MCP preservando idempotência; criar 6 segmentos de perfil; aprovação de 1 clique; fila de revisão no admin. | 5 dias úteis de Daily até 7h com aprovação de 1 clique; zero item sem TIER 1. |
+| **M2.6 Re-score histórico (D-007)** | Após o engine puro, recalcular TL Score, CPM, VPM e spread de todas as campanhas canonicalizadas; popular percentil com base real. | >90% das campanhas canônicas com score determinístico; percentil deixa de ser base curta. |
+| **M2.7 Beehiiv MCP + Daily (D-008)** | Migrar publicação para MCP preservando idempotência; criar os 6 segmentos de perfil; aprovação de 1 clique; fila de revisão no admin. | 5 dias úteis de Daily até 7h com aprovação de 1 clique; zero item sem TIER 1; 6 segmentos criados. |
 
 ---
 

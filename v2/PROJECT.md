@@ -213,6 +213,8 @@ Mapa proposto do `tipo` real → taxonomia do brief §5.4:
 
 ## 5. Decisões que exigem o operador (bloqueiam a implementação)
 
+> **✅ RESOLVIDO (2026-07-16).** Todas aprovadas — ver `v2/DECISIONS.md` (D-001…D-008). O texto abaixo é o registro original das perguntas.
+
 Estas decisões devem ser resolvidas antes/durante o M1. Nenhuma será tomada unilateralmente.
 
 1. **Taxonomia canônica (§4.3):** ratificar o mapa `tipo`→taxonomia, em especial `cartao` e `hotelaria` (manter como tipos próprios ou dobrar em `bonus_acumulo`/`outro`?).
