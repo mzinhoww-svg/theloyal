@@ -166,5 +166,53 @@ Duas falhas de vigência são **naturezas diferentes**: **parsing** ("li a data 
 - `fricção` (10) — precisa de **modelo próprio** de esforço de execução (sem milestone ainda).
 - `estoque` (10) — depende de **award search ao vivo**, fora do escopo do ciclo atual.
 
+## D-023 — Engine: 2 overrides, não 3
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice 4) · Origem: Trilha A
+Vigência-não-confirmada saiu do score (D-022) e é derivável do FSM → fica no gate/digest, não é override do engine. Overrides do engine: `sem_tier1`, `conta_nao_calculavel`. Lista extensível por versão.
+
+## D-024 — Prioridade de override: `conta_nao_calculavel` > `sem_tier1`
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice 4) · Origem: Trilha A
+Quando os dois disparam, `conta_nao_calculavel` vence em `override_aplicado` (ambos logados em `tl_overrides`). **A prioridade não é arbitrária:** `sem_tier1` sozinho é uma **fila de trabalho útil** (confirme a fonte e vira Deal Desk); `conta_nao_calculavel` é um **beco** (nem confirmando TIER 1 vira publicável, porque não há conta fechável). O beco vence e **tira o item da fila de candidatos a confirmar** — confirmar TIER 1 de algo sem conta é trabalho desperdiçado. Gravar assim para ninguém inverter achando que dá no mesmo.
+
+## D-025 — `tl_breakdown.base_curta`
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice 4) · Origem: Trilha A
+Coluna booleana em `tl_breakdown` marca o amortecimento de percentil por base curta (SPEC §2) de forma auditável — `base_n < min_samples`.
+
+## D-026 — Adapter: percentual do slug vence o corpo
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice B) · Origem: Trilha B
+Quando o % aparece no slug (`ate-90`→90) e no corpo, o slug vence — mais estável que HTML volátil.
+
+## D-027 — Adapter: 3xx/encerrada = não confirmável
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice B) · Origem: Trilha B
+Redirect de campanha (ex.: →`/promocao`) é **recusa de confirmação**, não TIER 1. Guarda o INV-16: não confirma o que morreu.
+
+## D-028 — `coleta_execucoes` = telemetria durável de coleta
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice B) · Origem: Trilha B
+`campanha_fontes` é trilha de confirmação (não registra varredura vazia) e `job_queue` é efêmera; a saúde por fonte (REQ-09/NFR-03) precisa de tabela própria. Justifica a migration 007.
+
+## D-029 — Escopo de adapter: Livelo `static-sitemap`, TAP `pt_br`
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice B) · Origem: Trilha B
+Livelo: só `static-sitemap`. TAP: só locale `pt_br`. Reduz descoberta ao que é campanha BR relevante.
+
+## D-030 — `pontos_mais_dinheiro`: sintético agora, real depois — número com asterisco
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice C) · Origem: Trilha C
+9/9 fechado com 4 sintéticos marcados; a extração nunca produz o tipo hoje. **Regra (não observação): sintético NUNCA entra em número público de precision/recall sem ser declarado como tal.** Qualquer número público que hoje inclua os 4 sintéticos do PMD **carrega essa marca até o 2º passe com reais os substituir** — mesmo rigor do D-019. **Número com sintético é número com asterisco, sempre.** Dívida: substituir por reais no 1º banco vivo que contiver o tipo.
+
+## D-031 — Convenção de campos de `pontos_mais_dinheiro`
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice C) · Origem: Trilha C
+`destino=sem_destino`, `publico=geral`, `percentual=null` (split de pagamento pontos+dinheiro não é bônus). *(Dívida registrada, não-ADR: medir o gap do tipo dentro do portão exigiria mudar `gate-run.mjs` — fora do escopo da C.)*
+
+## D-032 — Derivação = slice de re-score, não o engine
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice re-score) · Ratificação do operador
+O engine é puro sobre entradas ∈ [0,1]; a **derivação** (CPM/histórico/buckets → [0,1]) roda na **varredura de re-score**, com seus próprios testes contra dados reais e seu **próprio "vetor de derivação" a aprovar** (mesma disciplina do vetor de pesos). Mantém o engine testável com golden sintéticos independentes do banco e concentra o risco de canonicalização no re-score (onde o backup segura).
+
+## D-033 — Matcher URL→campanha reusa `identidade.mjs`; cria campanha se preciso
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice matcher) · Ratificação do operador
+A página oficial extrai tipo+origem+destino+público e casa com campanha existente pela **mesma identidade canônica do M1** (`identidade.mjs`), não matcher paralelo novo. Se a campanha **não existe**, nasce **já com fonte TIER 1**. Confirmar fonte = evento em campanha existente **ou** nascimento de campanha nova confirmada; ambos geram evento em `campanha_versoes`.
+
+## D-034 — Evidência TIER 1 em `campanha_fontes` (payload jsonb)
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice matcher) · Ratificação do operador
+Coluna `payload jsonb` aditiva guarda o trecho/evidência que justifica a confirmação TIER 1 (mesma disciplina de proveniência de tudo). Migration 008, aditiva.
+
 ## Regra de execução
-Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** Backup `campaigns_bkp_prev2_20260716` retido **até o M2 confirmar que a canonicalização não precisa de rollback**.
+Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** Backup `campaigns_bkp_prev2_20260716` retido **até o re-score (R1) confirmar em escala que a canonicalização não precisa de rollback**.
