@@ -95,7 +95,7 @@ function EngineCell({ p }: { p: ProgramView }) {
         <div className="mb-1 flex items-center justify-between gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Predict</span>
           {eng ? (
-            <Pill tone={CONF_TONE[eng.confidence] ?? "gray"}>{eng.confidence}</Pill>
+<Pill tone={CONF_TONE[eng.confidence] ?? "gray"} className="opacity-90">{eng.confidence}</Pill>
           ) : (
             <Pill tone="gray">sem série</Pill>
           )}
