@@ -79,19 +79,25 @@ function PromoList({ p }: { p: ProgramView }) {
   );
 }
 
+function EngineBoxHeader({ label, confidence }: { label: string; confidence: string | null }) {
+  return (
+    <div className="mb-1 flex items-center justify-between gap-2">
+      <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</span>
+      <span className="font-mono text-xs text-gray-500">
+        <span className="sr-only">confiança: </span>
+        {confidence ?? "sem série"}
+      </span>
+    </div>
+  );
+}
+
 function EngineCell({ p }: { p: ProgramView }) {
   const f = p.forecast;
   const eng = p.predict;
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="rounded border border-line bg-paper p-3">
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Predict</span>
-          <span className="font-mono text-xs text-gray-500">
-            <span className="sr-only">confiança: </span>
-            {eng ? eng.confidence : "sem série"}
-          </span>
-        </div>
+        <EngineBoxHeader label="Predict" confidence={eng ? eng.confidence : null} />
         {eng && !eng.blockReason ? (
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
             <div>
@@ -132,13 +138,7 @@ function EngineCell({ p }: { p: ProgramView }) {
         )}
       </div>
       <div className="rounded border border-line bg-paper p-3">
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Forecast</span>
-          <span className="font-mono text-xs text-gray-500">
-            <span className="sr-only">confiança: </span>
-            {f ? f.confidence : "sem série"}
-          </span>
-        </div>
+        <EngineBoxHeader label="Forecast" confidence={f ? f.confidence : null} />
         {f ? (
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
             <div>
@@ -265,7 +265,7 @@ export default async function ProgramasPage({
         />
       )}
 
-      <p className="mt-8 max-w-prose border-t border-line pt-4 text-xs text-gray-500">
+      <p className="mt-8 max-w-prose border-t border-line pt-4 text-sm text-gray-500">
         Promoções vêm do ledger (status continua/vence-72h/nova). Saúde compõe os sinais reais dos
         motores — readiness, confiança, backtest e divergência; sem base suficiente o programa fica
         &ldquo;sem base&rdquo;, nunca um número chutado. Promoções podem mudar sem aviso. Confira

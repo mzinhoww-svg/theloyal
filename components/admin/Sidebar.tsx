@@ -261,7 +261,7 @@ export function MobileNav() {
               href={l.href}
               aria-current={active ? "page" : undefined}
               className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-xs font-semibold transition-colors ${
-                active ? "text-ink" : "text-gray-400 hover:text-gray-700"
+                active ? "text-ink" : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <span
@@ -280,7 +280,9 @@ export function MobileNav() {
           aria-label="Abrir menu completo"
           aria-expanded={open}
           aria-controls="tl-mobile-drawer"
-          className="flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-xs font-semibold text-gray-400 transition-colors hover:text-gray-700"
+          className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-xs font-semibold transition-colors ${
+            open ? "text-ink" : "text-gray-500 hover:text-gray-700"
+          }`}
         >
           <span
             aria-hidden="true"
