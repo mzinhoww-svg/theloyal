@@ -47,19 +47,26 @@ Componentes (pesos a fixar na spec, não no código-surpresa): **percentil** (do
 - **Sub-métrica de eficiência faltando** (ex.: tem percentil, mas CPM não fecha): o peso do componente ausente **redistribui proporcionalmente** para os presentes — `score = Σ_presentes pesoᵢ·valorᵢ / Σ_presentes pesoᵢ`. **Nunca** um zero que afunda um item legítimo que só não tem conta fechável.
 - **`conta_nao_calculavel` (override → Não confirmado)**: só quando **não há sinal de valor computável nenhum** (sem % de bônus, sem percentil possível, sem CPM) — INV-07. Não é "faltou uma sub-métrica"; é "não dá para dar veredito". A fronteira é explícita: redistribuição para o parcial, override para o vazio total.
 
-### 2.2 Pesos v1 propostos (aguardam aprovação explícita do operador)
+### 2.2 Pesos `score_pesos.v1` — TRAVADO (aprovado pelo operador)
 
-Vetor `score_pesos.v1`, com racional por componente. **Não cravado por intuição no código** — proposto aqui para aprovação, e os golden files nascem ancorados nesta versão.
+Vetor final, ancorado nos golden. Vigência **saiu do score** (urgência não é qualidade — peso positivo em vigência-restante premiaria o afogadilho, o "corra, última chance" proibido pelo brief/INV-06). Fontes viraram **override** (não peso). Reconciliação 8→5 = **Opção A** (`RECONCILIACAO-MANUAL-8-para-5.md` / D-022).
 
 | componente | peso v1 | papel | racional |
 |---|--:|---|---|
-| **percentil** | **0,40** | dominante | "isso é bom?" — o bônus/valor vs o histórico da própria rota é o sinal mais forte que o leitor age. Dominante, mas **não maioria**: sozinho não força "Vale agir". Amortecido por base curta (§2). |
-| **eficiência** (CPM/VPM/spread) | **0,25** | a conta | "qual é a conta" — custo/valor. Só pesa quando calculável; ausente → **redistribui** (§2.1), nunca zero que afunda. |
-| **raridade** | **0,15** | modulador | um 100% raro merece mais atenção que um 100% mensal. Modula atenção, não é o núcleo do veredito. |
-| **vigência restante** | **0,10** | modulador | pressão de tempo da janela **já parseada e confirmada** (vigência não confirmada é override, não componente). |
-| **abrangência** de público | **0,10** | ajuste fino | geral > cartão > clube (mais leitores elegíveis). Desempate, não núcleo. |
+| **percentil** | **0,45** | dominante | bônus/valor vs histórico da própria rota — sinal mais forte que o leitor age. Dominante mas **não maioria**; amortecido por base curta (§2). |
+| **eficiência** (CPM/VPM/spread) | **0,30** | a conta | custo/valor. Só pesa quando calculável; ausente → **redistribui** (§2.1), nunca zero que afunda. Absorve `liquidez` do Manual v1. |
+| **raridade** | **0,15** | modulador | 100% raro > 100% mensal. Modula atenção, não é o núcleo. Novo no v2 (implícito em "valor" no v1). |
+| **abrangência** de público | **0,10** | ajuste fino | geral > cartão > clube. Absorve `aplicabilidade` do Manual v1. |
 
-Soma 1,00. `shrink_k = 5`, `min_samples = 3` (alinhado ao predict engine). Racional do teto: com percentil a 0,40, nem um percentil perfeito (1,0) sozinho chega perto de "Vale agir" (85) — exige contribuição forte também de eficiência + raridade. **Nenhum componente único força o veredito de topo**, por desenho.
+Soma 1,00. `shrink_k = 5`, `min_samples = 3` (alinhado ao predict engine). **Teto por desenho:** com percentil a 0,45, nem um percentil perfeito sozinho chega a "Vale agir" (85) — exige eficiência + raridade altos. Nenhum componente único força o topo. Protege credibilidade contra hype.
+
+### 2.3 As 3 dimensões órfãs: editoriais, nunca no número (D-022)
+
+`regra` (termos/clawback), `fricção` (esforço de execução), `estoque` (disponibilidade) **não têm fonte determinística** hoje → **não entram no `tl_score`** (fabricar componente sem fonte violaria INV-12). Mas continuam **vivas para o leitor**: o LLM **pode narrá-las no texto do item e no breakdown como qualificação editorial**, citando evidência ("termos exigem clube", "estoque não verificado"), **sem alterar o `tl_score`**. Informação preservada, número não contaminado. Dívida de reintrodução registrada (D-022).
+
+### 2.4 Manual público versionado (condição bloqueante da Opção A — Trilha A)
+
+O texto público do Manual (`components/sections.tsx`) **é atualizado na mesma leva do engine** (não depois): passa a declarar "TL Score **v2**, vigente desde [data]", arquiva os 8 critérios v1 como versão anterior com changelog, e diz **explicitamente** que 3 dimensões (termos/regra, fricção, estoque) são avaliadas editorialmente e **ainda não entram na nota**, com previsão de reintrodução. Admitir o que não se mede é **mais forte** que fingir um peso — o leitor cético confia mais nisso que num 10 inventado. Metodologia auditável **ao longo do tempo**, não só num instante.
 
 ## 3. Ordem dos overrides: depois do cálculo, sempre registrados
 
