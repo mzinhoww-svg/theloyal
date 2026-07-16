@@ -27,6 +27,7 @@
         "daily": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Janelas no horizonte curto (media+), prontas para o daily." },
         "weekly": { "type": "array", "items": { "$ref": "#/$defs/forecast" }, "description": "Janelas no horizonte da semana (baixa+), prontas para o weekly." },
         "radarDaily": { "type": "array", "items": { "$ref": "#/$defs/radarItem" }, "description": "Itens de Radar (rótulo+data pt-BR) prontos para colar no daily. Vêm do resultado canônico reconciliado (Predict canônico; Forecast fallback), nota de corte aplicada." },
+        "radarMonitoringDaily": { "type": "integer", "minimum": 0, "description": "Séries reais 'em observação' no horizonte do daily (não publicáveis) — base do texto honesto 'monitorando N séries'." },
         "radarWeekly": { "type": "array", "items": { "$ref": "#/$defs/radarItem" }, "description": "Itens de Radar prontos para o weekly (resultado canônico, nota de corte aplicada)." },
         "radarMonitoringWeekly": { "type": "integer", "minimum": 0, "description": "Quantas séries reais estão 'em observação' (não publicáveis) — base do texto honesto 'monitorando N séries'." }
       }

@@ -8,10 +8,11 @@ import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   CONFIDENCE, DISCLAIMER, RADAR_NOTE_DEFAULT, TOKENS, VERDICTS,
-  assertEditorialRules, editorialRuleMessage, listEditionFiles, loadEdition, loadEntities,
+  assertEditorialRules, editorialRuleMessage, listEditionFiles, loadEdition, loadEntities, monitoringLine,
 } from "./lib.mjs";
 import { assessForecastArtifact, DEFAULT_MAX_FORECAST_AGE_HOURS } from "./forecast-freshness.mjs";
 import { consolidatedHighlights } from "./lib/weekly-consolidate.mjs";
+import { schemaErrors } from "./lib/schema.mjs";
 
 // Consolidação Weekly ← Daily (Fase 2.1 / P2.14). Só age quando o JSON pede
 // (consolidateFromDaily:true): lê as edições do Daily no período e substitui os
@@ -39,7 +40,7 @@ function esc(s) {
 // → radar automático NÃO usado (nunca publica números desatualizados em silêncio).
 function resolveRadar(wk) {
   if (wk.radar && Array.isArray(wk.radar.windows) && wk.radar.windows.length)
-    return { monitoring: 0, ...wk.radar }; // override manual
+    return { monitoringCount: 0, ...wk.radar }; // override manual
   if (!existsSync(FORECAST_PATH)) return null;
   let fc;
   try {
@@ -58,11 +59,11 @@ function resolveRadar(wk) {
     return null;
   }
   const windows = fc?.digest?.radarWeekly ?? [];
-  // Chip de monitoramento (deferido 1.3 da régua): séries reais em observação
+  // Linha de monitoramento (deferido 1.3 da régua): séries reais em observação
   // que NÃO passam a nota de corte. Contagem honesta — nunca vira número/janela.
-  const monitoring = Number(fc?.digest?.radarMonitoringWeekly) || 0;
-  if (!windows.length && !monitoring) return null;
-  return { note: RADAR_NOTE_DEFAULT, windows, monitoring };
+  const monitoringCount = Number(fc?.digest?.radarMonitoringWeekly) || 0;
+  if (!windows.length && !monitoringCount) return null;
+  return { note: RADAR_NOTE_DEFAULT, windows, monitoringCount };
 }
 
 // ---------- Validação editorial ----------
@@ -70,6 +71,10 @@ const REQUIRED = ["number", "period", "dateStart", "dateEnd", "publishTime", "re
 
 export function validateWeekly(wk) {
   const errors = [], warnings = [], ok = [];
+  // Contrato de schema em runtime (P2.13b) — antes dos checks semânticos.
+  const schemaErrs = schemaErrors("weekly", wk);
+  for (const m of schemaErrs) errors.push(m);
+  if (!schemaErrs.length) ok.push("Contrato de schema (weekly.schema.json) satisfeito");
   const missing = REQUIRED.filter((k) => wk[k] === undefined || wk[k] === null || wk[k] === "");
   if (missing.length) errors.push(`Campos obrigatórios ausentes: ${missing.join(", ")}`);
   else ok.push("Estrutura do weekly completa");
@@ -117,7 +122,7 @@ export function validateWeekly(wk) {
 // ---------- Radar (HTML e-mail) ----------
 function radarEmail(radar) {
   if (!radar) return "";
-  const rows = radar.windows.map((w) => {
+  const rows = (radar.windows ?? []).map((w) => {
     const c = CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa;
     const bonus = w.bonus ? ` <span style="font-family:${MONO};font-size:13px;color:${TOKENS.g500}">${esc(w.bonus)}</span>` : "";
     const basis = w.basis ? `<div style="font-family:${SANS};font-size:12px;color:${TOKENS.g400};margin-top:2px">${esc(w.basis)}</div>` : "";
@@ -130,13 +135,10 @@ function radarEmail(radar) {
       ${basis}
     </div>`;
   }).join("");
-  const monitoring = radar.monitoring
-    ? `<div style="border-top:1px solid ${TOKENS.line};padding:10px 0">
-      <span style="display:inline-block;border:1px dashed ${TOKENS.g400};color:${TOKENS.g500};border-radius:9999px;padding:2px 10px;font-family:${SANS};font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em">Monitoramento</span>
-      <span style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};margin-left:8px">${radar.monitoring} série(s) em observação — sem janela dentro da nota de corte</span>
-    </div>`
+  const mon = radar.monitoringCount
+    ? `<div style="font-family:${SANS};font-size:12px;color:${TOKENS.g400};margin-top:10px">${esc(monitoringLine(radar.monitoringCount))}</div>`
     : "";
-  return `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(radar.note ?? RADAR_NOTE_DEFAULT)}</div>${rows}${monitoring}`;
+  return `<div style="font-family:${SANS};font-size:13px;color:${TOKENS.g500};line-height:1.5;margin-bottom:12px">${esc(radar.note ?? RADAR_NOTE_DEFAULT)}</div>${rows}${mon}`;
 }
 
 function labelBlock(text) {
@@ -208,13 +210,12 @@ export function renderWeeklyPlain(wk) {
   if (radar) {
     L.push("RADAR DE JANELAS");
     L.push(radar.note ?? RADAR_NOTE_DEFAULT, "");
-    for (const w of radar.windows) {
+    for (const w of radar.windows ?? []) {
       const c = (CONFIDENCE[w.confidence] ?? CONFIDENCE.baixa).label;
       L.push(`  ${w.label}${w.bonus ? " " + w.bonus : ""}  —  ${w.window}  [${c}]`);
       if (w.basis) L.push(`    ${w.basis}`);
     }
-    if (radar.monitoring)
-      L.push(`  [MONITORAMENTO] ${radar.monitoring} série(s) em observação — sem janela dentro da nota de corte`);
+    if (radar.monitoringCount) L.push(`  ${monitoringLine(radar.monitoringCount)}`);
     L.push("");
   }
   const mov = wk.movements ?? {};
@@ -269,17 +270,17 @@ function WeeklyArticle({ wk, radar }) {
           h("span", { className: "tl-label" }, "Radar de janelas"),
           h("p", { className: "tl-radar-note" }, radar.note ?? RADAR_NOTE_DEFAULT),
           h("ul", { className: "tl-radar" },
-            radar.windows.map((w, i) =>
+            (radar.windows ?? []).map((w, i) =>
               h("li", { key: i, className: "tl-radar-item" },
                 h("div", { className: "tl-radar-head" },
                   h("span", { className: "tl-radar-label" }, w.label, w.bonus ? h("span", { className: "mono tl-radar-bonus" }, ` ${w.bonus}`) : null),
                   h("span", { className: "mono tl-radar-window" }, w.window)),
                 h(ConfPill, { conf: w.confidence }),
                 w.basis ? h("div", { className: "tl-radar-basis" }, w.basis) : null))),
-          radar.monitoring
+          radar.monitoringCount
             ? h("p", { className: "tl-radar-monitoring" },
                 h("span", { className: "tl-monitoring-chip" }, "Monitoramento"),
-                ` ${radar.monitoring} série(s) em observação — sem janela dentro da nota de corte`)
+                ` ${monitoringLine(radar.monitoringCount)}`)
             : null)
       : null,
     wk.movements

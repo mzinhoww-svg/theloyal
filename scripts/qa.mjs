@@ -108,6 +108,7 @@ function auditEmailDir(dir) {
       block(`${tag}: ${editorialRuleMessage(v)}`);
     }
     if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
+    if (/The Loyalty\b/.test(html)) block(`${tag}: marca antiga "The Loyalty" no HTML — use "The Loyal"`);
     if (/<script/i.test(html)) block(`${tag}: contém <script> (proibido em e-mail)`);
     if (/(?:src|background)\s*=?\s*["']?https?:\/\//i.test(html) || /url\(\s*https?:/i.test(html)) block(`${tag}: carrega recurso externo (deve ser self-contained)`);
     if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
@@ -138,6 +139,7 @@ function auditWebDir(dir) {
       block(`${tag}: ${editorialRuleMessage(v)}`);
     }
     if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
+    if (/The Loyalty\b/.test(html)) block(`${tag}: marca antiga "The Loyalty" no HTML — use "The Loyal"`);
     if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
     if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: regras invioláveis OK, disclaimer presente`);
   }

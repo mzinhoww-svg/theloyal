@@ -1,4 +1,4 @@
-// Logo oficial The Loyalty. Tokens do tema apenas — nenhum hex hardcodado.
+// Logo oficial The Loyal. Tokens do tema apenas — nenhum hex hardcodado.
 // Wordmark: Fraunces (var --font-display) "The" 600 + "Loyalty" 700.
 // Monograma: quadrado (bg token) + letras (currentColor) construidas em geometria fixa.
 
@@ -34,7 +34,7 @@ type MonogramProps = {
   title?: string;
 };
 
-export function Monogram({ size = 48, variant = "default", className = "", title = "The Loyalty" }: MonogramProps) {
+export function Monogram({ size = 48, variant = "default", className = "", title = "The Loyal" }: MonogramProps) {
   const square =
     variant === "green" ? "bg-green-600" : variant === "inverted" ? "bg-paper" : "bg-ink";
   const letters = variant === "default" ? "text-paper" : "text-ink";
