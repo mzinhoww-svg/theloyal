@@ -175,9 +175,10 @@ export function resolverCampanha(campanha, indices, ref) {
   if (!tipo) return { resolvido: false, revisao: 'tipo_indefinido', tipo: null, ...base };
 
   const lo = classificarLado(campanha.origem, indices);
-  // origem é sempre obrigatória; ruído/vazio -> revisão
+  // origem é sempre obrigatória; ruído/vazio -> revisão com flag origem_nao_resolvida
+  // (nunca descarte; volume alimenta o golden set — inclui cidades/destinos movidos p/ ruído)
   if (lo.tipo === 'ruido' || lo.tipo === 'vazio') {
-    return { resolvido: false, revisao: `origem_${lo.tipo}`, tipo, origemCode: null, ...base };
+    return { resolvido: false, revisao: 'origem_nao_resolvida', origem_ruido_tipo: lo.tipo, tipo, origemCode: null, ...base };
   }
 
   const ld = classificarLado(campanha.destino, indices);

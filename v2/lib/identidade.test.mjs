@@ -90,9 +90,13 @@ test('regra por tipo: compra SEM destino -> lado único', () => {
   assert.equal(r.identity_key, `compra_pontos|smiles|${SEM_DESTINO}|geral`);
 });
 
-test('origem ruído/vazio -> revisão', () => {
-  assert.equal(resolverCampanha({ origem: 'desconhecido', destino: 'Smiles', tipo: 'transferencia' }, IX, '2026-07-16').revisao, 'origem_ruido');
-  assert.equal(resolverCampanha({ origem: '', destino: 'Smiles', tipo: 'compra' }, IX, '2026-07-16').revisao, 'origem_vazio');
+test('origem ruído/vazio -> revisão com flag origem_nao_resolvida', () => {
+  const r1 = resolverCampanha({ origem: 'desconhecido', destino: 'Smiles', tipo: 'transferencia' }, IX, '2026-07-16');
+  assert.equal(r1.revisao, 'origem_nao_resolvida');
+  assert.equal(r1.origem_ruido_tipo, 'ruido');
+  const r2 = resolverCampanha({ origem: '', destino: 'Smiles', tipo: 'compra' }, IX, '2026-07-16');
+  assert.equal(r2.revisao, 'origem_nao_resolvida');
+  assert.equal(r2.origem_ruido_tipo, 'vazio');
 });
 
 test('cauda -> bucket, marcado bucketed', () => {
