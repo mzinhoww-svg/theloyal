@@ -11,10 +11,12 @@ import { getSeriesTrends } from "./admin-predict";
 import { p30Series } from "./predict-trends";
 import {
   activePromosByProgram,
+  buildSeriesOutlook,
   engineHealth,
   isAirlineProgram,
   type EngineHealth,
   type PromoView,
+  type SeriesOutlook,
 } from "./program-health";
 
 // Ledger com colunas de exibição além do set de qualidade (status/source_name
@@ -22,6 +24,8 @@ import {
 const PROGRAM_LEDGER_SELECT = `${LEDGER_QUALITY_SELECT},status,source_name`;
 
 type LedgerRow = CampaignRow & { status?: string | null; source_name?: string | null };
+
+export type OutlookRow = SeriesOutlook & { windowLabel: string | null };
 
 export interface ProgramView {
   program: string; // slug normalizado (destino)
@@ -34,6 +38,7 @@ export interface ProgramView {
   forecast: Forecast | null; // cluster →programa
   predict: Prediction | null; // cluster
   forecastWindow: string | null; // formatada pt-BR
+  outlook: OutlookRow[]; // séries origem→destino: janela mais próxima primeiro
   health: EngineHealth;
   trend: number[] | null; // p30 ao longo dos snapshots
 }
@@ -67,6 +72,20 @@ export async function loadPrograms(now?: string): Promise<ProgramsData> {
 
   const forecastByDest = new Map(forecast.clusters.map((c) => [c.destino, c]));
   const predictByDest = new Map(predict.clusters.map((p) => [p.destino, p]));
+
+  // Rotas (origem→destino) agrupadas por programa para o "próximas prováveis".
+  const forecastRoutesByDest = new Map<string, Forecast[]>();
+  for (const r of forecast.routes) {
+    const list = forecastRoutesByDest.get(r.destino) ?? [];
+    list.push(r);
+    forecastRoutesByDest.set(r.destino, list);
+  }
+  const predictRoutesByDest = new Map<string, Prediction[]>();
+  for (const r of predict.routes) {
+    const list = predictRoutesByDest.get(r.destino) ?? [];
+    list.push(r);
+    predictRoutesByDest.set(r.destino, list);
+  }
 
   // Última campanha observada por destino (qualquer status — leitura direta).
   const lastByDest = new Map<string, string>();
@@ -116,6 +135,30 @@ export async function loadPrograms(now?: string): Promise<ProgramsData> {
           }
         : null,
     );
+    const outlook = buildSeriesOutlook(
+      (predictRoutesByDest.get(slug) ?? []).map((r) => ({
+        origem: r.origem,
+        readiness: r.readiness,
+        confidence: r.confidence,
+        windowStart: r.windowStart,
+        windowEnd: r.windowEnd,
+        p30: r.probabilities?.p30 ?? null,
+        p90: r.probabilities?.p90 ?? null,
+        hitRate: r.backtest?.windowHitRate ?? null,
+        observations: r.backtest?.observations ?? 0,
+      })),
+      (forecastRoutesByDest.get(slug) ?? []).map((r) => ({
+        origem: r.origem,
+        confidence: r.confidence,
+        windowStart: r.windowStart,
+        windowEnd: r.windowEnd,
+        typicalPercent: r.typicalPercent,
+      })),
+    ).map((s) => ({
+      ...s,
+      windowLabel: s.windowStart ? formatWindow(s.windowStart, s.windowEnd) : null,
+    }));
+
     return {
       program: slug,
       label: programLabel(slug),
@@ -127,6 +170,7 @@ export async function loadPrograms(now?: string): Promise<ProgramsData> {
       forecast: f,
       predict: p,
       forecastWindow: f?.windowStart ? formatWindow(f.windowStart, f.windowEnd) : null,
+      outlook,
       health,
       trend: p ? p30Series(trends.get(p.seriesKey)) : null,
     };

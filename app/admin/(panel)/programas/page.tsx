@@ -79,6 +79,43 @@ function PromoList({ p }: { p: ProgramView }) {
   );
 }
 
+// Séries origem→destino com previsão: janela mais próxima primeiro, depois
+// maior probabilidade. "Acerto" é o hit rate de janela do backtest — a série
+// com melhor acerto (amostra mínima) leva a marca "mais assertiva".
+function OutlookList({ p }: { p: ProgramView }) {
+  if (!p.outlook.length) {
+    return <p className="text-sm text-gray-500">Nenhuma série com previsão para este programa.</p>;
+  }
+  return (
+    <ul className="divide-y divide-line">
+      {p.outlook.slice(0, 4).map((s) => (
+        <li key={s.origem} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2">
+          <span className="min-w-0 flex-1 truncate text-sm text-ink">
+            {s.origem} → {p.program}
+            {s.typicalPercent != null && (
+              <span className="ml-2 font-mono text-xs tabular-nums text-gray-500">~{s.typicalPercent}%</span>
+            )}
+          </span>
+          <span className="font-mono text-xs tabular-nums text-ink">
+            {s.windowLabel ?? "janela —"}
+          </span>
+          <span className="font-mono text-xs tabular-nums text-gray-500">p30 {pct(s.p30)}</span>
+          <span className="font-mono text-xs tabular-nums text-gray-500">
+            acerto{" "}
+            {s.hitRate != null && s.observations > 0
+              ? `${pct(s.hitRate)} · ${s.observations} obs`
+              : "—"}
+          </span>
+          {s.mostAssertive && <Pill tone="green">mais assertiva</Pill>}
+        </li>
+      ))}
+      {p.outlook.length > 4 && (
+        <li className="py-2 text-xs text-gray-500">+ {p.outlook.length - 4} série(s) com previsão</li>
+      )}
+    </ul>
+  );
+}
+
 function EngineBoxHeader({ label, confidence }: { label: string; confidence: string | null }) {
   return (
     <div className="mb-1 flex items-center justify-between gap-2">
@@ -191,6 +228,11 @@ function ProgramCard({ p }: { p: ProgramView }) {
       <PromoList p={p} />
 
       <div className="mb-1 mt-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+        Próximas campanhas prováveis
+      </div>
+      <OutlookList p={p} />
+
+      <div className="mb-1 mt-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
         Saúde dos motores
       </div>
       <EngineCell p={p} />
@@ -267,10 +309,13 @@ export default async function ProgramasPage({
       )}
 
       <p className="mt-8 max-w-prose border-t border-line pt-4 text-sm text-gray-500">
-        Promoções vêm do ledger (status continua/vence-72h/nova). Saúde compõe os sinais reais dos
-        motores — readiness, confiança, backtest e divergência; sem base suficiente o programa fica
-        &ldquo;sem base&rdquo;, nunca um número chutado. Promoções podem mudar sem aviso. Confira
-        sempre as regras no site oficial antes de comprar, transferir ou resgatar.
+        Promoções vêm do ledger (status continua/vence-72h/nova). Em &ldquo;próximas
+        prováveis&rdquo;, a janela vem do Forecast, a probabilidade (p30) do Predict e o acerto é o
+        hit rate de janela do backtest — &ldquo;mais assertiva&rdquo; marca a série com melhor
+        acerto e amostra mínima. Saúde compõe os sinais reais dos motores — readiness, confiança,
+        backtest e divergência; sem base suficiente o programa fica &ldquo;sem base&rdquo;, nunca
+        um número chutado. Promoções podem mudar sem aviso. Confira sempre as regras no site
+        oficial antes de comprar, transferir ou resgatar.
       </p>
     </>
   );

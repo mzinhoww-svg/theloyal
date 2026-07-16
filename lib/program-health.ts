@@ -95,6 +95,127 @@ export function activePromosByProgram(
   return out;
 }
 
+// ---- Próximas campanhas por série (origem→destino) ----
+//
+// Junta as previsões POR ROTA dos dois motores: a janela vem do Forecast
+// (recorrência), a probabilidade vem do Predict (hazard) e a assertividade é
+// o acerto de janela do backtest. Ordena pela janela mais próxima; séries sem
+// janela entram depois, por probabilidade. Nada aqui inventa número.
+
+export interface PredictRouteSignals {
+  origem: string | null;
+  readiness: string;
+  confidence: string;
+  windowStart: string | null;
+  windowEnd: string | null;
+  p30: number | null;
+  p90: number | null;
+  hitRate: number | null; // backtest windowHitRate
+  observations: number; // backtest observations
+}
+
+export interface ForecastRouteSignals {
+  origem: string | null;
+  confidence: string;
+  windowStart: string | null;
+  windowEnd: string | null;
+  typicalPercent: number | null;
+}
+
+export interface SeriesOutlook {
+  origem: string;
+  windowStart: string | null; // Forecast manda; Predict cobre quando ausente
+  windowEnd: string | null;
+  p30: number | null;
+  p90: number | null;
+  hitRate: number | null;
+  observations: number;
+  typicalPercent: number | null;
+  confidence: string | null;
+  mostAssertive: boolean; // melhor acerto de janela com amostra mínima
+}
+
+const MIN_ASSERTIVE_OBS = 3;
+
+export function buildSeriesOutlook(
+  predictRoutes: PredictRouteSignals[],
+  forecastRoutes: ForecastRouteSignals[],
+): SeriesOutlook[] {
+  const byOrigem = new Map<string, SeriesOutlook>();
+  for (const f of forecastRoutes) {
+    if (!f.origem) continue;
+    byOrigem.set(f.origem, {
+      origem: f.origem,
+      windowStart: f.windowStart,
+      windowEnd: f.windowEnd,
+      p30: null,
+      p90: null,
+      hitRate: null,
+      observations: 0,
+      typicalPercent: f.typicalPercent,
+      confidence: f.confidence ?? null,
+      mostAssertive: false,
+    });
+  }
+  for (const p of predictRoutes) {
+    if (!p.origem) continue;
+    const ready = p.readiness === "ready" || p.readiness === "ready_with_warnings";
+    const row: SeriesOutlook = byOrigem.get(p.origem) ?? {
+      origem: p.origem,
+      windowStart: null,
+      windowEnd: null,
+      p30: null,
+      p90: null,
+      hitRate: null,
+      observations: 0,
+      typicalPercent: null,
+      confidence: null,
+      mostAssertive: false,
+    };
+    if (ready) {
+      row.p30 = p.p30;
+      row.p90 = p.p90;
+      row.confidence = p.confidence;
+      if (!row.windowStart) {
+        row.windowStart = p.windowStart;
+        row.windowEnd = p.windowEnd;
+      }
+    }
+    row.hitRate = p.hitRate;
+    row.observations = p.observations;
+    byOrigem.set(p.origem, row);
+  }
+
+  // Só entra quem tem algum sinal real (janela, probabilidade ou backtest).
+  const rows = Array.from(byOrigem.values()).filter(
+    (r) => r.windowStart != null || r.p30 != null || (r.hitRate != null && r.observations > 0),
+  );
+
+  rows.sort((a, b) => {
+    if (a.windowStart && b.windowStart) {
+      if (a.windowStart !== b.windowStart) return a.windowStart < b.windowStart ? -1 : 1;
+      return (b.p30 ?? -1) - (a.p30 ?? -1);
+    }
+    if (a.windowStart) return -1;
+    if (b.windowStart) return 1;
+    return (b.p30 ?? -1) - (a.p30 ?? -1);
+  });
+
+  let best: SeriesOutlook | null = null;
+  for (const r of rows) {
+    if (r.hitRate == null || r.observations < MIN_ASSERTIVE_OBS) continue;
+    if (
+      !best ||
+      r.hitRate > (best.hitRate ?? -1) ||
+      (r.hitRate === best.hitRate && r.observations > best.observations)
+    ) {
+      best = r;
+    }
+  }
+  if (best) best.mostAssertive = true;
+  return rows;
+}
+
 // ---- Saúde composta dos motores ----
 
 export type HealthTone = "green" | "blue" | "yellow" | "red" | "gray";

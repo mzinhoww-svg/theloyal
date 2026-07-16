@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   activePromosByProgram,
+  buildSeriesOutlook,
   engineHealth,
   isAirlineProgram,
 } from "../lib/program-health.ts";
@@ -103,6 +104,79 @@ test("saúde: estados de bloqueio mapeiam para red/gray com o porquê", () => {
   );
   assert.equal(semBase.tone, "gray");
   assert.equal(engineHealth(null, null).tone, "gray");
+});
+
+const predictRoute = (over = {}) => ({
+  origem: "livelo",
+  readiness: "ready",
+  confidence: "alta",
+  windowStart: null,
+  windowEnd: null,
+  p30: 0.8,
+  p90: 0.97,
+  hitRate: 0.7,
+  observations: 7,
+  ...over,
+});
+const forecastRoute = (over = {}) => ({
+  origem: "livelo",
+  confidence: "alta",
+  windowStart: "2026-08-05",
+  windowEnd: "2026-08-15",
+  typicalPercent: 95,
+  ...over,
+});
+
+test("outlook: junta motores por origem — janela do Forecast, p30 do Predict", () => {
+  const rows = buildSeriesOutlook([predictRoute()], [forecastRoute()]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].windowStart, "2026-08-05");
+  assert.equal(rows[0].p30, 0.8);
+  assert.equal(rows[0].typicalPercent, 95);
+});
+
+test("outlook: ordena por janela mais próxima; sem janela vai depois, por p30", () => {
+  const rows = buildSeriesOutlook(
+    [
+      predictRoute({ origem: "c6", windowStart: null, p30: 0.4, hitRate: null, observations: 0 }),
+      predictRoute({ origem: "itau", windowStart: "2026-09-01", windowEnd: "2026-09-10", p30: 0.6 }),
+    ],
+    [forecastRoute({ origem: "livelo" })],
+  );
+  assert.deepEqual(
+    rows.map((r) => r.origem),
+    ["livelo", "itau", "c6"],
+  );
+});
+
+test("outlook: 'mais assertiva' exige amostra mínima e pega o melhor acerto", () => {
+  const rows = buildSeriesOutlook(
+    [
+      predictRoute({ origem: "livelo", hitRate: 0.9, observations: 2 }), // amostra curta — fora
+      predictRoute({ origem: "itau", hitRate: 0.7, observations: 5 }),
+      predictRoute({ origem: "esfera", hitRate: 0.6, observations: 8 }),
+    ],
+    [],
+  );
+  const marked = rows.filter((r) => r.mostAssertive);
+  assert.equal(marked.length, 1);
+  assert.equal(marked[0].origem, "itau");
+});
+
+test("outlook: predict bloqueado não vaza probabilidade; sem sinal nenhum, sai da lista", () => {
+  const rows = buildSeriesOutlook(
+    [
+      predictRoute({
+        origem: "bb",
+        readiness: "insufficient_history",
+        p30: 0.5,
+        hitRate: null,
+        observations: 0,
+      }),
+    ],
+    [],
+  );
+  assert.equal(rows.length, 0);
 });
 
 test("saúde: divergência entre motores vira motivo de atenção", () => {
