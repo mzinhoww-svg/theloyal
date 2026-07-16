@@ -57,7 +57,7 @@ export function DateReviewQueue({
                 {p.proposedDate}
                 <span className="block text-xs text-gray-500">+{p.yearsShifted} ano(s)</span>
               </Td>
-              <Td label="Evidência" className="max-w-[280px] text-xs text-gray-500">
+              <Td label="Evidência" className="max-w-xs text-xs text-gray-500">
                 {p.evidence.join(" · ")}
               </Td>
               <Td label="Confiança">

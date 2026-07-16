@@ -27,6 +27,7 @@ export function SubmitButton({
   title,
   confirm,
   disabled = false,
+  ariaDescribedBy,
 }: {
   children: ReactNode;
   pendingLabel?: string;
@@ -37,6 +38,8 @@ export function SubmitButton({
   confirm?: string;
   // Desabilita externamente (ex.: ação que não faz sentido com dado parcial).
   disabled?: boolean;
+  // Liga o botão a um texto visível/sr-only que explica por que está desabilitado.
+  ariaDescribedBy?: string;
 }) {
   const { pending } = useFormStatus();
   const [armed, setArmed] = useState(false);
@@ -62,7 +65,12 @@ export function SubmitButton({
       type="submit"
       disabled={pending || disabled}
       title={title}
+      aria-describedby={ariaDescribedBy}
       onBlur={() => armed && setArmed(false)}
+      // Escape desarma a confirmação pendente (convenção padrão de cancelar).
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && armed) setArmed(false);
+      }}
       aria-live={armed ? "polite" : undefined}
       className={`${BASE} ${confirm ? VARIANT.danger : VARIANT[variant]}`}
     >

@@ -372,10 +372,21 @@ export default async function PredictPage({
         sub={`Motor histórico & preditivo por série (${MODEL_VERSION}). ${ledgerRows} campanhas no ledger · as of ${asOf}.`}
         actions={
           <ActionForm action={snapshotAllAction}>
+            {(!datasetComplete || loadWarnings.length > 0) && (
+              // Motivo do disabled acessível (title não alcança teclado/leitor).
+              <span id="snapshot-disabled-reason" className="sr-only">
+                {!datasetComplete
+                  ? "carga do ledger incompleta — recalcule antes de snapshotar"
+                  : "há falha de leitura — recarregue antes de snapshotar"}
+              </span>
+            )}
             <SubmitButton
               variant="primary"
               pendingLabel="Salvando…"
               disabled={!datasetComplete || loadWarnings.length > 0}
+              ariaDescribedBy={
+                !datasetComplete || loadWarnings.length > 0 ? "snapshot-disabled-reason" : undefined
+              }
               title={
                 !datasetComplete
                   ? "carga do ledger incompleta — recalcule antes de snapshotar"
@@ -404,7 +415,7 @@ export default async function PredictPage({
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Séries" value={series.length} sub={`${result.clusters.length} programas · ${result.routes.length} rotas`} tone="gray" />
         <StatCard label="Com previsão" value={ready} sub="ready / ready_with_warnings" tone={ready > 0 ? "green" : "gray"} />
-        <StatCard label="Bloqueadas" value={blocked} sub="histórico insuficiente" tone={blocked > 0 ? "yellow" : "green"} />
+        <StatCard label="Bloqueadas" value={blocked} sub="histórico insuficiente" tone={blocked > 0 ? "gray" : "green"} />
         <StatCard label="As of" value={<span className="text-lg">{asOf}</span>} sub={datasetComplete ? "carga completa" : "carga PARCIAL"} tone={datasetComplete ? undefined : "red"} />
       </section>
 
