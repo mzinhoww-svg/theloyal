@@ -8,6 +8,12 @@ import { dirname, join } from 'node:path';
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const amostra = JSON.parse(readFileSync(join(DIR, 'AMOSTRA-100.json'), 'utf8'));
+// Suplemento SINTÉTICO: fecha a cobertura do 9º tipo (pontos_mais_dinheiro), que tem
+// 0 exemplos reais na base (a extração nunca o produz — ver CRITERIO §3 e CACA-PMD.md).
+// Marcado com flag 'sintetico' e EXCLUÍDO das métricas de detecção/campos críticos
+// para não contaminar o portão congelado; entra só na cobertura de tipos.
+let pmd = [];
+try { pmd = JSON.parse(readFileSync(join(DIR, 'AMOSTRA-PMD.json'), 'utf8')); } catch { pmd = []; }
 
 // ── Gabarito por id (deduplicado). classe: 'campanha' | 'nao_campanha'.
 // gab quando campanha: {tipo, origem, destino, publico, pct, vig, prov, flags}
@@ -159,6 +165,18 @@ const G = {
   'vilagale-desconhecido-hotelaria-na': NC('Vila Galé ... voos + all inclusive a partir de R$3.242 (pacote em dinheiro)'),
   'xp-desconhecido-cartao-2024-04-18': C('bonus_acumulo', 'xp', SD, 'cartao', 2, 'indeterminada',
     'XP oferece investback de 2% no cartão adicional ... até amanhã (19/03) (ano não confirmável)'),
+
+  // ── pontos_mais_dinheiro — SINTÉTICOS (0 reais na base). pct=null (split de pagamento,
+  // não bônus → sem invenção de número, INV-03); vigência indeterminada (sem data real).
+  // Distinção vs compra_pontos travada no trecho ("não é compra de milhas / sem transferência").
+  'pmd-sintetico-smiles-dinheiro-mais-milhas': C('pontos_mais_dinheiro', 'smiles', SD, 'geral', N, 'indeterminada',
+    'SINTÉTICO: "Dinheiro + Milhas" Smiles — parte em milhas + parte em reais [origem=smiles pelo saldo de milhas; pct=null pagamento combinado; vigência indeterminada]', ['sintetico']),
+  'pmd-sintetico-latampass-pontos-mais-dinheiro': C('pontos_mais_dinheiro', 'latam_pass', SD, 'geral', N, 'indeterminada',
+    'SINTÉTICO: "Pontos + Dinheiro" LATAM Pass — completa o resgate pagando a diferença [origem=latam_pass; pct=null; vigência indeterminada; NÃO é compra_pontos]', ['sintetico']),
+  'pmd-sintetico-azul-pontos-mais-dinheiro': C('pontos_mais_dinheiro', 'azul_fidelidade', SD, 'geral', N, 'indeterminada',
+    'SINTÉTICO: "Pontos + Dinheiro" Azul Fidelidade — passagem paga em pontos + reais [origem=azul_fidelidade; pct=null; vigência indeterminada]', ['sintetico']),
+  'pmd-sintetico-livelo-pague-com-pontos-e-dinheiro': C('pontos_mais_dinheiro', 'livelo', SD, 'geral', N, 'indeterminada',
+    'SINTÉTICO: "Pontos + Dinheiro" Livelo — resgate de produto pago em pontos + reais [origem=livelo; pct=null; sem transferência; vigência indeterminada]', ['sintetico']),
 };
 
 // ── Normalização de códigos da extração -> canônico (para comparar com o gabarito).
@@ -206,7 +224,7 @@ function cmpVig(extr, gab) {
 // ── Dedup por id (mantém 1ª ocorrência) + join com gabarito.
 const seen = new Set();
 const rows = [];
-for (const r of amostra) {
+for (const r of [...amostra, ...pmd]) {
   if (seen.has(r.id)) continue;
   seen.add(r.id);
   const g = G[r.id];
@@ -215,11 +233,15 @@ for (const r of amostra) {
 }
 
 // ── Métricas.
-const campanhas = rows.filter((r) => r.classe === 'campanha');
-const negativos = rows.filter((r) => r.classe === 'nao_campanha');
+// Sintéticos ficam FORA de detecção e campos críticos (não são saída real da base);
+// entram só na cobertura de tipos (§ cobertura_tipos). Portão congelado intacto.
+const isSynth = (r) => r.flags?.includes('sintetico');
+const realRows = rows.filter((r) => !isSynth(r));
+const campanhas = realRows.filter((r) => r.classe === 'campanha');
+const negativos = realRows.filter((r) => r.classe === 'nao_campanha');
 
-// Detecção (a extração transformou TODAS as 86 em campanha).
-const detected = rows.length;                 // tudo virou campanha na base
+// Detecção (a extração transformou TODAS as 86 reais em campanha).
+const detected = realRows.length;             // tudo virou campanha na base
 const realCamp = campanhas.length;
 const detPrecision = realCamp / detected;     // % do que a base publica que é campanha real
 const fpNegatives = negativos.length;         // negativos publicados como campanha
@@ -238,8 +260,10 @@ const labeled = rows.map((r) => {
   const cd = cmpDestino(r.extracao_atual.destino, r.destino);
   const cp = cmpPct(r.extracao_atual.percentual, r.pct);
   const cv = cmpVig(r.extracao_atual.vigencia_fim, r.vig);
-  tally(field.origem, co.kind); tally(field.destino, cd.kind);
-  tally(field.pct, cp.kind); tally(field.vig, cv.kind);
+  if (!isSynth(r)) {                           // sintético não conta nos campos críticos
+    tally(field.origem, co.kind); tally(field.destino, cd.kind);
+    tally(field.pct, cp.kind); tally(field.vig, cv.kind);
+  }
   return {
     ...base,
     gabarito: { tipo: r.tipo, origem_programa: r.origem, destino_programa: r.destino, publico: r.publico, percentual: r.pct, vigencia_fim: r.vig },
@@ -279,9 +303,30 @@ const TIPO_MAP = { statusmatch: 'status_match', 'status match': 'status_match', 
 let tipoOk = 0;
 for (const r of campanhas) { const et = TIPO_MAP[r.extracao_atual.tipo] || r.extracao_atual.tipo; if (et === r.tipo) tipoOk++; }
 
+// ── Cobertura dos 9 tipos canônicos (inclui sintéticos p/ fechar o 9º: pontos_mais_dinheiro).
+const TIPOS_9 = ['transferencia_bonificada', 'promocao_emissao', 'compra_pontos', 'clube', 'status_match', 'bonus_acumulo', 'shopping', 'pontos_mais_dinheiro', 'outro'];
+const porTipo = {};
+for (const r of rows.filter((r) => r.classe === 'campanha')) porTipo[r.tipo] = (porTipo[r.tipo] || 0) + 1;
+const tiposCobertos = TIPOS_9.filter((t) => (porTipo[t] || 0) > 0);
+const synth = rows.filter(isSynth);
+
 const out = {
   gerado_em: '2026-07-16',
-  total_itens_unicos: rows.length,
+  total_itens_unicos: realRows.length,
+  total_com_sinteticos: rows.length,
+  cobertura_tipos: {
+    tipos_com_exemplo: tiposCobertos.length,
+    total_tipos: 9,
+    cobertura: `${tiposCobertos.length}/9`,
+    por_tipo: porTipo,
+    faltando: TIPOS_9.filter((t) => !(porTipo[t] > 0)),
+  },
+  sinteticos: {
+    n: synth.length,
+    tipo_gabarito: [...new Set(synth.map((r) => r.tipo))],
+    ids: synth.map((r) => r.id),
+    nota: 'Itens SINTÉTICOS (fonte=sintetico) que fecham o tipo pontos_mais_dinheiro (0 reais na base). Excluídos das métricas de detecção e de campos críticos p/ não contaminar o portão congelado. Ver CACA-PMD.md.',
+  },
   deteccao: {
     itens_extraidos_como_campanha: detected,
     campanhas_reais: realCamp,
@@ -301,6 +346,11 @@ const out = {
   tipo_secundario: { acertos: tipoOk, total: realCamp, acuracia: +(tipoOk / realCamp).toFixed(4) },
 };
 
-writeFileSync(join(DIR, 'AMOSTRA-100-ROTULADA.json'), JSON.stringify(labeled, null, 1));
+// Rotulada REAL (gate-run.mjs consome esta — sintéticos NÃO entram aqui p/ não contaminar o gate).
+// Sintéticos vão para arquivo separado; a cobertura 9/9 vive em METRICAS.cobertura_tipos.
+const labeledReal = labeled.filter((l) => !l.flags?.includes('sintetico'));
+const labeledSynth = labeled.filter((l) => l.flags?.includes('sintetico'));
+writeFileSync(join(DIR, 'AMOSTRA-100-ROTULADA.json'), JSON.stringify(labeledReal, null, 1));
+writeFileSync(join(DIR, 'AMOSTRA-PMD-ROTULADA.json'), JSON.stringify(labeledSynth, null, 1));
 writeFileSync(join(DIR, 'METRICAS.json'), JSON.stringify(out, null, 2));
 console.log(JSON.stringify(out, null, 2));

@@ -1,0 +1,194 @@
+[
+ {
+  "id": "pmd-sintetico-smiles-dinheiro-mais-milhas",
+  "fonte": "sintetico",
+  "url": "sintetico://pmd/smiles-dinheiro-mais-milhas",
+  "input": {
+   "titulo": "Smiles deixa pagar a emissão com parte em milhas e parte em dinheiro",
+   "trecho": "SINTÉTICO (nao e noticia real). No modelo Dinheiro + Milhas, o cliente Smiles fecha a passagem usando parte do saldo de milhas e paga o restante em reais no cartao. Nao ha bonus percentual: e uma forma de pagamento combinada dentro do proprio programa."
+  },
+  "classe": "campanha",
+  "flags": [
+   "sintetico"
+  ],
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "smiles",
+   "destino": null,
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "gabarito": {
+   "tipo": "pontos_mais_dinheiro",
+   "origem_programa": "smiles",
+   "destino_programa": "sem_destino",
+   "publico": "geral",
+   "percentual": null,
+   "vigencia_fim": "indeterminada"
+  },
+  "proveniencia": "SINTÉTICO: \"Dinheiro + Milhas\" Smiles — parte em milhas + parte em reais [origem=smiles pelo saldo de milhas; pct=null pagamento combinado; vigência indeterminada]",
+  "match": {
+   "origem": {
+    "ok": true,
+    "kind": "match"
+   },
+   "destino": {
+    "ok": true,
+    "kind": "match"
+   },
+   "percentual": {
+    "ok": true,
+    "kind": "match_null"
+   },
+   "vigencia": {
+    "ok": true,
+    "kind": "match_indet"
+   }
+  }
+ },
+ {
+  "id": "pmd-sintetico-latampass-pontos-mais-dinheiro",
+  "fonte": "sintetico",
+  "url": "sintetico://pmd/latampass-pontos-mais-dinheiro",
+  "input": {
+   "titulo": "LATAM Pass permite completar o resgate pagando a diferenca em dinheiro",
+   "trecho": "SINTÉTICO (nao e noticia real). Quando faltam milhas para a emissao, o LATAM Pass oferece Pontos + Dinheiro: o cliente aplica as milhas que tem e paga a diferenca em reais para fechar o resgate. E mecanica de pagamento combinada, nao e compra de milhas nem bonus de transferencia."
+  },
+  "classe": "campanha",
+  "flags": [
+   "sintetico"
+  ],
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "latampass",
+   "destino": null,
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "gabarito": {
+   "tipo": "pontos_mais_dinheiro",
+   "origem_programa": "latam_pass",
+   "destino_programa": "sem_destino",
+   "publico": "geral",
+   "percentual": null,
+   "vigencia_fim": "indeterminada"
+  },
+  "proveniencia": "SINTÉTICO: \"Pontos + Dinheiro\" LATAM Pass — completa o resgate pagando a diferença [origem=latam_pass; pct=null; vigência indeterminada; NÃO é compra_pontos]",
+  "match": {
+   "origem": {
+    "ok": true,
+    "kind": "match"
+   },
+   "destino": {
+    "ok": true,
+    "kind": "match"
+   },
+   "percentual": {
+    "ok": true,
+    "kind": "match_null"
+   },
+   "vigencia": {
+    "ok": true,
+    "kind": "match_indet"
+   }
+  }
+ },
+ {
+  "id": "pmd-sintetico-azul-pontos-mais-dinheiro",
+  "fonte": "sintetico",
+  "url": "sintetico://pmd/azul-pontos-mais-dinheiro",
+  "input": {
+   "titulo": "Azul Fidelidade vende passagem com pagamento em pontos mais dinheiro",
+   "trecho": "SINTÉTICO (nao e noticia real). Na compra de passagens, a Azul Fidelidade permite abater parte do valor com pontos e pagar o restante em dinheiro no cartao. E combinacao de meios de pagamento; o preco final depende de quantos pontos o cliente aplica. Sem bonus e sem transferencia."
+  },
+  "classe": "campanha",
+  "flags": [
+   "sintetico"
+  ],
+  "extracao_atual": {
+   "tipo": "shopping",
+   "origem": "azul",
+   "destino": null,
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "gabarito": {
+   "tipo": "pontos_mais_dinheiro",
+   "origem_programa": "azul_fidelidade",
+   "destino_programa": "sem_destino",
+   "publico": "geral",
+   "percentual": null,
+   "vigencia_fim": "indeterminada"
+  },
+  "proveniencia": "SINTÉTICO: \"Pontos + Dinheiro\" Azul Fidelidade — passagem paga em pontos + reais [origem=azul_fidelidade; pct=null; vigência indeterminada]",
+  "match": {
+   "origem": {
+    "ok": true,
+    "kind": "match"
+   },
+   "destino": {
+    "ok": true,
+    "kind": "match"
+   },
+   "percentual": {
+    "ok": true,
+    "kind": "match_null"
+   },
+   "vigencia": {
+    "ok": true,
+    "kind": "match_indet"
+   }
+  }
+ },
+ {
+  "id": "pmd-sintetico-livelo-pague-com-pontos-e-dinheiro",
+  "fonte": "sintetico",
+  "url": "sintetico://pmd/livelo-pague-com-pontos-e-dinheiro",
+  "input": {
+   "titulo": "Livelo deixa fechar o resgate pagando com pontos e dinheiro juntos",
+   "trecho": "SINTÉTICO (nao e noticia real). No resgate de produtos, a Livelo aceita Pontos + Dinheiro: o cliente usa o saldo de pontos disponivel e paga o valor restante no cartao. Sem bonus e sem transferencia — apenas divisao do pagamento entre pontos e reais."
+  },
+  "classe": "campanha",
+  "flags": [
+   "sintetico"
+  ],
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "livelo",
+   "destino": null,
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "gabarito": {
+   "tipo": "pontos_mais_dinheiro",
+   "origem_programa": "livelo",
+   "destino_programa": "sem_destino",
+   "publico": "geral",
+   "percentual": null,
+   "vigencia_fim": "indeterminada"
+  },
+  "proveniencia": "SINTÉTICO: \"Pontos + Dinheiro\" Livelo — resgate de produto pago em pontos + reais [origem=livelo; pct=null; sem transferência; vigência indeterminada]",
+  "match": {
+   "origem": {
+    "ok": true,
+    "kind": "match"
+   },
+   "destino": {
+    "ok": true,
+    "kind": "match"
+   },
+   "percentual": {
+    "ok": true,
+    "kind": "match_null"
+   },
+   "vigencia": {
+    "ok": true,
+    "kind": "match_indet"
+   }
+  }
+ }
+]

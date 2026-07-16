@@ -1,0 +1,90 @@
+[
+ {
+  "id": "pmd-sintetico-smiles-dinheiro-mais-milhas",
+  "fonte": "sintetico",
+  "sintetico": true,
+  "url": "sintetico://pmd/smiles-dinheiro-mais-milhas",
+  "estrato": "pmd_sintetico",
+  "input": {
+   "titulo": "Smiles deixa pagar a emissão com parte em milhas e parte em dinheiro",
+   "trecho": "SINTÉTICO (nao e noticia real). No modelo Dinheiro + Milhas, o cliente Smiles fecha a passagem usando parte do saldo de milhas e paga o restante em reais no cartao. Nao ha bonus percentual: e uma forma de pagamento combinada dentro do proprio programa."
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "smiles",
+   "destino": null,
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "pmd-sintetico-latampass-pontos-mais-dinheiro",
+  "fonte": "sintetico",
+  "sintetico": true,
+  "url": "sintetico://pmd/latampass-pontos-mais-dinheiro",
+  "estrato": "pmd_sintetico",
+  "input": {
+   "titulo": "LATAM Pass permite completar o resgate pagando a diferenca em dinheiro",
+   "trecho": "SINTÉTICO (nao e noticia real). Quando faltam milhas para a emissao, o LATAM Pass oferece Pontos + Dinheiro: o cliente aplica as milhas que tem e paga a diferenca em reais para fechar o resgate. E mecanica de pagamento combinada, nao e compra de milhas nem bonus de transferencia."
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "latampass",
+   "destino": null,
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "pmd-sintetico-azul-pontos-mais-dinheiro",
+  "fonte": "sintetico",
+  "sintetico": true,
+  "url": "sintetico://pmd/azul-pontos-mais-dinheiro",
+  "estrato": "pmd_sintetico",
+  "input": {
+   "titulo": "Azul Fidelidade vende passagem com pagamento em pontos mais dinheiro",
+   "trecho": "SINTÉTICO (nao e noticia real). Na compra de passagens, a Azul Fidelidade permite abater parte do valor com pontos e pagar o restante em dinheiro no cartao. E combinacao de meios de pagamento; o preco final depende de quantos pontos o cliente aplica. Sem bonus e sem transferencia."
+  },
+  "extracao_atual": {
+   "tipo": "shopping",
+   "origem": "azul",
+   "destino": null,
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ },
+ {
+  "id": "pmd-sintetico-livelo-pague-com-pontos-e-dinheiro",
+  "fonte": "sintetico",
+  "sintetico": true,
+  "url": "sintetico://pmd/livelo-pague-com-pontos-e-dinheiro",
+  "estrato": "pmd_sintetico",
+  "input": {
+   "titulo": "Livelo deixa fechar o resgate pagando com pontos e dinheiro juntos",
+   "trecho": "SINTÉTICO (nao e noticia real). No resgate de produtos, a Livelo aceita Pontos + Dinheiro: o cliente usa o saldo de pontos disponivel e paga o valor restante no cartao. Sem bonus e sem transferencia — apenas divisao do pagamento entre pontos e reais."
+  },
+  "extracao_atual": {
+   "tipo": "compra",
+   "origem": "livelo",
+   "destino": null,
+   "percentual": null,
+   "vigencia_fim": "na",
+   "lado_unico": true
+  },
+  "classe": null,
+  "gabarito": null,
+  "proveniencia": null
+ }
+]
