@@ -15,7 +15,8 @@ const SEED = {
     { code: 'livelo', name: 'Livelo', kind: 'bancario', aliases: ['livelo'] },
     { code: 'esfera', name: 'Esfera', kind: 'bancario', aliases: ['esfera'] },
   ],
-  ruido: ['desconhecido', 'null', 'na', 'banco', 'x'],
+  ruido: ['desconhecido', 'null', 'na', 'x', 'fgts'],
+  generico_recuperavel: ['banco', 'bancos', 'cartao', 'cartoes'],
   buckets: { aereo: 'aerea_outra', hotel: 'hotel_outro', varejo: 'varejo_outro', default: 'outro' },
 };
 const IX = construirIndices(SEED);
@@ -97,6 +98,13 @@ test('origem ruído/vazio -> revisão com flag origem_nao_resolvida', () => {
   const r2 = resolverCampanha({ origem: '', destino: 'Smiles', tipo: 'compra' }, IX, '2026-07-16');
   assert.equal(r2.revisao, 'origem_nao_resolvida');
   assert.equal(r2.origem_ruido_tipo, 'vazio');
+});
+
+test('origem genérica recuperável -> sub-motivo distinto do lixo', () => {
+  const g = resolverCampanha({ origem: 'bancos', destino: 'Smiles', tipo: 'transferencia' }, IX, '2026-07-16');
+  assert.equal(g.revisao, 'origem_generica_recuperavel');
+  const j = resolverCampanha({ origem: 'fgts', destino: 'Smiles', tipo: 'transferencia' }, IX, '2026-07-16');
+  assert.equal(j.revisao, 'origem_nao_resolvida');
 });
 
 test('cauda -> bucket, marcado bucketed', () => {

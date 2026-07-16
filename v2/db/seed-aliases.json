@@ -205,10 +205,14 @@
     { "code": "starbucks", "name": "Starbucks", "kind": "varejo", "aliases": ["starbucks"] },
     { "code": "havaianas", "name": "Havaianas", "kind": "varejo", "aliases": ["havaianas"] }
   ],
+  "_nota_generico": "generico_recuperavel: origem que a extração deixou genérica (perdeu o banco/cartão específico). NÃO é lixo — vai para revisão com sub-motivo origem_generica_recuperavel e alimenta o golden set p/ treinar a extração a capturar o específico. Separado do ruído puro.",
+  "generico_recuperavel": [
+    "banco", "bancos", "cartao", "cartoes", "cartao azul", "cartoes de credito",
+    "cartoes_parceiros", "cartoes parceiros", "parceiros", "cartoes de credito"
+  ],
   "ruido": [
-    "null", "desconhecido", "na", "n/a", "nenhum", "x", "banco", "bancos", "governo",
-    "cartao", "cartoes", "cartao azul", "cartoes de credito", "cartoes_parceiros", "cartao151025",
-    "parceiros", "hoteis", "hotel", "hotelaria", "rede hoteleira nao especificada",
+    "null", "desconhecido", "na", "n/a", "nenhum", "x", "governo", "cartao151025",
+    "hoteis", "hotel", "hotelaria", "rede hoteleira nao especificada",
     "dinheiro", "dolar", "criptomoedas", "cripto", "crypto", "pontos", "miles", "reward",
     "casa", "sul", "black", "bahia", "md", "pp", "arq", "uau", "jp", "lor", "elma", "omo", "max",
     "vantagens", "cupom", "alertas", "alertaspp", "mega promo", "lacador", "lacaoderofertas",

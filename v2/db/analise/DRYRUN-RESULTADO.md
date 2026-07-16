@@ -59,6 +59,23 @@ smiles   -> melhoresdestinos        (destino = blog)
 
 Todos são transferência onde o **destino** é desconhecido/ruído/genérico → revisão correta (transfer exige destino real). Confirma que blogs-como-ruído também funcionam no lado destino.
 
+## `pp` resolvido por evidência → RUÍDO (Passageiro de Primeira)
+
+Corte 1 — destinos das 23 `pp`: hoteis.com(9), hoteis(7), astropay, nomad, seatsaero, whatsapp, desconhecido, pp. **Nenhum destino de transferência aéreo/bancário** (Priority Pass jamais seria origem disso).
+Corte 2 — fontes das 23: **todas** de `passageirodeprimeira.com`, URLs sobre o próprio blog (`grupos-do-pp`, `pp-15-anos-nomad`, `semana-da-europa-do-pp`). "PP" = abreviação do blog. **Confirmado: fica em ruído.**
+
+## Sub-motivo `origem_generica_recuperavel` implementado
+
+Split de revisão atualizado (total 286):
+
+| Motivo | Campanhas | Natureza |
+|---|---|---|
+| `origem_nao_resolvida` | **251** | lixo/blog/cidade/genérico não recuperável |
+| `origem_generica_recuperavel` | **22** | extração perdeu o banco/cartão específico (bancos, cartao, banco, cartoes) — insumo do golden set |
+| `transferencia_sem_destino` | **13** | transferência com destino desconhecido/ruído |
+
+Os 22 recuperáveis ficam separados do lixo puro, prontos para o golden set do M1 treinar a extração a capturar o específico.
+
 ## Situação
 
-Dry-run OK, nada escrito. **Parado para sua aprovação** (não rodei apply nem backup). Ao aprovar (e decidir `pp`): faço backup on-demand → confirmo integridade → `--apply` → relatório pós-apply.
+Dry-run OK, nada escrito. `pp` confirmado ruído; sub-motivo implementado (15 testes verdes). **Parado para sua aprovação do apply** (não rodei apply nem backup). Ao autorizar: backup on-demand → confirmo integridade → `--apply` aditivo → relatório pós-apply.

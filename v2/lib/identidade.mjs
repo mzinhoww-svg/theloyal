@@ -54,8 +54,9 @@ export function construirIndices(seed) {
     aliasMap.set(normalizar(p.code), p.code);
   }
   const noiseSet = new Set((seed.ruido || []).map(normalizar));
+  const genericoSet = new Set((seed.generico_recuperavel || []).map(normalizar));
   const buckets = seed.buckets || { default: 'outro' };
-  return { aliasMap, kindByCode, noiseSet, buckets };
+  return { aliasMap, kindByCode, noiseSet, genericoSet, buckets };
 }
 
 // compat: construção só do aliasMap (usada em testes antigos).
@@ -111,10 +112,11 @@ export function inferirBucket(nomeNormalizado, buckets) {
   return { code: buckets.default || 'outro', kind: 'outro' };
 }
 
-// Classifica um lado (origem/destino): programa | bucket | ruido | vazio.
-export function classificarLado(textoBruto, { aliasMap, kindByCode, noiseSet, buckets }) {
+// Classifica um lado (origem/destino): programa | bucket | generico | ruido | vazio.
+export function classificarLado(textoBruto, { aliasMap, kindByCode, noiseSet, genericoSet, buckets }) {
   const n = normalizar(textoBruto);
   if (!n) return { tipo: 'vazio', code: null, kind: null, bruto: n };
+  if (genericoSet && genericoSet.has(n)) return { tipo: 'generico', code: null, kind: null, bruto: n };
   if (noiseSet.has(n)) return { tipo: 'ruido', code: null, kind: null, bruto: n };
   const code = resolverPrograma(textoBruto, aliasMap);
   if (code) return { tipo: 'programa', code, kind: kindByCode.get(code) || 'outro', bruto: n };
@@ -175,8 +177,13 @@ export function resolverCampanha(campanha, indices, ref) {
   if (!tipo) return { resolvido: false, revisao: 'tipo_indefinido', tipo: null, ...base };
 
   const lo = classificarLado(campanha.origem, indices);
-  // origem é sempre obrigatória; ruído/vazio -> revisão com flag origem_nao_resolvida
-  // (nunca descarte; volume alimenta o golden set — inclui cidades/destinos movidos p/ ruído)
+  // origem é sempre obrigatória. Dois sub-motivos de revisão (nunca descarte):
+  //  - origem_generica_recuperavel: extração perdeu o banco/cartão específico (bancos, cartao...).
+  //    Erro RECUPERÁVEL -> insumo do golden set p/ treinar a extração.
+  //  - origem_nao_resolvida: ruído puro / cidade / blog / vazio.
+  if (lo.tipo === 'generico') {
+    return { resolvido: false, revisao: 'origem_generica_recuperavel', tipo, origemCode: null, ...base };
+  }
   if (lo.tipo === 'ruido' || lo.tipo === 'vazio') {
     return { resolvido: false, revisao: 'origem_nao_resolvida', origem_ruido_tipo: lo.tipo, tipo, origemCode: null, ...base };
   }
