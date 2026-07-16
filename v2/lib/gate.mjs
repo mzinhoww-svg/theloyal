@@ -16,11 +16,18 @@ const BLOG_PRODUTO = /(\b(cursos?|mentoria|masterclass)\b|dominando o|assine nos
 // Sem \b nas pontas: quebra em "disney+" (o + não é caractere de palavra).
 const PERK = /(salas? vip|uber one|disney\+|gemini|clube ifood|ifood gratis|streaming gratis)/;
 
-// Cupom/desconto de varejo (sem mecânica de pontos).
-const CUPOM = /(\bcupom\b|\boff\b|% de desconto|r\$ ?\d[\d.,]* de desconto|desconto no abastec)/;
+// Cupom forte: a palavra "cupom/OFF" é vocabulário de varejo — programa de fidelidade
+// nunca chama sua promo de "cupom". VENCE o guard de emissor (ruling 1).
+const CUPOM_FORTE = /(\bcupom\b|\bcupons\b|\boff\b)/;
+// Cupom fraco: "% de desconto" é ambíguo (existe "desconto no resgate" de programa).
+// RESPEITA o guard de emissor.
+const CUPOM_FRACO = /(% de desconto|r\$ ?\d[\d.,]* de desconto|desconto no abastec)/;
 
 // Tarifa/pacote em dinheiro.
 const TARIFA = /(a partir de r\$|di[aá]rias?|all inclusive|\bvoos?\b|\bpassagens?\b|\bpacotes?\b)/;
+
+// Isenção de anuidade / benefício de cartão sem mecânica de ponto (regra-mãe D-018).
+const ANUIDADE = /(anuidade gr[aá]tis|anuidade gratuita|sem anuidade|isen[çc][aã]o de anuidade)/;
 
 /**
  * @param {{news_item_id:string, titulo:string, trecho?:string, tipo?:string,
@@ -45,8 +52,13 @@ export function camadaA(item, ctx = {}) {
   // perk_sem_pontos — benefício nomeado E sem mecânica de ponto/milha/cashback.
   if (PERK.test(texto) && !temMecanica) return rej('perk_sem_pontos', match(texto, PERK));
 
-  // cupom_varejo — só se NÃO for promo de programa emissor.
-  if (CUPOM.test(texto) && !temMecanica && !promotorEmissor) return rej('cupom_varejo', match(texto, CUPOM));
+  // anuidade_sem_pontos — vantagem de ter o cartão, não é ponto/milha (regra-mãe D-018).
+  if (ANUIDADE.test(texto) && !temMecanica) return rej('anuidade_sem_pontos', match(texto, ANUIDADE));
+
+  // cupom_varejo (forte) — palavra "cupom/OFF" vence o guard de emissor (ruling 1).
+  if (CUPOM_FORTE.test(texto) && !temMecanica) return rej('cupom_varejo', match(texto, CUPOM_FORTE));
+  // cupom_varejo (fraco) — "% de desconto" respeita o guard (protege desconto de resgate).
+  if (CUPOM_FRACO.test(texto) && !temMecanica && !promotorEmissor) return rej('cupom_varejo', match(texto, CUPOM_FRACO));
 
   // tarifa_pacote_dinheiro — hotelaria/tarifa em R$, sem mecânica, não-emissor.
   if ((tipo === 'hotelaria' || TARIFA.test(texto)) && !temMecanica && !promotorEmissor) {
@@ -58,7 +70,7 @@ export function camadaA(item, ctx = {}) {
 function rej(motivo, evidencia) { return { rejeitado: true, motivo, camada: 'deterministica', evidencia }; }
 function match(texto, re) { const m = texto.match(re); return m ? m[0] : ''; }
 
-export const REGRAS_A = ['produto_blog', 'perk_sem_pontos', 'cupom_varejo', 'tarifa_pacote_dinheiro'];
+export const REGRAS_A = ['produto_blog', 'perk_sem_pontos', 'anuidade_sem_pontos', 'cupom_varejo', 'tarifa_pacote_dinheiro'];
 
 // Constrói o Set de emissores a partir do seed (kind aéreo/bancário/hotel).
 export function issuersDoSeed(seed) {

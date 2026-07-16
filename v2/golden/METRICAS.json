@@ -3,23 +3,23 @@
   "total_itens_unicos": 86,
   "deteccao": {
     "itens_extraidos_como_campanha": 86,
-    "campanhas_reais": 55,
-    "negativos_publicados_como_campanha": 31,
-    "precision_deteccao": 0.6395,
+    "campanhas_reais": 52,
+    "negativos_publicados_como_campanha": 34,
+    "precision_deteccao": 0.6047,
     "recall_deteccao_campanhas": 1,
     "nao_campanha_rejeitadas_pela_base": 0,
     "nao_campanha_precision_da_base": 0,
     "borderline_perk_sem_pontos": 7,
-    "precision_deteccao_se_perks_forem_campanha": 0.7209
+    "precision_deteccao_se_perks_forem_campanha": 0.686
   },
   "campos_criticos_sobre_campanhas_reais": {
-    "n_campanhas": 55,
+    "n_campanhas": 52,
     "programa": {
-      "correct": 76,
-      "retrieved": 108,
-      "relevant": 85,
-      "precision": 0.7037037037037037,
-      "recall": 0.8941176470588236
+      "correct": 70,
+      "retrieved": 102,
+      "relevant": 79,
+      "precision": 0.6862745098039216,
+      "recall": 0.8860759493670886
     },
     "percentual": {
       "correct": 18,
@@ -30,29 +30,29 @@
     },
     "vigencia": {
       "correct": 9,
-      "retrieved": 29,
-      "relevant": 21,
-      "precision": 0.3103448275862069,
-      "recall": 0.42857142857142855
+      "retrieved": 26,
+      "relevant": 19,
+      "precision": 0.34615384615384615,
+      "recall": 0.47368421052631576
     },
     "detalhe_origem": {
-      "match": 46,
+      "match": 43,
       "wrong": 7,
       "multi_banco_miss": 2
     },
     "detalhe_destino": {
-      "match": 30,
+      "match": 27,
       "spurious": 25
     },
     "detalhe_percentual": {
-      "match_null": 29,
+      "match_null": 26,
       "spurious": 8,
       "match": 18
     },
     "detalhe_vigencia": {
       "match_indet": 25,
-      "year_error": 10,
-      "overprecision": 9,
+      "year_error": 8,
+      "overprecision": 8,
       "missed": 1,
       "match": 9,
       "wrong": 1
@@ -60,7 +60,7 @@
   },
   "tipo_secundario": {
     "acertos": 30,
-    "total": 55,
-    "acuracia": 0.5455
+    "total": 52,
+    "acuracia": 0.5769
   }
 }

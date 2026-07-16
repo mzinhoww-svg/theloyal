@@ -1,32 +1,33 @@
 {
   "gerado_em": "2026-07-16",
   "total": 86,
-  "campanhas": 55,
-  "negativos": 31,
+  "campanhas": 52,
+  "negativos": 34,
   "alvo": {
     "rej_precision": 0.9,
     "camp_recall": 0.95,
     "rej_recall_secundario": 0.7
   },
   "resultado": {
-    "rejeitadas": 30,
+    "rejeitadas": 33,
     "em_revisao": 1,
-    "passaram_como_campanha": 55,
+    "passaram_como_campanha": 52,
     "rejeicao_precision": 1,
-    "rejeicao_recall": 0.968,
+    "rejeicao_recall": 0.971,
     "campanha_recall": 1,
     "campanhas_derrubadas": [],
     "por_motivo": {
       "cupom_varejo": 13,
       "perk_sem_pontos": 8,
       "stunt_rp": 3,
+      "anuidade_sem_pontos": 3,
       "exemplo_resgate": 1,
       "tarifa_pacote_dinheiro": 4,
       "produto_blog": 1
     },
     "por_camada": {
-      "deterministica": 24,
-      "llm": 6
+      "deterministica": 29,
+      "llm": 4
     },
     "split_camada_b": {
       "ambiguo_real": [
@@ -36,10 +37,7 @@
         "qatar-desconhecido-estrutural-na",
         "smiles-melhores destinos-compra-na"
       ],
-      "regra_faltante": [
-        "livelo-magalu-compra-na",
-        "mastercard-azul-compra-2024-11-26"
-      ]
+      "regra_faltante": []
     },
     "deterministicas_travadas": [
       {
@@ -53,6 +51,10 @@
       {
         "id": "americanexpress-ifood-cartao-na",
         "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "bradesco-desconhecido-cartao-2024-06-30",
+        "motivo": "anuidade_sem_pontos"
       },
       {
         "id": "c6-desconhecido-clube-na",
@@ -69,6 +71,14 @@
       {
         "id": "itau-google-clube-na",
         "motivo": "perk_sem_pontos"
+      },
+      {
+        "id": "livelo-magalu-compra-na",
+        "motivo": "cupom_varejo"
+      },
+      {
+        "id": "mastercard-azul-compra-2024-11-26",
+        "motivo": "cupom_varejo"
       },
       {
         "id": "mastercard-uber-cartao-na",
@@ -107,6 +117,10 @@
         "motivo": "tarifa_pacote_dinheiro"
       },
       {
+        "id": "nubank-desconhecido-cartao-2024-05-26",
+        "motivo": "anuidade_sem_pontos"
+      },
+      {
         "id": "null-grandpalladiumimbassai-hotelaria-na",
         "motivo": "tarifa_pacote_dinheiro"
       },
@@ -117,6 +131,10 @@
       {
         "id": "resortstaua-desconhecido-hotelaria-na",
         "motivo": "tarifa_pacote_dinheiro"
+      },
+      {
+        "id": "santander-aadvantage-cartao-2026-03",
+        "motivo": "anuidade_sem_pontos"
       },
       {
         "id": "shell-desconhecido-compra-2024-08-20",

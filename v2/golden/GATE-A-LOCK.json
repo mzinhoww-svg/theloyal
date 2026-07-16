@@ -12,6 +12,10 @@
   "motivo": "perk_sem_pontos"
  },
  {
+  "id": "bradesco-desconhecido-cartao-2024-06-30",
+  "motivo": "anuidade_sem_pontos"
+ },
+ {
   "id": "c6-desconhecido-clube-na",
   "motivo": "perk_sem_pontos"
  },
@@ -26,6 +30,14 @@
  {
   "id": "itau-google-clube-na",
   "motivo": "perk_sem_pontos"
+ },
+ {
+  "id": "livelo-magalu-compra-na",
+  "motivo": "cupom_varejo"
+ },
+ {
+  "id": "mastercard-azul-compra-2024-11-26",
+  "motivo": "cupom_varejo"
  },
  {
   "id": "mastercard-uber-cartao-na",
@@ -64,6 +76,10 @@
   "motivo": "tarifa_pacote_dinheiro"
  },
  {
+  "id": "nubank-desconhecido-cartao-2024-05-26",
+  "motivo": "anuidade_sem_pontos"
+ },
+ {
   "id": "null-grandpalladiumimbassai-hotelaria-na",
   "motivo": "tarifa_pacote_dinheiro"
  },
@@ -74,6 +90,10 @@
  {
   "id": "resortstaua-desconhecido-hotelaria-na",
   "motivo": "tarifa_pacote_dinheiro"
+ },
+ {
+  "id": "santander-aadvantage-cartao-2026-03",
+  "motivo": "anuidade_sem_pontos"
  },
  {
   "id": "shell-desconhecido-compra-2024-08-20",
