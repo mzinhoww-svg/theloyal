@@ -39,3 +39,6 @@ next-env.d.ts.timestamp
 
 # Rascunhos transientes da consolidação Weekly (weekly:draft) — não versionar
 content/weekly/*.draft.json
+
+# git worktrees efêmeros de subagentes (nunca commitar)
+.claude/worktrees/
