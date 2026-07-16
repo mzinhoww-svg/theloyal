@@ -1,0 +1,30 @@
+{
+  "_nota": "Seed inicial de programas e aliases (D-001). Alias em forma normalizada (lower, sem acento, espacos colapsados). Este seed cobre o nucleo conhecido do ecossistema BR; sera ENRIQUECIDO contra a query de variantes distintas de campaigns.origem/destino quando a conexao Supabase estabilizar. Variante nao mapeada NAO e chutada -> vai para revisao (INV-07).",
+  "programas": [
+    { "code": "smiles",             "name": "Smiles",              "kind": "aereo",    "aliases": ["smiles", "gol smiles", "smiles gol", "gol"] },
+    { "code": "latam_pass",         "name": "LATAM Pass",          "kind": "aereo",    "aliases": ["latam pass", "latampass", "latam", "latam airlines", "multiplus"] },
+    { "code": "azul_fidelidade",    "name": "Azul Fidelidade",     "kind": "aereo",    "aliases": ["azul", "azul fidelidade", "tudoazul", "tudo azul"] },
+    { "code": "tap_milesgo",        "name": "TAP Miles&Go",        "kind": "aereo",    "aliases": ["tap", "tap milesgo", "milesgo", "miles go", "miles and go", "tap miles e go"] },
+    { "code": "livelo",             "name": "Livelo",              "kind": "bancario", "aliases": ["livelo"] },
+    { "code": "esfera",             "name": "Esfera",              "kind": "bancario", "aliases": ["esfera", "santander esfera"] },
+    { "code": "itau",               "name": "Itau",                "kind": "bancario", "aliases": ["itau", "itaucard", "itau unibanco", "iupp"] },
+    { "code": "bradesco",           "name": "Bradesco",            "kind": "bancario", "aliases": ["bradesco"] },
+    { "code": "c6",                 "name": "C6 Bank",             "kind": "bancario", "aliases": ["c6", "c6 bank", "atomos"] },
+    { "code": "nubank",             "name": "Nubank",              "kind": "bancario", "aliases": ["nubank", "nubank rewards", "nu"] },
+    { "code": "inter",              "name": "Inter",               "kind": "bancario", "aliases": ["inter", "banco inter", "inter loop"] },
+    { "code": "membership_rewards", "name": "Membership Rewards",  "kind": "bancario", "aliases": ["membership rewards", "amex", "american express"] },
+    { "code": "banco_do_brasil",    "name": "Banco do Brasil",     "kind": "bancario", "aliases": ["banco do brasil", "bb", "ourocard", "livelo bb"] },
+    { "code": "santander",          "name": "Santander",           "kind": "bancario", "aliases": ["santander"] },
+    { "code": "caixa",              "name": "Caixa",               "kind": "bancario", "aliases": ["caixa"] },
+    { "code": "dotz",               "name": "Dotz",                "kind": "varejo",   "aliases": ["dotz"] },
+    { "code": "km_de_vantagens",    "name": "Km de Vantagens",     "kind": "varejo",   "aliases": ["km de vantagens", "km vantagens", "ipiranga"] }
+  ],
+  "pares_transferencia_seed": [
+    { "origem_code": "livelo", "destino_code": "smiles",          "paridade_base": 1.0 },
+    { "origem_code": "livelo", "destino_code": "latam_pass",      "paridade_base": 1.0 },
+    { "origem_code": "livelo", "destino_code": "azul_fidelidade", "paridade_base": 1.0 },
+    { "origem_code": "esfera", "destino_code": "smiles",          "paridade_base": 1.0 },
+    { "origem_code": "esfera", "destino_code": "latam_pass",      "paridade_base": 1.0 },
+    { "origem_code": "esfera", "destino_code": "azul_fidelidade", "paridade_base": 1.0 }
+  ]
+}
