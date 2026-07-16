@@ -1,0 +1,359 @@
+{
+  "gerado_em": "2026-07-16",
+  "n_campanhas": 52,
+  "invariante_overprecision": {
+    "valor": 0,
+    "exigido": 0,
+    "ok": true
+  },
+  "parsing": {
+    "precision": 1,
+    "recall": 1,
+    "datas_afirmadas": 14,
+    "datas_no_gold": 14,
+    "correta": 14,
+    "year_error": 0,
+    "wrong": 0,
+    "missed": 0,
+    "indeterminada_correta": 38
+  },
+  "alvo": {
+    "overprecision": 0,
+    "precision": 0.9,
+    "recall": 0.85
+  },
+  "bate_portao": true,
+  "confiabilidade_a_parte": {
+    "tier1": 0,
+    "tier2": 52,
+    "nota": "todas as fontes do golden sao TIER 2; 0% confirmado e estado correto do FSM, nao bug de parsing",
+    "fontes": {
+      "passageirodeprimeira": 16,
+      "melhorescartoes": 25,
+      "melhoresdestinos": 9,
+      "pontospravoar": 2
+    }
+  },
+  "detalhe": {
+    "correta": [
+      {
+        "id": "azul-azul-cartao-2024-04-29",
+        "esperado": "2026-04-29",
+        "got": "2026-04-29",
+        "motivo": "parcial_ano_inferido"
+      },
+      {
+        "id": "esfera-azul-transferencia-2024-05-14",
+        "esperado": "2025-05-14",
+        "got": "2025-05-14",
+        "motivo": "parcial_ano_inferido"
+      },
+      {
+        "id": "itau-latampass-transferencia-2024-11-14",
+        "esperado": "2025-11-14",
+        "got": "2025-11-14",
+        "motivo": "parcial_ano_inferido"
+      },
+      {
+        "id": "latampass-latampass-compra-2024-03-11",
+        "esperado": "2026-03-11",
+        "got": "2026-03-11",
+        "motivo": "parcial_ano_inferido"
+      },
+      {
+        "id": "livelo-azul-transferencia-2025-09-29",
+        "esperado": "2025-09-29",
+        "got": "2025-09-29",
+        "motivo": "data_cheia_texto"
+      },
+      {
+        "id": "livelo-latampass-transferencia-2024-08-21",
+        "esperado": "2025-08-21",
+        "got": "2025-08-21",
+        "motivo": "parcial_ano_inferido"
+      },
+      {
+        "id": "livelo-latampass-transferencia-2025-03-24",
+        "esperado": "2025-03-24",
+        "got": "2025-03-24",
+        "motivo": "parcial_ano_inferido"
+      },
+      {
+        "id": "livelo-livelo-clube-2024-10-10",
+        "esperado": "2025-10-10",
+        "got": "2025-10-10",
+        "motivo": "parcial_ano_inferido"
+      },
+      {
+        "id": "livelo-livelo-compra-2024-05-09",
+        "esperado": "2025-05-09",
+        "got": "2025-05-09",
+        "motivo": "parcial_ano_inferido"
+      },
+      {
+        "id": "livelo-livelo-compra-2025-06-17",
+        "esperado": "2025-06-17",
+        "got": "2025-06-17",
+        "motivo": "data_cheia_texto"
+      },
+      {
+        "id": "livelo-livelo-compra-2025-11-06",
+        "esperado": "2025-11-06",
+        "got": "2025-11-06",
+        "motivo": "data_cheia_texto"
+      },
+      {
+        "id": "livelo-smiles-transferencia-2024-09-27",
+        "esperado": "2025-05-09",
+        "got": "2025-05-09",
+        "motivo": "slug_data_cheia_hoje"
+      },
+      {
+        "id": "nomad-azul-cartao-2025-03-24",
+        "esperado": "2025-03-24",
+        "got": "2025-03-24",
+        "motivo": "data_cheia_texto"
+      },
+      {
+        "id": "picpay-uber-compra-2026-03-23",
+        "esperado": "2026-03-23",
+        "got": "2026-03-23",
+        "motivo": "data_cheia_texto"
+      }
+    ],
+    "year_error": [],
+    "wrong": [],
+    "overprecision": [],
+    "missed": [],
+    "correta_indet": [
+      {
+        "id": "all-qatarprivilege-statusmatch-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "all-reward-assinatura-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "azul-azul-compra-2024-08-17",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "banco-banco-estrutural-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "banco-pontos-cartao-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "bancointer-desconhecido-compra-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_data_declarada"
+      },
+      {
+        "id": "c6-azul-transferencia-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "caixa-caixa-cartao-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "cartao azul-desconhecido-cartao-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "crypto-livelo-cartao-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "desconhecido-azul-status match-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "desconhecido-latampass-clube-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "diners-diners-cartao-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "esfera-airfranceklm-transferencia-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "esfera-allaccor-transferencia-2024-09-17",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "esfera-esfera-clube-2024-04-19",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "esfera-esfera-clube-2024-09-17",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "esfera-ihg-transferencia-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "inter-uber-compra-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "ita-desconhecido-status match-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "latampass-smiles-transferencia-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "livelo-latampass-transferencia-2026-06-30",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "livelo-livelo-clube-2024-07-12",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "livelo-livelo-clube-2024-09-07",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "marriott-desconhecido-hotelaria-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "nubank-smiles-transferencia-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "null-smiles-transferencia-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "pontofrio-smiles-transferencia-2026-05-26",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "pontos pra voar-revolut-cartao-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "revolut-lifemiles-transferencia-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "shopee-livelo-compra-2024-08-08",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "smiles-smiles-clube-2024-03-22",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "smiles-smiles-clube-2026-07-20",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "surpreenda-stanley-compra-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "tap-desconhecido-estrutural-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "uber-inter-cashback-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "unitedmileageplus-desconhecido-compra-na",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "sem_dia_mes"
+      },
+      {
+        "id": "xp-desconhecido-cartao-2024-04-18",
+        "esperado": "indeterminada",
+        "got": "indeterminada",
+        "motivo": "ano_indeterminado"
+      }
+    ]
+  }
+}
