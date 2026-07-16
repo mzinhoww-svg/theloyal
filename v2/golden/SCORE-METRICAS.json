@@ -1,0 +1,193 @@
+{
+  "_doc": "Medição do TL Score engine sobre as 52 campanhas do golden. Ver cabeçalho de score-run.mjs sobre a lacuna de dado (percentil/eficiência) que o re-score (D-007) preenche.",
+  "versao_pesos": "v1",
+  "total_campanhas": 52,
+  "tier1_no_golden": 0,
+  "veredito_hoje": {
+    "Não confirmado": 52
+  },
+  "overrides_disparados": {
+    "conta_nao_calculavel": 52,
+    "sem_tier1": 52
+  },
+  "elegiveis_hoje": 0,
+  "elegiveis_se_confirmado_tier1": {
+    "valor": "indeterminado_dos_arquivos",
+    "motivo": "sem percentil (histórico de rota) nem eficiência (CPM), conta_nao_calculavel persiste mesmo com TIER 1. O número por-item exige o re-score da base canonicalizada (D-007) + preço de emissão. Não fabricado (INV-03)."
+  },
+  "fila_por_programa": {
+    "adapter_reachable": 26,
+    "manual_only": 26,
+    "pct_reachable": 50,
+    "programas": {
+      "livelo": 13,
+      "azul_fidelidade": 8,
+      "smiles": 7,
+      "latam_pass": 6,
+      "esfera": 6,
+      "all_accor": 3,
+      "inter": 3,
+      "btg": 2,
+      "revolut": 2,
+      "qatar_privilege": 1,
+      "caixa": 1,
+      "crypto_com": 1,
+      "diners": 1,
+      "flyingblue": 1,
+      "ihg": 1,
+      "ita": 1,
+      "itau": 1,
+      "marriott": 1,
+      "nomad": 1,
+      "nubank": 1,
+      "picpay": 1,
+      "lifemiles": 1,
+      "surpreenda": 1,
+      "tap": 1,
+      "united": 1,
+      "xp": 1
+    },
+    "programas_manuais": {
+      "azul_fidelidade": 6,
+      "inter": 3,
+      "latam_pass": 3,
+      "all_accor": 2,
+      "btg": 2,
+      "revolut": 2,
+      "qatar_privilege": 1,
+      "caixa": 1,
+      "diners": 1,
+      "ita": 1,
+      "itau": 1,
+      "marriott": 1,
+      "nomad": 1,
+      "picpay": 1,
+      "lifemiles": 1,
+      "surpreenda": 1,
+      "united": 1,
+      "xp": 1
+    },
+    "trilha_b": [
+      "smiles",
+      "livelo",
+      "esfera",
+      "tap"
+    ]
+  },
+  "amostra_breakdown": [
+    {
+      "campaign_id": "all-qatarprivilege-statusmatch-na",
+      "tipo": "status_match",
+      "publico": "geral",
+      "versao_pesos": "v1",
+      "tl_score_bruto": 100,
+      "veredito_bruto": "Vale agir",
+      "veredito": "Não confirmado",
+      "override_aplicado": "conta_nao_calculavel",
+      "base_curta": false,
+      "overrides": [
+        {
+          "override": "conta_nao_calculavel",
+          "de_veredito": "Vale agir",
+          "para_veredito": "Não confirmado",
+          "evidencia": "sem percentil e sem eficiência (CPM/VPM/spread) — nenhum sinal de valor computável"
+        },
+        {
+          "override": "sem_tier1",
+          "de_veredito": "Vale agir",
+          "para_veredito": "Não confirmado",
+          "evidencia": "campanha_fontes sem tier=1 — Deal Desk exige fonte TIER 1 (INV-02)"
+        }
+      ],
+      "breakdown": [
+        {
+          "componente": "abrangencia",
+          "valor": 1,
+          "valor_bruto": 1,
+          "peso": 0.1,
+          "peso_efetivo": 1,
+          "contribuicao": 1,
+          "base_n": null,
+          "janela": "publico",
+          "base_curta": false
+        }
+      ]
+    },
+    {
+      "campaign_id": "all-reward-assinatura-na",
+      "tipo": "clube",
+      "publico": "clube",
+      "versao_pesos": "v1",
+      "tl_score_bruto": 30,
+      "veredito_bruto": "Evitaria",
+      "veredito": "Não confirmado",
+      "override_aplicado": "conta_nao_calculavel",
+      "base_curta": false,
+      "overrides": [
+        {
+          "override": "conta_nao_calculavel",
+          "de_veredito": "Evitaria",
+          "para_veredito": "Não confirmado",
+          "evidencia": "sem percentil e sem eficiência (CPM/VPM/spread) — nenhum sinal de valor computável"
+        },
+        {
+          "override": "sem_tier1",
+          "de_veredito": "Evitaria",
+          "para_veredito": "Não confirmado",
+          "evidencia": "campanha_fontes sem tier=1 — Deal Desk exige fonte TIER 1 (INV-02)"
+        }
+      ],
+      "breakdown": [
+        {
+          "componente": "abrangencia",
+          "valor": 0.3,
+          "valor_bruto": 0.3,
+          "peso": 0.1,
+          "peso_efetivo": 1,
+          "contribuicao": 0.3,
+          "base_n": null,
+          "janela": "publico",
+          "base_curta": false
+        }
+      ]
+    },
+    {
+      "campaign_id": "azul-azul-cartao-2024-04-29",
+      "tipo": "promocao_emissao",
+      "publico": "cartao",
+      "versao_pesos": "v1",
+      "tl_score_bruto": 60,
+      "veredito_bruto": "Só para casos específicos",
+      "veredito": "Não confirmado",
+      "override_aplicado": "conta_nao_calculavel",
+      "base_curta": false,
+      "overrides": [
+        {
+          "override": "conta_nao_calculavel",
+          "de_veredito": "Só para casos específicos",
+          "para_veredito": "Não confirmado",
+          "evidencia": "sem percentil e sem eficiência (CPM/VPM/spread) — nenhum sinal de valor computável"
+        },
+        {
+          "override": "sem_tier1",
+          "de_veredito": "Só para casos específicos",
+          "para_veredito": "Não confirmado",
+          "evidencia": "campanha_fontes sem tier=1 — Deal Desk exige fonte TIER 1 (INV-02)"
+        }
+      ],
+      "breakdown": [
+        {
+          "componente": "abrangencia",
+          "valor": 0.6,
+          "valor_bruto": 0.6,
+          "peso": 0.1,
+          "peso_efetivo": 1,
+          "contribuicao": 0.6,
+          "base_n": null,
+          "janela": "publico",
+          "base_curta": false
+        }
+      ]
+    }
+  ]
+}

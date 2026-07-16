@@ -253,13 +253,23 @@ export function ComoAnalisamos() {
         </div>
         <Reveal>
           <div className="mt-12 rounded bg-ink px-5 py-4 font-mono text-[13px] leading-7 text-paper sm:px-6 sm:text-sm">
-            <span className="text-gray-400">TL Score = </span>
-            25·valor + 15·regra + 15·vigência + 10·fricção + 10·aplicabilidade +
-            10·liquidez + 10·estoque + 5·fontes
+            <span className="text-gray-400">TL Score v2 = </span>
+            0,45·percentil + 0,30·eficiência + 0,15·raridade + 0,10·abrangência
             <span className="block text-green-500">
-              sem vigência confirmada → Não confirmado, sempre
+              sem fonte TIER 1 ou sem conta possível → Não confirmado, sempre
             </span>
+            <span className="mt-2 block text-gray-400">vigente desde 16/07/2026</span>
           </div>
+        </Reveal>
+        <Reveal>
+          <p className="mt-4 max-w-content text-sm leading-relaxed text-gray-500">
+            Termos e regras, fricção de execução e disponibilidade de estoque são
+            avaliados no texto de cada edição, mas ainda não entram na nota: não
+            temos fonte determinística que os meça sem chutar, e preferimos admitir
+            isso a fingir um peso. Voltam para a conta quando a medição existir. A
+            versão anterior do TL Score, de oito critérios, fica arquivada com seu
+            histórico.
+          </p>
         </Reveal>
         <Reveal>
           <p className="mt-8 max-w-content border-l-[3px] border-gray-400 bg-paper-dark py-3 pl-5 pr-4 text-sm leading-relaxed text-gray-500">

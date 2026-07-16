@@ -1,0 +1,571 @@
+{
+  "_doc": "Golden do TL Score engine, ancorado em score_pesos.v1 (D-022 §2.2). node --test v2/lib/score.test.mjs trava estes valores. Regenerar so com bump de versao de pesos.",
+  "pesos": {
+    "versao": "v1",
+    "peso_percentil": 0.45,
+    "peso_eficiencia": 0.3,
+    "peso_raridade": 0.15,
+    "peso_abrangencia": 0.1,
+    "shrink_k": 5,
+    "min_samples": 3
+  },
+  "casos": [
+    {
+      "nome": "vale_agir_limpo",
+      "desc": "tudo presente, TIER 1, sem override → Vale agir",
+      "entradas": {
+        "campaign_id": "gold-vale-agir",
+        "tem_tier1": true,
+        "componentes": {
+          "percentil": {
+            "valor": 0.95,
+            "base_n": 100,
+            "janela": "18m"
+          },
+          "eficiencia": {
+            "valor": 0.92
+          },
+          "raridade": {
+            "valor": 0.9
+          },
+          "abrangencia": {
+            "valor": 0.85
+          }
+        }
+      },
+      "esperado": {
+        "tl_score_bruto": 91,
+        "veredito_bruto": "Vale agir",
+        "veredito": "Vale agir",
+        "override_aplicado": null,
+        "base_curta": false,
+        "overrides": [],
+        "breakdown": [
+          {
+            "componente": "percentil",
+            "valor": 0.9286,
+            "valor_bruto": 0.95,
+            "peso": 0.45,
+            "peso_efetivo": 0.45,
+            "contribuicao": 0.4179,
+            "base_n": 100,
+            "janela": "18m",
+            "base_curta": false
+          },
+          {
+            "componente": "eficiencia",
+            "valor": 0.92,
+            "valor_bruto": 0.92,
+            "peso": 0.3,
+            "peso_efetivo": 0.3,
+            "contribuicao": 0.276,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "raridade",
+            "valor": 0.9,
+            "valor_bruto": 0.9,
+            "peso": 0.15,
+            "peso_efetivo": 0.15,
+            "contribuicao": 0.135,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "abrangencia",
+            "valor": 0.85,
+            "valor_bruto": 0.85,
+            "peso": 0.1,
+            "peso_efetivo": 0.1,
+            "contribuicao": 0.085,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          }
+        ]
+      }
+    },
+    {
+      "nome": "sem_tier1_88",
+      "desc": "88 bruto Vale agir mas SEM TIER 1 → Não confirmado (sem_tier1)",
+      "entradas": {
+        "campaign_id": "gold-sem-tier1",
+        "tem_tier1": false,
+        "componentes": {
+          "percentil": {
+            "valor": 0.92,
+            "base_n": 200,
+            "janela": "18m"
+          },
+          "eficiencia": {
+            "valor": 0.9
+          },
+          "raridade": {
+            "valor": 0.85
+          },
+          "abrangencia": {
+            "valor": 0.75
+          }
+        }
+      },
+      "esperado": {
+        "tl_score_bruto": 88,
+        "veredito_bruto": "Vale agir",
+        "veredito": "Não confirmado",
+        "override_aplicado": "sem_tier1",
+        "base_curta": false,
+        "overrides": [
+          "sem_tier1"
+        ],
+        "breakdown": [
+          {
+            "componente": "percentil",
+            "valor": 0.9098,
+            "valor_bruto": 0.92,
+            "peso": 0.45,
+            "peso_efetivo": 0.45,
+            "contribuicao": 0.4094,
+            "base_n": 200,
+            "janela": "18m",
+            "base_curta": false
+          },
+          {
+            "componente": "eficiencia",
+            "valor": 0.9,
+            "valor_bruto": 0.9,
+            "peso": 0.3,
+            "peso_efetivo": 0.3,
+            "contribuicao": 0.27,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "raridade",
+            "valor": 0.85,
+            "valor_bruto": 0.85,
+            "peso": 0.15,
+            "peso_efetivo": 0.15,
+            "contribuicao": 0.1275,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "abrangencia",
+            "valor": 0.75,
+            "valor_bruto": 0.75,
+            "peso": 0.1,
+            "peso_efetivo": 0.1,
+            "contribuicao": 0.075,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          }
+        ]
+      }
+    },
+    {
+      "nome": "eficiencia_ausente_redistribui",
+      "desc": "sem CPM: peso da eficiência redistribui, não afunda",
+      "entradas": {
+        "campaign_id": "gold-redistribui",
+        "tem_tier1": true,
+        "componentes": {
+          "percentil": {
+            "valor": 0.8,
+            "base_n": 40,
+            "janela": "18m"
+          },
+          "raridade": {
+            "valor": 0.6
+          },
+          "abrangencia": {
+            "valor": 1
+          }
+        }
+      },
+      "esperado": {
+        "tl_score_bruto": 76,
+        "veredito_bruto": "Vale olhar",
+        "veredito": "Vale olhar",
+        "override_aplicado": null,
+        "base_curta": false,
+        "overrides": [],
+        "breakdown": [
+          {
+            "componente": "percentil",
+            "valor": 0.7667,
+            "valor_bruto": 0.8,
+            "peso": 0.45,
+            "peso_efetivo": 0.6429,
+            "contribuicao": 0.4929,
+            "base_n": 40,
+            "janela": "18m",
+            "base_curta": false
+          },
+          {
+            "componente": "raridade",
+            "valor": 0.6,
+            "valor_bruto": 0.6,
+            "peso": 0.15,
+            "peso_efetivo": 0.2143,
+            "contribuicao": 0.1286,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "abrangencia",
+            "valor": 1,
+            "valor_bruto": 1,
+            "peso": 0.1,
+            "peso_efetivo": 0.1429,
+            "contribuicao": 0.1429,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          }
+        ]
+      }
+    },
+    {
+      "nome": "base_curta_amortece",
+      "desc": "percentil base_n=2 (<3): amortece p/ 0,5, não vira percentil cheio",
+      "entradas": {
+        "campaign_id": "gold-base-curta",
+        "tem_tier1": true,
+        "componentes": {
+          "percentil": {
+            "valor": 0.95,
+            "base_n": 2,
+            "janela": "3m"
+          },
+          "eficiencia": {
+            "valor": 0.7
+          },
+          "raridade": {
+            "valor": 0.5
+          },
+          "abrangencia": {
+            "valor": 0.5
+          }
+        }
+      },
+      "esperado": {
+        "tl_score_bruto": 62,
+        "veredito_bruto": "Só para casos específicos",
+        "veredito": "Só para casos específicos",
+        "override_aplicado": null,
+        "base_curta": true,
+        "overrides": [],
+        "breakdown": [
+          {
+            "componente": "percentil",
+            "valor": 0.6286,
+            "valor_bruto": 0.95,
+            "peso": 0.45,
+            "peso_efetivo": 0.45,
+            "contribuicao": 0.2829,
+            "base_n": 2,
+            "janela": "3m",
+            "base_curta": true
+          },
+          {
+            "componente": "eficiencia",
+            "valor": 0.7,
+            "valor_bruto": 0.7,
+            "peso": 0.3,
+            "peso_efetivo": 0.3,
+            "contribuicao": 0.21,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "raridade",
+            "valor": 0.5,
+            "valor_bruto": 0.5,
+            "peso": 0.15,
+            "peso_efetivo": 0.15,
+            "contribuicao": 0.075,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "abrangencia",
+            "valor": 0.5,
+            "valor_bruto": 0.5,
+            "peso": 0.1,
+            "peso_efetivo": 0.1,
+            "contribuicao": 0.05,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          }
+        ]
+      }
+    },
+    {
+      "nome": "conta_nao_calculavel",
+      "desc": "só raridade+abrangência (sem % nem CPM) → Não confirmado (conta_nao_calculavel)",
+      "entradas": {
+        "campaign_id": "gold-conta-vazia",
+        "tem_tier1": true,
+        "componentes": {
+          "raridade": {
+            "valor": 0.4
+          },
+          "abrangencia": {
+            "valor": 1
+          }
+        }
+      },
+      "esperado": {
+        "tl_score_bruto": 64,
+        "veredito_bruto": "Só para casos específicos",
+        "veredito": "Não confirmado",
+        "override_aplicado": "conta_nao_calculavel",
+        "base_curta": false,
+        "overrides": [
+          "conta_nao_calculavel"
+        ],
+        "breakdown": [
+          {
+            "componente": "raridade",
+            "valor": 0.4,
+            "valor_bruto": 0.4,
+            "peso": 0.15,
+            "peso_efetivo": 0.6,
+            "contribuicao": 0.24,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "abrangencia",
+            "valor": 1,
+            "valor_bruto": 1,
+            "peso": 0.1,
+            "peso_efetivo": 0.4,
+            "contribuicao": 0.4,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          }
+        ]
+      }
+    },
+    {
+      "nome": "dois_overrides",
+      "desc": "sem TIER 1 E conta não calculável → 2 logs, override_aplicado=conta_nao_calculavel",
+      "entradas": {
+        "campaign_id": "gold-dois-ovr",
+        "tem_tier1": false,
+        "componentes": {
+          "raridade": {
+            "valor": 0.5
+          },
+          "abrangencia": {
+            "valor": 0.7
+          }
+        }
+      },
+      "esperado": {
+        "tl_score_bruto": 58,
+        "veredito_bruto": "Só para casos específicos",
+        "veredito": "Não confirmado",
+        "override_aplicado": "conta_nao_calculavel",
+        "base_curta": false,
+        "overrides": [
+          "conta_nao_calculavel",
+          "sem_tier1"
+        ],
+        "breakdown": [
+          {
+            "componente": "raridade",
+            "valor": 0.5,
+            "valor_bruto": 0.5,
+            "peso": 0.15,
+            "peso_efetivo": 0.6,
+            "contribuicao": 0.3,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "abrangencia",
+            "valor": 0.7,
+            "valor_bruto": 0.7,
+            "peso": 0.1,
+            "peso_efetivo": 0.4,
+            "contribuicao": 0.28,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          }
+        ]
+      }
+    },
+    {
+      "nome": "esperaria",
+      "desc": "faixa 40–54",
+      "entradas": {
+        "campaign_id": "gold-esperaria",
+        "tem_tier1": true,
+        "componentes": {
+          "percentil": {
+            "valor": 0.45,
+            "base_n": 30,
+            "janela": "18m"
+          },
+          "eficiencia": {
+            "valor": 0.5
+          },
+          "raridade": {
+            "valor": 0.45
+          },
+          "abrangencia": {
+            "valor": 0.55
+          }
+        }
+      },
+      "esperado": {
+        "tl_score_bruto": 48,
+        "veredito_bruto": "Esperaria",
+        "veredito": "Esperaria",
+        "override_aplicado": null,
+        "base_curta": false,
+        "overrides": [],
+        "breakdown": [
+          {
+            "componente": "percentil",
+            "valor": 0.4571,
+            "valor_bruto": 0.45,
+            "peso": 0.45,
+            "peso_efetivo": 0.45,
+            "contribuicao": 0.2057,
+            "base_n": 30,
+            "janela": "18m",
+            "base_curta": false
+          },
+          {
+            "componente": "eficiencia",
+            "valor": 0.5,
+            "valor_bruto": 0.5,
+            "peso": 0.3,
+            "peso_efetivo": 0.3,
+            "contribuicao": 0.15,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "raridade",
+            "valor": 0.45,
+            "valor_bruto": 0.45,
+            "peso": 0.15,
+            "peso_efetivo": 0.15,
+            "contribuicao": 0.0675,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "abrangencia",
+            "valor": 0.55,
+            "valor_bruto": 0.55,
+            "peso": 0.1,
+            "peso_efetivo": 0.1,
+            "contribuicao": 0.055,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          }
+        ]
+      }
+    },
+    {
+      "nome": "evitaria",
+      "desc": "faixa 0–39",
+      "entradas": {
+        "campaign_id": "gold-evitaria",
+        "tem_tier1": true,
+        "componentes": {
+          "percentil": {
+            "valor": 0.2,
+            "base_n": 30,
+            "janela": "18m"
+          },
+          "eficiencia": {
+            "valor": 0.25
+          },
+          "raridade": {
+            "valor": 0.3
+          },
+          "abrangencia": {
+            "valor": 0.4
+          }
+        }
+      },
+      "esperado": {
+        "tl_score_bruto": 27,
+        "veredito_bruto": "Evitaria",
+        "veredito": "Evitaria",
+        "override_aplicado": null,
+        "base_curta": false,
+        "overrides": [],
+        "breakdown": [
+          {
+            "componente": "percentil",
+            "valor": 0.2429,
+            "valor_bruto": 0.2,
+            "peso": 0.45,
+            "peso_efetivo": 0.45,
+            "contribuicao": 0.1093,
+            "base_n": 30,
+            "janela": "18m",
+            "base_curta": false
+          },
+          {
+            "componente": "eficiencia",
+            "valor": 0.25,
+            "valor_bruto": 0.25,
+            "peso": 0.3,
+            "peso_efetivo": 0.3,
+            "contribuicao": 0.075,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "raridade",
+            "valor": 0.3,
+            "valor_bruto": 0.3,
+            "peso": 0.15,
+            "peso_efetivo": 0.15,
+            "contribuicao": 0.045,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          },
+          {
+            "componente": "abrangencia",
+            "valor": 0.4,
+            "valor_bruto": 0.4,
+            "peso": 0.1,
+            "peso_efetivo": 0.1,
+            "contribuicao": 0.04,
+            "base_n": null,
+            "janela": null,
+            "base_curta": false
+          }
+        ]
+      }
+    }
+  ]
+}
