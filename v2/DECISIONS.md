@@ -148,5 +148,23 @@ Duas falhas de vigência são **naturezas diferentes**: **parsing** ("li a data 
 - **Achado:** o gold estrito pegou **5 overprecisions do próprio gabarito do M1** (datas do `id`/slug-sem-dia) → corrigidas para `indeterminada`. O invariante pega o erro do rotulador.
 - **Medido (in-sample):** overprecision 0, parsing precision/recall 1,0; confiabilidade 0/52 TIER 1, reportada à parte. O 1,0 é in-sample; o que vale fora é o **bloqueio estrutural** (INV-16) + a trava de virada, não o número.
 
+## D-022 — TL Score v2: vetor travado, Opção A, Manual público versionado, órfãos como dívida
+**Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice 4)
+
+**Vetor `score_pesos.v1` (travado):** `percentil 0,45 · eficiência 0,30 · raridade 0,15 · abrangência 0,10`; `shrink_k=5`, `min_samples=3`. Pesos **versionados em `score_pesos`**, não hardcoded (accuracy loop recalibra sem deploy; golden ancorados à versão; breakdown grava `versao_pesos`).
+- **Vigência fora do score:** urgência não é qualidade; peso positivo em vigência-restante premiaria o afogadilho (viola INV-06). Vira **selo de urgência** (FSM já deriva `ultimos_dias`).
+- **Fontes vira override**, não peso de 5 pts (mais forte; INV-02).
+
+**Reconciliação Manual v1 (8) → v2 (5) = Opção A** (`RECONCILIACAO-MANUAL-8-para-5.md`): `valor`→percentil+eficiência, `liquidez`→eficiência, `aplicabilidade`→abrangência, `vigência`→urgência, `fontes`→override, `raridade` nova. **35 pts órfãos** (`regra` 15, `fricção` 10, `estoque` 10) **não pontuam** — exigem dado sem fonte determinística (T&C parsing / modelo de fricção / award search); fabricar violaria INV-12.
+
+**Condição de honestidade (bloqueante):** o v2 se declara **versão nova**, não a mesma metodologia.
+- **Manual público atualizado na mesma leva do engine** (Trilha A): "TL Score v2, vigente desde [data]", v1 arquivado com changelog, e diz **explicitamente** que regra/fricção/estoque são avaliadas **editorialmente e não entram na nota** (previsão de reintrodução). Admitir o que não se mede > fingir peso.
+- **Narração editorial permitida:** LLM pode citar as 3 dimensões no texto/breakdown do item ("termos exigem clube", "estoque não verificado"), com evidência, **sem alterar `tl_score`**.
+
+**Dívida nomeada (dono de milestone, condição de reintrodução):**
+- `regra` (15) — o mais parseável; volta quando houver **T&C parsing** (candidato M3/M5).
+- `fricção` (10) — precisa de **modelo próprio** de esforço de execução (sem milestone ainda).
+- `estoque` (10) — depende de **award search ao vivo**, fora do escopo do ciclo atual.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** Backup `campaigns_bkp_prev2_20260716` retido **até o M2 confirmar que a canonicalização não precisa de rollback**.
