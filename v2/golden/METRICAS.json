@@ -1,6 +1,37 @@
 {
   "gerado_em": "2026-07-16",
   "total_itens_unicos": 86,
+  "total_com_sinteticos": 90,
+  "cobertura_tipos": {
+    "tipos_com_exemplo": 9,
+    "total_tipos": 9,
+    "cobertura": "9/9",
+    "por_tipo": {
+      "status_match": 3,
+      "clube": 8,
+      "promocao_emissao": 5,
+      "shopping": 10,
+      "outro": 8,
+      "bonus_acumulo": 6,
+      "transferencia_bonificada": 10,
+      "compra_pontos": 2,
+      "pontos_mais_dinheiro": 4
+    },
+    "faltando": []
+  },
+  "sinteticos": {
+    "n": 4,
+    "tipo_gabarito": [
+      "pontos_mais_dinheiro"
+    ],
+    "ids": [
+      "pmd-sintetico-smiles-dinheiro-mais-milhas",
+      "pmd-sintetico-latampass-pontos-mais-dinheiro",
+      "pmd-sintetico-azul-pontos-mais-dinheiro",
+      "pmd-sintetico-livelo-pague-com-pontos-e-dinheiro"
+    ],
+    "nota": "Itens SINTÉTICOS (fonte=sintetico) que fecham o tipo pontos_mais_dinheiro (0 reais na base). Excluídos das métricas de detecção e de campos críticos p/ não contaminar o portão congelado. Ver CACA-PMD.md."
+  },
   "deteccao": {
     "itens_extraidos_como_campanha": 86,
     "campanhas_reais": 52,
