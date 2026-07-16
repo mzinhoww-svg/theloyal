@@ -45,6 +45,30 @@ O matcher e a FSM já tratam os três casos corretamente (testado).
 2. **Head + buckets.** Seed expandido para **103 programas** (39 bancário, 23 varejo, 20 aéreo, 9 serviço, 6 hotel, 4 combustível, 2 streaming); cauda → bucket por kind com `origem_bruto`/`destino_bruto` preservados.
 3. **Curadoria minha → sua revisão.** Registro em `v2/db/seed-aliases.json` (versionado, revisável no PR #84).
 
+## Números finais pós-A+C (classificação ratificada)
+
+Registro: **191 programas**, **373 aliases**, **109 ruídos** no seed.
+
+| Lado | Programa (head) | Ruído (revisão) | Bucket (cauda) |
+|---|---|---|---|
+| origem | **87,9%** (3.165 linhas) | 7,5% (271) | 4,6% (164) |
+| destino | **59,1%** (2.127) | 37,2% (1.340) | 3,7% (133) |
+
+- **Campanhas que canonicalizam** (identidade de rota OU de lado único): **~92,5%** (origem resolvida a programa ou bucket).
+- **Campanhas em revisão `origem_nao_resolvida`**: **~271** (origem = ruído/vazio: `null`, `desconhecido`, cidades, blogs, lixo). Nunca descartadas; `origem_bruto` preservado; volume alimenta o golden set.
+
+### Destino "desconhecido" (34%) — resolvido, NÃO é bloqueio de TL Score
+
+Cruzamento `destino indefinido × tipo` (1.239 campanhas sem destino):
+
+| Situação | Campanhas | Tratamento |
+|---|---|---|
+| **Transferência** sem destino | **8** | → revisão (`transferencia_sem_destino`). Único caso que não pontua. |
+| Tipos de **lado único** (compra/clube/cartão/shopping/status_match) | **1.006** | → identidade de lado único. Pontua normal (CPM não exige destino). |
+| Outros tipos (não-transferência) | 225 | → lado único (`outro`). |
+
+**Conclusão:** o destino não precisa de passada própria de classificação. A regra de lado único já cobre 1.231 das 1.239 sem destino; só **8** transferências ficam em revisão. Destino não trava o M2.
+
 ## Próximo passo
 
 Nada aplicado ao banco (D-006: snapshot antes; MCP instável nesta sessão). Quando a conexão estabilizar: aplicar migration 001 + rodar `canonicalizar.mjs --dry-run` para os **números finais exatos** (resolvidas/lado-único/bucket/revisão por motivo) sobre as 3.600 linhas, e devolver o relatório para sua aprovação antes do `--apply`.
