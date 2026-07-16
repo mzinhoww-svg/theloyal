@@ -270,7 +270,7 @@ export function MobileNav() {
                   active ? "bg-ink" : "bg-transparent"
                 }`}
               />
-              <span className="truncate">{l.label}</span>
+              <span>{l.label}</span>
             </a>
           );
         })}
