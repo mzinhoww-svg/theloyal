@@ -89,24 +89,76 @@ deles deixa de ser artificial. **É pré-requisito da Parte C para itens lado-ú
 
 ---
 
-## 3. Parte C — Confirmação manual (prioridade 3, DEPOIS da B) · carga escopada do operador
+## 3. Parte C — Gate de CONFIANÇA TIER 1, limiar auto-ajustável (prioridade 3, DEPOIS da B)
 
-**Fila de curadoria no admin**, ranqueada por `tl_score_bruto` **corrigido**, só:
-- **vivas** (3 portões menos o TIER 1),
-- **score bruto ≥ 70** (corte, §5),
-- **computável** (não `conta_nao_calculavel`),
-- **não-crawleável** (as crawleáveis já foram pela Parte A),
-- para item **lado-único: só depois da Parte B** ter corrigido o score.
+> **Mudança de natureza (diretriz do operador):** a Parte C NÃO é "curadoria manual
+> permanente". É um **gate de confiança**: a confirmação automática (Parte A) sempre
+> roda; a revisão humana é a **exceção calibrada** que só acontece quando a confiança
+> da confirmação fica abaixo de um limiar. O sistema **aprende a subir a barra de
+> automação** conforme prova que acerta. É o **accuracy loop** (brief §13) operando
+> pela primeira vez de verdade, aplicado à confirmação de fonte.
 
-Cada linha traz: identidade, %/vigência ingeridos, **link candidato da fonte
-oficial** (heurística: site oficial do programa), score + breakdown. O operador
-abre, confirma os termos, e roda `confirmar_tier1` (URL oficial, %, público,
-vigência, evidência jsonb) — mesma mecânica manual do caso azul. Divergência →
-corrige + re-scora antes de publicar.
+### 3.1 A confirmação produz um SCORE DE CONFIANÇA (determinístico), não um booleano
 
-**Abaixo do corte** (55–69, "Só casos"): não entra na fila manual. Espera a coleta
-automática alcançar, ou fica no ranking **sem publicar**. Não se gasta confirmação
-manual em item que ninguém vai agir.
+Toda confirmação da Parte A calcula uma **confiança ∈ [0,1]** a partir de **sinais
+objetivos e verificáveis** da própria confirmação — nunca de um julgamento de LLM
+(determinismo-primeiro, INV-12; o LLM pode **narrar** por que a confiança ficou
+baixa, jamais **decidir** que ficou). Sinais (fatos sim/não da confirmação):
+
+- **Janela de vigência clara** no regulamento? (D-047) — sim eleva, ausente derruba.
+- **Termos corroboram sem divergência?** O % oficial bate com o ingerido? *(o azul
+  teria confiança BAIXA: blog 115% × oficial escala — divergência forte.)*
+- **Fonte é regulamento oficial** vs página secundária/redirect?
+- **Público inequívoco** na escala? (escala clara por público eleva; ambígua derruba)
+- **Estado vivo confirmado** (200, não 3xx→/promocao)?
+
+A confiança é uma função pura desses sinais (pesos versionados, como `score_pesos`).
+Recalibrar = nova versão + changelog.
+
+### 3.2 O limiar decide o caminho — os DOIS automáticos
+
+- **Confiança ≥ limiar →** confirma e **atravessa os 3 portões sem revisão humana**.
+  Automação plena.
+- **Confiança < limiar →** vai para a **fila de revisão humana** (o antigo "manual").
+  Não é bloqueio permanente: é "este caso ainda não é confiável o bastante para
+  automatizar". O operador confirma/corrige; o desfecho **alimenta o auto-ajuste**.
+
+A fila de revisão herda o **corte de valor** (§5): só entra item vivo + computável +
+`tl_score_bruto` ≥ piso (70 inicial) — não se gasta revisão em item que ninguém vai
+agir. Para item **lado-único, só depois da Parte B** (score corrigido).
+
+### 3.3 O limiar se AUTO-AJUSTA (mede o próprio acerto)
+
+O sistema compara as confirmações automáticas com o que a revisão humana **depois
+corrige**. Alta concordância (humano quase nunca discorda do automático) → o limiar
+pode **baixar** (mais coisa passa sozinha). Erro perto do limiar (humano corrige com
+frequência) → o limiar **sobe** (mais vai para revisão). Auto-calibra para manter a
+qualidade de publicação.
+
+### 3.4 As 4 TRAVAS do auto-ajuste (INVARIANTES da C — auto-ajuste sem trava degrada silenciosamente)
+
+1. **Piso gated.** O sistema **sobe** o limiar sozinho (mais cauteloso, livre), mas
+   **baixá-lo abaixo de um PISO exige autorização do operador** (baixar limiar =
+   aumentar risco de publicar erro → nunca automático). Cautela é livre; risco é gated.
+2. **A auditoria pré-publicação fica ACIMA de tudo.** Confiança alta pula a revisão
+   humana da **FONTE**, não a **auditoria da PUBLICAÇÃO**: mesmo a confirmação
+   auto-aprovada enfrenta o gate de auditoria do digest (refaz contas, checa vigência,
+   lint) antes de publicar. Duas camadas distintas — a confiança não vaza para a régua.
+3. **Volume mínimo antes de mover o limiar.** Não ajusta com 5 confirmações (ruído).
+   `n` mínimo de confirmações com **desfecho conhecido** antes de qualquer movimento —
+   mesmo princípio do predict (base_n≥3, série≥12m): não calibra com base insuficiente.
+4. **Todo movimento de limiar é LOGADO** com o motivo + a taxa de acerto que o
+   justificou. Auditável ao longo do tempo, como os pesos do score. Se um dia publicar
+   erro, dá para rastrear se o limiar estava baixo demais e por quê.
+
+### 3.5 Consequência de lançamento (human-in-the-loop faseado, brief §13)
+
+**Dia 1: limiar CONSERVADOR (alto).** Sem histórico para confiar em si, quase tudo de
+confiança não-máxima vai para revisão — o operador confirma bastante na mão. Conforme
+acumula confirmações com desfecho conhecido, o limiar **baixa até o piso**,
+automatizando mais. O sistema aprende com as confirmações do operador e o **tira do
+caminho onde já provou que acerta** — total-automação depois de provar taxa de bloqueio
+baixa. Aprovação humana no começo, automação plena no fim.
 
 ---
 
@@ -131,13 +183,23 @@ Parte C (manual)  ── espera B ──> fila só com score corrigido + ≥70 +
 
 ---
 
-## 5. Corte de score da fila manual — piso "Vale olhar" (70)
+## 5. Dois parâmetros distintos do sistema (não confundir)
 
-Proposto: **`tl_score_bruto ≥ 70`** para entrar na fila de confirmação manual.
-Razão: abaixo de 70 é "Só para casos específicos" (55–69) ou pior — confirmar fonte
-na mão de item que poucos vão agir é custo sem retorno. O corte é **configurável**
-(não hardcoded), revisável conforme a fila real. Itens 55–69 vivos ficam no ranking
-e sobem à fila manual se a derivação (B) os empurrar acima de 70.
+A Parte C tem **dois eixos**, ambos parâmetros versionados/auditáveis (não hardcoded),
+que respondem a perguntas diferentes:
+
+- **Corte de VALOR — `tl_score_bruto ≥ 70` (piso "Vale olhar", inicial).** Responde
+  "*este item merece a atenção do pipeline?*". Abaixo de 70 (55–69 "Só casos") não
+  entra na fila de revisão nem consome confirmação — fica no ranking sem publicar,
+  esperando a coleta automática ou a derivação (B) empurrá-lo acima. Valor inicial 70,
+  ajustável conforme a fila real.
+- **Limiar de CONFIANÇA (§3.2, auto-ajustável com piso gated).** Responde "*esta
+  confirmação é confiável o bastante para automatizar, ou vai para revisão humana?*".
+  É o eixo que aprende e se calibra (§3.3–3.4).
+
+Um item só é candidato quando passa o corte de valor; **entre os candidatos**, o
+limiar de confiança decide auto-publica vs revisão. Os dois são ortogonais: valor =
+"vale a pena?", confiança = "posso confiar na confirmação automática?".
 
 ---
 
@@ -160,16 +222,27 @@ e sobem à fila manual se a derivação (B) os empurrar acima de 70.
 
 ---
 
-## 8. Decisões que aguardam o operador (paro aqui — não disparo agente)
+## 8. Decisões do operador — RESOLVIDAS (D-048)
 
-1. **Ordem/paralelização (§4):** A ∥ B primeiro, C depois de B — confirma? Ou quer
-   A sozinha primeiro (encher o que der de graça) e B+C numa segunda leva?
-2. **Corte da fila manual = 70 (§5)** — aceita o piso "Vale olhar", ou outro?
-3. **Parte B é PROPOSTA de vetor** (como os outros): quer ver o vetor lado-único
-   antes de re-scorar, mesma disciplina? (Minha recomendação: sim.)
-4. **Escala por público na coleta (D-045/D-047):** quando o oficial revelar escala
-   (N %s por público), a Parte A **separa em N identidades** automaticamente, ou
-   marca para tua revisão (pode ser decisão de produto qual público vira Deal Desk)?
+1. **Ordem A∥B→C:** ✅ confirmada. A e B ortogonais rodam juntas; C depois da B.
+2. **Corte de valor = 70:** ✅ confirmado como valor inicial; vira **parâmetro** do
+   sistema (§5), não número fixo.
+3. **Parte B como PROPOSTA de vetor:** ✅ obrigatório — o vetor lado-único v1 vem para
+   aprovação com racional antes de re-scorar os 1.220 (derivação errada envenena 1.220).
+4. **Escala por público na coleta:** ✅ a Parte A **separa em N identidades automático**
+   (regra de identidade M1 / D-047; o azul provou que colapsar destrói informação), com
+   trilha. Só marca para revisão se a separação for **ambígua** (regulamento não deixa
+   claro qual público tem qual %).
+
+**Redesenho da Parte C (D-048):** de "curadoria manual permanente" para **gate de
+confiança com limiar auto-ajustável** — confiança determinística por sinais objetivos,
+piso gated, 4 travas, ligado ao accuracy loop, human-in-the-loop faseado (§3). A
+confiança **não** é nota de LLM: é calculada de fatos verificáveis; o LLM narra, não decide.
+
+**Estado:** Partes A e B **aprovadas** (podem ir para spec detalhada). Parte C
+reescrita (§3) **aguarda aprovação do operador** — o gate de confiança rege toda
+publicação futura, então o operador vê o desenho antes do código. **Nenhum agente de
+implementação disparado.**
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes
 de comprar, transferir ou resgatar.*
