@@ -93,7 +93,21 @@
     },
     "cartoesBancos": {
       "type": "string",
-      "description": "Cartões & bancos (§1.4, D-057): parágrafo editorial evergreen sobre campanhas de cartão e transferência bancária vivas. Aceita TIER 2 (panorama, não recomendação). Prosa redigida a jusante sobre os itens de `selecionarCartoesBancos` (v2/lib/digest/ofertas-ativas.mjs) — mesma disciplina de `resumoDoDia`."
+      "description": "DEPRECADO (v4, D-059): use `cartoesBancosItens` — a prosa única não carrega url/fonte por item. Mantido por compatibilidade com edições legadas. Cartões & bancos (§1.4, D-057): parágrafo editorial evergreen sobre campanhas de cartão e transferência bancária vivas. Aceita TIER 2 (panorama, não recomendação)."
+    },
+    "cartoesBancosItens": {
+      "type": "array",
+      "description": "Cartões e bancos por item (v4, D-059): substitui a prosa única `cartoesBancos`. url+fonte OBRIGATÓRIOS por item (guardrail D-059: número sem fonte que o sustente sai da peça); item sem `nota` carrega status honesto ('sem confirmação'/'fora da régua'/'sem nota' — gate 5.5).",
+      "items": { "$ref": "#/$defs/cartaoBancoItem" }
+    },
+    "radarSemConfirmacao": {
+      "type": "array",
+      "description": "'No radar, ainda sem confirmação oficial' (v4, D-059): itens citados dentro do Sinal do dia cuja regra ainda não foi confirmada em fonte oficial. url+fonte OBRIGATÓRIOS — item não confirmado nunca é citado sem link da fonte + status explícito (guardrail D-059).",
+      "items": { "$ref": "#/$defs/radarSemConfirmacaoItem" }
+    },
+    "predictNarrativa": {
+      "$ref": "#/$defs/predictNarrativa",
+      "description": "Camada narrativa do Predict no corpo editorial (D-059 §3): probabilidade sempre visível, mesmo baixa/em formação. `texto` DEVE ser exatamente o output de `formatarPredictNarrativa` (v2/lib/digest/editorial.mjs) — o gate 5.5 recomputa; nunca cita valor/data de janela futura."
     },
     "oQueFechouSemana": {
       "type": "array",
@@ -195,6 +209,7 @@
         "text": { "type": "string" },
         "cpm": { "type": "string", "description": "CPM em mono, ex: CPM R$ 24,90" },
         "note": { "type": "string" },
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://", "description": "Link da fonte do item (v4, D-059) — renderizado como '(fonte)'." },
         "vigencia": { "type": "string", "format": "date-time" }
       }
     },
@@ -272,7 +287,51 @@
         "tipo": { "type": "string", "description": "Taxonomia D-001, ex: transferencia_bonificada, compra_pontos" },
         "percentual": { "type": ["number", "null"], "description": "Bônus/desconto observado. null quando o tipo não usa percentual (ex.: pontos_mais_dinheiro, D-031)." },
         "prazo": { "type": ["string", "null"], "format": "date-time", "description": "vigencia_fim (ISO). null = vigência indeterminada ('sem data' no render)." },
-        "leitura": { "$ref": "#/$defs/verdict", "description": "Vocabulário canônico de veredito (D-057 decisão 1) — nunca um 2º vocabulário paralelo." }
+        "leitura": { "$ref": "#/$defs/verdict", "description": "Vocabulário canônico de veredito (D-057 decisão 1) — nunca um 2º vocabulário paralelo." },
+        "cpm": { "type": ["string", "null"], "description": "Custo do milheiro formatado (v4, D-059), ex: 'R$ 16,84'. null = tipo sem CPM ('—' no render)." },
+        "publico": { "type": ["string", "null"], "description": "Público da oferta (v4, D-059), ex: 'Clube'. null = geral." },
+        "nota": { "type": ["integer", "null"], "minimum": 0, "maximum": 100, "description": "Nota TL do item para a sublinha 'TL {nota}' (v4, opcional)." }
+      }
+    },
+    "radarSemConfirmacaoItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titulo", "detalhe", "url", "fonte"],
+      "description": "Um item do bloco 'No radar, ainda sem confirmação oficial' (v4, D-059). url+fonte obrigatórios — item não confirmado nunca é citado sem fonte linkada.",
+      "properties": {
+        "titulo": { "type": "string" },
+        "detalhe": { "type": "string" },
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "fonte": { "type": "string" },
+        "nota": { "type": ["integer", "null"], "minimum": 0, "maximum": 100, "description": "Nota TL quando existe ('TL {nota}' no render); null = sem nota — o texto NÃO pode citar número TL (gate 5.5)." },
+        "vence": { "type": ["string", "null"], "description": "Vigência (ISO date) quando conhecida." }
+      }
+    },
+    "cartaoBancoItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nome", "descricao", "url", "fonte"],
+      "description": "Um item de 'Cartões e bancos' (v4, D-059). url+fonte obrigatórios; sem `nota`, descricao/status devem declarar o motivo honesto ('sem confirmação'/'fora da régua'/'sem nota').",
+      "properties": {
+        "nome": { "type": "string" },
+        "descricao": { "type": "string" },
+        "url": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "fonte": { "type": "string" },
+        "status": { "type": ["string", "null"], "description": "Status honesto do item, ex: a constante STATUS_SEM_CONFIRMACAO ('Ainda sem confirmação oficial')." },
+        "nota": { "type": ["integer", "null"], "minimum": 0, "maximum": 100 }
+      }
+    },
+    "predictNarrativa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rotaOrigem", "rotaDestino", "probabilidade", "texto"],
+      "description": "Narrativa do Predict (D-059 §3). `texto` é SEMPRE o output de formatarPredictNarrativa(rotaOrigem, rotaDestino, historicoTipicoPercent, probabilidade) — recomputado pelo gate 5.5; nunca cita data/valor de janela futura.",
+      "properties": {
+        "rotaOrigem": { "type": "string", "description": "origem_code da rota acompanhada" },
+        "rotaDestino": { "type": "string", "description": "destino_code da rota acompanhada" },
+        "historicoTipicoPercent": { "type": ["number", "null"], "description": "Bônus típico histórico da rota (%), ou null quando não há base." },
+        "probabilidade": { "type": "string", "enum": ["baixa", "media", "alta", "em-formacao"] },
+        "texto": { "type": "string" }
       }
     },
     "fechouSemanaItem": {

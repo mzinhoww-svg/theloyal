@@ -11,11 +11,12 @@
 // Mesma lógica para rastreabilidade completa de número↔banco (INV-03): aqui só
 // roda a checagem ESTRUTURAL (o texto contém dígito), não a travessia completa
 // até a linha exata do banco — isso é dívida explícita, não fingida como feita.
-import { DISCLAIMER, assertEditorialRules, isExpired } from '../../../scripts/lib.mjs';
+import { DISCLAIMER, URGENCY_RE, assertEditorialRules, collectStrings, isExpired } from '../../../scripts/lib.mjs';
 import { passaTresPortoes, elegivelDealDesk, selecionarDealDesk, TRES_PORTOES } from './selecionar.mjs';
 import { mapVeredito } from './mapear-contrato.mjs';
 import { BANCOS_ORIGEM } from './ofertas-ativas.mjs';
 import { selecionarPredict, formatarTeaserPredict } from './dia-fraco.mjs';
+import { lintJargao, formatarPredictNarrativa, rotaDisplay, PALAVRA_PROBABILIDADE } from './editorial.mjs';
 
 const stubCheckLink = async () => true;
 
@@ -470,6 +471,187 @@ export function checkContaProsa(edition = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// §3.5 — checks do formato v4 (D-059, rodadas editoriais) — sempre-on
+// ---------------------------------------------------------------------------
+
+/**
+ * Jargão interno banido de texto voltado ao leitor (D-059): varre TODAS as
+ * strings da edição + o HTML renderizado com `lintJargao`. Qualquer hit é erro.
+ * @param {object} edition
+ * @param {string} renderedHtml
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkJargao(edition = {}, renderedHtml = '') {
+  const results = [];
+  const hits = new Map();
+  for (const s of collectStrings(edition)) {
+    for (const termo of lintJargao(s)) {
+      if (!hits.has(termo)) hits.set(termo, s.slice(0, 60));
+    }
+  }
+  results.push({
+    ok: hits.size === 0,
+    check: 'jargão interno ausente das strings da edição (D-059)',
+    detail: hits.size === 0
+      ? 'nenhum termo interno vazou para o leitor'
+      : [...hits.entries()].map(([t, s]) => `"${t}" em "${s}…"`).join('; '),
+  });
+  if (renderedHtml) {
+    const htmlHits = lintJargao(renderedHtml);
+    results.push({
+      ok: htmlHits.length === 0,
+      check: 'jargão interno ausente do HTML renderizado (D-059)',
+      detail: htmlHits.length ? `termo(s): ${htmlHits.join(', ')}` : 'limpo',
+    });
+  }
+  return results;
+}
+
+const RE_CLAIM_TL = /TL(?:\s*Score)?\s*\d/i;
+
+/**
+ * Radar sem confirmação (D-059, guardrail): item não confirmado NUNCA é citado
+ * sem url+fonte; sem `nota`, o texto não pode reivindicar um número TL.
+ * @param {object} edition
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkRadarSemConfirmacao(edition = {}) {
+  const results = [];
+  const itens = Array.isArray(edition.radarSemConfirmacao) ? edition.radarSemConfirmacao : [];
+  itens.forEach((item, i) => {
+    const tag = `radarSemConfirmacao[${i}] (${item.titulo ?? 'sem título'})`;
+    const temFonte = has(item.url) && has(item.fonte);
+    results.push({
+      ok: temFonte,
+      check: `${tag}: url e fonte presentes (item não confirmado nunca sem fonte linkada, D-059)`,
+      detail: temFonte ? 'ok' : `url="${item.url ?? ''}", fonte="${item.fonte ?? ''}"`,
+    });
+    if (item.nota === null || item.nota === undefined) {
+      const texto = `${item.titulo ?? ''} ${item.detalhe ?? ''}`;
+      const claimaTl = RE_CLAIM_TL.test(texto);
+      results.push({
+        ok: !claimaTl,
+        check: `${tag}: sem nota ⇒ texto não pode citar número TL`,
+        detail: claimaTl ? 'texto cita um número TL sem nota registrada' : 'ok',
+      });
+    }
+  });
+  return results;
+}
+
+/**
+ * Narrativa do Predict (D-059 §3): probabilidade visível, nunca data/janela
+ * futura, nunca urgência, e `texto` recomputa EXATAMENTE via
+ * `formatarPredictNarrativa` — a única forma sancionada de produzir a frase.
+ * @param {object} edition
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkPredictNarrativa(edition = {}) {
+  const results = [];
+  const pn = edition.predictNarrativa;
+  if (!has(pn)) return results;
+  const texto = String(pn.texto ?? '');
+
+  const palavra = PALAVRA_PROBABILIDADE[pn.probabilidade];
+  const temPalavra = Boolean(palavra) && texto.includes(palavra);
+  results.push({
+    ok: temPalavra,
+    check: 'predictNarrativa: texto torna a probabilidade visível',
+    detail: temPalavra ? `contém "${palavra}"` : `probabilidade="${pn.probabilidade}" não aparece no texto`,
+  });
+
+  const temAno = /\d{4}/.test(texto);
+  results.push({
+    ok: !temAno,
+    check: 'predictNarrativa: não cita ano/data futura',
+    detail: temAno ? 'texto contém sequência de 4 dígitos (ano/data)' : 'ok',
+  });
+
+  const temJanela = /\bde \d{1,2} a \d{1,2}\b/i.test(texto);
+  results.push({
+    ok: !temJanela,
+    check: 'predictNarrativa: não cita janela explícita ("de X a Y")',
+    detail: temJanela ? 'texto contém janela explícita' : 'ok',
+  });
+
+  const temUrgencia = URGENCY_RE.test(texto);
+  results.push({
+    ok: !temUrgencia,
+    check: 'predictNarrativa: sem urgência artificial (regra 4)',
+    detail: temUrgencia ? 'texto contém termo de urgência banido' : 'ok',
+  });
+
+  let esperado = null;
+  try {
+    esperado = formatarPredictNarrativa(pn);
+  } catch {
+    esperado = null;
+  }
+  const bate = esperado !== null && texto === esperado;
+  results.push({
+    ok: bate,
+    check: 'predictNarrativa: texto recomputa exatamente via formatarPredictNarrativa (rastreabilidade)',
+    detail: bate ? 'ok' : `texto divergente do template sancionado${esperado === null ? ' (campos inválidos para recomputar)' : ''}`,
+  });
+
+  return results;
+}
+
+const RE_STATUS_HONESTO = /sem confirma[çc][ãa]o|fora da r[ée]gua|sem nota/iu;
+
+/**
+ * Cartões e bancos por item (D-059): url+fonte obrigatórios; item sem `nota`
+ * carrega status honesto ('sem confirmação'/'fora da régua'/'sem nota').
+ * @param {object} edition
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkCartoesBancosItens(edition = {}) {
+  const results = [];
+  const itens = Array.isArray(edition.cartoesBancosItens) ? edition.cartoesBancosItens : [];
+  itens.forEach((item, i) => {
+    const tag = `cartoesBancosItens[${i}] (${item.nome ?? 'sem nome'})`;
+    const temFonte = has(item.url) && has(item.fonte);
+    results.push({
+      ok: temFonte,
+      check: `${tag}: url e fonte presentes (número sem fonte que o sustente sai da peça, D-059)`,
+      detail: temFonte ? 'ok' : `url="${item.url ?? ''}", fonte="${item.fonte ?? ''}"`,
+    });
+    if (item.nota === null || item.nota === undefined) {
+      const texto = `${item.descricao ?? ''} ${item.status ?? ''}`;
+      const honesto = RE_STATUS_HONESTO.test(texto);
+      results.push({
+        ok: honesto,
+        check: `${tag}: sem nota ⇒ descrição/status declara 'sem confirmação', 'fora da régua' ou 'sem nota'`,
+        detail: honesto ? 'ok' : 'item sem nota e sem status honesto explicando o porquê',
+      });
+    }
+  });
+  return results;
+}
+
+/**
+ * Rota de exibição de compra/clube (D-059, regra do operador): recomputa
+ * `rotaDisplay` e garante que NUNCA renderiza "sem destino"/"sem_destino".
+ * @param {object} edition
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkRotaDisplayCompra(edition = {}) {
+  const results = [];
+  const itens = Array.isArray(edition.ofertasAtivas) ? edition.ofertasAtivas : [];
+  itens.forEach((item, i) => {
+    if (item.tipo !== 'compra' && item.tipo !== 'clube') return;
+    const rota = rotaDisplay(item);
+    const ok = !/sem[_ ]destino/i.test(rota);
+    results.push({
+      ok,
+      check: `ofertasAtivas[${i}]: rota de compra/clube exibe o próprio programa, nunca "sem destino" (D-059)`,
+      detail: `rota recomputada="${rota}"`,
+    });
+  });
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // Orquestração
 // ---------------------------------------------------------------------------
 
@@ -494,6 +676,13 @@ export function runGate55(edition, { campaignsFromDb = [], renderedHtml = '', ch
   results.push(...checkFechouSemana(edition, campaignsFromDb, { hoje: hoje || edition?.date }));
   results.push(...checkPredict(edition, { renderedHtml, radarDailyWindows }));
   results.push(...checkContaProsa(edition));
+
+  // Formato v4 (D-059) — sempre-on, como os checks v3.
+  results.push(...checkJargao(edition, renderedHtml));
+  results.push(...checkRadarSemConfirmacao(edition));
+  results.push(...checkPredictNarrativa(edition));
+  results.push(...checkCartoesBancosItens(edition));
+  results.push(...checkRotaDisplayCompra(edition));
 
   const errors = results.filter((r) => !r.ok).map((r) => `${r.check}: ${r.detail}`);
   const warnings = [];

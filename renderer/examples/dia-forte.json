@@ -11,12 +11,37 @@
   "signal": "3 programas mudaram regra de transferência na mesma semana. Quando o mercado inteiro aperta na mesma direção, o recado não é promoção. É margem — a conta abaixo mostra o CPM real de R$ 16,60 por milheiro.",
   "resumoDoDia": "3 programas apertaram a régua de pontos por real na mesma semana — Latam Pass revisou a tabela de resgate em rotas curtas, Smiles mudou a regra de expiração de 36 para 24 meses e um banco lançou transferência direta para uma aérea. Isoladamente cada mudança é pequena; juntas, sinalizam reprecificação de mercado, não uma campanha isolada.",
   "ofertasAtivas": [
-    { "origem": "livelo", "destino": "smiles", "tipo": "transferencia", "percentual": 110, "prazo": "2026-07-09T23:59:00-03:00", "leitura": "vale-agir" },
-    { "origem": "smiles", "destino": null, "tipo": "compra", "percentual": 80, "prazo": "2026-07-31T23:59:00-03:00", "leitura": "vale-olhar" },
-    { "origem": "esfera", "destino": "azul", "tipo": "transferencia", "percentual": 90, "prazo": "2026-07-10T23:59:00-03:00", "leitura": "vale-olhar" },
-    { "origem": "brl", "destino": "esfera", "tipo": "compra", "percentual": 35, "prazo": null, "leitura": "casos-especificos" },
+    { "origem": "livelo", "destino": "smiles", "tipo": "transferencia", "percentual": 110, "prazo": "2026-07-09T23:59:00-03:00", "leitura": "vale-agir", "cpm": "R$ 16,60", "publico": "Clube", "nota": 88 },
+    { "origem": "smiles", "destino": null, "tipo": "compra", "percentual": 80, "prazo": "2026-07-31T23:59:00-03:00", "leitura": "vale-olhar", "cpm": "R$ 22,40", "publico": null, "nota": 72 },
+    { "origem": "esfera", "destino": "azul", "tipo": "transferencia", "percentual": 90, "prazo": "2026-07-10T23:59:00-03:00", "leitura": "vale-olhar", "cpm": "R$ 15,79", "nota": 76 },
+    { "origem": "brl", "destino": "esfera", "tipo": "compra", "percentual": 35, "prazo": null, "leitura": "casos-especificos", "cpm": null },
     { "origem": "livelo", "destino": "hilton", "tipo": "transferencia", "percentual": 50, "prazo": "2026-07-20T23:59:00-03:00", "leitura": "esperaria" }
   ],
+  "radarSemConfirmacao": [
+    {
+      "titulo": "Coalizão de varejo: bônus de transferência anunciado em rede social",
+      "detalhe": "post oficial sem página de regulamento ainda; sem conta possível até a regra sair",
+      "url": "https://www.passageirodeprimeira.com/coalizao-bonus-social",
+      "fonte": "passageirodeprimeira",
+      "nota": null,
+      "vence": null
+    },
+    {
+      "titulo": "Livelo → Hilton Honors: 50% de bônus até 20/07",
+      "detalhe": "nicho hotelaria, vale para estadias longas",
+      "url": "https://www.pontospravoar.com/livelo-hilton-50",
+      "fonte": "pontospravoar",
+      "nota": 61,
+      "vence": "2026-07-20"
+    }
+  ],
+  "predictNarrativa": {
+    "rotaOrigem": "itau",
+    "rotaDestino": "latam_pass",
+    "historicoTipicoPercent": 23,
+    "probabilidade": "alta",
+    "texto": "O Predict acompanha a rota Itaú → LATAM Pass (histórico típico de bônus na faixa de 23%) e vê probabilidade alta de uma nova janela nesta rota. O recorte completo do Predict, com as janelas acompanhadas, sai no Digest Pro."
+  },
   "deals": [
     {
       "category": "Transferência bonificada · Livelo → Smiles",
@@ -107,6 +132,7 @@
       "text": "Bônus Esfera → Azul termina amanhã, 23h59.",
       "cpm": "CPM R$ 15,79",
       "note": "vale só para quem já tem emissão planejada",
+      "url": "https://www.esfera.com.vc",
       "vigencia": "2026-07-09T23:59:00-03:00"
     }
   ],
@@ -120,7 +146,24 @@
     "result": ["CPM final", "R$ 16,60 /milheiro"]
   },
   "oQueEvitar": "Comprar pontos sem destino fechado só pelo desconto anunciado. A esse CPM, o estoque trava capital e ainda fica exposto a mudança de regra antes do resgate.",
-  "cartoesBancos": "5 programas de cartão e 2 convênios de transferência bancária seguem com campanha viva nesta semana — Itaú lidera as transferências bonificadas para bancos parceiros, com Nubank em segundo.",
+  "cartoesBancosItens": [
+    {
+      "nome": "Itaú · cartões parceiros",
+      "descricao": "lidera as transferências bonificadas para bancos parceiros nesta semana, com 2 campanhas vivas",
+      "url": "https://www.melhorescartoes.com.br/itau-transferencias",
+      "fonte": "Melhores Cartões",
+      "status": "Ainda sem confirmação oficial",
+      "nota": null
+    },
+    {
+      "nome": "Nubank",
+      "descricao": "transferência bonificada de 15% para clube de pontos parceiro",
+      "url": "https://www.passageirodeprimeira.com/nubank-transferencia-15",
+      "fonte": "Passageiro de Primeira",
+      "status": "Ainda sem confirmação oficial",
+      "nota": null
+    }
+  ],
   "clipping": [
     { "title": "Latam Pass revisa tabela de resgate em rotas curtas", "url": "https://www.latampass.com.br/noticias/tabela-resgate", "source": "melhorescartoes", "tier": 2, "summary": "A companhia reduziu o teto de milhas por real em cartões de entrada, efeito a partir da próxima fatura." },
     { "title": "Smiles altera regra de expiração para novos acúmulos", "url": "https://www.smiles.com.br/noticias/expiracao", "source": "melhoresdestinos", "tier": 2, "summary": "Pontos acumulados a partir de agosto passam a expirar em 24 meses, ante 36 hoje." },

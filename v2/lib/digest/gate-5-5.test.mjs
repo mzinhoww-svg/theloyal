@@ -5,8 +5,10 @@ import { DISCLAIMER } from '../../../scripts/lib.mjs';
 import {
   checkComuns, checkComDealDesk, checkSemDealDesk, runGate55, DEAL_DESK_MARKER,
   checkOfertasAtivas, checkCartoesBancos, checkFechouSemana, checkPredict, checkContaProsa,
+  checkJargao, checkRadarSemConfirmacao, checkPredictNarrativa, checkCartoesBancosItens, checkRotaDisplayCompra,
 } from './gate-5-5.mjs';
 import { selecionarSinaisRapidos, formatarTeaserPredict } from './dia-fraco.mjs';
+import { formatarPredictNarrativa } from './editorial.mjs';
 
 // Estado real de hoje (2026-07-17, SPEC-SLICE-DIGEST-ENGINE.md §0): 0 elegíveis
 // a Deal Desk; o único item vivo/tier1/com-conta é bruto 55 (smiles, compra),
@@ -24,7 +26,9 @@ function edicaoDiaFracoValida() {
   const { itens: sinaisRapidos } = selecionarSinaisRapidos(CAMPANHAS_HOJE);
   return {
     number: 42, date: '2026-07-17', weekday: 'SEXTA-FEIRA', publishTime: '8H00', readingMinutes: 5,
-    signal: 'Hoje 1 candidato vivo com TIER 1 confirmado teve conta fechada: smiles bruto 55, banda "Só para casos específicos" — abaixo do corte de Deal Desk (vale-olhar/vale-agir).',
+    // Vocabulário do leitor (D-059): sem jargão interno (TIER/candidato vivo) —
+    // "fonte oficial" é a tradução sancionada, e o gate exige dígito + candidato nomeado.
+    signal: 'Hoje só 1 oferta passou com fonte oficial confirmada: smiles, compra de pontos, nota bruta 55 — banda "Só para casos específicos", abaixo do corte de Deals do dia (vale-agir/vale-olhar).',
     deals: [],
     sources: [{ label: 'Regulamento oficial Smiles', url: 'https://www.smiles.com.br' }],
     disclaimer: DISCLAIMER,
@@ -162,7 +166,7 @@ function edicaoV3Valida() {
     ofertasAtivas: [
       { origem: 'brl', destino: 'smiles', tipo: 'compra', percentual: 40, prazo: '2026-07-17T23:59:00-03:00', leitura: 'casos-especificos' },
     ],
-    cartoesBancos: '5 cartões e 2 bancos seguem com transferência bonificada viva hoje — nenhum com TIER 1 confirmado ainda.',
+    cartoesBancos: '5 cartões e 2 bancos seguem com transferência bonificada viva hoje — nenhum com fonte oficial confirmada ainda.',
     oQueFechouSemana: [
       { origem: 'livelo', destino: 'azul', tipo: 'transferencia', percentual: 120, encerrouEm: '2026-07-12T23:59:00-03:00' },
     ],
@@ -318,6 +322,187 @@ test('checkContaProsa: quebrado — prosa cita número que não existe na conta 
   };
   const results = checkContaProsa(ed);
   assert.ok(results.some((r) => !r.ok && r.check.includes('correspondente literal')));
+});
+
+// ── Formato v4 (D-059) ──────────────────────────────────────────────────
+
+// checkJargao
+test('checkJargao: golden — edição no vocabulário do leitor passa limpo', () => {
+  const ed = edicaoV3Valida();
+  const results = checkJargao(ed, RENDERED_HTML_SEM_DEAL_DESK);
+  const falhas = results.filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkJargao: quebrado — "TIER 1" vazando em string da edição → reprova', () => {
+  const ed = { ...edicaoV3Valida(), preheader: '1 oferta com fonte TIER 1 confirmada hoje.' };
+  const results = checkJargao(ed, RENDERED_HTML_SEM_DEAL_DESK);
+  assert.ok(results.some((r) => !r.ok && r.detail.includes('TIER 1')));
+});
+
+test('checkJargao: quebrado — jargão só no HTML renderizado também reprova', () => {
+  const ed = edicaoV3Valida();
+  const html = '<html><p>56 candidatos vivos no radar hoje</p></html>';
+  const results = checkJargao(ed, html);
+  assert.ok(results.some((r) => !r.ok && r.check.includes('HTML renderizado')));
+});
+
+// checkRadarSemConfirmacao
+const RADAR_ITEM_OK = {
+  titulo: 'Banco do Nordeste → Azul Fidelidade: até 110% de bônus',
+  detalhe: '80% de base para o Clube, 50% para os demais; vence hoje',
+  url: 'https://pontospravoar.com/bnb-azul', fonte: 'pontospravoar', nota: null, vence: '2026-07-17',
+};
+
+test('checkRadarSemConfirmacao: golden — item com fonte e sem claim de TL passa', () => {
+  const ed = { radarSemConfirmacao: [RADAR_ITEM_OK, { ...RADAR_ITEM_OK, titulo: 'Livelo → Hilton: 50%', detalhe: 'a melhor nota do dia', nota: 65 }] };
+  const falhas = checkRadarSemConfirmacao(ed).filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkRadarSemConfirmacao: ausente ⇒ sem checks', () => {
+  assert.deepEqual(checkRadarSemConfirmacao({}), []);
+});
+
+test('checkRadarSemConfirmacao: quebrado — item sem url ou sem fonte → reprova', () => {
+  const semUrl = checkRadarSemConfirmacao({ radarSemConfirmacao: [{ ...RADAR_ITEM_OK, url: '' }] });
+  assert.ok(semUrl.some((r) => !r.ok && r.check.includes('url e fonte presentes')));
+  const semFonte = checkRadarSemConfirmacao({ radarSemConfirmacao: [{ ...RADAR_ITEM_OK, fonte: null }] });
+  assert.ok(semFonte.some((r) => !r.ok && r.check.includes('url e fonte presentes')));
+});
+
+test('checkRadarSemConfirmacao: quebrado — nota null mas texto reivindica número TL → reprova', () => {
+  const ed = { radarSemConfirmacao: [{ ...RADAR_ITEM_OK, detalhe: 'ficou com TL 65 na nossa régua', nota: null }] };
+  const results = checkRadarSemConfirmacao(ed);
+  assert.ok(results.some((r) => !r.ok && r.check.includes('não pode citar número TL')));
+});
+
+// checkPredictNarrativa
+function predictNarrativaValida() {
+  const campos = { rotaOrigem: 'esfera', rotaDestino: 'smiles', historicoTipicoPercent: 70, probabilidade: 'em-formacao' };
+  return { ...campos, texto: formatarPredictNarrativa(campos) };
+}
+
+test('checkPredictNarrativa: golden — texto gerado pelo template sancionado passa', () => {
+  const ed = { predictNarrativa: predictNarrativaValida() };
+  const falhas = checkPredictNarrativa(ed).filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkPredictNarrativa: ausente ⇒ sem checks', () => {
+  assert.deepEqual(checkPredictNarrativa({}), []);
+});
+
+test('checkPredictNarrativa: quebrado — texto escrito à mão (não recomputa) → reprova', () => {
+  const pn = predictNarrativaValida();
+  pn.texto = 'O Predict acompanha Esfera → Smiles, base em formação. Recorte no Digest Pro.';
+  const results = checkPredictNarrativa({ predictNarrativa: pn });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('recomputa exatamente')));
+});
+
+test('checkPredictNarrativa: quebrado — texto vaza ano/data futura → reprova', () => {
+  const pn = predictNarrativaValida();
+  pn.texto = `${pn.texto} Próxima janela esperada em 2026.`;
+  const results = checkPredictNarrativa({ predictNarrativa: pn });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('ano/data')));
+});
+
+test('checkPredictNarrativa: quebrado — janela explícita "de X a Y" → reprova', () => {
+  const pn = predictNarrativaValida();
+  pn.texto = `${pn.texto} Janela de 17 a 24 do mês que vem.`;
+  const results = checkPredictNarrativa({ predictNarrativa: pn });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('janela explícita')));
+});
+
+test('checkPredictNarrativa: quebrado — probabilidade declarada não aparece no texto → reprova', () => {
+  const campos = { rotaOrigem: 'esfera', rotaDestino: 'smiles', historicoTipicoPercent: 70, probabilidade: 'alta' };
+  const pn = { ...campos, texto: formatarPredictNarrativa({ ...campos, probabilidade: 'baixa' }) };
+  const results = checkPredictNarrativa({ predictNarrativa: pn });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('probabilidade visível')));
+});
+
+// checkCartoesBancosItens
+const CARTAO_ITEM_OK = {
+  nome: 'Itaú · cartão LATAM Pass', descricao: 'até 5,25 milhas por dólar até 31/07',
+  url: 'https://www.melhorescartoes.com.br/latam-pass', fonte: 'Melhores Cartões',
+  status: 'Ainda sem confirmação oficial', nota: null,
+};
+
+test('checkCartoesBancosItens: golden — fonte presente + status honesto passa', () => {
+  const ed = {
+    cartoesBancosItens: [
+      CARTAO_ITEM_OK,
+      { nome: 'C6 → LATAM Pass', descricao: '25% de bônus só hoje', url: 'https://passageirodeprimeira.com/c6', fonte: 'Passageiro de Primeira', status: 'Confirmada, mas fraca: TL 36, Evitaria', nota: 36 },
+      { nome: 'Caixa', descricao: '100% de cashback no IOF', url: 'https://passageirodeprimeira.com/caixa', fonte: 'Passageiro de Primeira', status: 'Benefício de tarifa — fora da régua TL', nota: null },
+    ],
+  };
+  const falhas = checkCartoesBancosItens(ed).filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkCartoesBancosItens: ausente ⇒ sem checks', () => {
+  assert.deepEqual(checkCartoesBancosItens({}), []);
+});
+
+test('checkCartoesBancosItens: quebrado — item sem url/fonte → reprova', () => {
+  const results = checkCartoesBancosItens({ cartoesBancosItens: [{ ...CARTAO_ITEM_OK, url: null }] });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('url e fonte presentes')));
+});
+
+test('checkCartoesBancosItens: quebrado — sem nota E sem status honesto → reprova (regra do BB Ourocard)', () => {
+  const results = checkCartoesBancosItens({
+    cartoesBancosItens: [{ nome: 'BB Ourocard', descricao: '5,5 milhas por dólar', url: 'https://exemplo.com/bb', fonte: 'blog', status: null, nota: null }],
+  });
+  assert.ok(results.some((r) => !r.ok && r.check.includes("declara 'sem confirmação'")));
+});
+
+// checkRotaDisplayCompra
+test('checkRotaDisplayCompra: golden — compra com destino próprio/sem_destino/null nunca vira "sem destino"', () => {
+  const ed = {
+    ofertasAtivas: [
+      { origem: 'smiles', destino: 'smiles', tipo: 'compra', leitura: 'casos-especificos' },
+      { origem: 'smiles', destino: 'sem_destino', tipo: 'compra', leitura: 'casos-especificos' },
+      { origem: 'azul_fidelidade', destino: null, tipo: 'clube', leitura: 'esperaria' },
+      { origem: 'livelo', destino: 'smiles', tipo: 'transferencia', leitura: 'vale-agir' }, // ignorado (não é compra/clube)
+    ],
+  };
+  const results = checkRotaDisplayCompra(ed);
+  assert.equal(results.length, 3, 'só os itens compra/clube são checados');
+  const falhas = results.filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+  assert.ok(results[0].detail.includes('Smiles → Smiles'));
+});
+
+test('checkRotaDisplayCompra: ausente ⇒ sem checks', () => {
+  assert.deepEqual(checkRotaDisplayCompra({}), []);
+});
+
+// runGate55: blocos v4 entram na orquestração
+test('runGate55: edição v4 completa (radar + predictNarrativa + cartões por item) aprova', () => {
+  const ed = {
+    ...edicaoV3Valida(),
+    radarSemConfirmacao: [RADAR_ITEM_OK],
+    predictNarrativa: predictNarrativaValida(),
+    cartoesBancosItens: [CARTAO_ITEM_OK],
+  };
+  const r = runGate55(ed, { campaignsFromDb: CAMPANHAS_V3, renderedHtml: RENDERED_HTML_SEM_DEAL_DESK, hoje: '2026-07-17' });
+  assert.equal(r.pass, true, `esperava passar: ${JSON.stringify(r.errors)}`);
+});
+
+test('runGate55: jargão em qualquer string derruba o gate', () => {
+  const ed = { ...edicaoV3Valida(), resumoDoDia: 'Só 1 item com conta computável passou o dia com 55 pontos de nota.' };
+  const r = runGate55(ed, { campaignsFromDb: CAMPANHAS_V3, renderedHtml: RENDERED_HTML_SEM_DEAL_DESK, hoje: '2026-07-17' });
+  assert.equal(r.pass, false);
+  assert.ok(r.errors.some((e) => e.includes('jargão')));
+});
+
+test('runGate55: predictNarrativa divergente do template derruba o gate', () => {
+  const pn = predictNarrativaValida();
+  pn.texto = 'Predict: janela prevista para a semana que vem, aproveite.';
+  const ed = { ...edicaoV3Valida(), predictNarrativa: pn };
+  const r = runGate55(ed, { campaignsFromDb: CAMPANHAS_V3, renderedHtml: RENDERED_HTML_SEM_DEAL_DESK, hoje: '2026-07-17' });
+  assert.equal(r.pass, false);
+  assert.ok(r.errors.some((e) => e.includes('recomputa exatamente')));
 });
 
 // ── runGate55: os blocos v3 entram na orquestração ──

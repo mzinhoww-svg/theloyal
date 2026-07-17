@@ -149,11 +149,44 @@ export function validateEdition(ed, opts = {}) {
   }
 
   // Vigência dos itens "Fecha logo" (quando presente): não pode estar vencida.
+  // v4 (D-059): `url` opcional, mas quando presente deve ser http(s) absoluta.
   (Array.isArray(ed.fechaLogo) ? ed.fechaLogo : []).forEach((f, i) => {
     if (f.vigencia && ed.date && isExpired(f.vigencia, ed.date)) {
       err(`Fecha logo ${i + 1} (${f.tag ?? "sem tag"}): vigência (${f.vigencia}) já vencida na data da edição`);
     }
+    if (f.url !== undefined && !/^https?:\/\//.test(f.url)) {
+      err(`Fecha logo ${i + 1} (${f.tag ?? "sem tag"}): url inválida (deve ser http(s) absoluta)`);
+    }
   });
+
+  // v4 (D-059): item não confirmado nunca é citado sem fonte linkada.
+  const radarSemConfirmacao = Array.isArray(ed.radarSemConfirmacao) ? ed.radarSemConfirmacao : [];
+  radarSemConfirmacao.forEach((r, i) => {
+    const tag = `Radar sem confirmação ${i + 1} (${r.titulo ?? "sem título"})`;
+    if (!/^https?:\/\//.test(r.url ?? "")) err(`${tag}: url inválida ou ausente (obrigatória — guardrail D-059)`);
+    if (!r.fonte) err(`${tag}: fonte ausente (obrigatória — guardrail D-059)`);
+  });
+  if (radarSemConfirmacao.length) pass(`Radar sem confirmação: ${radarSemConfirmacao.length} item(ns) com fonte exigida`);
+
+  // v4 (D-059): Cartões e bancos por item — mesma exigência de fonte.
+  const cartoesBancosItens = Array.isArray(ed.cartoesBancosItens) ? ed.cartoesBancosItens : [];
+  cartoesBancosItens.forEach((c, i) => {
+    const tag = `Cartões e bancos ${i + 1} (${c.nome ?? "sem nome"})`;
+    if (!/^https?:\/\//.test(c.url ?? "")) err(`${tag}: url inválida ou ausente (obrigatória — guardrail D-059)`);
+    if (!c.fonte) err(`${tag}: fonte ausente (obrigatória — guardrail D-059)`);
+  });
+  if (cartoesBancosItens.length) pass(`Cartões e bancos: ${cartoesBancosItens.length} item(ns) com fonte exigida`);
+
+  // v4 (D-059 §3): narrativa do Predict — probabilidade no vocabulário fixo,
+  // texto presente. (A recomputação exata do texto é papel do gate 5.5.)
+  if (ed.predictNarrativa !== undefined) {
+    const pn = ed.predictNarrativa;
+    if (!["baixa", "media", "alta", "em-formacao"].includes(pn.probabilidade)) {
+      err(`Predict narrativa: probabilidade "${pn.probabilidade}" fora de baixa|media|alta|em-formacao`);
+    }
+    if (!pn.texto) err("Predict narrativa: texto ausente");
+    else pass("Predict narrativa presente com probabilidade visível");
+  }
 
   // Shopping · VPM observado (opcional): dado público, com fonte, framing "observado".
   const shopping = Array.isArray(ed.shoppingWatch) ? ed.shoppingWatch : [];
