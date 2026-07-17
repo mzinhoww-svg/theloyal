@@ -26,7 +26,35 @@ export const FLAGS = {
   TIPO_SORTEIO: 'tipo_suspeito_sorteio',
   TIPO_TARIFA: 'tipo_suspeito_beneficio_tarifa',
   CONFIANCA_BAIXA_DESTAQUE: 'confianca_baixa_para_destaque',
+  PERCENTUAL_TETO: 'percentual_acima_teto_sanidade',
 };
+
+// P2 (D-061, espelha D-041 R5 — teto plausível POR TIPO, configurável): ghosts
+// de extração (120.000% = pontos de boas-vindas lidos como percentual) saem do
+// percentil e vão a revisão. Compra/clube têm bônus reais de 300–375% (Smiles
+// 375 TIER1 confirmada), então o teto delas é o piso 300; os demais tipos
+// (transferência/cartão/hotelaria...) raramente passam de 130% — teto 200.
+// FLAG DE REVISÃO, nunca reclassificação automática: item real flagado (ex. a
+// própria Smiles 375) continua publicável — o flag pede o olho humano e tira o
+// número da ECDF até confirmar.
+export const TETO_SANIDADE_PERCENTUAL = { compra: 300, clube: 300, padrao: 200 };
+
+/**
+ * @param {object} item
+ * @returns {Array<{flag:string, motivo:string}>}
+ */
+export function checkSanidadePercentual(item) {
+  const pct = Number(item?.percentual);
+  if (!Number.isFinite(pct)) return [];
+  const teto = TETO_SANIDADE_PERCENTUAL[item?.tipo] ?? TETO_SANIDADE_PERCENTUAL.padrao;
+  if (pct > teto) {
+    return [{
+      flag: FLAGS.PERCENTUAL_TETO,
+      motivo: `percentual ${pct}% acima do teto de sanidade do tipo "${item?.tipo}" (${teto}%) — fora do percentil até revisão humana; provável erro de extração`,
+    }];
+  }
+  return [];
+}
 
 // Dias de folga: vigência mais de N dias antes do first_seen = "venceu antes
 // de nascer" (o padrão do bug de ano). 180 evita falso-positivo de item visto
@@ -136,6 +164,7 @@ export function verificarPreSuperficie(itens = [], opts = {}) {
       ...checkSanidadeVigencia(item),
       ...checkTipoOferta(item),
       ...checkConfiancaDestaque(item, opts),
+      ...checkSanidadePercentual(item),
     ];
     if (flags.length === 0) aprovados.push(item);
     else paraRevisao.push({ item, flags });

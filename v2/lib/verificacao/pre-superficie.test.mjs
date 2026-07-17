@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   FLAGS, confiancaDe, checkSanidadeVigencia, checkTipoOferta,
-  checkConfiancaDestaque, verificarPreSuperficie,
+  checkConfiancaDestaque, checkSanidadePercentual, verificarPreSuperficie,
 } from './pre-superficie.mjs';
 
 // ── casos reais (estado ANTES das correções D-060) ──────────────────────────
@@ -34,10 +34,17 @@ const CAIXA = {
   vigencia_fim_date: '2027-12-31', first_seen: '2026-07-16', estado: 'detectada',
   tl_score_bruto: 50, notes: '100% de cashback no IOF em compras internacionais [confianca:baixa]',
 };
-const LIMPA = {
+// Smiles 375% real: NÃO é "limpa" sob o P2 — compra >300 flagra para revisão
+// (comportamento desejado: flag, nunca remoção). Item limpo de verdade abaixo.
+const SMILES_375 = {
   id: 'smiles-compra', tipo: 'compra', percentual: '375', paridade: null,
   vigencia_fim_date: '2026-07-17', first_seen: '2026-07-15', estado: 'ultimos_dias',
   tl_score_bruto: 55, notes: 'Compra de pontos Smiles',
+};
+const LIMPA = {
+  id: 'itau-azul-transf', tipo: 'transferencia', percentual: '115', paridade: null,
+  vigencia_fim_date: '2026-07-15', first_seen: '2026-07-10', estado: 'encerrada',
+  tl_score_bruto: 55, notes: 'Transferencia bonificada de 115% [confianca:alta]',
 };
 
 test('confiancaDe: extrai o rótulo de notes; ausente vira null', () => {
@@ -99,12 +106,23 @@ test('confiança baixa + nota de destaque flagra; nota baixa ou confiança alta 
   assert.equal(checkConfiancaDestaque({ ...FLYING_BLUE, notes: 'x [confianca:alta]' }).length, 0);
 });
 
+test('P2: teto por tipo — ghost de cartão (120000%) flagra; compra 375 real flagra pra revisão; compra 300 e transferência 115 passam', () => {
+  const ghost = { tipo: 'cartao', percentual: '120000' };
+  assert.equal(checkSanidadePercentual(ghost)[0].flag, FLAGS.PERCENTUAL_TETO);
+  const smiles375 = { tipo: 'compra', percentual: '375' };
+  assert.equal(checkSanidadePercentual(smiles375).length, 1); // revisão, nunca reclassificação
+  assert.equal(checkSanidadePercentual({ tipo: 'compra', percentual: '300' }).length, 0);
+  assert.equal(checkSanidadePercentual({ tipo: 'transferencia', percentual: '115' }).length, 0);
+  assert.equal(checkSanidadePercentual({ tipo: 'transferencia', percentual: '305' }).length, 1);
+  assert.equal(checkSanidadePercentual({ tipo: 'compra', percentual: null }).length, 0);
+});
+
 test('verificarPreSuperficie: nada some — flagados vão para revisão COM o item, limpos passam', () => {
-  const itens = [BNB, FLYING_BLUE, ALIEXPRESS, BRADESCO, CAIXA, LIMPA];
+  const itens = [BNB, FLYING_BLUE, ALIEXPRESS, BRADESCO, CAIXA, SMILES_375, LIMPA];
   const { aprovados, paraRevisao } = verificarPreSuperficie(itens);
   assert.equal(aprovados.length + paraRevisao.length, itens.length);
-  assert.deepEqual(aprovados.map((i) => i.id), ['smiles-compra']);
-  assert.equal(paraRevisao.length, 5);
+  assert.deepEqual(aprovados.map((i) => i.id), ['itau-azul-transf']);
+  assert.equal(paraRevisao.length, 6); // inclui a Smiles 375 real — flag P2, nunca remoção
   for (const r of paraRevisao) {
     assert.ok(r.item && r.flags.length >= 1, 'item flagado carrega o item e ao menos 1 flag');
   }

@@ -612,5 +612,27 @@ históricas), 554 valor-sem-data, 40 tipo-suspeito, 119 confiança-baixa≥70. *
 operacional projetado: ~0 a poucas unidades/dia** — administrável. Integração da
 passada no pipeline vivo (ingest + montagem) entra junto com o backport v4 em curso.
 
+## D-061 — P2 aplicado (teto de sanidade de percentual por tipo) + Caixa reclassificada para só-Clipping
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2
+**(1) P2 — teto de sanidade "ghosts" (espelha D-041 R5, teto por tipo):** flag de revisão
+em `percentual` acima do teto — **200 para os tipos gerais** (transferência/cartão/
+hotelaria..., onde bônus real raramente passa de 130) e **piso 300 para compra/clube**
+(onde 300–375% são reais — a própria Smiles 375 TIER1). Aplicado em produção:
+**193 campanhas flagadas** (164 compra/clube >300, 29 demais >200; ghosts típicos:
+cartões com "120.000%" = pontos de boas-vindas lidos como percentual), trilha 1:1 em
+`campanha_versoes` (`flag_p2_teto_sanidade`; um lote de trilha duplicado por engano meu
+foi removido — 193 eventos finais). **Nada reclassificado automaticamente**: flag manda
+para revisão e tira da ECDF no próximo rescore; item real flagado (ex. Smiles 375)
+continua publicável. Check permanente `checkSanidadePercentual` em
+`v2/lib/verificacao/pre-superficie.mjs` (12/12 testes). Interpretação registrada do
+"percentual>200 (piso 300)": teto por tipo — se o operador quis outra leitura, corrigir
+aqui.
+**(2) Caixa (D-060) — só Clipping:** `used_in=["clipping_only"]` + nota na campanha
+(trilha `d061_caixa_so_clipping`). Efeito no rascunho: a Caixa ESTAVA visível na seção
+"Cartões e bancos" — removida de lá e movida para o Clipping com link da fonte e o
+enquadramento "benefício de tarifa do cartão (cashback do IOF), não acúmulo de pontos —
+fora da régua TL". `content/editions/0001.json` atualizado (JSON canônico → rascunho
+regenerado por bloco). Clipping foi de 6 para 7 itens; validate e 191/191 verdes.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
