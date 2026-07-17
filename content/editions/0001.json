@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "number": 1,
+  "date": "2026-07-17",
+  "weekday": "SEXTA-FEIRA",
+  "publishTime": "8H00",
+  "readingMinutes": 3,
+  "subject": "Hoje nenhuma oferta passou do corte — e aqui está a conta",
+  "preheader": "56 candidatos vivos, 1 com fonte TIER 1 confirmada. Nenhum vale Deal Desk hoje.",
+  "signal": "Hoje 56 candidatos estavam vivos no radar; só 1 tinha fonte TIER 1 confirmada (Smiles, compra de pontos com 375% de bônus sobre o lote). A conta desse item fechou em bruto 55, banda \"Só para casos específicos\" — abaixo do corte de Deal Desk (vale-agir/vale-olhar). Nenhum item entra na recomendação hoje.",
+  "deals": [],
+  "fechaLogo": [
+    {
+      "tag": "VENCE HOJE",
+      "text": "Compra de pontos Smiles com 375% de bônus sobre o lote vence hoje (17/07) — não é recomendação, é aviso de prazo.",
+      "cpm": "bruto 55 · Só para casos específicos",
+      "note": "não cruza o corte de Deal Desk; listado por urgência de calendário, não por valor",
+      "vigencia": "2026-07-17"
+    }
+  ],
+  "clipping": [
+    { "title": "Air France reformula lounge La Première no Aeroporto de Paris", "url": "https://passageirodeprimeira.com/air-france-reabre-lounge-la-premiere-aeroporto-paris-cdg/", "source": "passageirodeprimeira", "tier": 2, "summary": "A companhia reabriu o lounge La Première em Paris-CDG com novo design, spa ampliado e suítes privativas." },
+    { "title": "Inter oferece 54% de desconto na compra de pontos Loop", "url": "https://passageirodeprimeira.com/inter-oferece-54-de-desconto-na-compra-de-pontos-loop/", "source": "passageirodeprimeira", "tier": 2, "summary": "Desconto anunciado pelo Super App em lotes de 1.000 a 20.000 pontos Loop, conversíveis em milhas, fatura ou cashback." },
+    { "title": "Esfera oferece até 5 pontos por real gasto na Nike, Lacoste e C&A", "url": "https://passageirodeprimeira.com/esfera-oferece-ate-5-pontos-por-real-gasto-na-natura-casas-bahia-e-mais-2/", "source": "passageirodeprimeira", "tier": 2, "summary": "Bônus por loja, com prazos de validade distintos entre elas; a da Nike vale até 17/07/2026." },
+    { "title": "Compra de dólares sem taxas no ARQ por R$ 5,14", "url": "https://passageirodeprimeira.com/a-oferta-esta-chegando-ao-fim-compre-dolares-sem-taxas-no-arq-por-apenas-r-514/", "source": "passageirodeprimeira", "tier": 2, "summary": "Conversão de reais para dólar digital sem IOF nem spread, limitada a R$ 10.000 por conta durante o período da Copa." },
+    { "title": "Embarque com reconhecimento facial chega à Qatar Airways", "url": "https://pontospravoar.com/embarque-com-reconhecimento-facial-chega-a-qatar-airways/", "source": "pontospravoar", "tier": 2, "summary": "Parceria com o Aeroporto Internacional de Hamad e a Sita elimina a apresentação de documentos em check-in, bagagem e embarque." },
+    { "title": "Hotéis em Belo Horizonte com diárias a partir de R$ 138", "url": "https://pontospravoar.com/reserve-hoteis-belo-horizonte-diarias-partir-138-reais/", "source": "pontospravoar", "tier": 2, "summary": "Seleção de hotéis Accor na cidade com faixa de preço para diferentes perfis de viagem." }
+  ],
+  "sinaisRapidos": [
+    { "origem": "brl", "destino": "smiles", "tipo": "compra", "brutoScore": 55, "motivoNaoQualifica": "veredito bruto \"Só para casos específicos\" abaixo do corte de Deal Desk (vale-agir/vale-olhar)" }
+  ],
+  "sources": [
+    { "label": "Página oficial de compra Smiles", "url": "https://www.smiles.com.br" }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."
+}

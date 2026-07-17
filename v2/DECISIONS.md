@@ -406,5 +406,33 @@ recebeu o patch aditivo (scoreBreakdown 4 componentes + `contaFeita`/`oQueEvitar
 **Achado do processo:** o gate 5.5 pegou 3 gaps de autoria reais numa fixture marcada
 illustrative — evidência de que ele funciona como auditoria independente, não decorativa.
 
+## D-056 — Primeiro rascunho do Daily criado no Beehiiv (draft, sem envio); contagem dos 5 dias NÃO iniciada
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2 (fecho)
+Fecha o passo serializado 3 do dispatch de fechamento do M2: primeiro post do The Loyal
+Daily criado no Beehiiv **como rascunho**, para validação visual da marca antes de
+qualquer disparo real (salvaguarda S2-D1). **Conteúdo é dado real, não fixture:**
+edição nº 1, 2026-07-17, montada a partir do estado vivo do banco no momento (56
+candidatos vivos via SQL direto, 1 TIER 1 confirmado — `smiles-desconhecido-compra-
+2026-07-17`, bruto 55, "Só para casos específicos" — recomputado com
+`selecionarDealDesk`/`selecionarFechaLogo` reais). Clipping (6 itens) vem de linhas reais de
+`news_raw` (fontes `passageirodeprimeira`/`pontospravoar`, tier 2 confirmado em
+`news_sources`), com resumo próprio (nunca copiado) e tom neutro (revisado para não colidir
+com `URGENCY_RE`). **Resumo do dia e Loyalty Lab foram OMITIDOS de propósito** — não havia
+dado real o bastante para uma narrativa sem fabricar tendência (regra-mãe "seção sem dado
+real = omitida"); ficam como próxima rodada de curadoria, não bloqueio. Gate 5.5 rodado
+contra o HTML renderizado desta edição real → **PASS**, zero erros (`v2/lib/digest/gate-
+5-5.mjs`). Artefato salvo em `content/editions/0001.json`.
+**Beehiiv:** `save_post` criado — `post_f7b2c959-8dcf-46e0-864d-f26b162a68f7`, status
+`draft`, `scheduled_at: null`, audiência default (free, ambos os canais), zero destinatário
+notificado. Dialeto Tiptap (`v2/lib/digest/render-beehiiv.mjs`) — sem `<table>`, sem
+inline `style` fora de `span`, sem emoji, amarelo só em borda/fill (nunca texto), verde de
+texto sempre `#00A878`. **Link do editor:** `https://app.beehiiv.com/posts/f7b2c959-8dcf-
+46e0-864d-f26b162a68f7/edit`. **Draft público:** `https://theloyal.beehiiv.com/p/hoje-
+nenhuma-oferta-passou-do-corte-e-aqui-esta-a-conta?draft=true`.
+**Travas respeitadas:** auto-publish continua DESLIGADO; a contagem dos 5 dias úteis de
+aprovação (D-050 decisão 3) **NÃO foi iniciada** — fica para o operador decidir quando o
+rascunho estiver aprovado, por instrução explícita do dispatch. Nenhum e-mail foi enviado,
+nenhum assinante foi notificado.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
