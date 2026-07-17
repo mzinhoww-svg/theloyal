@@ -10,7 +10,9 @@ import {
 
 const REQUIRED = ["number", "date", "weekday", "publishTime", "readingMinutes", "signal", "deals", "sources", "disclaimer"];
 // Blocos obrigatórios da estrutura editorial (não só campos escalares).
-const REQUIRED_BLOCKS = ["signal", "deals", "sources", "disclaimer"];
+// `deals` NÃO entra aqui: dia fraco (deals:[]) é estado de primeira classe
+// (D-044/D-050/D-053) — vazio é avisado (linha ~48), nunca erro de bloco ausente.
+const REQUIRED_BLOCKS = ["signal", "sources", "disclaimer"];
 const DEAL_REQUIRED = ["category", "title", "context", "conta", "verdict", "source"];
 
 export function validateEdition(ed, opts = {}) {
