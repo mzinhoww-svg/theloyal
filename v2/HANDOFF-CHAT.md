@@ -106,9 +106,24 @@ contra o corpus. Mas os dois loops que dependem de **desfecho real observado** f
 
 Não é bug — é a ordem natural: mede-se o que dá contra o corpus agora; os loops de
 acerto **ligam quando houver acerto para medir** (produto operando gera histórico).
-**Cobertura de base do predict (medida hoje):** dos 1.008 pares com identidade,
-**215** têm base_n≥3 e **163** têm base_n≥3 **e** série≥12m → aptos a probabilidade
-numérica honesta; 45 robustos (≥12 e ≥12m).
+
+**Cobertura de base do predict (A3, PR #106) — PROVISÓRIA, ver caveat:** dos 1.008
+pares, **215** têm base_n≥3; aptos a probabilidade numérica (base_n≥3 & série≥12m):
+**119** por série só-`first_seen` (conservador, **número público** credibility-first)
+ou **163** por `first_seen→last_seen` (teto otimista); 45 robustos (≥12 & ≥12m).
+Concentração: livelo/azul/esfera/smiles (mesmo núcleo de TIER 1 + ratios).
+**⚠ Recalcular sobre a janela confiável (D-052.3):** esta foto usou a série como-está,
+que carrega a **corrupção temporal sistemática** diagnosticada pelo chat de predict
+(`v2/predict/DIAGNOSTICO-CAUSA-RAIZ-TEMPORAL.md`, branch `predict-engine-backtesting-six5pq`:
+75,6% dos transfer datados com ano atrasado 1–6 anos; janela confiável **~24m, não 36**).
+119/163 podem encolher filtrados por data confiável. **Um só número oficial de cobertura
+entre os dois chats — alinhar com predict, não cravar aqui isolado.**
+
+**Ordem travada auto-publish (D-052.2):** o outcomes-ledger é **pré-requisito** de ligar
+auto-publish — ledger existe e captura → produto opera → ledger acumula → auto-ajuste do
+gate (D-048) liga. Nunca ligar auto-publish sem o ledger capturando (perde o histórico
+dos primeiros dias). **Guarda de worktree (D-052.1):** todo agente nasce com checkout
+explícito do base real, nunca por herança do commit do worktree.
 
 ### Re-score-1 dry-run na base SUJA (superado pela recanon; referência histórica)
 > Este dry-run rodou ANTES da recanonicalização. O balde 4=103 e as anomalias
