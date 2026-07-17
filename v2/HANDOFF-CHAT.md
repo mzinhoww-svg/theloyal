@@ -282,8 +282,20 @@ aproxima o lançamento é a CALIBRAÇÃO fechar — não o track record.** Ordem
    movimento (janela temporal do predict ainda não cravada; vetores não fechados). Construir
    sobre janela que vai mudar = retrabalho. **Gatilho para construir: janela cravada E vetores
    fechados.** Track record enche a loja; a calibração é que **abre** a loja.
-3. **[predict] Reconstrução temporal** (~24m) + reconciliação da edge fn — crava a janela
-   confiável (destrava vigência para track record E cobertura).
+3. **[predict] Reconstrução temporal** (~24m) — a **reconciliação da edge fn JÁ FOI FEITA:
+   v15 no ar** (âncora + flag reconciliado; ver o bloco de dependência da Frente 1 e o
+   instrumento de medição em `v2/predict/MEDICAO-YROFF-V15.md`).
+   Crava a janela confiável (destrava vigência para track record E cobertura). **⇒ PERGUNTA
+   ABERTA AO PREDICT (responder no handoff):** a reconstrução do **histórico** depende da
+   confirmação de `yr_off→0` nas notícias **novas**, ou pode rodar **já** que a v15 está no ar?
+   Racional do operador (inclinação: rodar já): a v15 **protege o futuro** (previne ano
+   fabricado em nova extração); a reconstrução **conserta o passado** (registros antigos já
+   corrompidos, que a v15 não toca). São **conjuntos disjuntos** → a reconstrução do passado
+   não precisaria esperar a comprovação do estancamento do presente. **EXCEÇÃO que inverteria
+   a resposta:** se a reconstrução **reprocessa/reescreve registros que o cron ainda pode
+   tocar** (colisão passado×presente), aí espera a confirmação `yr_off→0` antes, para não
+   competir com a extração viva. Predict decide com base em: *a reconstrução toca linha que o
+   cron re-extrai?* Não → roda já. Sim → espera a medição do próximo ciclo.
 4. **Ponto-limite (D-051):** os 3 loops de desfecho (gate/ledger, predict/série, accuracy/
    vereditos publicados) só destravam quando o **produto OPERAR**. Construir não adianta mais;
    só operar adianta. Próxima grande alavanca = **ir ao ar** (após calibração fechar).
