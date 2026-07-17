@@ -165,8 +165,12 @@ a base não tem oferta forte viva; a próxima vem do calendário, não de mais c
 
 ## 3. Decisões travadas (fonte de verdade: `v2/DECISIONS.md`)
 
-**Não re-litigar.** ADRs **D-001..D-053** em `v2/DECISIONS.md`; invariantes
-**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Mais recentes: **D-052** contrato do template
+**Não re-litigar.** ADRs **D-001..D-054** em `v2/DECISIONS.md`; invariantes
+**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Mais recentes: **D-054** fecha as últimas
+decisões nomeadas (Clipping logo após Resumo do dia; corte Loyalty Lab 0,85; limiar
+coleta TIER1 0,75; cron 6h; override `refutado_tier1`) e registra o **deploy real da
+coleta TIER 1** (edge function `coleta-tier1` v1 ACTIVE + `pg_cron` 6h, provado ao vivo:
+0 candidatos hoje, bate com a medição prévia). **D-052** contrato do template
 de e-mail Daily (4 decisões do `SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md` §3 — Conta Feita,
 `oQueEvitar`, cap 3, schema vence); **D-053** Digest Engine — `scoreBreakdown` corrigido
 (4 componentes reais), Clipping + Resumo do dia no dia fraco, Loyalty Lab automatizável

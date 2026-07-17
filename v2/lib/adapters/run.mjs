@@ -19,7 +19,10 @@ import esfera from './esfera.mjs';
 import tap from './tap.mjs';
 
 export const ADAPTERS = [smiles, livelo, esfera, tap];
-const UA = process.env.TL_USER_AGENT
+// globalThis.process?.env — seguro em runtimes sem `process` global (ver
+// mesma nota em coleta-tier1.mjs); este arquivo é importado (não só
+// executado como CLI) pela edge function coleta-tier1.
+const UA = globalThis.process?.env?.TL_USER_AGENT
   || 'TheLoyalBot/1.0 (+https://theloyal.com.br; contato@theloyal.com.br)';
 
 /** Resolve o adapter dono de uma URL pelo host do sitemap. */
@@ -111,4 +114,4 @@ async function main() {
   if (!res.ok) process.exit(2);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error(e.message); process.exit(1); });
+if (globalThis.process?.argv?.[1] && import.meta.url === `file://${globalThis.process.argv[1]}`) main().catch((e) => { console.error(e.message); globalThis.process?.exit?.(1); });

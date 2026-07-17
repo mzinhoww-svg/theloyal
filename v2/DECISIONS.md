@@ -353,5 +353,24 @@ que cai é só a de corroboração TIER 1. **2 decisões nomeadas seguem abertas
 exata do Clipping na ordem; valor final do corte 0,85) — propostas default já registradas
 em `SPEC-SLICE-DIGEST-ENGINE.md` §4, não bloqueiam a construção.
 
+## D-054 — Fecha as decisões nomeadas do Digest Engine e da Coleta TIER 1 em Produção; coleta TIER 1 DEPLOYADA
+**Data:** 2026-07-17 · **Status:** Aprovada e aplicada · **Milestone:** M2
+Ratifica as últimas decisões nomeadas de `SPEC-SLICE-DIGEST-ENGINE.md` §4 e
+`SPEC-SLICE-COLETA-TIER1-PRODUCAO.md` §2, e registra o deploy real. **Digest Engine:**
+Clipping é seção própria, posicionada logo após Resumo do dia (ordem final: Resumo do
+dia → Clipping → Radar → Radar VPM → Sinais rápidos → Loyalty Lab); corte do score de
+automação do Loyalty Lab = **0,85** (fecha D-053). **Coleta TIER 1 em Produção:** limiar
+de confiança **0,75**; cron a cada **6h**; novo override `refutado_tier1` para
+refutação firme (D-049); **TAP fica fora da cobertura desta rodada** (sem adapter de
+sitemap fechado — registrado, não bloqueia, cobertura real = 3 de 4 programas listados).
+**Deployado e provado ao vivo nesta rodada:** edge function `coleta-tier1` (version 1,
+ACTIVE, `verify_jwt=false`), `pg_cron` a cada 6h (`coleta-tier1-6h`, jobid 30). Invoke de
+prova: HTTP 200, `candidatos_no_banco:0` — bate exatamente com a medição prévia (zero das
+17 vivas crawleáveis cruza o piso de valor 70 hoje); run logado em `runs`. **Achado ao
+construir:** o golden já travado de `decisaoNoLimiar` (`coleta-tier1.test.mjs`) mostra que
+`corrobora_com_ajuste` vai **sempre** a revisão humana, mesmo com confiança 1,0 — o plano
+de gravação (`gravacao-tier1.mjs`) respeita esse comportamento já testado em vez de
+reescrevê-lo (D-043, dado/código vence resumo de spec).
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
