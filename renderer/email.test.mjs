@@ -21,11 +21,12 @@ test('dia-forte: renderiza sem lançar, HTML bem formado (doctype + html + body 
   assert.match(html, /<\/body><\/html>$/);
 });
 
-test('dia-forte: imagens do template v4 presentes (header, sinal, fecha logo, divisor)', () => {
+test('dia-forte: imagens do template v4 presentes (header, sinal, divisor) — arte FECHA LOGO fora (rótulo oficial é Vence em até 72h)', () => {
   const html = renderEmail(diaForte);
   assert.ok(html.includes(IMG_HEADER));
   assert.ok(html.includes(IMG_SECAO_SINAL));
-  assert.ok(html.includes(IMG_SECAO_FECHA));
+  assert.ok(!html.includes(IMG_SECAO_FECHA), 'arte com o nome antigo não entra');
+  assert.ok(html.includes('Vence em até 72h'));
   assert.ok(html.includes(IMG_DIVISOR_LINHA));
 });
 
@@ -60,7 +61,7 @@ test('dia-forte: deal com contaProsa/leitura renderiza "A conta" e "Leitura" (§
 
 test('dia-forte: Fecha Logo é caixa amarela (fill yellow-100, borda yellow-500) com os 2 itens e link (fonte)', () => {
   const html = renderEmail(diaForte);
-  assert.ok(html.includes('Fecha logo'), 'alt da arte de seção');
+  assert.ok(html.includes('Vence em até 72h'), 'título oficial da seção');
   assert.ok(html.includes('VENCE EM 48H'));
   assert.ok(html.includes('VENCE EM 24H'));
   assert.ok(html.includes('background-color:#FCF0CE; border-left:4px solid #F2C94C'));
@@ -94,7 +95,7 @@ test('dia-forte: renderiza os blocos na ordem v4 — Sinal → Ofertas → Deals
   const sinal = idx('Sinal do dia');
   const ofertas = idx('Ofertas ativas');
   const deals = idx('Deals do dia');
-  const fecha = idx('Fecha logo');
+  const fecha = idx('Vence em até 72h');
   const cartoes = idx('Cartões e bancos');
   const clipping = idx('>Clipping<');
   const fechouSemana = idx('O que fechou nesta semana');
@@ -187,7 +188,7 @@ test('dia-fraco: sem contaFeita e sem deals → bloco "Conta feita" não aparece
 
 test('dia-fraco: Fecha Logo lista os 3 itens VENCE HOJE com fonte linkada', () => {
   const html = renderEmail(diaFraco);
-  assert.ok(html.includes('Fecha logo'));
+  assert.ok(html.includes('Vence em até 72h'));
   assert.equal((html.match(/VENCE HOJE/g) || []).length, 3);
   assert.ok(html.includes('Banco do Nordeste → Azul Fidelidade'));
 });

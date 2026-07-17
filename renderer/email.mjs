@@ -247,8 +247,9 @@ ${ed.illustrative ? `<div style="font-family:Arial,sans-serif; font-size:12px; c
   // esquerda yellow-500; texto Ink — amarelo nunca como texto, regra 7).
   const fechaLogo = Array.isArray(ed.fechaLogo) ? ed.fechaLogo : [];
   if (fechaLogo.length > 0) {
-    P.push(templateImg(IMG_SECAO_FECHA, "Fecha logo"));
-    P.push(`<tr><td style="padding:12px 32px 8px 32px;">
+    // Rótulo oficial: "Vence em até 72h" (D-057, reafirmado pelo operador) —
+    // a arte "FECHA LOGO" não entra até existir arte com o nome novo.
+    P.push(`<tr><td style="padding:12px 32px 8px 32px;">${eyebrow("Vence em até 72h")}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${YELLOW100}; border-left:4px solid ${YELLOW500};"><tr><td style="padding:14px 18px 6px 18px;">${fechaLogo.map(fechaLogoItem).join("")}</td></tr></table>
 </td></tr>`);
   }

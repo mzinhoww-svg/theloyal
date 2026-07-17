@@ -21,12 +21,13 @@ test('0001: nunca <table> (limitação Tiptap) e imagens do template na ordem ce
   assert.ok(!html.includes('<table'), 'Tiptap descarta estilo de tabela — nunca <table>');
   const iHeader = html.indexOf(IMG_HEADER);
   const iSinal = html.indexOf(IMG_SECAO_SINAL);
-  const iFecha = html.indexOf(IMG_SECAO_FECHA);
+  const iFecha = html.indexOf('<h2>Vence em até 72h</h2>');
   const iDivisor = html.indexOf(IMG_DIVISOR_LINHA);
   const iFooter = html.indexOf(IMG_FOOTER);
+  assert.ok(!html.includes(IMG_SECAO_FECHA), 'arte com o nome antigo (FECHA LOGO) não entra');
   assert.ok(html.startsWith(`<img src="${IMG_HEADER}"`), 'o documento abre com o header de marca');
   assert.ok(iHeader >= 0 && iSinal > iHeader && iFecha > iSinal && iDivisor > iFecha && iFooter > iDivisor,
-    `ordem de imagens inesperada: header=${iHeader} sinal=${iSinal} fecha=${iFecha} divisor=${iDivisor} footer=${iFooter}`);
+    `ordem inesperada: header=${iHeader} sinal=${iSinal} venceEm72h=${iFecha} divisor=${iDivisor} footer=${iFooter}`);
 });
 
 test('0001: linha meta — Nº 1 · SEXTA-FEIRA · 17/07/2026 · leitura de 4 min', () => {

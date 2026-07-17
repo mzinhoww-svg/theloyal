@@ -240,7 +240,10 @@ export function renderBeehiivHtml(ed) {
   // 5. Fecha Logo — divisor (imagem) + caixa amarela (fill yellow-100, borda
   // yellow-500 — amarelo só como fill, texto Ink; regra 7).
   if (Array.isArray(ed.fechaLogo) && ed.fechaLogo.length > 0) {
-    parts.push(img(IMG_SECAO_FECHA, 'Fecha logo'));
+    // Rótulo oficial da seção: "Vence em até 72h" (D-057, reafirmado pelo
+    // operador — o M3//promocoes consome o dado com este nome). A arte
+    // existente diz "FECHA LOGO" e por isso NÃO entra até existir arte nova.
+    parts.push(heading('Vence em até 72h', 2));
     parts.push(section(ed.fechaLogo.map(fechaLogoItem).join(''), {
       'background-color': YELLOW100, 'border-color': YELLOW500, 'border-style': 'solid',
       'border-width-left': 4, 'padding-top': 14, 'padding-right': 18, 'padding-bottom': 14, 'padding-left': 18, 'margin-bottom': 16,
