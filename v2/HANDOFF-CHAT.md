@@ -13,7 +13,10 @@
 > **Última atualização:** 2026-07-17 (v3 — coleta TIER 1 provada (gate de confiança
 > operando no lote-1), vetor lado-único re-scorado. **Princípio de lançamento travado
 > (D-050): o produto NÃO espera estar pronto — está; espera OFERTA FORTE. Estreia
-> RECUSANDO, não performando.** Próxima frente: cobertura de fontes.
+> RECUSANDO, não performando.** Próxima frente: cobertura de fontes. **+ edge fn `campaigns`
+> v15 deployada: âncora de ano (Patch 1) + flag reconciliado ±65d OU gap>365 (Patch 2);
+> 20/20 dois lados, não-regressão bloqueante verde, coleta viva. Origem da corrupção
+> temporal ESTANCADA na prevenção — medição yr_off→0 confirma no próximo ciclo com nova.**
 >
 > **Leitura para os três chats (D-050):** a máquina está provada ponta a ponta. O
 > Deal Desk vivo é gatilhado por **oferta** (forte + viva + confirmada), não por data.
@@ -115,11 +118,22 @@ media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera
    **⚠️ DEPENDÊNCIA CROSS-CHAT (predict):** a **correção da edge fn** (bug de corrupção
    temporal VIVO na extração — chat de predict) é **pré-requisito** para as campanhas
    capturadas pela cobertura terem **vigência confiável** (vigência = 1 dos 3 portões,
-   D-044). **Status (do chat de predict): Fase 1a APROVADA e em implementação/teste**
-   (passar `published_at` ao prompt + validação de plausibilidade). Não trava a Frente B
-   (reverse-lookup roda), mas a vigência das novas campanhas só é confiável **depois da
-   Fase 1a deployada e comprovada em prod (yr_off→0)**. É a Fase 1a do predict que
-   destrava vigência confiável para o que a cobertura capturar. Alinhamento principal↔predict.
+   D-044). **Status: edge fn `campaigns` v15 DEPLOYADA em prod pelo principal (2026-07-17
+   14:30Z, version 15, `verify_jwt=false` preservado).** Integra a PROPOSTA-ANCORA-V15 do
+   predict sobre a v14-shadow: **Patch 1 — âncora de ano** (passa `published_at` ao prompt;
+   o LLM para de fabricar o ano na origem — a prevenção que faltava) + **Patch 2 —
+   reconciliação do flag** `date_suspect = padrão ±65d de N×365 (v14) OU gap>365d
+   (predict)`. **Teste dos dois lados, gate de não-regressão BLOQUEANTE: 20/20 no golden
+   de referência (`temporal-plausibility`) E 20/20 no flag inline da edge fn** — zero
+   limpos regridem, todos os quebrados viram suspect (inclui o canônico 943d que o ±65d
+   sozinho perdia). **Invoke pós-deploy: HTTP 200, `versao:"v15-ancora"`, run logado
+   `status ok` — coleta NÃO caiu.** Não muda makeId/upsert(id)/schema (Fase 1b fora).
+   **Medição de estancamento pendente do próximo ciclo com notícia nova:** fila vazia hoje
+   (0 novas), então yr_off→0 se confirma quando o próximo `daily` pós-v15 entrar. **Baseline
+   pré-v15 (só origem `daily`, datado n=24): 50% com yr_off (gap>365); v14 flagava 9, o
+   flag reconciliado pega 12** — os 3 extra são exatamente os gaps sujos do Patch 2. Não trava a
+   Frente B (reverse-lookup roda). A reconstrução histórica do predict e a medição yr_off→0
+   nas novas seguem a origem já estancada. Alinhamento principal↔predict fechado neste turno.
 2. **[EM EXECUÇÃO] Re-score lado-único (Parte B aprovada).** Agente re-scorando os 1.220
    `sem_destino` com LADO_UNICO_V1: fallback OFF, `conta_nao_calculavel`→não-valor (null),
    D-037 buckets, min 3/8, versionado. Movimento modesto (54/79 saem da banda 65, nada
