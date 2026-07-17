@@ -52,9 +52,9 @@ aplica** em produção. A calibração nunca versiona vetor direto no banco. Ex.
 recalibrado, a aplicação vai pelo principal, não pela calibração.
 
 **Fila de escrita inscrita (o que cada chat vai aplicar — manter atualizado):**
-- **Principal:** não-valor (`conta_nao_calculavel`→bruto null), cobertura/TIER 1 (Frente B). Aplica.
-- **Predict:** reconstrução da camada temporal (Fase 1a estanca o bug vivo; reconstrução histórica a seguir). **Propõe → principal aplica.**
-- **Calibração:** `score_pesos`/`derivacao` só se recalibrados e aprovados (hoje: **v1 mantido, nada a aplicar** — D-053); golden N=400 é artefato de repo, não escrita de produção. **Propõe → principal aplica.**
+- **Principal:** não-valor (`conta_nao_calculavel`→bruto null), cobertura/TIER 1 (Frente B). Aplica. **Nota de estado real (2026-07-17):** o que está em produção na edge fn de campanhas é a **v14-shadow** do principal — **flaga, não previne** — deployada **sem inscrição** (foi ela que furou a regra e propagou leitura errada).
+- **Predict:** reconstrução da camada temporal. **⚠ Correção de estado:** a **âncora da Fase 1a NÃO foi deployada** (contradição descoberta ao verificar o banco — o relato anterior de "estancado" era leitura errada, propagada pela v14-shadow não-inscrita). Origem do bug **ainda viva**. Reconstrução histórica (~24m) **pendente**. **Propõe → principal aplica com inscrição prévia.**
+- **Calibração:** `score_pesos`/`derivacao` só se recalibrados e aprovados (hoje: **v1 mantido, nada a aplicar** — D-053); golden N=400 é artefato de repo, não escrita de produção. Gates re-medidos, quando fecharem: número → operador; se implicar versionar vetor → **principal aplica**, nunca direto. **Propõe → principal aplica.**
 
 ---
 
