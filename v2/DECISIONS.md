@@ -634,5 +634,21 @@ enquadramento "benefício de tarifa do cartão (cashback do IOF), não acúmulo 
 fora da régua TL". `content/editions/0001.json` atualizado (JSON canônico → rascunho
 regenerado por bloco). Clipping foi de 6 para 7 itens; validate e 191/191 verdes.
 
+## D-062 — Rascunho nº 1 (layout v4.1) aprovado visualmente pelo operador
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2
+Após a rodada v4.1 (Ofertas ativas em cards empilhados — nunca `columns`, que
+quebrava no parse do Beehiiv e vazava o milheiro da margem; itens sem confirmação
+na MESMA seção com selo "AGUARDANDO CONFIRMAÇÃO OFICIAL" + fonte linkada; bloco
+"No radar" removido do Sinal do dia), o operador respondeu **"aprovado"** — lido
+como a **aprovação visual final do rascunho da edição nº 1**
+(`post_f7b2c959`, status draft). O que NÃO muda com esta aprovação:
+**auto-publish continua desligado** e a **contagem dos 5 dias úteis é decisão
+do operador** — não inicia sozinha (regra de sessão reafirmada).
+**P2 (D-061):** a evidência da premissa incorreta foi apresentada (a Smiles 375
+FOI flagada — 375 > 300; ~164 flags compra/clube incluem compras reais 350–375).
+O teto permanece no estado vigente `{compra: 300, clube: 300, padrao: 200}`
+(opção A — manter). Se o operador quis a opção B (teto 400 para compra/clube,
+banda real passa limpa e ghosts 400+ continuam flagados), corrigir aqui.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
