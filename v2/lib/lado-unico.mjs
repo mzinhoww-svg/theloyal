@@ -38,7 +38,10 @@ export const LADO_UNICO_V1 = {
     janela: 'tipo-merchant',
     min_merchant: 3,   // população mínima do merchant p/ ranqueio cheio (= score_pesos.min_samples)
     min_tipo: 8,       // barra mais alta p/ o fallback cross-merchant (sinal fraco)
-    fallback_tipo: true, // operador decide: true = mais discriminação; false = mais neutros honestos
+    // DECISÃO DO OPERADOR APROVADA (D-047 §4.1): fallback cross-merchant DESLIGADO.
+    // Merchant fino (pop < min_merchant) → NEUTRO sinalizado, nunca cross-merchant
+    // — fiel a INV-03/D-042/c2 ("faltou referência → classifica", não fabrica).
+    fallback_tipo: false,
   },
 
   // eficiência: idêntica à derivação geral — ECDF-inverso do CPM. No lado-único o
@@ -181,4 +184,25 @@ export function montarEntradasLadoUnico(campanha = {}, contexto = {}, config = L
   const { componentes, pop_src } = derivarLadoUnico(campanha, contexto, config);
   const temTier1 = contexto.tem_tier1 === true || Number(campanha.tier) === 1;
   return { campaign_id: campanha.id ?? null, tem_tier1: temTier1, componentes, _pop_src: pop_src };
+}
+
+/**
+ * DECISÃO DO OPERADOR APROVADA (D-047 §4.4): `conta_nao_calculavel` = NÃO-VALOR.
+ * Quando o override final é `conta_nao_calculavel`, o `tl_score_bruto` que o engine
+ * calculou vem SÓ de raridade+abrangência (não há sinal de valor: sem % e sem CPM).
+ * Publicar esse número — ou a BANDA de veredito derivada dele (ex.: "Vale olhar") —
+ * sugeriria um valor que não existe. Marca-se então como não-valor:
+ *   - `tl_score_bruto`  → null (marcador; NÃO desinfla — anula)
+ *   - `veredito_bruto`  → 'Não confirmado' (o não-valor; nunca a banda de raridade+
+ *     abrangência, que "gravaria número como se fosse valor")
+ * O resto do resultado é preservado (`override_aplicado='conta_nao_calculavel'`,
+ * `veredito` já era 'Não confirmado'). Pura e idempotente.
+ * @param {ReturnType<import('./score.mjs').calcularScore>} resultado
+ * @returns {object} resultado marcado como não-valor se conta_nao_calculavel.
+ */
+export function marcarNaoValorLadoUnico(resultado) {
+  if (resultado && resultado.override_aplicado === 'conta_nao_calculavel') {
+    return { ...resultado, tl_score_bruto: null, veredito_bruto: resultado.veredito ?? 'Não confirmado' };
+  }
+  return resultado;
 }

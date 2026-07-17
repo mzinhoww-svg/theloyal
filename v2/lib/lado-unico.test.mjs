@@ -18,6 +18,7 @@ import {
   derivarAbrangenciaLadoUnico,
   derivarLadoUnico,
   montarEntradasLadoUnico,
+  marcarNaoValorLadoUnico,
 } from './lado-unico.mjs';
 
 // Populações reais lidas do banco (read-only) — ver PROPOSTA-VETOR-LADO-UNICO.md.
@@ -54,28 +55,38 @@ test('percentil merchant: o MESMO % ranqueia DIFERENTE em merchants diferentes',
     `40% deve ranquear diferente entre merchants (${noML.valor} vs ${naAmazon.valor})`);
 });
 
-// --- fallback tipo: sinal FRACO, marcado, exige barra maior -------------------
-test('percentil: sem população de merchant, usa tipo (fallback) e MARCA base_curta', () => {
-  const tipoPop = Array.from({ length: 12 }, (_, i) => (i + 1) * 10); // 10..120, n=12 >= min_tipo(8)
+// --- DECISÃO DO OPERADOR (D-047 §4.1): fallback cross-merchant DESLIGADO no default
+test('vetor: fallback_tipo é FALSE por default (decisão do operador, D-047 §4.1)', () => {
+  assert.equal(LADO_UNICO_V1.percentil.fallback_tipo, false);
+});
+
+test('percentil DEFAULT: merchant fino → NEUTRO sinalizado, NUNCA cross-merchant (INV-03/D-042/c2)', () => {
+  // Mesmo com tipo defensável (n=12 >= min_tipo), o default NÃO borra cross-merchant.
+  const tipoPop = Array.from({ length: 12 }, (_, i) => (i + 1) * 10); // 10..120, n=12
   const r = derivarPercentilLadoUnico({ percentual: 70, popMerchant: [10], popTipo: tipoPop });
+  assert.equal(r.pop_src, 'neutro');   // fallback OFF → neutro honesto, não 'tipo'
+  assert.equal(r.valor, 0.5);
+  assert.equal(r.base_n, 0);           // engine puxa integralmente para 0,5
+  assert.equal(r.base_curta, true);
+});
+
+// --- fallback tipo: mecanismo preservado, mas só sob config explícita (não default)
+test('percentil: com fallback_tipo=true explícito, usa tipo (fallback) e MARCA base_curta', () => {
+  const cfg = { ...LADO_UNICO_V1, percentil: { ...LADO_UNICO_V1.percentil, fallback_tipo: true } };
+  const tipoPop = Array.from({ length: 12 }, (_, i) => (i + 1) * 10); // 10..120, n=12 >= min_tipo(8)
+  const r = derivarPercentilLadoUnico({ percentual: 70, popMerchant: [10], popTipo: tipoPop }, cfg);
   assert.equal(r.pop_src, 'tipo');
   assert.equal(r.base_curta, true);  // cross-merchant → engine amortece parte do peso
   assert.equal(r.base_n, 1);
 });
 
 test('percentil: sem merchant e sem tipo defensável → NEUTRO sinalizado, não fabrica (INV-03)', () => {
-  const r = derivarPercentilLadoUnico({ percentual: 70, popMerchant: [10], popTipo: [10, 20] });
+  const cfg = { ...LADO_UNICO_V1, percentil: { ...LADO_UNICO_V1.percentil, fallback_tipo: true } };
+  const r = derivarPercentilLadoUnico({ percentual: 70, popMerchant: [10], popTipo: [10, 20] }, cfg);
   assert.equal(r.pop_src, 'neutro');
   assert.equal(r.valor, 0.5);
   assert.equal(r.base_n, 0);        // engine puxa integralmente para 0,5
   assert.equal(r.base_curta, true);
-});
-
-test('percentil: fallback_tipo=false → não borra cross-merchant, cai em neutro', () => {
-  const cfg = { ...LADO_UNICO_V1, percentil: { ...LADO_UNICO_V1.percentil, fallback_tipo: false } };
-  const tipoPop = Array.from({ length: 12 }, (_, i) => (i + 1) * 10);
-  const r = derivarPercentilLadoUnico({ percentual: 70, popMerchant: [10], popTipo: tipoPop }, cfg);
-  assert.equal(r.pop_src, 'neutro');
 });
 
 test('percentil: sem % → null (sem sinal de valor → engine dispara conta_nao_calculavel)', () => {
@@ -115,6 +126,36 @@ test('montarEntradas: sem % e sem CPM → só raridade+abrangência (conta_nao_c
   assert.ok(!('percentil' in componentes));
   assert.ok(!('eficiencia' in componentes));
   assert.ok('raridade' in componentes && 'abrangencia' in componentes);
+});
+
+// --- DECISÃO DO OPERADOR (D-047 §4.4): conta_nao_calculavel = NÃO-VALOR (null) ---
+test('não-valor: cnc → tl_score_bruto null E veredito_bruto vira Não confirmado (não vaza banda)', () => {
+  // A banda "Vale olhar" HOJE vem de raridade+abrangência sem lastro (Artefato 2).
+  // Anular o número mas manter a BANDA gravaria o número como se fosse valor.
+  const r = marcarNaoValorLadoUnico({
+    tl_score_bruto: 24, veredito_bruto: 'Vale olhar', veredito: 'Não confirmado',
+    override_aplicado: 'conta_nao_calculavel',
+  });
+  assert.equal(r.tl_score_bruto, null);              // marcador de não-valor
+  assert.equal(r.veredito_bruto, 'Não confirmado');  // não vaza a banda de raridade+abrangência
+  assert.equal(r.override_aplicado, 'conta_nao_calculavel');
+});
+
+test('não-valor: sem_tier1 (ou sem override) mantém tl_score_bruto E veredito_bruto — só cnc muda', () => {
+  const semTier1 = marcarNaoValorLadoUnico({ tl_score_bruto: 67, veredito_bruto: 'Só para casos específicos', override_aplicado: 'sem_tier1' });
+  assert.equal(semTier1.tl_score_bruto, 67);
+  assert.equal(semTier1.veredito_bruto, 'Só para casos específicos');
+  const semOvr = marcarNaoValorLadoUnico({ tl_score_bruto: 77, veredito_bruto: 'Vale olhar', override_aplicado: null });
+  assert.equal(semOvr.tl_score_bruto, 77);
+  assert.equal(semOvr.veredito_bruto, 'Vale olhar');
+});
+
+test('não-valor: idempotente — aplicar duas vezes = uma vez', () => {
+  const uma = marcarNaoValorLadoUnico({ tl_score_bruto: 33, veredito_bruto: 'Evitaria', veredito: 'Não confirmado', override_aplicado: 'conta_nao_calculavel' });
+  const duas = marcarNaoValorLadoUnico(uma);
+  assert.deepEqual(duas, uma);
+  assert.equal(duas.tl_score_bruto, null);
+  assert.equal(duas.veredito_bruto, 'Não confirmado');
 });
 
 // --- end-to-end GUARDADO (ativa quando score.mjs existe) ----------------------
