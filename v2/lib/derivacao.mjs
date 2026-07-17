@@ -48,7 +48,7 @@ export const DERIVACAO_V1 = {
   raridade: {
     janela: 'snapshot-rota',
     limiares: [
-      { max: 1, valor: 1.0 },   // ocorrência única — mais rara
+      { max: 1, valor: 0.85 },  // ocorrência única — tetada em 0,85 (D-037): rara, mas não premiar ruído
       { max: 2, valor: 0.85 },
       { max: 5, valor: 0.65 },
       { max: 20, valor: 0.45 },
