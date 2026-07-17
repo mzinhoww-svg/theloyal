@@ -1,0 +1,415 @@
+{
+  "gerado_em": "2026-07-17T13:19:59.992Z",
+  "base": "sã · CPM vivo (re-score-2)",
+  "dry_run": true,
+  "linhas": [
+    {
+      "candidato": "v1 (baseline)",
+      "pesos": {
+        "versao": "v1",
+        "peso_percentil": 0.45,
+        "peso_eficiencia": 0.3,
+        "peso_raridade": 0.15,
+        "peso_abrangencia": 0.1,
+        "shrink_k": 5,
+        "min_samples": 3
+      },
+      "computaveis": {
+        "n": 1996,
+        "mediana": 60,
+        "q1": 51,
+        "q3": 66,
+        "iqr": 15,
+        "desvio": 11.93,
+        "distintos": 61,
+        "entropia_bits": 5.273,
+        "em65": 286,
+        "em65_pct": 14.3,
+        "banda_pct": 55.9
+      },
+      "base_suficiente": {
+        "n": 1580,
+        "mediana": 58,
+        "q1": 48,
+        "q3": 67,
+        "iqr": 19,
+        "desvio": 12.84,
+        "distintos": 61,
+        "entropia_bits": 5.561,
+        "em65": 45,
+        "em65_pct": 2.8,
+        "banda_pct": 44.6
+      },
+      "confirmavel": {
+        "n": 164,
+        "mediana": 51,
+        "q1": 41,
+        "q3": 66,
+        "iqr": 25,
+        "desvio": 14.68,
+        "distintos": 37,
+        "entropia_bits": 4.621,
+        "em65": 1,
+        "em65_pct": 0.6,
+        "banda_pct": 28.7
+      }
+    },
+    {
+      "candidato": "shrink_k=3",
+      "pesos": {
+        "versao": "v1",
+        "peso_percentil": 0.45,
+        "peso_eficiencia": 0.3,
+        "peso_raridade": 0.15,
+        "peso_abrangencia": 0.1,
+        "shrink_k": 3,
+        "min_samples": 3
+      },
+      "computaveis": {
+        "n": 1996,
+        "mediana": 61,
+        "q1": 50,
+        "q3": 67,
+        "iqr": 17,
+        "desvio": 12.74,
+        "distintos": 64,
+        "entropia_bits": 5.308,
+        "em65": 276,
+        "em65_pct": 13.8,
+        "banda_pct": 49.7
+      },
+      "base_suficiente": {
+        "n": 1580,
+        "mediana": 59,
+        "q1": 47,
+        "q3": 68,
+        "iqr": 21,
+        "desvio": 13.76,
+        "distintos": 64,
+        "entropia_bits": 5.592,
+        "em65": 24,
+        "em65_pct": 1.5,
+        "banda_pct": 40.4
+      },
+      "confirmavel": {
+        "n": 164,
+        "mediana": 52,
+        "q1": 41,
+        "q3": 67,
+        "iqr": 26,
+        "desvio": 15.27,
+        "distintos": 41,
+        "entropia_bits": 4.751,
+        "em65": 1,
+        "em65_pct": 0.6,
+        "banda_pct": 28.7
+      }
+    },
+    {
+      "candidato": "shrink_k=2",
+      "pesos": {
+        "versao": "v1",
+        "peso_percentil": 0.45,
+        "peso_eficiencia": 0.3,
+        "peso_raridade": 0.15,
+        "peso_abrangencia": 0.1,
+        "shrink_k": 2,
+        "min_samples": 3
+      },
+      "computaveis": {
+        "n": 1996,
+        "mediana": 61,
+        "q1": 49,
+        "q3": 67,
+        "iqr": 18,
+        "desvio": 13.35,
+        "distintos": 65,
+        "entropia_bits": 5.359,
+        "em65": 265,
+        "em65_pct": 13.3,
+        "banda_pct": 47.5
+      },
+      "base_suficiente": {
+        "n": 1580,
+        "mediana": 59,
+        "q1": 47,
+        "q3": 69,
+        "iqr": 22,
+        "desvio": 14.41,
+        "distintos": 65,
+        "entropia_bits": 5.643,
+        "em65": 23,
+        "em65_pct": 1.5,
+        "banda_pct": 37.7
+      },
+      "confirmavel": {
+        "n": 164,
+        "mediana": 52,
+        "q1": 41,
+        "q3": 67,
+        "iqr": 26,
+        "desvio": 15.58,
+        "distintos": 39,
+        "entropia_bits": 4.631,
+        "em65": 0,
+        "em65_pct": 0,
+        "banda_pct": 29.3
+      }
+    },
+    {
+      "candidato": "shrink_k=8",
+      "pesos": {
+        "versao": "v1",
+        "peso_percentil": 0.45,
+        "peso_eficiencia": 0.3,
+        "peso_raridade": 0.15,
+        "peso_abrangencia": 0.1,
+        "shrink_k": 8,
+        "min_samples": 3
+      },
+      "computaveis": {
+        "n": 1996,
+        "mediana": 60,
+        "q1": 51,
+        "q3": 65,
+        "iqr": 14,
+        "desvio": 11.1,
+        "distintos": 60,
+        "entropia_bits": 5.163,
+        "em65": 272,
+        "em65_pct": 13.6,
+        "banda_pct": 59.9
+      },
+      "base_suficiente": {
+        "n": 1580,
+        "mediana": 58,
+        "q1": 48,
+        "q3": 66,
+        "iqr": 18,
+        "desvio": 11.87,
+        "distintos": 59,
+        "entropia_bits": 5.386,
+        "em65": 31,
+        "em65_pct": 2,
+        "banda_pct": 49.6
+      },
+      "confirmavel": {
+        "n": 164,
+        "mediana": 51,
+        "q1": 42,
+        "q3": 66,
+        "iqr": 24,
+        "desvio": 14.05,
+        "distintos": 40,
+        "entropia_bits": 4.823,
+        "em65": 1,
+        "em65_pct": 0.6,
+        "banda_pct": 31.7
+      }
+    },
+    {
+      "candidato": "percentil0.50 efic0.25",
+      "pesos": {
+        "versao": "v1",
+        "peso_percentil": 0.5,
+        "peso_eficiencia": 0.25,
+        "peso_raridade": 0.15,
+        "peso_abrangencia": 0.1,
+        "shrink_k": 5,
+        "min_samples": 3
+      },
+      "computaveis": {
+        "n": 1996,
+        "mediana": 60,
+        "q1": 51,
+        "q3": 66,
+        "iqr": 15,
+        "desvio": 12.14,
+        "distintos": 61,
+        "entropia_bits": 5.253,
+        "em65": 60,
+        "em65_pct": 3,
+        "banda_pct": 54.7
+      },
+      "base_suficiente": {
+        "n": 1580,
+        "mediana": 58,
+        "q1": 47,
+        "q3": 67,
+        "iqr": 20,
+        "desvio": 13.2,
+        "distintos": 61,
+        "entropia_bits": 5.552,
+        "em65": 59,
+        "em65_pct": 3.7,
+        "banda_pct": 43.9
+      },
+      "confirmavel": {
+        "n": 164,
+        "mediana": 51.5,
+        "q1": 42,
+        "q3": 65,
+        "iqr": 23,
+        "desvio": 14.49,
+        "distintos": 38,
+        "entropia_bits": 4.753,
+        "em65": 17,
+        "em65_pct": 10.4,
+        "banda_pct": 28.7
+      }
+    },
+    {
+      "candidato": "efic0.35 percentil0.40",
+      "pesos": {
+        "versao": "v1",
+        "peso_percentil": 0.4,
+        "peso_eficiencia": 0.35,
+        "peso_raridade": 0.15,
+        "peso_abrangencia": 0.1,
+        "shrink_k": 5,
+        "min_samples": 3
+      },
+      "computaveis": {
+        "n": 1996,
+        "mediana": 61,
+        "q1": 51,
+        "q3": 66,
+        "iqr": 15,
+        "desvio": 11.75,
+        "distintos": 59,
+        "entropia_bits": 5.254,
+        "em65": 75,
+        "em65_pct": 3.8,
+        "banda_pct": 54.4
+      },
+      "base_suficiente": {
+        "n": 1580,
+        "mediana": 58,
+        "q1": 48,
+        "q3": 66,
+        "iqr": 18,
+        "desvio": 12.5,
+        "distintos": 59,
+        "entropia_bits": 5.481,
+        "em65": 75,
+        "em65_pct": 4.7,
+        "banda_pct": 46.4
+      },
+      "confirmavel": {
+        "n": 164,
+        "mediana": 51,
+        "q1": 40,
+        "q3": 68,
+        "iqr": 28,
+        "desvio": 15.03,
+        "distintos": 39,
+        "entropia_bits": 4.749,
+        "em65": 1,
+        "em65_pct": 0.6,
+        "banda_pct": 33.5
+      }
+    },
+    {
+      "candidato": "raridade0.20 abr0.05",
+      "pesos": {
+        "versao": "v1",
+        "peso_percentil": 0.45,
+        "peso_eficiencia": 0.3,
+        "peso_raridade": 0.2,
+        "peso_abrangencia": 0.05,
+        "shrink_k": 5,
+        "min_samples": 3
+      },
+      "computaveis": {
+        "n": 1996,
+        "mediana": 58,
+        "q1": 47,
+        "q3": 64,
+        "iqr": 17,
+        "desvio": 12.54,
+        "distintos": 64,
+        "entropia_bits": 5.246,
+        "em65": 41,
+        "em65_pct": 2.1,
+        "banda_pct": 53.3
+      },
+      "base_suficiente": {
+        "n": 1580,
+        "mediana": 54,
+        "q1": 43,
+        "q3": 63,
+        "iqr": 20,
+        "desvio": 13.06,
+        "distintos": 63,
+        "entropia_bits": 5.5,
+        "em65": 30,
+        "em65_pct": 1.9,
+        "banda_pct": 41.2
+      },
+      "confirmavel": {
+        "n": 164,
+        "mediana": 48,
+        "q1": 39,
+        "q3": 63,
+        "iqr": 24,
+        "desvio": 14.61,
+        "distintos": 39,
+        "entropia_bits": 4.786,
+        "em65": 0,
+        "em65_pct": 0,
+        "banda_pct": 25.6
+      }
+    },
+    {
+      "candidato": "raridade0.10 percentil0.50",
+      "pesos": {
+        "versao": "v1",
+        "peso_percentil": 0.5,
+        "peso_eficiencia": 0.3,
+        "peso_raridade": 0.1,
+        "peso_abrangencia": 0.1,
+        "shrink_k": 5,
+        "min_samples": 3
+      },
+      "computaveis": {
+        "n": 1996,
+        "mediana": 62,
+        "q1": 51,
+        "q3": 67,
+        "iqr": 16,
+        "desvio": 12.78,
+        "distintos": 65,
+        "entropia_bits": 5.365,
+        "em65": 31,
+        "em65_pct": 1.6,
+        "banda_pct": 51
+      },
+      "base_suficiente": {
+        "n": 1580,
+        "mediana": 60,
+        "q1": 48,
+        "q3": 68,
+        "iqr": 20,
+        "desvio": 14.15,
+        "distintos": 64,
+        "entropia_bits": 5.667,
+        "em65": 31,
+        "em65_pct": 2,
+        "banda_pct": 39.6
+      },
+      "confirmavel": {
+        "n": 164,
+        "mediana": 52,
+        "q1": 41,
+        "q3": 68,
+        "iqr": 27,
+        "desvio": 15.8,
+        "distintos": 38,
+        "entropia_bits": 4.58,
+        "em65": 1,
+        "em65_pct": 0.6,
+        "banda_pct": 28
+      }
+    }
+  ]
+}
