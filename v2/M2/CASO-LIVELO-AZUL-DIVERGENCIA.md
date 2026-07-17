@@ -44,6 +44,33 @@ custo-base Livelo R$30/milheiro (D-039) e ratio `livelo→azul` = 1 (confiança 
 âncora de paridade). O milheiro Azul sai a **R$15,00 (100%) / R$13,95 (115%) /
 R$13,33 (125%)** — quanto maior o bônus, menor o custo do milheiro.
 
+## RESOLUÇÃO — regulamento oficial (fonte TIER 1) recebido 2026-07-17
+
+O operador leu a página oficial e enviou o **regulamento** (fonte TIER 1). Ele
+resolve tudo e o 115% cai por terra:
+
+- **Vigência real:** 10h de **15/04** às 23h59 de **17/04/2025** — encerrada há
+  mais de um ano. O "vivo, vence 31/07/2026" era dado do blog desatualizado.
+- **NÃO é 115%. É escala por público**, mesmo par `livelo→azul`, mesma janela:
+  não-assinante **50%** · Clube Livelo/Azul **100%** · Clube Azul 6–12m **105%** ·
+  Clube Azul tiers 1k–5k **110%** · Clube Azul 10k/20k (>12m) **120%**. Teto 300
+  mil pts/CPF; bônus válido 6 meses.
+- **115% não existe em nenhum tier.** O blog fabricou/mediou um número que a fonte
+  oficial desmente — a prova concreta de por que blog é TIER 2 e o Deal Desk exige
+  TIER 1. **Caso-fundador da arquitetura de tiers.**
+
+**Correção aplicada (confirmação manual TIER 1, D-003):** a linha (`publico=geral`)
+foi corrigida para o tier geral = **50%**, vigência 15–17/04/2025, `estado=historica`,
+`tier=1`, regulamento como fonte oficial (`campanha_fontes` com a escala completa no
+`payload` jsonb; trilha em `campanha_versoes` com o blog-115-refutado). Re-scorada:
+a **50% geral → percentil 0** (50% é pior que todo o histórico 70–130% da rota),
+CPM R$20,00, **`tl_score_bruto`=25 → "Evitaria"** (override nenhum, TIER 1 real).
+
+**O produto num item:** o blog publicaria "Vale olhar" (76). A verdade para o
+público geral é **"Evitaria" (25)** — um bônus abaixo do mercado da própria rota.
+A fonte oficial transformou um "parece bom" num "evite". Fora do Deal Desk vivo por
+vigência (encerrada); entra no **track record** como exemplo.
+
 ## Aprendizado registrado
 
 1. **Blog como fonte de percentual é TIER 2 e foi pego errando o número** logo no
