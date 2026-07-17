@@ -216,6 +216,18 @@ export function resolverCampanha(campanha, indices, ref) {
     ladoUnico = true;
   }
 
+  // Guard de self-loop de transferência (D-041, R3+R4 colapsados). Uma
+  // transferência de um programa para ELE MESMO não existe: é promo do mesmo
+  // programa mal-tipada, origem perdida na extração, ou placeholder. O mapa/seed
+  // está CERTO (PagoGol É Smiles, AllAccor É Accor, MundoAvios É Avios — provado
+  // no seed); o defeito é a LINHA, não o alias. Manda para revisão em vez de
+  // emitir identidade self-loop pontuável. Regra PERMANENTE: pega qualquer
+  // self-loop futuro, não só os 13 de hoje (não é patch caso-a-caso).
+  if (tipo === 'transferencia_bonificada' && lo.code != null && lo.code === destinoCode) {
+    return { resolvido: false, revisao: 'transferencia_self_loop', tipo,
+      origemCode: lo.code, destinoCode, ...base };
+  }
+
   return {
     resolvido: true, tipo, origemCode: lo.code, destinoCode, publico,
     identity_key: identityKey(tipo, lo.code, destinoCode, publico),
