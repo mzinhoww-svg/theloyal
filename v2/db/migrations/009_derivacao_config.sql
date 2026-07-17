@@ -53,11 +53,11 @@ values
   ('derivacao.v1', 'rota-total', 3,
    'ecdf-inverso', 'cpm-populacao-global',
    'snapshot-rota',
-   '[{"max":1,"valor":1.0},{"max":2,"valor":0.85},{"max":5,"valor":0.65},'
+   '[{"max":1,"valor":0.85},{"max":2,"valor":0.85},{"max":5,"valor":0.65},'
    || '{"max":20,"valor":0.45},{"max":50,"valor":0.25},{"max":null,"valor":0.10}]'::jsonb,
    'publico',
    '{"geral":1.0,"cartao":0.6,"selecionados":0.45,"clube":0.3}'::jsonb,
-   'PROPOSTA a aprovar (D-032). percentil = ECDF do bonus vs historico da MESMA rota '
+   'APROVADO D-037 (n=1 tetado 0,85). percentil = ECDF do bonus vs historico da MESMA rota '
    || '(% nao e comparavel entre rotas); eficiencia = ECDF-inverso do CPM (menor = melhor), '
    || 'ausente -> redistribui; raridade = bucket por frequencia da rota; abrangencia = mapa publico. '
    || 'limiares.max=null representa Infinity (ultimo bucket).')

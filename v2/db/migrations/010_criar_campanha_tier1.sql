@@ -1,5 +1,5 @@
 -- =====================================================================
--- Migration 009 — criar_campanha_tier1: nascimento de campanha já TIER 1 (D-033)
+-- Migration 010 — criar_campanha_tier1: nascimento de campanha já TIER 1 (D-033)
 -- =====================================================================
 -- ADITIVA e IDEMPOTENTE. NÃO aplicada ainda (só escrita/validada) — decisão
 -- da slice do matcher URL→campanha. Numeração 009: na base 006 é lacuna
