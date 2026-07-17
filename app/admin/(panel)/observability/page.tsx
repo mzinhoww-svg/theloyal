@@ -1,4 +1,4 @@
-import { rest } from "@/lib/admin-db";
+import { rest, fetchAllRows } from "@/lib/admin-db";
 import { calendarRows, type Campaignish } from "@/lib/admin-calendar";
 import { getConfig } from "@/lib/admin-forecast";
 import { buildForecast, formatWindow, type CampaignRow } from "@/lib/forecast";
@@ -34,10 +34,12 @@ const CONF_TONE = (c: string): "green" | "blue" | "gray" =>
 
 export default async function ObservabilityPage() {
   const month = new Date().toISOString().slice(0, 7);
-  const [{ config }, campaigns, valuations, editions] = await Promise.all([
+  const [{ config }, loaded, valuations, editions] = await Promise.all([
     getConfig(),
-    rest<CampaignRow>(
-      "campaigns?select=id,origem,destino,tipo,percentual,vigencia_inicio,vigencia_fim,observed_at&limit=2000",
+    // Leitura completa e paginada — sem o limite silencioso de 2000. Fase C0.
+    fetchAllRows<CampaignRow>(
+      "campaigns",
+      "id,origem,destino,tipo,percentual,vigencia_inicio,vigencia_fim,observed_at",
     ),
     rest<Valuation>(
       "valuations?select=program,piso,teto,confidence&is_current=eq.true&order=piso.desc",
@@ -46,6 +48,9 @@ export default async function ObservabilityPage() {
       "editions?select=product,title,date,gate_validate,gate_audit,quality_score,beehiiv_url&order=date.desc&limit=50",
     ),
   ]);
+
+  const campaigns = loaded.rows;
+  const datasetComplete = loaded.complete;
 
   // Previsão pelo motor único (mesma config da área de predict). Programas +
   // rotas, mapeados para o shape compacto desta tabela.
@@ -138,12 +143,12 @@ export default async function ObservabilityPage() {
             {confident.length > 0 ? (
               confident.slice(0, 20).map((f, i) => (
                 <tr key={i}>
-                  <Td className="font-medium">{f.rota}</Td>
-                  <Td>
+                  <Td className="font-medium" label="Rota">{f.rota}</Td>
+                  <Td label="Confiança">
                     <Pill tone={CONF_TONE(f.conf)}>{f.conf}</Pill>
                   </Td>
-                  <Td>{f.prediction}</Td>
-                  <Td className="text-gray-500">{f.basis}</Td>
+                  <Td label="Previsão">{f.prediction}</Td>
+                  <Td className="text-gray-500" label="Base">{f.basis}</Td>
                 </tr>
               ))
             ) : (
@@ -153,8 +158,14 @@ export default async function ObservabilityPage() {
         </Table>
         {forming.length > 0 && (
           <p className="mt-2 text-xs text-gray-500">
-            + {forming.length} rotas ainda em formação (menos de 3 janelas
-            observadas) — sem previsão até acumular histórico.
+            + {forming.length} rotas ainda em formação (menos de {config.minSamples} janela
+            {config.minSamples === 1 ? "" : "s"} observada
+            {config.minSamples === 1 ? "" : "s"}) — sem previsão até acumular histórico.
+          </p>
+        )}
+        {!datasetComplete && (
+          <p className="mt-2 text-xs text-red-600">
+            Leitura do ledger incompleta — a previsão acima pode estar parcial. Recarregue.
           </p>
         )}
       </section>
@@ -176,14 +187,14 @@ export default async function ObservabilityPage() {
             {valuations.length > 0 ? (
               valuations.map((v, i) => (
                 <tr key={i}>
-                  <Td className="font-medium">{v.program}</Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td className="font-medium" label="Programa">{v.program}</Td>
+                  <Td className="text-right font-mono tabular-nums" label="Piso">
                     {v.piso ?? "—"}
                   </Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td className="text-right font-mono tabular-nums" label="Teto">
                     {v.teto ?? "—"}
                   </Td>
-                  <Td className="text-gray-500">{v.confidence ?? "—"}</Td>
+                  <Td className="text-gray-500" label="Confiança">{v.confidence ?? "—"}</Td>
                 </tr>
               ))
             ) : (
@@ -210,20 +221,20 @@ export default async function ObservabilityPage() {
             {editions.length > 0 ? (
               editions.map((e, i) => (
                 <tr key={i}>
-                  <Td>
+                  <Td label="Produto">
                     <Pill tone={toneForStatus(e.product)}>{e.product}</Pill>
                   </Td>
-                  <Td>{e.title ?? "—"}</Td>
-                  <Td className="font-mono tabular-nums text-gray-500">
+                  <Td label="Título">{e.title ?? "—"}</Td>
+                  <Td className="font-mono tabular-nums text-gray-500" label="Data">
                     {e.date ?? "—"}
                   </Td>
-                  <Td>
+                  <Td label="Gates">
                     <GateChips validate={e.gate_validate} audit={e.gate_audit} />
                   </Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td className="text-right font-mono tabular-nums" label="Qual.">
                     {e.quality_score ?? "—"}
                   </Td>
-                  <Td>
+                  <Td className="tl-cell-action">
                     {e.beehiiv_url ? (
                       <a
                         href={e.beehiiv_url}

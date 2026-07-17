@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
   "entities": [
-    { "key": "livelo", "name": "Livelo", "type": "programa-origem", "aliases": ["Livelo"] },
-    { "key": "esfera", "name": "Esfera", "type": "programa-origem", "aliases": ["Esfera"] },
-    { "key": "smiles", "name": "Smiles", "type": "programa-cia", "aliases": ["Smiles"] },
-    { "key": "latam-pass", "name": "LATAM Pass", "type": "programa-cia", "aliases": ["Latam Pass", "LATAM Pass", "latampass", "Latam Pass"] },
-    { "key": "azul-fidelidade", "name": "Azul Fidelidade", "type": "programa-cia", "aliases": ["Azul", "Azul Fidelidade"] }
+    { "key": "livelo", "name": "Livelo", "type": "programa-origem", "aliases": ["Livelo"], "sourceTier": "T1", "domains": ["livelo.com.br"] },
+    { "key": "esfera", "name": "Esfera", "type": "programa-origem", "aliases": ["Esfera"], "sourceTier": "T1", "domains": ["esfera.com.vc", "esfera.com.br"] },
+    { "key": "smiles", "name": "Smiles", "type": "programa-cia", "aliases": ["Smiles"], "sourceTier": "T1", "domains": ["smiles.com.br"] },
+    { "key": "latam-pass", "name": "LATAM Pass", "type": "programa-cia", "aliases": ["Latam Pass", "LATAM Pass", "latampass", "Latam Pass"], "sourceTier": "T1", "domains": ["latampass.latam.com", "latam.com"] },
+    { "key": "azul-fidelidade", "name": "Azul Fidelidade", "type": "programa-cia", "aliases": ["Azul", "Azul Fidelidade"], "sourceTier": "T1", "domains": ["voeazul.com.br", "azul.com.br"] }
   ]
 }

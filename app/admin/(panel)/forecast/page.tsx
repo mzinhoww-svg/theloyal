@@ -1,4 +1,4 @@
-import { loadPredict, type PredictView } from "@/lib/admin-forecast";
+import { loadForecast, type ForecastView } from "@/lib/admin-forecast";
 import { formatWindow, type Confidence } from "@/lib/forecast";
 import {
   PageHeader,
@@ -8,18 +8,32 @@ import {
   Th,
   Td,
   EmptyRow,
+  EmptyState,
   Sparkline,
   fmtDate,
   type Tone,
 } from "@/components/admin/ui";
+import {
+  Disclosure,
+  NextWindowCard,
+  FilterChips,
+  SearchForm,
+  ClearFilters,
+  Pagination,
+  type FilterParams,
+} from "@/components/admin/dashboard";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { ActionForm } from "@/components/admin/toast";
 import { DistributionBar, WindowTimeline, Field } from "@/components/admin/forecast-charts";
+import { QualityPanel } from "@/components/admin/QualityPanel";
+import { DateReviewQueue } from "@/components/admin/DateReviewQueue";
 import {
   saveConfigAction,
   setOverrideAction,
   removeOverrideAction,
   recalcSnapshotAction,
+  applyDateCorrectionAction,
+  rejectDateCorrectionAction,
 } from "./actions";
 
 const CONF_TONE: Record<Confidence, Tone> = {
@@ -36,13 +50,21 @@ const CONF_LABEL: Record<Confidence, string> = {
 };
 
 const INPUT = "rounded border border-line bg-surface px-2 py-1 text-sm text-ink";
+// Grades da página (um só lugar para ajustar cada minmax): cards compactos vs
+// campos de formulário com hint longo (precisam de coluna mais larga).
+const GRID_CARDS = "[grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]";
+const GRID_FIELDS = "[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]";
 
-function ConfCell({ v }: { v: PredictView }) {
+// Dias entre duas datas ISO (UTC, sem fuso).
+const daysBetweenISO = (a: string, b: string) =>
+  Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86_400_000);
+
+function ConfCell({ v }: { v: ForecastView }) {
   return (
     <span className="inline-flex items-center gap-1.5">
       <Pill tone={CONF_TONE[v.confidence]}>{CONF_LABEL[v.confidence]}</Pill>
       {v.overriddenConfidence && (
-        <span className="text-[11px] text-gray-400" title="confiança sobrescrita pelo operador">
+        <span className="text-xs text-gray-400" title="confiança sobrescrita pelo operador">
           override
         </span>
       )}
@@ -50,7 +72,30 @@ function ConfCell({ v }: { v: PredictView }) {
   );
 }
 
-function QuickOverride({ v, action, label }: { v: PredictView; action: "pin" | "mute"; label: string }) {
+function EligibilityCell({ v }: { v: ForecastView }) {
+  if (v.editorialEligible) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <Pill tone="green">elegível</Pill>
+        {v.editorialOverridden && (
+          <span className="text-xs text-gray-400" title="liberada por override com nota">
+            override
+          </span>
+        )}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex flex-col gap-0.5">
+      <Pill tone="gray">bloqueada</Pill>
+      {v.editorialBlockReason && (
+        <span className="text-xs text-gray-500">{v.editorialBlockReason}</span>
+      )}
+    </span>
+  );
+}
+
+function QuickOverride({ v, action, label }: { v: ForecastView; action: "pin" | "mute"; label: string }) {
   return (
     <ActionForm action={setOverrideAction}>
       <input type="hidden" name="scope" value={v.scope} />
@@ -63,70 +108,147 @@ function QuickOverride({ v, action, label }: { v: PredictView; action: "pin" | "
   );
 }
 
-function PredictTable({ title, sub, rows }: { title: string; sub: string; rows: PredictView[] }) {
+function ForecastTable({ columnLabel, rows }: { columnLabel: string; rows: ForecastView[] }) {
   return (
-    <section className="mb-8">
-      <h2 className="mb-1 font-display text-lg font-semibold">{title}</h2>
-      <p className="mb-3 text-sm text-gray-500">{sub}</p>
-      <Table>
-        <thead>
-          <tr>
-            <Th>{title.includes("programa") ? "Programa" : "Rota"}</Th>
-            <Th>Confiança</Th>
-            <Th>Janela prevista</Th>
-            <Th className="text-right">Cadência</Th>
-            <Th>Base</Th>
-            <Th>Ações</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length ? (
-            rows.map((v) => (
-              <tr key={v.key} className={v.muted ? "opacity-50" : undefined}>
-                <Td className="font-medium">
-                  <span className="inline-flex items-center gap-1.5">
-                    {v.pinned && <Pill tone="blue">fixado</Pill>}
-                    {v.muted && <Pill tone="gray">silenciado</Pill>}
-                    {v.route}
-                    {v.typicalPercent ? (
-                      <span className="font-mono text-xs text-gray-400">{v.typicalPercent}%</span>
-                    ) : null}
-                  </span>
-                </Td>
-                <Td>
-                  <ConfCell v={v} />
-                </Td>
-                <Td className="font-mono tabular-nums">
-                  {v.windowStart ? formatWindow(v.windowStart, v.windowEnd) : "—"}
-                </Td>
-                <Td className="w-24 text-right">
-                  {v.intervals.length >= 2 ? (
-                    <Sparkline data={v.intervals} tone={CONF_TONE[v.confidence]} height={22} />
+    <Table>
+      <thead>
+        <tr>
+          <Th>{columnLabel}</Th>
+          <Th>Confiança</Th>
+          <Th>Editorial</Th>
+          <Th className="text-right">Ondas</Th>
+          <Th>Última</Th>
+          <Th className="text-right">Maior interv.</Th>
+          <Th>Janela prevista</Th>
+          <Th className="text-right">Cadência</Th>
+          <Th>Base / alertas</Th>
+          <Th>Ações</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.length ? (
+          rows.map((v) => (
+            <tr key={v.key} className={v.muted ? "opacity-50" : undefined}>
+              <Td label={columnLabel} className="font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  {v.pinned && <Pill tone="blue">fixado</Pill>}
+                  {v.muted && <Pill tone="gray">silenciado</Pill>}
+                  {v.route}
+                  {v.typicalPercent ? (
+                    <span className="font-mono text-xs text-gray-400" title="bônus típico observado (mediana)">
+                      bônus ~{v.typicalPercent}%
+                    </span>
+                  ) : null}
+                </span>
+              </Td>
+              <Td label="Confiança">
+                <ConfCell v={v} />
+              </Td>
+              <Td label="Editorial">
+                <EligibilityCell v={v} />
+              </Td>
+              <Td label="Ondas" className="text-right font-mono tabular-nums">
+                {v.samples}
+                {v.intervals.length ? (
+                  <span className="text-gray-400"> · {v.intervals.length}i</span>
+                ) : null}
+              </Td>
+              <Td label="Última" className="font-mono text-xs tabular-nums text-gray-500">{v.lastWindow ?? "—"}</Td>
+              <Td label="Maior interv." className="text-right font-mono tabular-nums">
+                {v.maxIntervalDays != null ? (
+                  // Nunca cor sozinha (a11y) — e amarelo NUNCA como texto
+                  // (regra 7 da marca): faixa de atenção usa fill yellow-100
+                  // com texto Ink + rótulo para leitores de tela.
+                  v.maxIntervalDays >= 540 ? (
+                    <span className="text-red-600">
+                      {v.maxIntervalDays}d<span className="sr-only"> (intervalo crítico)</span>
+                    </span>
+                  ) : v.maxIntervalDays >= 365 ? (
+                    <span className="rounded bg-yellow-100 px-1 text-ink">
+                      {v.maxIntervalDays}d<span className="sr-only"> (atenção)</span>
+                    </span>
                   ) : (
-                    <span className="text-xs text-gray-400">—</span>
-                  )}
-                </Td>
-                <Td className="text-xs text-gray-500">{v.basis}</Td>
-                <Td>
-                  <div className="flex items-center gap-1">
-                    <QuickOverride v={v} action="pin" label={v.pinned ? "—" : "fixar"} />
-                    <QuickOverride v={v} action="mute" label={v.muted ? "—" : "silenciar"} />
-                  </div>
-                </Td>
-              </tr>
-            ))
-          ) : (
-            <EmptyRow cols={6} label="sem séries" />
-          )}
-        </tbody>
-      </Table>
-    </section>
+                    <span>{v.maxIntervalDays}d</span>
+                  )
+                ) : (
+                  "—"
+                )}
+              </Td>
+              <Td label="Janela prevista" className="font-mono tabular-nums">
+                {v.windowStart ? formatWindow(v.windowStart, v.windowEnd) : "—"}
+              </Td>
+              <Td label="Cadência" className="w-24 text-right">
+                {v.intervals.length >= 2 ? (
+                  <Sparkline data={v.intervals} tone={CONF_TONE[v.confidence]} height={22} />
+                ) : (
+                  <span className="text-xs text-gray-400">—</span>
+                )}
+              </Td>
+              <Td label="Base / alertas" className="text-xs text-gray-500">
+                {v.basis}
+                {v.warnings.length > 0 && (
+                  <span className="mt-0.5 block text-red-600">{v.warnings.join(" · ")}</span>
+                )}
+              </Td>
+              <Td className="tl-cell-action">
+                <div className="flex items-center gap-1">
+                  <QuickOverride v={v} action="pin" label={v.pinned ? "—" : "fixar"} />
+                  <QuickOverride v={v} action="mute" label={v.muted ? "—" : "silenciar"} />
+                </div>
+              </Td>
+            </tr>
+          ))
+        ) : (
+          <EmptyRow cols={10} label="sem séries" />
+        )}
+      </tbody>
+    </Table>
   );
 }
 
-export default async function PredictPage() {
-  const data = await loadPredict();
+const PATH = "/admin/forecast";
+const PAGE_SIZE = 30;
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+
+export default async function ForecastPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  // Filtros por URL (compartilháveis): conf, q, pagina — valem para as tabelas.
+  const params: FilterParams = {};
+  for (const k of ["conf", "q", "pagina"]) {
+    const v = first(searchParams?.[k]).trim();
+    if (v) params[k] = v;
+  }
+  const hasFilters = !!(params.conf || params.q);
+  const matches = (v: ForecastView) => {
+    if (params.conf && v.confidence !== params.conf) return false;
+    if (params.q && !v.route.toLowerCase().includes(params.q.toLowerCase())) return false;
+    return true;
+  };
+
+  const data = await loadForecast();
   const { config, configRow, overrides, result } = data;
+  const clustersF = data.clusters.filter(matches);
+  const routesF = data.routes.filter(matches);
+  const pageCount = Math.max(1, Math.ceil(routesF.length / PAGE_SIZE));
+  const page = Math.min(Math.max(1, Number(params.pagina) || 1), pageCount);
+  const routesPage = routesF.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const eligibleCount = [...data.routes, ...data.clusters].filter((v) => v.editorialEligible).length;
+
+  // Próximas janelas: rotas e programas não silenciados cuja janela toca o
+  // horizonte semanal, ordenados por abertura (fixados primeiro).
+  const upcoming = [...data.clusters, ...data.routes]
+    .filter((v) => !v.muted && v.windowStart && v.windowEnd)
+    .map((v) => ({
+      v,
+      open: daysBetweenISO(data.generatedFor, v.windowStart as string),
+      close: daysBetweenISO(data.generatedFor, v.windowEnd as string),
+    }))
+    .filter((w) => w.open <= config.horizonWeekly && w.close >= 0)
+    .sort((a, b) => (a.v.pinned !== b.v.pinned ? (a.v.pinned ? -1 : 1) : a.open - b.open))
+    .slice(0, 6);
 
   // Timeline: janelas dos programas dentro do horizonte semanal, não silenciadas.
   const timeline = data.clusters
@@ -171,11 +293,65 @@ export default async function PredictPage() {
         }
       />
 
-      <section className="mb-6 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
+      {!data.datasetComplete && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-red-600 bg-red-100 p-3 text-sm text-red-700"
+        >
+          Leitura do ledger incompleta — {data.radarBlockedReason ?? "carga parcial"}. Os radares do
+          daily/weekly estão bloqueados (nenhum número editorial é gerado) até a carga completar.
+          Nenhum override ignora este bloqueio.
+        </div>
+      )}
+      {data.loadWarnings.length > 0 && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-yellow-500 bg-yellow-100 p-3 text-sm text-ink"
+        >
+          Falha ao ler: {data.loadWarnings.join(" · ")}. Os blocos afetados podem aparecer vazios
+          sem estar.{" "}
+          <a href={PATH} className="font-semibold underline">
+            Recarregar página
+          </a>
+        </div>
+      )}
+
+      <section className={`mb-6 grid gap-3 ${GRID_CARDS}`}>
         <StatCard label="Séries rastreadas" value={result.routesTracked + result.clustersTracked} sub={`${result.routesTracked} rotas · ${result.clustersTracked} programas`} tone="blue" />
-        <StatCard label="Com previsão" value={result.withPrediction} sub="base suficiente" tone="green" />
-        <StatCard label="Ledger" value={data.ledgerRows} sub="linhas consideradas" />
-        <StatCard label="Gerado para" value={<span className="text-lg">{data.generatedFor}</span>} sub="data de referência" />
+        <StatCard label="Com previsão" value={result.withPrediction} sub="base interna suficiente" tone="green" />
+        <StatCard label="Elegíveis p/ digest" value={eligibleCount} sub={`gate editorial ≥${config.minEditorialWaves} ondas`} tone={eligibleCount > 0 ? "green" : "gray"} />
+        <StatCard label="Ledger" value={data.ledgerRows} sub={data.datasetComplete ? "linhas (carga completa)" : "linhas (carga PARCIAL)"} tone={data.datasetComplete ? undefined : "red"} />
+        <StatCard label="Gerado para" value={<span className="text-lg">{data.generatedFor}</span>} sub="data de referência (recalculado ao vivo)" />
+      </section>
+
+      <section className="mb-8">
+        <h2 className="mb-1 font-display text-lg font-semibold">Próximas janelas</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          O que abre (ou já está aberto) dentro do horizonte semanal ({config.horizonWeekly}d),
+          ordenado pela abertura. Fixados vêm primeiro; silenciados ficam de fora.
+        </p>
+        {upcoming.length ? (
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
+            {upcoming.map(({ v, open, close }) => (
+              <NextWindowCard
+                key={v.key}
+                label={v.route}
+                confidenceLabel={CONF_LABEL[v.confidence]}
+                tone={CONF_TONE[v.confidence]}
+                daysToOpen={open}
+                daysToClose={close}
+                window={formatWindow(v.windowStart, v.windowEnd)}
+                typicalPercent={v.typicalPercent}
+                basis={v.basis}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            label="nenhuma janela prevista dentro do horizonte"
+            hint="Janelas aparecem aqui quando uma série com previsão entra no horizonte semanal configurado."
+          />
+        )}
       </section>
 
       <section className="mb-8 grid gap-3 md:grid-cols-2">
@@ -191,16 +367,86 @@ export default async function PredictPage() {
         <WindowTimeline from={data.generatedFor} horizon={config.horizonWeekly} items={timeline} />
       </section>
 
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Parâmetros do motor</h2>
+      <section className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <FilterChips
+          path={PATH}
+          params={params}
+          param="conf"
+          label="Confiança"
+          options={[
+            { label: "alta", value: "alta" },
+            { label: "média", value: "media" },
+            { label: "baixa", value: "baixa" },
+            { label: "em formação", value: "em-formacao" },
+          ]}
+        />
+        <SearchForm path={PATH} params={params} placeholder="buscar rota (ex.: →smiles)" />
+        <ClearFilters path={PATH} active={hasFilters} />
+      </section>
+
+      <Disclosure
+        title="Previsão por programa"
+        count={clustersF.length}
+        sub={
+          hasFilters
+            ? `filtrado de ${data.clusters.length} programas`
+            : "cluster do destino — consolida campanhas program-wide de várias origens"
+        }
+        open
+      >
+        <ForecastTable columnLabel="Programa" rows={clustersF} />
+      </Disclosure>
+
+      <Disclosure
+        title="Previsão por rota"
+        count={routesF.length}
+        sub={
+          hasFilters
+            ? `filtrado de ${data.routes.length} rotas`
+            : "origem → destino · cadência = série de intervalos entre janelas"
+        }
+        open={hasFilters}
+      >
+        <ForecastTable columnLabel="Rota" rows={routesPage} />
+        <Pagination path={PATH} params={params} page={page} pageCount={pageCount} />
+      </Disclosure>
+
+      <Disclosure
+        title="Revisão de datas"
+        count={data.dateProposals.length}
+        sub="correções propostas para anos fabricados pela extração — decisão sempre do operador"
+        open={data.dateProposals.length > 0}
+      >
+        <p className="mb-3 text-sm text-gray-500">
+          Campanhas bloqueadas por <span className="font-mono text-xs">suspect_year</span> cujo gap
+          evento→proveniência casa com o padrão de ano fabricado. Aplicar corrige{" "}
+          <span className="font-mono text-xs">vigencia_inicio</span> (o id fica intacto) e libera a
+          campanha para as séries no próximo recálculo; rejeitar mantém o bloqueio. Tudo auditado.
+        </p>
+        <DateReviewQueue
+          proposals={data.dateProposals}
+          applyAction={applyDateCorrectionAction}
+          rejectAction={rejectDateCorrectionAction}
+        />
+      </Disclosure>
+
+      <Disclosure
+        title="Qualidade do ledger (C0.2)"
+        count={result.quality.excluded.length}
+        sub="campanhas excluídas antes da formação das séries"
+      >
+        <QualityPanel quality={result.quality} embedded />
+      </Disclosure>
+
+      <Disclosure title="Parâmetros do motor" sub="recorrência → confiança e janela (admin, daily e weekly)">
         <p className="mb-3 text-sm text-gray-500">
           Ajusta como a recorrência vira confiança e janela. Vale para o admin, o daily e o weekly.
           {configRow?.updated_at && (
             <span className="text-gray-400"> · última alteração {fmtDate(configRow.updated_at)} por {configRow.updated_by ?? "—"}</span>
           )}
         </p>
-        <ActionForm action={saveConfigAction} className="rounded-lg border border-line bg-surface p-4">
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
+        <ActionForm action={saveConfigAction} className="rounded-lg border border-line bg-paper p-4">
+          <div className={`grid gap-4 ${GRID_FIELDS}`}>
             {cfgField("wave_epsilon_days", "Janela de onda (dias)", "Janelas ≤ N dias contam como a mesma campanha.", config.waveEpsilonDays)}
             {cfgField("min_samples", "Mínimo de janelas", "Abaixo disso, fica em formação (sem previsão).", config.minSamples)}
             {cfgField("samples_media", "Amostras p/ média", "Mín. de janelas para confiança média.", config.samplesMedia)}
@@ -216,14 +462,14 @@ export default async function PredictPage() {
             </SubmitButton>
           </div>
         </ActionForm>
-      </section>
+      </Disclosure>
 
-      <section className="mb-8">
-        <h2 className="mb-1 font-display text-lg font-semibold">Overrides</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Fixar (destaca), silenciar (retira dos digests) ou sobrescrever a confiança de uma série.
-        </p>
-        <ActionForm action={setOverrideAction} className="mb-4 rounded-lg border border-line bg-surface p-4">
+      <Disclosure
+        title="Overrides"
+        count={overrides.length}
+        sub="fixar, silenciar ou sobrescrever a confiança de uma série"
+      >
+        <ActionForm action={setOverrideAction} className="mb-4 rounded-lg border border-line bg-paper p-4">
           <div className="flex flex-wrap items-end gap-3">
             <Field label="Escopo">
               <select name="scope" className={INPUT} defaultValue="cluster">
@@ -277,9 +523,9 @@ export default async function PredictPage() {
             {overrides.length ? (
               overrides.map((o) => (
                 <tr key={o.id}>
-                  <Td className="text-gray-500">{o.scope === "cluster" ? "programa" : "rota"}</Td>
-                  <Td className="font-medium">{o.route}</Td>
-                  <Td>
+                  <Td label="Escopo" className="text-gray-500">{o.scope === "cluster" ? "programa" : "rota"}</Td>
+                  <Td label="Rota / programa" className="font-medium">{o.route}</Td>
+                  <Td label="Ação">
                     {o.action === "confidence" ? (
                       <span>confiança → <Pill tone={CONF_TONE[(o.confidence ?? "baixa") as Confidence]}>{o.confidence}</Pill></span>
                     ) : o.action === "pin" ? (
@@ -288,12 +534,12 @@ export default async function PredictPage() {
                       <Pill tone="gray">silenciado</Pill>
                     )}
                   </Td>
-                  <Td className="text-gray-500">{o.note ?? "—"}</Td>
-                  <Td className="font-mono text-xs text-gray-500">{fmtDate(o.created_at)}</Td>
-                  <Td>
+                  <Td label="Nota" className="text-gray-500">{o.note ?? "—"}</Td>
+                  <Td label="Quando" className="font-mono text-xs text-gray-500">{fmtDate(o.created_at)}</Td>
+                  <Td className="tl-cell-action">
                     <ActionForm action={removeOverrideAction}>
                       <input type="hidden" name="id" value={o.id} />
-                      <SubmitButton variant="danger" pendingLabel="…">
+                      <SubmitButton variant="danger" pendingLabel="…" confirm="confirmar remoção?">
                         remover
                       </SubmitButton>
                     </ActionForm>
@@ -305,19 +551,23 @@ export default async function PredictPage() {
             )}
           </tbody>
         </Table>
-      </section>
+      </Disclosure>
 
-      <section className="mb-8">
-        <div className="mb-1 flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">Histórico de snapshots</h2>
-          {snapTrend.length >= 2 && (
-            <div className="w-40">
-              <Sparkline data={snapTrend} tone="blue" height={26} />
+      <Disclosure
+        title="Histórico de snapshots"
+        count={data.snapshots.length}
+        sub="cada “Recalcular + snapshot” grava um ponto"
+      >
+        {snapTrend.length >= 2 && (
+          <div className="mb-3 max-w-xs">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+              Séries com previsão por snapshot
             </div>
-          )}
-        </div>
+            <Sparkline data={snapTrend} tone="blue" height={26} />
+          </div>
+        )}
         <p className="mb-3 text-sm text-gray-500">
-          Cada &ldquo;Recalcular + snapshot&rdquo; grava um ponto. Acompanhe como a base de previsão evolui com o backfill.
+          Acompanhe como a base de previsão evolui com o backfill.
         </p>
         <Table>
           <thead>
@@ -334,12 +584,12 @@ export default async function PredictPage() {
             {data.snapshots.length ? (
               data.snapshots.map((s) => (
                 <tr key={s.id}>
-                  <Td className="font-mono tabular-nums">{s.generated_for}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.routes_tracked ?? "—"}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.clusters_tracked ?? "—"}</Td>
-                  <Td className="text-right font-mono tabular-nums">{s.with_prediction ?? "—"}</Td>
-                  <Td className="font-mono text-xs text-gray-500">{fmtDate(s.created_at)}</Td>
-                  <Td className="text-gray-500">{s.created_by ?? "—"}</Td>
+                  <Td label="Gerado para" className="font-mono tabular-nums">{s.generated_for}</Td>
+                  <Td label="Rotas" className="text-right font-mono tabular-nums">{s.routes_tracked ?? "—"}</Td>
+                  <Td label="Programas" className="text-right font-mono tabular-nums">{s.clusters_tracked ?? "—"}</Td>
+                  <Td label="Com previsão" className="text-right font-mono tabular-nums">{s.with_prediction ?? "—"}</Td>
+                  <Td label="Quando" className="font-mono text-xs text-gray-500">{fmtDate(s.created_at)}</Td>
+                  <Td label="Por" className="text-gray-500">{s.created_by ?? "—"}</Td>
                 </tr>
               ))
             ) : (
@@ -347,18 +597,7 @@ export default async function PredictPage() {
             )}
           </tbody>
         </Table>
-      </section>
-
-      <PredictTable
-        title="Previsão por programa"
-        sub="Cluster do destino — consolida campanhas program-wide de várias origens."
-        rows={data.clusters}
-      />
-      <PredictTable
-        title="Previsão por rota"
-        sub="Origem → destino. Cadência = série de intervalos entre janelas."
-        rows={data.routes}
-      />
+      </Disclosure>
 
       <p className="mt-8 border-t border-line pt-4 text-xs text-gray-400">
         Projeção por recorrência do histórico do ledger. Sem base suficiente → em formação; nunca chuta uma data.

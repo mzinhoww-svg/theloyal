@@ -3,15 +3,14 @@
 // (Salvar como PDF a partir da web, com @media print).
 // Uso: node scripts/pro.mjs [caminho.json]
 import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import { DISCLAIMER, EMOJI_RE, TOKENS, URGENCY_RE, VERDICTS, collectStrings, loadEdition } from "./lib.mjs";
+import { DISCLAIMER, TOKENS, VERDICTS, assertEditorialRules, editorialRuleMessage, collectStrings, loadEdition } from "./lib.mjs";
+import { schemaErrors } from "./lib/schema.mjs";
 
 const SERIF = "Georgia, 'Times New Roman', serif";
 const SANS = "Arial, Helvetica, sans-serif";
 const MONO = "Consolas, 'Courier New', monospace";
 const ALERT_BORDER = { insight: TOKENS.blue600, warning: TOKENS.yellow500, danger: TOKENS.red600 };
 const REQUIRED = ["periodId", "period", "title", "summary", "tlScorePeriod", "benchmarks", "players", "matrix", "implications", "alerts", "watch", "sources", "disclaimer"];
-// Termos que denunciam dado interno / linguagem corporativa (heurística).
-const INTERNAL_RE = /\b(CMI|dado interno|base interna|nossos clientes|nossa base|receita interna)\b/iu;
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -19,6 +18,10 @@ function esc(s) {
 
 export function validatePro(r) {
   const errors = [], warnings = [], ok = [];
+  // Contrato de schema em runtime (P2.13b) — antes dos checks semânticos.
+  const schemaErrs = schemaErrors("pro", r);
+  for (const m of schemaErrs) errors.push(m);
+  if (!schemaErrs.length) ok.push("Contrato de schema (pro-report.schema.json) satisfeito");
   const missing = REQUIRED.filter((k) => r[k] === undefined || r[k] === null || r[k] === "");
   if (missing.length) errors.push(`Campos obrigatórios ausentes: ${missing.join(", ")}`);
   else ok.push("Estrutura executiva completa (10 seções)");
@@ -26,14 +29,13 @@ export function validatePro(r) {
   if (r.disclaimer === DISCLAIMER) ok.push("Disclaimer oficial íntegro");
   else errors.push("Disclaimer ausente ou alterado");
 
-  const strings = collectStrings(r);
-  if (strings.some((s) => EMOJI_RE.test(s))) errors.push("Emoji no corpo do relatório");
-  else ok.push("Zero emoji");
-  if (strings.some((s) => URGENCY_RE.test(s))) errors.push("Urgência artificial no relatório");
-  else ok.push("Sem urgência artificial");
-  const internal = strings.filter((s) => INTERNAL_RE.test(s));
-  if (internal.length) errors.push(`Possível dado interno/CMI/linguagem corporativa: ${JSON.stringify(internal[0].slice(0, 60))}`);
-  else ok.push("Sem dado interno, CMI ou linguagem corporativa de empresa específica");
+  // Regras invioláveis de texto — fonte única (assertEditorialRules). Antes o Pro
+  // carregava um INTERNAL_RE próprio e mais fraco; agora usa o mesmo rigor do Daily.
+  const proViolations = assertEditorialRules(r);
+  for (const v of proViolations) errors.push(editorialRuleMessage(v));
+  if (!proViolations.some((v) => v.rule === "emoji")) ok.push("Zero emoji");
+  if (!proViolations.some((v) => v.rule === "urgencia")) ok.push("Sem urgência artificial");
+  if (!proViolations.some((v) => v.rule === "interno")) ok.push("Sem dado interno, CMI ou linguagem corporativa de empresa específica");
 
   const t = r.tlScorePeriod ?? {};
   if (typeof t.average !== "number" || t.average < 0 || t.average > 100) errors.push("TL Score médio fora de 0–100");
@@ -57,6 +59,7 @@ export function validatePro(r) {
   if ((r.sources ?? []).length && r.sources.every((s) => /^https?:\/\//.test(s.url ?? ""))) ok.push("Fontes com URL");
 
   // Tom executivo: sinalizar explicação básica e parágrafos longos.
+  const strings = collectStrings(r);
   strings.forEach((s) => {
     if (/\b(o que é|como funciona|para iniciantes|passo a passo)\b/iu.test(s)) warnings.push(`Tom pouco executivo (explicação básica): ${JSON.stringify(s.slice(0, 50))}`);
   });

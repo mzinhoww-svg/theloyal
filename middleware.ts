@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ADMIN_COOKIE, tokenHash, safeEqual } from "@/lib/admin-auth";
+import { ADMIN_COOKIE, verifySession } from "@/lib/admin-auth";
 
 // Protege /admin/* por cookie de sessão (hash do ADMIN_TOKEN). A página de
 // login é pública; sem token válido, tudo redireciona pra ela. Roda no Edge.
@@ -20,8 +20,9 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   const cookie = req.cookies.get(ADMIN_COOKIE)?.value;
 
   if (token && cookie) {
-    const expected = await tokenHash(token);
-    if (safeEqual(cookie, expected)) return NextResponse.next();
+    // Sessão assinada com expiração (BKL-08) — o hash estático legado deixa
+    // de valer; sessões antigas exigem novo login uma única vez.
+    if (await verifySession(token, cookie)) return NextResponse.next();
   }
 
   const url = req.nextUrl.clone();

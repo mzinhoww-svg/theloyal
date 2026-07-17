@@ -1,8 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { patch, insert, del } from "@/lib/admin-db";
-import { loadPredict } from "@/lib/admin-forecast";
+import { patch, insert } from "@/lib/admin-db";
+import { loadForecast } from "@/lib/admin-forecast";
+import { readOverridePayload, saveOverride, removeOverrideById } from "@/lib/admin-overrides";
+import { applyDateCorrection, rejectDateCorrection } from "@/lib/admin-date-reviews";
+import type { DateCorrectionProposal } from "@/lib/date-review";
 import type { ActionState } from "@/components/admin/toast";
 
 const who = () => process.env.ADMIN_USER?.trim() || "admin";
@@ -47,52 +50,78 @@ export async function saveConfigAction(
 }
 
 // Cria/atualiza um override por rota ou programa (pin | mute | confidence).
+// A tabela é compartilhada com o Predict — revalida as duas áreas.
 export async function setOverrideAction(
   _prev: ActionState,
   fd: FormData,
 ): Promise<ActionState> {
-  const scope = String(fd.get("scope") || "");
-  const route = String(fd.get("route") || "").trim();
-  const action = String(fd.get("action") || "");
-  const confidence = String(fd.get("confidence") || "").trim();
-  const note = String(fd.get("note") || "").trim();
-
-  if (!["route", "cluster"].includes(scope)) return { ok: false, message: "escopo inválido" };
-  if (!route) return { ok: false, message: "rota ausente" };
-  if (!["pin", "mute", "confidence"].includes(action)) return { ok: false, message: "ação inválida" };
-  if (action === "confidence" && !["alta", "media", "baixa"].includes(confidence))
-    return { ok: false, message: "confiança inválida para override de confiança" };
-
-  const rowData = {
-    scope,
-    route,
-    action,
-    confidence: action === "confidence" ? confidence : null,
-    note: note || null,
-    created_at: new Date().toISOString(),
-    created_by: who(),
-  };
-  try {
-    await insert("forecast_overrides", rowData, { onConflict: "scope,route" });
+  const res = await saveOverride(readOverridePayload(fd), who());
+  if (res.ok) {
     revalidatePath("/admin/forecast");
-    return { ok: true, message: `override ${action} salvo para ${route}` };
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "falha ao salvar override" };
+    revalidatePath("/admin/predict");
   }
+  return res;
 }
 
 export async function removeOverrideAction(
   _prev: ActionState,
   fd: FormData,
 ): Promise<ActionState> {
-  const id = String(fd.get("id") || "");
-  if (!id) return { ok: false, message: "id ausente" };
-  try {
-    await del("forecast_overrides", `id=eq.${encodeURIComponent(id)}`);
+  const res = await removeOverrideById(String(fd.get("id") || ""));
+  if (res.ok) {
     revalidatePath("/admin/forecast");
-    return { ok: true, message: "override removido" };
+    revalidatePath("/admin/predict");
+  }
+  return res;
+}
+
+// ---- Trilha D — revisão assistida de datas ----
+// A proposta viaja serializada no form (gerada no server, decidida pelo
+// operador). Aplicar corrige vigencia_inicio e audita; rejeitar só audita.
+
+function parseProposal(fd: FormData): DateCorrectionProposal | null {
+  try {
+    const p = JSON.parse(String(fd.get("proposal") || "")) as DateCorrectionProposal;
+    if (!p?.campaignId || !/^\d{4}-\d{2}-\d{2}$/.test(p.proposedDate ?? "")) return null;
+    return p;
+  } catch {
+    return null;
+  }
+}
+
+function revalidateLedgerSurfaces(): void {
+  revalidatePath("/admin/forecast");
+  revalidatePath("/admin/predict");
+  revalidatePath("/admin/radar");
+}
+
+export async function applyDateCorrectionAction(
+  _prev: ActionState,
+  fd: FormData,
+): Promise<ActionState> {
+  const p = parseProposal(fd);
+  if (!p) return { ok: false, message: "proposta inválida" };
+  try {
+    await applyDateCorrection(p, who());
+    revalidateLedgerSurfaces();
+    return { ok: true, message: `data corrigida: ${p.route} → ${p.proposedDate}` };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "falha ao remover" };
+    return { ok: false, message: e instanceof Error ? e.message : "falha ao aplicar correção" };
+  }
+}
+
+export async function rejectDateCorrectionAction(
+  _prev: ActionState,
+  fd: FormData,
+): Promise<ActionState> {
+  const p = parseProposal(fd);
+  if (!p) return { ok: false, message: "proposta inválida" };
+  try {
+    await rejectDateCorrection(p, who());
+    revalidateLedgerSurfaces();
+    return { ok: true, message: `proposta rejeitada para ${p.route}` };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "falha ao rejeitar" };
   }
 }
 
@@ -102,7 +131,7 @@ export async function recalcSnapshotAction(
   _fd: FormData,
 ): Promise<ActionState> {
   try {
-    const data = await loadPredict();
+    const data = await loadForecast();
     await insert("forecast_snapshots", {
       generated_for: data.generatedFor,
       routes_tracked: data.result.routesTracked,

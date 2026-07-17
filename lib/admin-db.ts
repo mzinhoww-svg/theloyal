@@ -4,8 +4,9 @@
 // RLS e habilita as RPCs admin_*; por isso este modulo e server-only e nunca
 // pode ser importado por um Client Component.
 
-const SUPABASE_URL =
-  process.env.SUPABASE_URL?.trim() || "https://qjqnqcsdnpvvmyzkavoq.supabase.co";
+// BKL-03: URL SÓ de env — sem fallback hardcoded apontando para produção.
+// Ambiente sem env → modo mock explícito (nunca produção silenciosa).
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim() || "";
 // Aceita os dois nomes que convivem no deploy: SUPABASE_SERVICE_ROLE_KEY (novo)
 // e SUPABASE_SERVICE_KEY (usado pelo Radar/lib/admin.ts). Mesma chave.
 const SERVICE_KEY =
@@ -13,7 +14,7 @@ const SERVICE_KEY =
   process.env.SUPABASE_SERVICE_KEY?.trim();
 
 export function adminConfigured(): boolean {
-  return !!SERVICE_KEY;
+  return !!SERVICE_KEY && !!SUPABASE_URL;
 }
 
 function headers(extra?: Record<string, string>): Record<string, string> {
@@ -25,22 +26,69 @@ function headers(extra?: Record<string, string>): Record<string, string> {
   };
 }
 
-// Leitura direta de tabela via PostgREST. Retorna [] em qualquer falha para
-// nunca derrubar a pagina — a UI trata lista vazia como estado valido.
-export async function rest<T = Record<string, unknown>>(
+// Leitura com status: distingue "vazio de verdade" de "leitura falhou" —
+// BKL-07: a UI não pode tratar falha de rede/permissão como lista vazia.
+export type RestResult<T> = { rows: T[]; error: string | null };
+
+export async function restResult<T = Record<string, unknown>>(
   path: string,
-): Promise<T[]> {
-  if (!SERVICE_KEY) return [];
+): Promise<RestResult<T>> {
+  if (!adminConfigured()) return { rows: [], error: "SUPABASE_URL/SERVICE_KEY ausentes (modo mock)" };
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       headers: headers(),
       cache: "no-store",
     });
-    if (!res.ok) return [];
-    return (await res.json()) as T[];
-  } catch {
-    return [];
+    if (!res.ok) return { rows: [], error: `HTTP ${res.status}` };
+    return { rows: (await res.json()) as T[], error: null };
+  } catch (e) {
+    return { rows: [], error: e instanceof Error ? e.message : "falha de rede" };
   }
+}
+
+// Leitura direta de tabela via PostgREST. Retorna [] em qualquer falha para
+// nunca derrubar a pagina — chamadores que precisam distinguir falha de vazio
+// usam restResult (acima).
+export async function rest<T = Record<string, unknown>>(
+  path: string,
+): Promise<T[]> {
+  return (await restResult<T>(path)).rows;
+}
+
+// Carrega TODAS as linhas de uma tabela via paginacao DETERMINISTICA (ordem
+// explicita, nunca a ordem padrao do banco), sem o limite silencioso de 2000.
+// Retorna { rows, complete }: complete=false se alguma pagina falhar ou o teto
+// de seguranca for atingido — o chamador deve bloquear saida editorial nesse
+// caso, nunca descartar linhas em silencio. Fase C0.
+export async function fetchAllRows<T = Record<string, unknown>>(
+  table: string,
+  select: string,
+  opts: { pageSize?: number; maxPages?: number; order?: string } = {},
+): Promise<{ rows: T[]; complete: boolean; pages: number }> {
+  const pageSize = opts.pageSize ?? 1000;
+  const maxPages = opts.maxPages ?? 50;
+  const order = opts.order ?? "id.asc";
+  if (!adminConfigured()) return { rows: [], complete: false, pages: 0 };
+  const rows: T[] = [];
+  let pages = 0;
+  for (let offset = 0; ; offset += pageSize) {
+    if (pages >= maxPages) return { rows, complete: false, pages }; // teto de seguranca
+    let chunk: T[];
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/${table}?select=${select}&order=${order}&limit=${pageSize}&offset=${offset}`,
+        { headers: headers(), cache: "no-store" },
+      );
+      if (!res.ok) return { rows, complete: false, pages };
+      chunk = (await res.json()) as T[];
+    } catch {
+      return { rows, complete: false, pages };
+    }
+    pages++;
+    rows.push(...chunk);
+    if (chunk.length < pageSize) break; // ultima pagina
+  }
+  return { rows, complete: true, pages };
 }
 
 // Chamada de RPC (funcoes admin_*). Retorna o JSON cru; o chamador tipa.
@@ -48,7 +96,7 @@ export async function rpc<T = unknown>(
   fn: string,
   args: Record<string, unknown> = {},
 ): Promise<T | null> {
-  if (!SERVICE_KEY) return null;
+  if (!adminConfigured()) return null;
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
       method: "POST",
@@ -70,7 +118,7 @@ export async function patch(
   filter: string,
   body: Record<string, unknown>,
 ): Promise<void> {
-  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  if (!adminConfigured()) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
     method: "PATCH",
     headers: headers({ prefer: "return=minimal" }),
@@ -90,7 +138,7 @@ export async function insert(
   rows: Record<string, unknown> | Record<string, unknown>[],
   opts: { onConflict?: string } = {},
 ): Promise<void> {
-  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  if (!adminConfigured()) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
   const prefer = opts.onConflict
     ? "return=minimal,resolution=merge-duplicates"
     : "return=minimal";
@@ -109,7 +157,7 @@ export async function insert(
 
 // Remove linhas por filtro PostgREST (ex.: "id=eq.<uuid>"). Server-only.
 export async function del(table: string, filter: string): Promise<void> {
-  if (!SERVICE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
+  if (!adminConfigured()) throw new Error("SUPABASE_SERVICE_ROLE_KEY ausente");
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
     method: "DELETE",
     headers: headers({ prefer: "return=minimal" }),

@@ -5,11 +5,27 @@
 /* The Loyal - DESIGN.md. Flat editorial: hierarquia por tipografia e borda, nunca por sombra. */
 
 @layer base {
+  /* Tokens de motion (MOTION-AUDIT/PLAN, lote 1).
+     --ease-out reconcilia com o `ease-standard` do Tailwind (mesma curva) para
+     evitar dois ease-out quase-iguais. Durações curtas: UI < 300ms. */
+  :root {
+    --ease-out: cubic-bezier(0.2, 0, 0, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-panel: cubic-bezier(0.32, 0.72, 0, 1);
+    --motion-press: 140ms;
+    --motion-small: 180ms;
+    --motion-medium: 240ms;
+    --motion-panel: 300ms;
+  }
   html {
     scroll-behavior: smooth;
   }
   body {
     @apply bg-paper text-ink font-sans antialiased;
+  }
+  /* Ancoras nao ficam sob o header sticky (WCAG 2.4.11) nem sob o sticky CTA */
+  :where(section, [id])[id] {
+    scroll-margin-top: 72px;
   }
   ::selection {
     @apply bg-green-100 text-ink;
@@ -28,22 +44,210 @@
   .tl-container {
     @apply mx-auto max-w-page px-6 lg:px-12;
   }
+  /* Ritmo vertical mobile-first: bandas de fundo separam os beats,
+     entao o padding e respiro interno, nao vazio entre secoes. */
   .tl-section {
-    @apply py-16 md:py-24 lg:py-28;
+    @apply py-12 md:py-24 lg:py-28;
+  }
+  /* Press feedback padrão (Emil): cor + scale(0.97) no :active, transform-only.
+     Substitui o transition-colors dos pressionáveis (cobre cor E transform). */
+  .tl-press {
+    transition:
+      color var(--motion-press) var(--ease-out),
+      background-color var(--motion-press) var(--ease-out),
+      border-color var(--motion-press) var(--ease-out),
+      transform var(--motion-press) var(--ease-out);
+  }
+  .tl-press:active {
+    transform: scale(0.97);
   }
 }
 
-/* Entrada de secao no scroll: fade + translateY(12px), 400ms, uma vez */
+/* ===== Central de Controle — mobile-first ===== */
+
+/* Safe-area do iPhone (notch / home bar) para a navegação inferior. */
+.tl-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Espaço no fim do conteúdo para não ficar sob a bottom navigation (só mobile). */
+@media (max-width: 767px) {
+  .tl-safe-bottom-pad {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
+  }
+}
+
+/* Trava o scroll do body enquanto o drawer está aberto. */
+.tl-lock-scroll {
+  overflow: hidden;
+}
+
+/* Drawer de navegação: desliza da esquerda. transform/opacity apenas — o
+   reset global de prefers-reduced-motion neutraliza a transição. */
+.tl-drawer-panel {
+  transform: translateX(-100%);
+  transition: transform 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+.tl-drawer-open .tl-drawer-panel {
+  transform: translateX(0);
+}
+.tl-drawer-scrim {
+  opacity: 0;
+  transition: opacity 260ms cubic-bezier(0.2, 0, 0, 1);
+}
+.tl-drawer-open .tl-drawer-scrim {
+  opacity: 1;
+}
+
+/* Tabela → cards no mobile. Cada linha vira um card com campos rotulados
+   (label em cima, valor embaixo). Zero scroll horizontal. Acima de md (768px)
+   a tabela volta ao formato normal com header sticky. */
+@media (max-width: 767px) {
+  .tl-datatable {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .tl-datatable table,
+  .tl-datatable thead,
+  .tl-datatable tbody,
+  .tl-datatable tr,
+  .tl-datatable th,
+  .tl-datatable td {
+    display: block;
+    width: auto;
+  }
+  /* Header vira rótulo por célula (data-label); some visualmente mas segue
+     no DOM para leitores de tela. */
+  .tl-datatable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .tl-datatable tbody tr {
+    margin-bottom: 12px;
+    border: 1px solid theme(colors.line);
+    border-radius: 12px;
+    background: theme(colors.surface);
+    padding: 4px 16px;
+  }
+  /* Neutraliza zebra/hover no card (especificidade > variantes utilitárias). */
+  .tl-datatable tbody tr:nth-child(even),
+  .tl-datatable tbody tr:hover {
+    background: theme(colors.surface);
+  }
+  .tl-datatable tbody tr:last-child {
+    margin-bottom: 0;
+  }
+  .tl-datatable td {
+    display: block;
+    width: auto;
+    padding: 9px 0;
+    border: 0;
+    border-bottom: 1px solid theme(colors.line);
+    text-align: left;
+    font-size: 14px;
+    /* No card, valores longos (URLs, ids, rotas) quebram em vez de estourar
+       a largura — garante zero scroll horizontal mesmo a 320px. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  /* max-width utilitário de coluna não faz sentido no card (ocupa a linha). */
+  .tl-datatable td[class*="max-w-"] {
+    max-width: none;
+  }
+  .tl-datatable td:last-child {
+    border-bottom: 0;
+  }
+  .tl-datatable td[data-label]:not([data-label=""])::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: theme(colors.gray.400);
+  }
+  /* Célula que ocupa a linha inteira sem rótulo (ações, empty state). */
+  .tl-datatable td.tl-cell-full {
+    text-align: left;
+  }
+  .tl-datatable td.tl-cell-full::before {
+    content: none;
+  }
+  /* Ações dentro do card: alvo cheio para o polegar. */
+  .tl-datatable td.tl-cell-action {
+    padding-top: 12px;
+  }
+  .tl-datatable td.tl-cell-action::before {
+    content: none;
+  }
+  .tl-datatable td.tl-cell-action form,
+  .tl-datatable td.tl-cell-action button,
+  .tl-datatable td.tl-cell-action a {
+    width: 100%;
+  }
+  .tl-datatable td.tl-cell-action > * {
+    display: flex;
+    width: 100%;
+  }
+}
+
+/* Entrada por ancora de secao (nao por card): fade + translateY(8px), uma vez.
+   Fallback sem JS via <noscript> no layout (o conteudo nunca fica oculto). */
 .tl-reveal {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(8px);
   transition:
-    opacity 400ms cubic-bezier(0.2, 0, 0, 1),
-    transform 400ms cubic-bezier(0.2, 0, 0, 1);
+    opacity var(--motion-medium) var(--ease-out),
+    transform var(--motion-medium) var(--ease-out);
 }
 .tl-reveal.is-in {
   opacity: 1;
   transform: none;
+}
+
+/* Entrada suave de confirmação (troca form→sucesso): opacity + translateY(4px).
+   @starting-style = sem JS, graceful se o browser não suportar; reduced-motion
+   torna instantâneo pelo bloco global. Propósito: evitar teleporte na confirmação. */
+.tl-fade-in {
+  transition:
+    opacity var(--motion-small) var(--ease-out),
+    transform var(--motion-small) var(--ease-out);
+}
+@starting-style {
+  .tl-fade-in {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* Toast do admin: entrada (@starting-style) e saída (data-leaving) por transition,
+   interrompível para stacking. Reduced-motion torna instantâneo pelo bloco global. */
+.tl-toast {
+  transition:
+    opacity var(--motion-small) var(--ease-out),
+    transform var(--motion-small) var(--ease-out);
+}
+@starting-style {
+  .tl-toast {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.tl-toast[data-leaving] {
+  opacity: 0;
+  transform: translateY(8px);
+  /* Saída um pouco mais rápida que a entrada (180ms): resposta mais ágil. */
+  transition-duration: var(--motion-press);
 }
 
 /* ===== Mascote Ponto: idle (PONTO-MASCOTE-GUIA.md secao 5) ===== */
@@ -116,6 +320,8 @@
   .p-pupil { transition: none; transform: none !important; }
   .ponto-head { transition: none; }
   .ponto-head.is-tilt { transform: none; }
+  /* Press: mantem feedback de cor, remove o movimento (scale) */
+  .tl-press:active { transform: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;

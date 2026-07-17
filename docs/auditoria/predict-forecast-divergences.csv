@@ -1,0 +1,8 @@
+serie,forecast,predict,mesmas_campanhas,mesma_ultima_data,mesma_janela,divergencia,fonte_da_divergencia
+# Divergencias Forecast x Predict. Ambos leem campaigns/transferencia e usam windowDate+normProgram+collapseWaves(3) IGUAIS.
+# Diferencas estruturais: (a) filtro tipo: forecast=normProgram(trim+lower); predict=toLowerCase (sem trim). (b) minSamples: forecast=2, predict=3. (c) modelo: forecast=mediana de intervalo+janela +-sd/2; predict=hazard de sobrevivencia+backtest. (d) forecast tem overrides/config editavel/artefato; predict nao.
+livelo->connectmiles,"prev (baixa) janela ~fev/2029 (2 amostras, intervalo 943)",BLOQUEADO (insufficient_history 2<3),sim,sim,nao,forecast preve de intervalo anomalo; predict bloqueia,amostra minima diferente (2 vs 3)
+esfera->azul,"baixa; janela ~jul/2026 (median 30, mean 56, sd 50, cv 0.89, 12 ondas)","overdue: days_since_last~263>>median~30 -> P30~100%; central~agora; conf rebaixada por CV",sim,sim,nao,forecast rola janela p/ frente por mediana; predict trata como atrasado (hazard),modelo diferente
+series_2_amostras (18 rotas forecast_only),preve com confianca baixa,BLOQUEADO,sim,sim,nao,forecast entrega numero; predict bloqueia,amostra minima diferente
+todas as series,artefato content/forecast.json (2026-07-14; 119 linhas; 23 rotas; overridesApplied=0),runtime ao vivo (504 transf; 97 rotas; snapshots manuais),NAO (artefato defasado),NAO,NAO,artefato do forecast defasado ~1 dia e ledger 4x menor; ignora 3 overrides do banco,snapshot/artefato desatualizado
+# Distribuicao aproximada da causa das divergencias: DADOS (mesmas campanhas, datas erradas/ausentes, amostra) ~ 60%; MODELO (hazard vs mediana; minSamples 2 vs 3) ~ 40%. Nenhuma reconciliacao 'predict ready = verdade' (RFC-009) e aplicada.

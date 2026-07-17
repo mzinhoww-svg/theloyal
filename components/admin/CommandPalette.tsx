@@ -103,12 +103,25 @@ export function CommandPalette() {
       <button
         type="button"
         onClick={openPalette}
-        className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-line bg-paper px-3 text-xs font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700"
+        className="inline-flex min-h-[44px] w-full items-center justify-between gap-2 rounded-full border border-line bg-paper px-4 text-sm font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700 md:w-auto md:justify-start md:px-3 md:text-xs"
         aria-keyshortcuts="Meta+K Control+K"
         title="Buscar e navegar (⌘K)"
       >
-        <span>Buscar…</span>
-        <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 font-mono text-[10px] text-gray-500">
+        <span className="inline-flex items-center gap-2">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 15 15"
+            aria-hidden="true"
+            focusable="false"
+            className="flex-none"
+          >
+            <circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M10 10l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          Buscar…
+        </span>
+        <kbd className="hidden rounded border border-line bg-surface px-1.5 py-0.5 font-mono text-[10px] text-gray-500 md:inline">
           ⌘K
         </kbd>
       </button>

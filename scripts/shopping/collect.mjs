@@ -9,7 +9,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { ADAPTERS, ADAPTER_VERSION, diagnose } from "./adapters.mjs";
 
-const SB_URL = (process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co").replace(/\/+$/, "");
+// BKL-03: sem fallback hardcoded de URL.
+const SB_URL = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+if (!SB_URL) {
+  console.error("[collect] SUPABASE_URL ausente — configure o ambiente antes de rodar.");
+  process.exit(1);
+}
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null;
 const args = process.argv.slice(2);
 const DIAGNOSE = args.includes("--diagnose");

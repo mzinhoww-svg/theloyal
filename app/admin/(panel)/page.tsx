@@ -169,14 +169,14 @@ export default async function DashboardPage() {
             {runList.length > 0 ? (
               runList.slice(0, 8).map((r, i) => (
                 <tr key={`${r.jobname}-${i}`}>
-                  <Td className="font-mono">{r.jobname}</Td>
-                  <Td>
+                  <Td label="Job" className="font-mono">{r.jobname}</Td>
+                  <Td label="Status">
                     <StatusCell status={r.status} />
                   </Td>
-                  <Td className="font-mono tabular-nums text-gray-500">
+                  <Td label="Início" className="font-mono tabular-nums text-gray-500">
                     {fmtDate(r.start_time)}
                   </Td>
-                  <Td className="text-gray-500">{r.return_message ?? "—"}</Td>
+                  <Td label="Retorno" className="text-gray-500">{r.return_message ?? "—"}</Td>
                 </tr>
               ))
             ) : (
@@ -210,29 +210,29 @@ export default async function DashboardPage() {
             {recentCampaigns.length > 0 ? (
               recentCampaigns.map((c) => (
                 <tr key={c.id}>
-                  <Td className="whitespace-nowrap font-medium">
+                  <Td label="Rota" className="whitespace-nowrap font-medium">
                     {c.origem}
                     <span className="text-gray-400"> → </span>
                     {c.destino}
                   </Td>
-                  <Td className="text-gray-500">{c.tipo}</Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td label="Tipo" className="text-gray-500">{c.tipo}</Td>
+                  <Td label="%" className="text-right font-mono tabular-nums">
                     {c.percentual ?? "—"}
                   </Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td label="TL Score" className="text-right font-mono tabular-nums">
                     {c.tl_score ?? "—"}
                   </Td>
-                  <Td>
+                  <Td label="Veredito">
                     {c.verdict ? (
                       <Pill tone={toneForVerdict(c.verdict)}>{c.verdict}</Pill>
                     ) : (
                       "—"
                     )}
                   </Td>
-                  <Td>
+                  <Td label="Status">
                     <Pill tone={toneForStatus(c.status)}>{c.status}</Pill>
                   </Td>
-                  <Td className="font-mono tabular-nums text-gray-500">
+                  <Td label="Vence" className="font-mono tabular-nums text-gray-500">
                     {c.vigencia_fim ? String(c.vigencia_fim).slice(0, 10) : "—"}
                   </Td>
                 </tr>
