@@ -15,10 +15,13 @@
 //
 // `ratio` = razao de conversao BASE origem:destino (milhas destino por ponto de
 // origem ANTES do bonus). 1 na maioria dos hubs (Livelo/Esfera -> cia aerea
-// 1:1). Quando != 1 (ex.: Livelo->ConnectMiles, ver PROPOSTA §4) o custo-base
-// SOZINHO subestima o CPM: por isso `ratio` e explicito e default 1 e uma
-// SUPOSICAO, nao um fato. Se a razao real for desconhecida -> null (nao chuta,
-// INV-03), o chamador trata como "CPM nao reconstruivel".
+// 1:1), mas NAO em todos: Livelo->ConnectMiles converte 3:1 (ratio=0,3333, ver
+// PROPOSTA-RATIOS §4) — com ratio=1 o CPM erraria 2,8x. Por isso `ratio` e
+// OBRIGATORIO, SEM DEFAULT (D-039 / decisao 3 do vetor de ratios): par ausente
+// ou ratio desconhecido => CPM null (nao reconstruivel), NUNCA 1:1 implicito. O
+// chamador so passa o ratio lido da tabela custo_base_ratio (migration 012)
+// quando ele NAO e nulo; ratio omitido/NULL/NaN/<=0 aqui -> null (nao chuta,
+// INV-03), o consumidor trata como "CPM nao reconstruivel".
 //
 // Este modulo NAO le banco e NAO toca a derivacao (derivarEficiencia consome o
 // CPM ja pronto). So converte custo-base -> CPM.
@@ -29,12 +32,14 @@
  *
  * @param {number} custoMilheiroOrigem  R$/milheiro da moeda de ORIGEM (custo de fabrica).
  * @param {number} bonusPct             bonus da transferencia em % (ex.: 100 = 1:2). >= 0.
- * @param {number} [ratioBase=1]        razao base origem:destino ANTES do bonus (milhas/ponto).
+ * @param {number} ratioBase            razao base origem:destino ANTES do bonus (milhas/ponto).
+ *   OBRIGATORIO, sem default (D-039): omitido/NULL/NaN/<=0 => retorno null.
  * @returns {number|null}  CPM em R$/milheiro, arredondado a 2 casas; null se
  *   qualquer entrada for invalida (custo/ratio nao-finito ou <= 0, bonus < 0 ou
- *   nao-finito). null = "nao reconstruivel", nunca um numero chutado (INV-03).
+ *   nao-finito) OU se `ratioBase` for omitido. null = "nao reconstruivel", nunca
+ *   um numero chutado (INV-03); em especial, ratio ausente NUNCA vira 1:1.
  */
-export function cpmDeCustoBase(custoMilheiroOrigem, bonusPct, ratioBase = 1) {
+export function cpmDeCustoBase(custoMilheiroOrigem, bonusPct, ratioBase) {
   const custo = Number(custoMilheiroOrigem);
   const bonus = Number(bonusPct);
   const ratio = Number(ratioBase);

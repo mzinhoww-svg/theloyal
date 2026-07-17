@@ -108,8 +108,8 @@ test('percentil: sem % → null (componente ausente, não neutro)', () => {
 });
 
 // --- raridade --------------------------------------------------------------
-test('raridade: rota única (n=1) → mais rara; recorrente (n>50) → comum', () => {
-  assert.equal(derivarRaridade({ frequencia: 1 }).valor, 1.0);
+test('raridade: rota única (n=1) tetada em 0,85 (D-037); recorrente (n>50) → comum', () => {
+  assert.equal(derivarRaridade({ frequencia: 1 }).valor, 0.85); // D-037: n=1 tetado, não premiar ruído
   assert.equal(derivarRaridade({ frequencia: 2 }).valor, 0.85);
   assert.equal(derivarRaridade({ frequencia: 3 }).valor, 0.65);
   assert.equal(derivarRaridade({ frequencia: 20 }).valor, 0.45);
@@ -119,7 +119,7 @@ test('raridade: rota única (n=1) → mais rara; recorrente (n>50) → comum', (
 
 test('raridade: resolve frequência via lookup (objeto e Map) ou historicoRota', () => {
   assert.equal(derivarRaridade({ rota: 'a|b|c|geral', frequencias: { 'a|b|c|geral': 3 } }).valor, 0.65);
-  assert.equal(derivarRaridade({ rota: 'k', frequencias: new Map([['k', 1]]) }).valor, 1.0);
+  assert.equal(derivarRaridade({ rota: 'k', frequencias: new Map([['k', 1]]) }).valor, 0.85); // D-037: n=1 tetado
   assert.equal(derivarRaridade({ historicoRota: [40, 40, 40] }).base_n, 3);
 });
 
