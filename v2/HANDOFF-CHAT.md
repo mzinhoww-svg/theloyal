@@ -10,8 +10,10 @@
 > (score, probabilidade, conta, percentil, CPM) sai de SQL/função pura testada.
 > A LLM escreve, explica, audita — **nunca calcula**. Quebrou isso, quebrou o v2.
 >
-> **Última atualização:** 2026-07-17 (v1 — após recanonicalização dos 13 self-loops
-> gravada; re-score-1 sobre base sã EM EXECUÇÃO). Ratios 012/013 + fix do helper já feitos.
+> **Última atualização:** 2026-07-17 (v2 — MARCO: pipeline M2 provado ponta a ponta.
+> Re-score-1 e re-score-2 (CPM vivo) gravados e verificados. Primeiro item real
+> (`livelo→azul`) atravessou a máquina inteira e validou a tese. Deal Desk vivo
+> hoje = vazio-honesto por falta de TIER 1. Próxima slice: coleta TIER 1 (3 partes).
 
 ---
 
@@ -44,7 +46,19 @@ integração: `claude/loyalty-landing-page-v1-7vbjq7`.
 | Re-score-1 (dry-run, D-038) | ✅ rodado na base suja (draft PR #103) | `M2/rescore/`, `M2/RESCORE-1-DRYRUN.md` |
 | Guard de self-loop no matcher | ✅ **permanente (D-041 R4 rev.)** | `identidade.mjs` `resolverCampanha` |
 | Recanonicalização dos 13 self-loops | ✅ **gravada + limpa (self-loops→0)** | `SPEC-SLICE-RECANONICALIZACAO.md`, trilha `campanha_versoes` |
-| Re-score-1 sobre base sã (grava) | 🔄 **EM EXECUÇÃO** (agente worktree) | `M2/RESCORE-1-BASE-SA.md` (a sair) |
+| Re-score-1 sobre base sã (grava) | ✅ **gravado + verificado** (B4=102) | `M2/RESCORE-1-BASE-SA.md` |
+| Re-score-2 CPM vivo (grava) | ✅ **gravado + verificado** (B4=101; 28 conta R$) | `M2/RESCORE-2-CPM-VIVO.md` |
+| Primeiro item real `livelo→azul` | ✅ **TIER 1 manual (D-003); corrigido 115→50, Evitaria** | `M2/CASO-LIVELO-AZUL-DIVERGENCIA.md` |
+| Coleta TIER 1 (próxima slice) | 📋 **SPEC escrita, aguarda aprovação** | `M2/SPEC-SLICE-COLETA-TIER1.md` |
+
+### 🏁 MARCO (2026-07-17): pipeline M2 provado ponta a ponta
+O primeiro item real atravessou a **máquina inteira** (canonicalização → engine →
+CPM → ratio → TIER 1 → vigência → override → veredito). O caso `livelo→azul` é a
+**validação da tese**: o blog dizia 115% ("Vale olhar" 76); a fonte oficial (regulamento)
+mostrou escala por público (50/100/105/110/120), encerrada 17/04/2025 → o público
+geral (50%) vira **"Evitaria" 25**. "Parece bom" → "evite", porque conta+fonte não
+sustentam. **Deal Desk vivo hoje = vazio-honesto:** das 54 vivas, 1 com TIER 1. O
+gargalo **não é score, é coleta de fonte oficial** → próxima slice (coleta TIER 1).
 
 **O que foi feito neste turno (2026-07-17):**
 1. Ratios: `custo_base_ratio` (012 DDL) + seed **8 ratios aprovados** (013) no banco.
@@ -85,31 +99,38 @@ media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera
 
 ## 2. Blockers abertos (o que trava o próximo passo)
 
-1. **[EM EXECUÇÃO] Re-score-1 sobre a base sã.** Agente delegado pontuando os 3.330
-   resolvidos; grava `tl_score_bruto` se o dry-run passar limpo. Próximo ponto de
-   parada real → operador lê o **balde 4 recalculado** + a **recomendação de backup**.
-2. **[OPERADOR, após (1)] Balde 4 recalculado + release do backup.** Decisão de
-   produto que libera B3 (confirmar TIER 1 nos alcançáveis) e a soltura do backup
-   `campaigns_bkp_prev2_20260716` (preso até re-score verde).
-3. **[SEQUÊNCIA] Re-score-2 com CPM vivo.** Ratios (012/013) + custo-base (011)
-   aplicados → CPM de `transferencia` reconstruível nos 8 pares. O re-score-2 tira
-   metade da base da banda neutra 65 (D-042). Depende de (1) gravado.
-4. **[DÍVIDA nomeada — D-042] Derivação de lado-único.** Os 1.220 `sem_destino`
-   `lado_unico` (merchant/shopping) — como pontuam sem rota, resolver no re-score-2
-   dentro do vetor de derivação existente. Não abre slice nova.
-5. **[DÍVIDA] `tem_tier1` vem de `campaigns.tier===1`** no runner (default de
-   `montarEntradas`) porque `campanha_fontes` está vazia. Quando encher, vem de lá (INV-02).
+1. **[OPERADOR] Aprovar a SPEC da coleta TIER 1** (`SPEC-SLICE-COLETA-TIER1.md`).
+   Três partes: **A** automática (adapters nas vivas crawleáveis, zero carga) ∥ **B**
+   derivação lado-único (resolve D-042, corrige score dos `sem_destino`) → **C** manual
+   (fila de curadoria, corte score ≥70, depois de B). 4 decisões abertas no §8 da spec
+   (ordem/paralelização, corte, vetor-B como PROPOSTA, escala-por-público na coleta).
+2. **[DÍVIDA → vira Parte B] Derivação de lado-único (D-042).** 1.220 `sem_destino`
+   pontuam sem rota (score semi-artificial). Vira a **Parte B** da slice de coleta —
+   pré-requisito da confirmação manual (não confirmar fonte de score que vai mudar).
+3. **[DÍVIDA] `tem_tier1` vem de `campaigns.tier===1`** no runner (default de
+   `montarEntradas`) porque `campanha_fontes` estava vazia. A coleta TIER 1 vai
+   enchê-la → quando encher, `tem_tier1` deve vir de lá (INV-02).
+4. **[DÍVIDA — D-046] Track record** dos históricos de alto valor (arquivo/prova de
+   metodologia) → superfície M3, não Deal Desk vivo.
+
+**Já resolvidos neste turno (não são mais blockers):** re-score-1 (B4=102) e re-score-2
+(CPM vivo, B4=101, 28 conta R$) gravados+verificados; D-014 encerrado (backup trava
+solta, arquivo frio até fecho do M2); primeiro item `livelo→azul` corrigido via TIER 1
+manual (115→50, Evitaria, histórica).
 
 ---
 
 ## 3. Decisões travadas (fonte de verdade: `v2/DECISIONS.md`)
 
-**Não re-litigar.** ADRs **D-001..D-043** em `v2/DECISIONS.md`; invariantes
-**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Recentes (D-040..043): recanon = só
-self-loops (sem_destino/banda-65 são derivação, não identidade); triagem R1–R5 +
-guard permanente de self-loop; banda neutra CPM-cego é correta; **modo de operação
-D-043** (autonomia dentro de slice aprovada; **dado vence instrução do operador
-quando contradiz** — precedente PagoGol=Smiles). Os que mais pegam no dia a dia:
+**Não re-litigar.** ADRs **D-001..D-047** em `v2/DECISIONS.md`; invariantes
+**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Recentes (D-040..047): recanon = só
+self-loops + guard permanente; banda neutra CPM-cego é correta; **D-043** modo de
+operação (autonomia dentro de slice aprovada; **dado vence instrução quando
+contradiz** — precedente PagoGol=Smiles); **D-044** Deal Desk = TRÊS portões (vivo
++ TIER 1 + computável); **D-045** TIER 1 corrobora os TERMOS (%), não só a página —
+blog é candidato; **D-046** track record (dívida M3); **D-047** adapter detecta
+campanha pela janela de vigência no regulamento, não pela URL + público-na-tupla
+validado. Os que mais pegam no dia a dia:
 
 - **INV-12** — determinismo: número vem de código puro testado; nada de SQL que
   re-implementa e diverge do JS (o dry-run mostrou ~2pt de gap SQL×JS → o runner
@@ -181,9 +202,11 @@ v2/
     PROPOSTA-VETOR-DERIVACAO.md   6 golden (A..F)
     PROPOSTA-CUSTO-BASE.md        custo-base por moeda
     PROPOSTA-RATIOS.md            vetor de ratios (aprovado, populado em 013)
-    RESCORE-1-DRYRUN.md           re-score-1 na base SUJA (superado)
-    RESCORE-1-BASE-SA.md          re-score-1 na base SÃ (a sair do agente)
-    rescore/                      runner (importa engine), golden-replay, out/
+    SPEC-SLICE-COLETA-TIER1.md    próxima slice (3 partes: A auto ∥ B deriv → C manual)
+    RESCORE-1-BASE-SA.md          re-score-1 base sã (B4=102, gravado)
+    RESCORE-2-CPM-VIVO.md         re-score-2 CPM vivo (B4=101, 28 conta R$, gravado)
+    CASO-LIVELO-AZUL-DIVERGENCIA.md  primeiro item real; blog 115% × oficial (caso-fundador)
+    rescore/                      runner (importa engine), golden-replay, rescore-2.mjs, out/
 ```
 
 **PRs relevantes:** #102 ratios (merged), #103 re-score dry-run base suja (draft),
@@ -193,11 +216,14 @@ v2/
 
 ## 6. Próximo passo imediato (para o chat que retomar)
 
-1. Re-score-1 sobre base sã (EM EXECUÇÃO) fecha → operador lê **balde 4 recalculado
-   por programa** + **read do backup** (liberar/segurar). Este é o ponto de parada real.
-2. Se gravou limpo: libera B3 (confirmar TIER 1 nos alcançáveis) + decide backup.
-3. Re-score-2 com CPM vivo (ratios 012/013 já aplicados) → tira base da banda 65 → dry-run → gravar.
-4. B3 nos alcançáveis → **primeiro Deal Desk**.
+1. **Operador aprova a SPEC da coleta TIER 1** (`SPEC-SLICE-COLETA-TIER1.md`) —
+   responder as 4 decisões do §8. Não disparar agente antes disso.
+2. **Parte A (automática) ∥ Parte B (derivação lado-único)** rodam juntas: adapters
+   confirmam TIER 1 das vivas crawleáveis (corroborando termos, D-045); vetor
+   lado-único v1 (PROPOSTA) corrige o score dos `sem_destino`.
+3. **Parte C (manual)** depois da B: fila de curadoria no admin, corte ≥70, o
+   operador confirma as fontes que valem.
+4. Itens que atravessam os 3 portões → o **digest/M3** monta o Deal Desk publicável.
 5. Atualizar este arquivo ao fechar cada slice.
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes
