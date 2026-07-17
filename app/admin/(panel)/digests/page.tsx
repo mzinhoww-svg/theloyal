@@ -201,6 +201,7 @@ export default async function DigestsPage() {
                     <Pill tone={toneForStatus(d.status)}>{d.status}</Pill>
                   </Td>
                   <Td className="tl-cell-action">
+
                     <a
                       href={`/admin/digests/drafts/${encodeURIComponent(d.id)}`}
                       className="text-blue-600 hover:underline"
