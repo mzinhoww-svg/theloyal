@@ -214,5 +214,28 @@ A página oficial extrai tipo+origem+destino+público e casa com campanha existe
 **Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M2 (slice matcher) · Ratificação do operador
 Coluna `payload jsonb` aditiva guarda o trecho/evidência que justifica a confirmação TIER 1 (mesma disciplina de proveniência de tudo). Migration 008, aditiva.
 
+## D-035 — CPM cego = asterisco TIPADO no breakdown público (dois motivos)
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+Enquanto a eficiência não estiver viva, o breakdown público **mostra explicitamente** que o score se apoia em percentil-de-rota e por que o CPM não entrou — com o mesmo rigor de "Não confirmado". **O asterisco tem DOIS motivos distintos, com textos diferentes:**
+- **`nao_calculado_ainda`** — transferência de moeda comprável esperando a tabela de ratios, ou compra ainda não extraída. É temporário; enche quando a slice de CPM avança.
+- **`nao_calculavel_por_natureza`** — origem de **ponto de banco** (Itaú, C6…): não há custo de aquisição de mercado (você acumula, não compra). É permanente e honesto ("origem sem custo de aquisição de mercado").
+O leitor precisa saber **qual** dos dois. Score com CPM cego é score com asterisco, igual sintético (D-030) e in-sample (D-019).
+
+## D-036 — Diagnóstico do CPM: pipeline nunca automatizou; tabela de custo-base viável agora
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+Os 10 CPMs foram leitura editorial manual (`valor_leitura` é prosa humana). Input por tipo: `compra_pontos` tem o preço no conteúdo (extraível barato — #99, 6→22, 0 falso-positivo); `transferência` precisa de custo-base por moeda (construível agora, **não é M5**); cartão/clube/estrutural/hotelaria = `n/a` legítimo.
+
+## D-037 — Vetor de derivação `DERIVACAO_V1` aprovado
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+percentil rota-total (ECDF midrank), eficiência ECDF-inverso do CPM (ausente→redistribui), **raridade n=1 tetada em 0,85**, abrangência `geral 1,0/cartão 0,6/selecionados 0,45/clube 0,3`, CPM global provisório, `min_samples=3`/`shrink_k=5`. Versionado em `derivacao_config` (migration 009, aplicada).
+
+## D-038 — Dois re-scores; runner importa o JS testado (não cópia)
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+**Re-score-1** roda agora por percentil-de-rota com CPM cego (asterisco D-035); **re-score-2** roda com eficiência viva após a tabela de custo-base+ratios aprovada. A slice de CPM **fura a fila e corre em paralelo**. **O re-score roda via runner (Edge Function) que IMPORTA `derivacao.mjs`+`score.mjs` versionado — nunca uma cópia** (cópia drifta do golden, violaria INV-12). **Dry-run + trava de anomalia (por linha E por programa) obrigatórios antes de gravar.**
+
+## D-039 — CPM v1 tem alcance parcial honesto (não cegueira total)
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+CPM v1 **acende** para `compra_pontos` (extrator) e transferência de **moeda comprável com ratio conhecido** (Livelo, origem #1, cobre muito). Fica **null com asterisco tipado** (D-035) para transferência de **banco** (sem âncora de mercado, permanente) e de moeda comprável **sem ratio ainda** (temporário). **A tabela de ratios por par é PRÉ-REQUISITO do CPM de transferência** — enquanto não existir, transferência = CPM null, **nunca ratio 1:1 inventado** (Livelo→ConnectMiles R$21,43 vs R$60 real = 2,8×: CPM 1:1 mentiria). Compra acende já (não depende de ratio). Custo-base v1: livelo 30 (alta), esfera 35 / smiles 21 / ihg 28 (média, marcadas), versionado com changelog. Piso ("a partir de") usado **como piso, nunca como média**. É CPM parcial honesto com motivo do null explícito por item — mais produto do que se tinha no diagnóstico inicial.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** Backup `campaigns_bkp_prev2_20260716` retido **até o re-score (R1) confirmar em escala que a canonicalização não precisa de rollback**.
