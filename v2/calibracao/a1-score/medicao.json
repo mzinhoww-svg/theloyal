@@ -1,0 +1,504 @@
+{
+  "gerado_em": "2026-07-17T13:14:54.530Z",
+  "base": "sã (identidade_id IS NOT NULL)",
+  "dry_run": true,
+  "gravou_na_base": false,
+  "golden": "6/6",
+  "pesos": {
+    "versao": "v1",
+    "peso_percentil": 0.45,
+    "peso_eficiencia": 0.3,
+    "peso_raridade": 0.15,
+    "peso_abrangencia": 0.1,
+    "shrink_k": 5,
+    "min_samples": 3
+  },
+  "derivacao": "derivacao.v1",
+  "rescore_1": {
+    "passe": 1,
+    "cpm_vivo": false,
+    "cpm_origem_dist": {
+      "cego": 3320,
+      "observado": 10
+    },
+    "cpm_pop": 10,
+    "totais": {
+      "campanhas": 3330,
+      "computaveis": 1996,
+      "beco": 1334,
+      "conta_fechada": 10
+    },
+    "resumo_todos": {
+      "n": 3330,
+      "min": 18,
+      "max": 91,
+      "media": 60.84,
+      "desvio": 17.02,
+      "q1": 50,
+      "mediana": 63,
+      "q3": 71,
+      "iqr": 21,
+      "moda": 91,
+      "moda_freq": 344,
+      "moda_pct": 10.3,
+      "valores_distintos": 60,
+      "entropia_bits": 5.174,
+      "entropia_norm": 0.876
+    },
+    "resumo_computaveis": {
+      "n": 1996,
+      "min": 22,
+      "max": 81,
+      "media": 58.35,
+      "desvio": 11.76,
+      "q1": 52,
+      "mediana": 60,
+      "q3": 66,
+      "iqr": 14,
+      "moda": 65,
+      "moda_freq": 286,
+      "moda_pct": 14.3,
+      "valores_distintos": 58,
+      "entropia_bits": 5.236,
+      "entropia_norm": 0.894
+    },
+    "resumo_confirmavel": {
+      "n": 10,
+      "min": 40,
+      "max": 78,
+      "media": 53.1,
+      "desvio": 11.07,
+      "q1": 44.75,
+      "mediana": 49,
+      "q3": 58.75,
+      "iqr": 14,
+      "moda": 49,
+      "moda_freq": 2,
+      "moda_pct": 20,
+      "valores_distintos": 9,
+      "entropia_bits": 3.122,
+      "entropia_norm": 0.985
+    },
+    "histograma_computaveis": [
+      {
+        "faixa": "20-24",
+        "n": 2
+      },
+      {
+        "faixa": "25-29",
+        "n": 33
+      },
+      {
+        "faixa": "30-34",
+        "n": 56
+      },
+      {
+        "faixa": "35-39",
+        "n": 78
+      },
+      {
+        "faixa": "40-44",
+        "n": 149
+      },
+      {
+        "faixa": "45-49",
+        "n": 125
+      },
+      {
+        "faixa": "50-54",
+        "n": 178
+      },
+      {
+        "faixa": "55-59",
+        "n": 303
+      },
+      {
+        "faixa": "60-64",
+        "n": 279
+      },
+      {
+        "faixa": "65-69",
+        "n": 534
+      },
+      {
+        "faixa": "70-74",
+        "n": 144
+      },
+      {
+        "faixa": "75-79",
+        "n": 109
+      },
+      {
+        "faixa": "80-84",
+        "n": 6
+      }
+    ],
+    "conta_exata_top": [
+      {
+        "score": 65,
+        "n": 286,
+        "pct": 14.3
+      },
+      {
+        "score": 59,
+        "n": 101,
+        "pct": 5.1
+      },
+      {
+        "score": 60,
+        "n": 95,
+        "pct": 4.8
+      },
+      {
+        "score": 69,
+        "n": 89,
+        "pct": 4.5
+      },
+      {
+        "score": 68,
+        "n": 79,
+        "pct": 4
+      },
+      {
+        "score": 58,
+        "n": 78,
+        "pct": 3.9
+      },
+      {
+        "score": 64,
+        "n": 75,
+        "pct": 3.8
+      },
+      {
+        "score": 53,
+        "n": 49,
+        "pct": 2.5
+      },
+      {
+        "score": 41,
+        "n": 47,
+        "pct": 2.4
+      },
+      {
+        "score": 57,
+        "n": 47,
+        "pct": 2.4
+      },
+      {
+        "score": 43,
+        "n": 46,
+        "pct": 2.3
+      },
+      {
+        "score": 56,
+        "n": 44,
+        "pct": 2.2
+      },
+      {
+        "score": 62,
+        "n": 44,
+        "pct": 2.2
+      },
+      {
+        "score": 66,
+        "n": 43,
+        "pct": 2.2
+      },
+      {
+        "score": 49,
+        "n": 40,
+        "pct": 2
+      },
+      {
+        "score": 54,
+        "n": 38,
+        "pct": 1.9
+      },
+      {
+        "score": 67,
+        "n": 37,
+        "pct": 1.9
+      },
+      {
+        "score": 52,
+        "n": 36,
+        "pct": 1.8
+      },
+      {
+        "score": 73,
+        "n": 36,
+        "pct": 1.8
+      },
+      {
+        "score": 63,
+        "n": 34,
+        "pct": 1.7
+      }
+    ],
+    "veredito_bruto_computaveis": {
+      "Só para casos específicos": 1116,
+      "Esperaria": 452,
+      "Vale olhar": 259,
+      "Evitaria": 169
+    },
+    "empilhamento": {
+      "em_65": 286,
+      "em_65_pct": 14.3,
+      "banda_neutra_55_69": 1116,
+      "banda_neutra_pct": 55.9
+    },
+    "b4": {
+      "total": 105,
+      "conta_fechada": 1,
+      "so_percentil": 104
+    }
+  },
+  "rescore_2": {
+    "passe": 2,
+    "cpm_vivo": true,
+    "cpm_origem_dist": {
+      "nao_transferencia": 2624,
+      "null_sem_custo_origem": 447,
+      "observado": 10,
+      "null_sem_ratio": 83,
+      "reconstruido": 154,
+      "null_sem_percentual": 12
+    },
+    "cpm_pop": 164,
+    "totais": {
+      "campanhas": 3330,
+      "computaveis": 1996,
+      "beco": 1334,
+      "conta_fechada": 164
+    },
+    "resumo_todos": {
+      "n": 3330,
+      "min": 18,
+      "max": 91,
+      "media": 60.77,
+      "desvio": 17.1,
+      "q1": 50,
+      "mediana": 63,
+      "q3": 71,
+      "iqr": 21,
+      "moda": 91,
+      "moda_freq": 344,
+      "moda_pct": 10.3,
+      "valores_distintos": 63,
+      "entropia_bits": 5.192,
+      "entropia_norm": 0.869
+    },
+    "resumo_computaveis": {
+      "n": 1996,
+      "min": 22,
+      "max": 85,
+      "media": 58.23,
+      "desvio": 11.93,
+      "q1": 51,
+      "mediana": 60,
+      "q3": 66,
+      "iqr": 15,
+      "moda": 65,
+      "moda_freq": 286,
+      "moda_pct": 14.3,
+      "valores_distintos": 61,
+      "entropia_bits": 5.273,
+      "entropia_norm": 0.889
+    },
+    "resumo_confirmavel": {
+      "n": 164,
+      "min": 25,
+      "max": 85,
+      "media": 53.38,
+      "desvio": 14.68,
+      "q1": 41,
+      "mediana": 51,
+      "q3": 66,
+      "iqr": 25,
+      "moda": 38,
+      "moda_freq": 20,
+      "moda_pct": 12.2,
+      "valores_distintos": 37,
+      "entropia_bits": 4.621,
+      "entropia_norm": 0.887
+    },
+    "histograma_computaveis": [
+      {
+        "faixa": "20-24",
+        "n": 2
+      },
+      {
+        "faixa": "25-29",
+        "n": 36
+      },
+      {
+        "faixa": "30-34",
+        "n": 51
+      },
+      {
+        "faixa": "35-39",
+        "n": 87
+      },
+      {
+        "faixa": "40-44",
+        "n": 147
+      },
+      {
+        "faixa": "45-49",
+        "n": 138
+      },
+      {
+        "faixa": "50-54",
+        "n": 165
+      },
+      {
+        "faixa": "55-59",
+        "n": 292
+      },
+      {
+        "faixa": "60-64",
+        "n": 275
+      },
+      {
+        "faixa": "65-69",
+        "n": 549
+      },
+      {
+        "faixa": "70-74",
+        "n": 138
+      },
+      {
+        "faixa": "75-79",
+        "n": 103
+      },
+      {
+        "faixa": "80-84",
+        "n": 12
+      },
+      {
+        "faixa": "85-89",
+        "n": 1
+      }
+    ],
+    "conta_exata_top": [
+      {
+        "score": 65,
+        "n": 286,
+        "pct": 14.3
+      },
+      {
+        "score": 60,
+        "n": 93,
+        "pct": 4.7
+      },
+      {
+        "score": 59,
+        "n": 91,
+        "pct": 4.6
+      },
+      {
+        "score": 69,
+        "n": 88,
+        "pct": 4.4
+      },
+      {
+        "score": 68,
+        "n": 79,
+        "pct": 4
+      },
+      {
+        "score": 58,
+        "n": 66,
+        "pct": 3.3
+      },
+      {
+        "score": 64,
+        "n": 64,
+        "pct": 3.2
+      },
+      {
+        "score": 66,
+        "n": 60,
+        "pct": 3
+      },
+      {
+        "score": 41,
+        "n": 59,
+        "pct": 3
+      },
+      {
+        "score": 62,
+        "n": 54,
+        "pct": 2.7
+      },
+      {
+        "score": 56,
+        "n": 51,
+        "pct": 2.6
+      },
+      {
+        "score": 57,
+        "n": 50,
+        "pct": 2.5
+      },
+      {
+        "score": 49,
+        "n": 39,
+        "pct": 2
+      },
+      {
+        "score": 54,
+        "n": 37,
+        "pct": 1.9
+      },
+      {
+        "score": 67,
+        "n": 36,
+        "pct": 1.8
+      },
+      {
+        "score": 63,
+        "n": 34,
+        "pct": 1.7
+      },
+      {
+        "score": 55,
+        "n": 34,
+        "pct": 1.7
+      },
+      {
+        "score": 53,
+        "n": 33,
+        "pct": 1.7
+      },
+      {
+        "score": 38,
+        "n": 33,
+        "pct": 1.7
+      },
+      {
+        "score": 51,
+        "n": 32,
+        "pct": 1.6
+      }
+    ],
+    "veredito_bruto_computaveis": {
+      "Só para casos específicos": 1116,
+      "Esperaria": 450,
+      "Vale olhar": 253,
+      "Evitaria": 176,
+      "Vale agir": 1
+    },
+    "empilhamento": {
+      "em_65": 286,
+      "em_65_pct": 14.3,
+      "banda_neutra_55_69": 1116,
+      "banda_neutra_pct": 55.9
+    },
+    "b4": {
+      "total": 100,
+      "conta_fechada": 27,
+      "so_percentil": 73
+    }
+  }
+}
