@@ -434,5 +434,30 @@ aprovação (D-050 decisão 3) **NÃO foi iniciada** — fica para o operador de
 rascunho estiver aprovado, por instrução explícita do dispatch. Nenhum e-mail foi enviado,
 nenhum assinante foi notificado.
 
+## D-057 — Digest Engine v3: revisão estrutural ratificada (Ofertas ativas, Vence 72h, Cartões & bancos, O que fechou, Predict; Radar VPM e Loyalty Lab como blocos próprios)
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2 (revisão de contrato)
+Ratifica as 8 decisões nomeadas do §5 de `SPEC-SLICE-DIGEST-ENGINE.md` v3 (commit
+`500389f`). **Decisões 1–6, propostas default aprovadas como estavam:** (1) rótulo da
+coluna "Leitura" em Ofertas ativas = vocabulário canônico de veredito (`Vale agir`/`Vale
+olhar`/`Só para casos específicos`/`Esperaria`/`Evitaria`), não um segundo vocabulário
+paralelo; (2) Cartões & bancos aceita TIER 2 (evergreen, sem corte de veredito); (3) lista
+curada de bancos por `origem_code` (itau/inter/c6/bradesco/banco_do_brasil/nubank/caixa/
+brb/santander/btg/xp/picpay); (4) cadência do Predict = `confidence='alta'` em
+`digest.radarDaily`, orientada a dado, não calendário fixo; (5) Resumo do dia funde com
+Sinal do dia (2 parágrafos, uma seção); (6) Radar (janelas) migra para dentro do teaser
+Predict. **Decisões 7–8, sem proposta default, resolvidas agora pelo operador:** (7)
+**Radar VPM vira seção própria** (não funde em Cartões & bancos, não corta — mesma fonte
+`shopping_metrics`, `selecionarRadarVpm` já existente, sem mudança de lógica); (8)
+**Loyalty Lab continua bloco narrativo separado**, corte de automação **0,85** inalterado
+(D-053, `scoreAutomacaoLoyaltyLab`/`precisaRevisaoHumana` já existentes, sem mudança).
+**Estrutura final da edição (ordem):** Sinal do dia (com Resumo fundido) → Ofertas ativas
+(tabela) → Deals do dia (numerado, `contaProsa`/`leitura` aditivos) → Vence em até 72h
+(renomeação de Fecha Logo) → Cartões & bancos → Clipping → O que fechou nesta semana →
+Radar VPM → Loyalty Lab → Predict. **Ordem de Radar VPM/Loyalty Lab/Predict na cauda é
+call editorial dentro do escopo já aprovado** (não redecidida pelo operador nesta
+rodada) — mantém a lógica de "observacional/analítico antes do teaser final" do
+sequenciamento anterior (D-053/D-054). **Modo: build aprovado — spec fecha aqui, próxima
+entrada em DECISIONS.md é o resultado do código.**
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
