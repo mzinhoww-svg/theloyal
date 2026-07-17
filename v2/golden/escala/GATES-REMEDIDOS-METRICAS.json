@@ -1,0 +1,185 @@
+{
+  "gerado_em": "2026-07-17",
+  "golden": "GOLDEN-400.json",
+  "n": 379,
+  "asterisco": "CAMADA A do gate agora medida FORA da amostra dos 86 (D-019) -> sem asterisco in-sample para a A. Vigencia/matcher idem. NADA PUBLICO ate revisao do operador.",
+  "gate": {
+    "camada_medida": "A (deterministica)",
+    "nota_camada_B": "camada B (LLM) nao roda em item novo offline (fixture dos 86). Residuo abaixo = o que subiria para B.",
+    "total": 379,
+    "campanhas": 254,
+    "negativos": 125,
+    "rejeitadas": 60,
+    "rejeicao_precision_ASSINATURA": 0.983,
+    "rejeicao_recall_deterministico": 0.472,
+    "campanha_recall": 0.996,
+    "campanhas_derrubadas": [
+      {
+        "id": "f8ddb97737bfb048d312a0a8ce3f66bea73602ea5f6b482425035c9d54e65782",
+        "motivo": "tarifa_pacote_dinheiro",
+        "tipo": "outro",
+        "titulo": "Companhia aérea permite pagamento de passagens com FGTS"
+      }
+    ],
+    "negativos_no_gold_por_motivo": {
+      "produto_blog": 28,
+      "cupom": 35,
+      "perk": 24,
+      "stunt": 18,
+      "resgate": 20
+    },
+    "negativos_pegos_pela_A_por_motivo": {
+      "cupom": 32,
+      "perk": 16,
+      "stunt": 4,
+      "produto_blog": 6,
+      "resgate": 1
+    },
+    "residuo_para_camada_B": 66
+  },
+  "vigencia": {
+    "campanhas": 254,
+    "com_data_no_gold": 33,
+    "indeterminada_no_gold": 221,
+    "overprecision_INV16": 17,
+    "overprecision_casos": [
+      {
+        "id": "75ad22aacb7244823e5a7cb8a0dda4421786033277dbe4a336c0e92349fc1476",
+        "got": "2025-09-15",
+        "titulo": "Envie pontos Livelo mais dinheiro para a Azul com bônus e co"
+      },
+      {
+        "id": "247d958615159ace1e546339f7ec0cf3858e73f03aea6b0ef2b38d075c30b71f",
+        "got": "2025-06-18",
+        "titulo": "Promoção Turbo Livelo: compre pontos por R$ 30,50 o milheiro"
+      },
+      {
+        "id": "fffc7c2c8f15581d1e8df7b0e3e3010aa1696e0748d52208889e571c7c01dd5f",
+        "got": "2025-08-06",
+        "titulo": "Smiles oferece até 350% de bônus na compra de milhas - milhe"
+      },
+      {
+        "id": "3cae1c6b8e0f1469a8ab88e4c88a8e8edff2e83e0bb84a192581dafe24eeca89",
+        "got": "2025-11-04",
+        "titulo": "Livelo oferece até 57% de desconto na compra de pontos – mil"
+      },
+      {
+        "id": "ad79407caaebf9550b739a8e9a46b9e0259792dd38d0f2a43efcb517aae357ab",
+        "got": "2025-04-07",
+        "titulo": "Compre pontos Inter Loop e transfira com até 100% de bônus p"
+      },
+      {
+        "id": "a86df0ac2bd015b32087205ec4564e0a0c9d2b03974242e5d36c327287712681",
+        "got": "2025-05-30",
+        "titulo": "Ganhe até 100% de bônus no envio de pontos KMV para a Azul –"
+      },
+      {
+        "id": "7922ce60ee3031df08d00645976e67b538d0a7183f205774475e3b44971fa085",
+        "got": "2025-07-02",
+        "titulo": "Imperdível! Azul oferece 3.500 pontos grátis para novos clie"
+      },
+      {
+        "id": "8d78d10e181e8925e0be1d1613b16c288caa9f6ff2911c181ec730088d685a5e",
+        "got": "2025-07-29",
+        "titulo": "Esfera e Latam Pass - transfira pontos mais dinheiro com bôn"
+      }
+    ],
+    "parsing_precision_datas": 0.394,
+    "datas_corretas": 13,
+    "datas_erradas_dia_ano": 2,
+    "datas_perdidas": 18,
+    "indeterminada_correta": 204,
+    "overprecision_interpretacao": "NAO e fabricacao do parser: 8/8 casos amostrados tem TOKEN DE DATA no texto (ex.: \"18/06/25\", \"valida te 30/05\", tag de deadline do Melhores Destinos). O gold-labeler (so titulo+trecho, regex simples) SUBLEU essas datas; o parser (parseVigencia, regex mais rico) as leu certo. INV-16 intacto (nunca inventou data sem token). Conclusao: a re-medicao de vigencia esta LIMITADA pela qualidade do gold de vigencia (agente); o parser esta MAIS correto que o gold nesses 17. Divida: no passe em massa, rotular vigencia do CONTEUDO COMPLETO.",
+    "nota": "gold vigencia = rotulo de conteudo (agente, fraco em datas). O numero estrutural forte e INV-16 (parser nunca fabrica). Precision/recall de data aqui subestima o parser."
+  },
+  "matcher": {
+    "campanhas": 254,
+    "tipo_accuracy_global": 0.602,
+    "recall_por_tipo_canonico": {
+      "bonus_acumulo": "4/23 = 0.174",
+      "outro": "11/13 = 0.846",
+      "clube": "29/31 = 0.935",
+      "compra_pontos": "37/42 = 0.881",
+      "transferencia_bonificada": "70/73 = 0.959",
+      "pontos_mais_dinheiro": "0/14 = 0",
+      "promocao_emissao": "0/28 = 0",
+      "shopping": "0/16 = 0",
+      "status_match": "2/14 = 0.143"
+    },
+    "exemplos_erro": [
+      {
+        "gold": "bonus_acumulo",
+        "raw": null,
+        "mapped": null,
+        "titulo": "azul fidelidade etihad acumulo resgate pontos.html"
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": null,
+        "mapped": null,
+        "titulo": "Radar PPV! Resumo das promoções de acúmulo e transferên"
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": "estrutural",
+        "mapped": "outro",
+        "titulo": "Parceria entre Etihad e Hong Kong Airlines começa a per"
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": "clube",
+        "mapped": "clube",
+        "titulo": "Último dia para assinar o Clube Livelo e turbinar seu a"
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": "clube",
+        "mapped": "clube",
+        "titulo": "CAIXA lança Clube UAU com acúmulo de até 15 mil pontos "
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": "estrutural",
+        "mapped": "outro",
+        "titulo": "Nubank Ultravioleta terá conversão automática em milhas"
+      },
+      {
+        "gold": "outro",
+        "raw": null,
+        "mapped": null,
+        "titulo": "Má notícia! Latam reduz acúmulo de milhas em hotéis res"
+      },
+      {
+        "gold": "outro",
+        "raw": "compra",
+        "mapped": "compra_pontos",
+        "titulo": "LATAM firma parceria com a Revo para o acúmulo de milha"
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": "estrutural",
+        "mapped": "outro",
+        "titulo": "Valendo! Smiles muda regra para acúmulo de milhas em vo"
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": "estrutural",
+        "mapped": "outro",
+        "titulo": "Novidade! Livelo fecha parceria com Uber para acúmulo d"
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": "compra",
+        "mapped": "compra_pontos",
+        "titulo": "Parceria Livelo e Uber para acúmulo de pontos entra em "
+      },
+      {
+        "gold": "bonus_acumulo",
+        "raw": null,
+        "mapped": null,
+        "titulo": "Agora é a vez da Livelo! Acúmulo de pontos na Amazon ac"
+      }
+    ],
+    "nota": "resolverTipo(extraction_json.tipo). Gap-types (shopping/status_match/pontos_mais_dinheiro/promocao_emissao) colapsam pelo MAPA_TIPO (cartao->bonus_acumulo, hotelaria->outro, compra->compra_pontos). Recall baixo neles = buraco de cobertura medido, nao ruido."
+  }
+}
