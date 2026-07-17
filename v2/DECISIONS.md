@@ -565,5 +565,52 @@ Aplicado no rascunho de hoje com dado real do forecast (`esfera→smiles`, typic
 70, confidence `em-formacao`). TL Score determinístico permanece intocado — a
 probabilidade explica a nota, nunca a altera.
 
+## D-060 — 6 correções de dado APLICADAS em produção + verificação pré-publicação construída
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2 (fecho)
+Gate do operador executado: as 6 correções de D-059 gravadas em produção, com trilha
+completa em `campanha_versoes` (9 eventos `correcao_d060_*`, payload antes/depois em cada
+um). Antes→depois:
+1. **AliExpress ×2** (`livelo-aliexpress-compra-2026-07-{21,23}`): tipo `compra`→
+   `shopping`, percentual 25→null (era "25 pontos/dólar", não 25%), bruto 60→null,
+   veredito → "Não confirmado" via `conta_nao_calculavel` (D-050.1). Rescore em revisão.
+2. **Caixa** (`caixa-desconhecido-cartao-2027-12-31`): percentual 100→null (cashback de
+   IOF = tarifa, não bônus de pontos), bruto 50→null, cnc; candidata a `nao_campanha`
+   via D-018 — decisão humana pendente.
+3. **Bradesco→Livelo**: tipo `transferencia`→`sorteio`.
+4. **BB Ourocard** (`bb-smiles-cartao-2026-12-31`): fonte linkada não sustenta o "5,5
+   milhas/dólar" → fila de revisão (identidade_id=NULL, convenção D-041; uuid anterior
+   preservado em notes/trilha).
+5. **BNB→Azul**: vigência **2024-07-17→2026-07-17** (bug de inferência de ano), estado
+   `historica`→`ultimos_dias` (vence hoje), codes normalizados `bnb`→`azul_fidelidade`,
+   `discard_reason` obsoleto ("vigencia encerrada em 2024") removido. Identidade e
+   rescore pendentes de revisão. **A oferta mais quente do dia voltou ao radar.**
+6. **Flying Blue**: canônica (`flyingblue-flyingblue-compra-na`) ganhou vigência
+   extraída da matéria (28/07/2026), `indeterminada`→`detectada`; duplicata
+   (`flyingblue-desconhecido-compra-na`) consolidada (`discard_reason=
+   duplicado_consolidado_d060`, identidade→revisão).
+
+**Verificação pré-publicação** (`v2/lib/verificacao/pre-superficie.mjs`, 11/11 testes):
+roda antes de QUALQUER superfície editorial (Digest + radar de ativos + M3). Checks —
+todos **flag para revisão, nunca descarte** (instrução explícita do operador: melhor
+mandar item bom pra revisão que sumir com promoção real): (a) `vigencia_bug_ano`
+(vigência >180d antes do first_seen — padrão BNB) e `valor_sem_data` (conta fechada sem
+vigência — padrão Flying Blue); (b) tipo suspeito: `acumulo_em_parceiro` (paridade
+"por dólar/real" com tipo compra/transferência — AliExpress), `sorteio` (Bradesco),
+`beneficio_tarifa` (IOF/anuidade com percentual — Caixa); (c)
+`confianca_baixa_para_destaque` (nota ≥60 com `[confianca:baixa]` — bloqueia
+headline/"melhor do dia", não remove da listagem). **Caso BB (número ausente da fonte)
+documentado como NÃO automatizável por heurística local — dono é a corroboração de
+termos TIER 1 (D-045).**
+
+**Medição histórica (volume de revisão):** nas **58 vivas** hoje, pós-correções: **0**
+flags estruturais e **2** bloqueios de destaque (`flyingblue-flyingblue` 65 e
+`costa_cruzeiros` 60 — ambos confiança baixa; 35/58 vivas são confiança baixa no total,
+mas só essas 2 cruzam o limiar de destaque). No backlog histórico completo (3.632, quase
+todo ingerido retroativamente nesta semana): ~1,6–1,9k bateriam o check de bug-de-ano
+(ingestão retroativa de campanhas já vencidas — sem ação, o FSM já as trata como
+históricas), 554 valor-sem-data, 40 tipo-suspeito, 119 confiança-baixa≥70. **Volume
+operacional projetado: ~0 a poucas unidades/dia** — administrável. Integração da
+passada no pipeline vivo (ingest + montagem) entra junto com o backport v4 em curso.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
