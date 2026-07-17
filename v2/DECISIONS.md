@@ -682,5 +682,66 @@ Custo marginal de uma edição hoje ≈ R$0 (nada gasta por causa dela). Além d
 custo em USD dos estágios existentes é hoje **não confirmado** — `model_registry`
 sem preço aprovado. Revisitar quando o Digest Engine especificar suas chamadas.
 
+## D-064 — Track A (M2.7 pipeline) + naming: A1–A4 construídos, Track B bloqueado
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2 (fechamento)
+
+**A1 — pré-superfície no pipeline vivo.** `v2/lib/verificacao/integrar.mjs`
+(`anotarRevisao`) liga a verificação D-060/D-061 ao ingest: cada candidato passa
+pelos checks ANTES de qualquer estado publicável; flag nunca descarta nem
+reclassifica — grava trilha `campanha_versoes` (`evento='flag_pre_superficie'`,
+`payload_antes=null`) e alimenta a fila. Wired em `rodar-producao.mjs` (idempotente
+por dia). Prova sobre os 58 vivos reais: **55 limpos, 3 revisão** (Smiles 375 P2 +
+flyingblue 65 e costa_cruzeiros 60 confiança-baixa); trilha gravada e idempotente;
+os 3 seguem vivos. Golden `integrar.test.mjs` (BNB reintroduzido: marcado, não
+enterrado, devolvido byte-a-byte).
+
+**A2 — runner diário `npm run daily`.** `scripts/daily.mjs` ponta a ponta:
+resolve edição → verifica (fila de revisão) → render → **gate único** → rascunho
+**draft-only idempotente por data** (ledger `content/daily-status.json`), NUNCA
+envia. Sem creds Beehiiv/Supabase → mock/`--campaigns` snapshot. Agendamento
+`.github/workflows/daily.yml` (`workflow_dispatch` + `schedule` COMENTADO a 09:30
+UTC/06:30 BRT seg-sex — só o operador liga, honrando "não inicia a contagem
+sozinho"). Execução autônoma provada (edição nº1, snapshot real, gate VERDE,
+2ª execução = noop). Achado do próprio runner: `ofertasAtivas` guardava o display
+`smiles→smiles`; alinhado ao código canônico `smiles→sem_destino` (rotaDisplay
+segue mostrando "Smiles → Smiles").
+
+**A3 — gate único bloqueante (M2.4).** `v2/lib/gate-unico.mjs` `gate(edition,ctx)`
+encadeia schema (`scripts/validate`) → dado (`pre-superficie`, NÃO bloqueia — flag
+é revisão, D-060) → editorial (`gate-5-5`), DELEGANDO (goldens dos módulos seguem
+autoridade). Golden `gate-unico.test.mjs` (7 casos). Suíte não-react **verde**
+(428) + painel 12; as 3 falhas remanescentes (`react` ausente no container) são
+ambientais, não regressão.
+
+**A4 — aprovação de 1 clique + fila de revisão.** Runner emite
+`out/daily/NNNN-revisao.md` (itens flagados, motivo, dados) que o operador vê
+ANTES de aprovar. Desenho para ratificação em `v2/M2/DESENHO-APROVACAO-1-CLIQUE.md`:
+recomenda o workflow `Beehiiv Publish` (`confirm: PUBLICAR`) como o "1 clique"
+oficial — separa rascunho automático (draft-only) do envio humano; auto-publish
+impossível por acidente.
+
+**Track B (6 segmentos Beehiiv) — BLOQUEADO, correto (INV-03 / regra 9).** Os 6
+nomes existem (`iniciante | emissao planejada | heavy user | alta renda |
+completar saldo | cashback first`, D-008), mas o CRITÉRIO (`where` DSL) não existe
+e não é construível: sem `custom_field` `perfil` e sem mecanismo de captura. Já
+registrado como blocker aberto na spec (SPEC-SLICE-VERIFICACAO-BEEHIIV-MCP §3/§5).
+**Sub-decisão de produto do operador**: (a) criar o custom_field `perfil` +
+(b) definir a captura (quiz de onboarding). Nada criado (não se chuta segmento).
+
+**Naming (Track D).** "The Loyal" é o nome próprio (CLAUDE.md). Corrigidos os leaks
+de "The Loyalty" no wordmark do site (`components/Logo.tsx`), masthead do web
+archive (`scripts/render-web.mjs`), media kit (`assets/logo/*`) e artefatos `out/*`;
+golden `tests/brand.test.mjs` robusto a tag-split. "loyalty" substantivo comum e
+nomes de arquivo de sistema preservados. Título/subject do rascunho Beehiiv
+corrigidos via MCP para "The Loyal Daily".
+
+**Estado do M2.** Slices de código do M2.7 (A1–A4) + M2.5 (D-063) fechadas e
+verdes; naming alinhado. **Falta para o M2 fechar de fato:** (1) ratificar o
+desenho de aprovação (A4); (2) resolver a sub-decisão de produto do Track B
+(segmentos); (3) o operador **iniciar a contagem dos 5 dias úteis** (descomentar o
+`schedule`) — decisão dele, não automática; (4) `DROP` do backup frio
+`campaigns_bkp_prev2_20260716` — decisão consciente do operador no fecho, nunca
+antes. Auto-publish permanece OFF.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
