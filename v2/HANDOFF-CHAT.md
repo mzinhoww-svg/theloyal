@@ -24,6 +24,40 @@
 
 ---
 
+## 0. REGRAS DE COORDENAÇÃO — os três chats escrevem no MESMO banco (ler antes de qualquer escrita)
+
+> **Por que existe.** Os três chats (principal, predict, calibração) operam sobre o
+> mesmo banco `qjqnqcsdnpvvmyzkavoq`. Enquanto todos estão em mede-e-propõe, sem risco.
+> Mas os três têm **escrita chegando** — calibração vai versionar parâmetro, predict vai
+> reconstruir a camada temporal, principal está aplicando não-valor e cobertura. A
+> **quase-colisão da edge fn v14** (predict quase sobrescreveu uma v14 que o principal
+> deployou sem inscrever) provou que sem regra dura os três colidem de novo. Estas duas
+> regras são **obrigatórias e precedem a escrita**, não cortesia depois.
+
+**REGRA 1 — Escrita única em produção: só o chat PRINCIPAL aplica migration e deploya edge fn.**
+Calibração e predict operam em **mede-e-propõe** e **entregam a mudança aprovada ao principal**,
+que serializa e aplica na ordem certa junto com as outras escritas. Um único ponto de escrita em
+produção mata a classe inteira de colisão de migration/deploy. Não trava ninguém: a frente propõe
+→ o operador aprova → o principal aplica.
+
+**REGRA 2 — Inscrição no handoff é GATE antes de escrever, não cortesia depois.**
+Nenhum chat toca produção sem antes **(a) ler o handoff** (ver o que os outros vão escrever) e
+**(b) inscrever aqui o que ele mesmo vai escrever**. A v14 furou porque a regra era voluntária;
+agora é obrigatória e precede a escrita.
+
+**Cadeia para qualquer parâmetro que a CALIBRAÇÃO produzir:** calibração **mede e propõe** →
+operador **aprova** (todo número que vira público passa pelo operador) → **principal serializa e
+aplica** em produção. A calibração nunca versiona vetor direto no banco. Ex.: os gates re-medidos
+(precisões que podem virar públicas) passam pelo operador; se implicarem versionar um vetor
+recalibrado, a aplicação vai pelo principal, não pela calibração.
+
+**Fila de escrita inscrita (o que cada chat vai aplicar — manter atualizado):**
+- **Principal:** não-valor (`conta_nao_calculavel`→bruto null), cobertura/TIER 1 (Frente B). Aplica.
+- **Predict:** reconstrução da camada temporal (Fase 1a estanca o bug vivo; reconstrução histórica a seguir). **Propõe → principal aplica.**
+- **Calibração:** `score_pesos`/`derivacao` só se recalibrados e aprovados (hoje: **v1 mantido, nada a aplicar** — D-053); golden N=400 é artefato de repo, não escrita de produção. **Propõe → principal aplica.**
+
+---
+
 ## 1. Estado atual
 
 **Metodologia:** GSD2 (Milestone > Slice > Task; spec antes de código;
