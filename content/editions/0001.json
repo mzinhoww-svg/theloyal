@@ -12,7 +12,7 @@
   "ofertasAtivas": [
     {
       "origem": "smiles",
-      "destino": "smiles",
+      "destino": "sem_destino",
       "tipo": "compra",
       "percentual": 375,
       "prazo": "2026-07-17",
