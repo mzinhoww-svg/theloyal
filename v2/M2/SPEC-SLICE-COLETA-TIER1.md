@@ -115,17 +115,33 @@ baixa, jamais **decidir** que ficou). Sinais (fatos sim/não da confirmação):
 A confiança é uma função pura desses sinais (pesos versionados, como `score_pesos`).
 Recalibrar = nova versão + changelog.
 
-### 3.2 O limiar decide o caminho — os DOIS automáticos
+### 3.1b Confiança (qualidade) é ORTOGONAL ao RESULTADO (corrobora/refuta) — D-049 ref.1
 
-- **Confiança ≥ limiar →** confirma e **atravessa os 3 portões sem revisão humana**.
-  Automação plena.
-- **Confiança < limiar →** vai para a **fila de revisão humana** (o antigo "manual").
-  Não é bloqueio permanente: é "este caso ainda não é confiável o bastante para
-  automatizar". O operador confirma/corrige; o desfecho **alimenta o auto-ajuste**.
+A confiança mede **quão bem verificamos**; o **resultado** da verificação é um eixo
+**separado**. O azul verificou com **alta confiança** E **refutou** o item. Nunca
+colapsar confiança com aprovação.
+
+Resultado ∈ **{corrobora_limpo, corrobora_com_ajuste, refuta}** — os **três níveis de
+divergência de termos** (D-049 ref.2), porque "termos corroboram" não é binário:
+
+| resultado | critério | exemplo | efeito |
+|---|---|---|---|
+| **corrobora_limpo** | número bate com a fonte dentro de tolerância de arredondamento/fraseio | blog "100%" vs oficial "até 100%" | confiança alta; publica se ≥ limiar |
+| **corrobora_com_ajuste** | número **existe** na fonte mas o **público/faixa** precisa correção | blog pegou 110% do tier clube; oficial tem a escala inteira | confiança **média**; separa por público (D-047) e/ou revisão |
+| **refuta** | número **não existe em NENHUMA faixa** da escala oficial | azul 115% vs 50/100/105/110/120 | remove/rebaixa com firmeza |
+
+### 3.2 O limiar × o resultado decidem o caminho (matriz, D-049)
+
+- **alta confiança + corrobora →** confirma e **atravessa os 3 portões sem revisão**.
+- **alta confiança + refuta →** **remove/rebaixa com firmeza** (não publica; corrige
+  com certeza — o azul: 115→50, Evitaria, histórica). Um refutado de alta confiança
+  sai do Deal Desk com a mesma convicção que um corroborado entra.
+- **confiança < limiar (qualquer resultado) →** **fila de revisão humana** (o antigo
+  "manual"). Não é bloqueio permanente: é "este caso ainda não é confiável o bastante
+  para automatizar". O desfecho **alimenta o auto-ajuste**.
 
 A fila de revisão herda o **corte de valor** (§5): só entra item vivo + computável +
-`tl_score_bruto` ≥ piso (70 inicial) — não se gasta revisão em item que ninguém vai
-agir. Para item **lado-único, só depois da Parte B** (score corrigido).
+`tl_score_bruto` ≥ piso (70 inicial). Para item **lado-único, só depois da Parte B**.
 
 ### 3.3 O limiar se AUTO-AJUSTA (mede o próprio acerto)
 
@@ -151,14 +167,20 @@ qualidade de publicação.
    justificou. Auditável ao longo do tempo, como os pesos do score. Se um dia publicar
    erro, dá para rastrear se o limiar estava baixo demais e por quê.
 
-### 3.5 Consequência de lançamento (human-in-the-loop faseado, brief §13)
+### 3.5 Lançamento faseado — modo "confirma-e-mostra" no dia 1 (D-049; trava 3)
 
-**Dia 1: limiar CONSERVADOR (alto).** Sem histórico para confiar em si, quase tudo de
-confiança não-máxima vai para revisão — o operador confirma bastante na mão. Conforme
-acumula confirmações com desfecho conhecido, o limiar **baixa até o piso**,
-automatizando mais. O sistema aprende com as confirmações do operador e o **tira do
-caminho onde já provou que acerta** — total-automação depois de provar taxa de bloqueio
-baixa. Aprovação humana no começo, automação plena no fim.
+**No dia 1 o limiar de partida é aprovado pelo OPERADOR, não pelo sistema.** O
+auto-ajuste (§3.3) só liga depois do **volume mínimo** de desfechos conhecidos (trava
+3). Até lá:
+
+- A Parte A roda em modo **"confirma-e-mostra"**: gera confirmações **com score de
+  confiança + resultado (corrobora/refuta)**, mas **NÃO publica automático**.
+- O operador vê o **primeiro lote real** (cada confirmação: confiança, corrobora/refuta,
+  onde caiu vs o limiar conservador inicial) e **crava o limiar de partida**.
+- Só então a publicação automática liga. O auto-ajuste assume depois do volume mínimo.
+
+Conforme acumula desfechos, o limiar baixa até o piso — o sistema **tira o operador do
+caminho onde já provou que acerta**. Aprovação humana no começo, automação plena no fim.
 
 ---
 
