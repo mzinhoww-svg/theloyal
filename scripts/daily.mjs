@@ -71,6 +71,34 @@ function contentHash(html) { return createHash('sha256').update(html).digest('he
 function loadLedger() { return existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, 'utf8')) : {}; }
 function saveLedger(l) { writeFileSync(LEDGER, JSON.stringify(l, null, 2) + '\n'); }
 
+// Fila de revisão como ARTEFATO legível (A4): o operador a vê ANTES de aprovar
+// o envio. Um item por flag, com motivo e o link da fonte quando houver. Nada
+// aqui bloqueia — é a lista que o olho humano confere.
+function escreverFilaRevisao({ ed, veredito, hoje }) {
+  const n = String(ed.number).padStart(4, '0');
+  const linhas = [
+    `# Fila de revisão — Daily nº ${ed.number} (${ed.date})`,
+    '',
+    `Gerada em ${hoje}. Gate: **${veredito.pass ? 'VERDE' : `VERMELHO (camada ${veredito.camada})`}**.`,
+    '',
+    veredito.revisao.length === 0
+      ? '_Nenhum item flagado hoje — nada a revisar antes de aprovar._'
+      : `**${veredito.revisao.length} item(ns) para conferência humana** (flag é revisão, nunca descarte — D-060):`,
+    '',
+  ];
+  for (const { item, flags } of veredito.revisao) {
+    linhas.push(`- **${item.id}** — tipo ${item.tipo}, ${item.percentual ?? 's/%'}%, TL ${item.tl_score_bruto ?? '—'}, estado ${item.estado}`);
+    for (const f of flags) linhas.push(`  - \`${f.flag}\`: ${f.motivo}`);
+  }
+  linhas.push('', '---', '',
+    '## Aprovação (decisão humana — 1 ação)',
+    '1. Confira a fila acima e a prévia do rascunho no Beehiiv.',
+    '2. Se aprovar, dispare o envio pela ação única de publicação (workflow `Beehiiv Publish` com `confirm: PUBLICAR`, ou o botão de envio no Beehiiv).',
+    '3. Auto-publish permanece OFF: sem essa ação, o rascunho não é enviado.');
+  writeFileSync(`${OUT}/${n}-revisao.md`, linhas.join('\n') + '\n');
+  return `${OUT}/${n}-revisao.md`;
+}
+
 // Upsert do rascunho, idempotente por DATA. Sem BEEHIIV_API_KEY → mock: registra
 // o alvo e o hash, não chama a API. NUNCA envia (status sempre draft).
 async function upsertRascunho({ ed, html, hoje }) {
@@ -137,14 +165,15 @@ async function main() {
 
   // 4. Gate único bloqueante.
   const veredito = gate(ed, { campaignsFromDb, renderedHtml: beehiivHtml, hoje, now: hoje });
+  const filaPath = escreverFilaRevisao({ ed, veredito, hoje });
   if (!veredito.pass) {
     log('[4/5]', `GATE VERMELHO na camada "${veredito.camada}" — ${veredito.violacoes.length} violação(ões). Rascunho NÃO gerado:`);
     for (const v of veredito.violacoes.slice(0, 12)) log('', `  ✗ ${v}`);
-    log('', `Fila de revisão (não bloqueia, informativa): ${veredito.revisao.length} item(ns).`);
+    log('', `Fila de revisão (não bloqueia, informativa): ${veredito.revisao.length} item(ns) → ${filaPath}.`);
     process.exitCode = 1;
     return;
   }
-  log('[4/5]', `GATE VERDE. Fila de revisão anexa: ${veredito.revisao.length} item(ns) para o operador ver antes de aprovar.`);
+  log('[4/5]', `GATE VERDE. Fila de revisão (${veredito.revisao.length} item(ns)) para o operador aprovar → ${filaPath}.`);
 
   // 5. Rascunho idempotente draft-only.
   const rasc = await upsertRascunho({ ed, html: beehiivHtml, hoje });
