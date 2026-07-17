@@ -108,8 +108,15 @@ media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera
 
 1. **[OPERADOR] Aprovar a SPEC de cobertura de fontes** (`SPEC-SLICE-COBERTURA-FONTES.md`).
    15/18 vivas crawleáveis sem URL oficial → invisíveis ao gate. Frente B (reverse-lookup:
-   oferta → busca página oficial, sem adapter novo) → Frente A (mais adapters, guiado por
-   medição: Azul/LATAM destinos, bancos, varejo) → Frente C (robustez). 4 decisões no §7.
+   oferta → busca página oficial **no sitemap oficial**, sem adapter novo) → Frente A (mais
+   adapters, priorizados por **oferta forte viva bloqueada**) → Frente C (robustez). 4
+   decisões no §7 (aguardam ratificação). 4 travamentos baqueados (gate não é pulado;
+   domínio oficial; corte por oferta-forte; URL compartilhada campanha/evergreen).
+   **⚠️ DEPENDÊNCIA CROSS-CHAT (predict):** a **correção da edge fn** (bug de corrupção
+   temporal VIVO na extração — chat de predict) é **pré-requisito** para as campanhas
+   capturadas pela cobertura terem **vigência confiável** (vigência = 1 dos 3 portões,
+   D-044). Não trava a Frente B, mas a vigência das novas só é confiável pós-correção.
+   **Ponto de alinhamento chat-principal ↔ chat-predict.**
 2. **[EM EXECUÇÃO] Re-score lado-único (Parte B aprovada).** Agente re-scorando os 1.220
    `sem_destino` com LADO_UNICO_V1: fallback OFF, `conta_nao_calculavel`→não-valor (null),
    D-037 buckets, min 3/8, versionado. Movimento modesto (54/79 saem da banda 65, nada
