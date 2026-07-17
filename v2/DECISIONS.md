@@ -501,5 +501,69 @@ Continua `status: draft`, `scheduled_at: null`, zero destinatário notificado.
 **Preview:** `https://theloyal.beehiiv.com/p/hoje-nenhuma-oferta-passou-do-corte-e-aqui-esta-a-conta?draft=true`.
 Auto-publish continua desligado; contagem dos 5 dias úteis **não iniciada**.
 
+## D-059 — Benchmark milhasbot: análise por promoção vai para M3; diagnóstico de cobertura (3 promoções vivas, 2 enterradas por bug de vigência); Predict com probabilidade sempre visível
+**Data:** 2026-07-17 · **Status:** Registrada (correções de dado aguardam aprovação) · **Milestone:** M2 (editorial) / M3 (roadmap)
+Rodada de refinamento editorial do rascunho nº 1 guiada por benchmark externo
+(milhasbot.com.br) colado pelo operador. Três desdobramentos:
+
+**(1) Roadmap M3 — "Ver análise" por promoção + histórico por programa.** O benchmark
+oferece página de análise individual por promoção (com a conta, contexto do regulamento,
+limitações — ex.: teto de 300k pontos, crédito em 15 dias úteis) e um placar histórico
+por programa (`/promocoes/`). O operador mandou colocar essa construção em M3/M4:
+**registrado como slice de M3**, encaixando no que já existe — D-046 (track record como
+arquivo público) e as páginas públicas do M3. Cada campanha ganha página própria com a
+conta feita, o TL Score explicado e o histórico da rota; o Daily linka "Ver análise" por
+item. Não construir agora.
+
+**(2) Diagnóstico de cobertura — o benchmark mostrou 3 ofertas vivas; TODAS já estavam
+no nosso banco, mas 2 invisíveis por bug de dado:**
+- `bancodobrasilnenhum,banco do nordeste-azul-transferencia-2024-07-17` (BNB→Azul até
+  110%): vigência parseada como **2024**-07-17 quando a matéria é de 2026 (classe de bug
+  do D-021 — inferência de ano em registro de extração LLM antigo) → FSM derivou
+  `historica` e o item sumiu do radar vivo. Identidade também malformada (origem_bruto
+  duplo). A oferta REAL vence 17/07/**2026**.
+- `flyingblue-*-compra-na` (Flying Blue 45% OFF): vigência não extraída (`na`) → estado
+  `indeterminada`, fora do filtro vivo. Matéria indica validade até 28/07/2026.
+- `livelo-hilton-hotelaria-2026-07-31` (50%, TL 65): viva e visível — a falha aqui foi
+  **editorial** (não citada na primeira versão do rascunho).
+**Correções de dado propostas (NÃO aplicadas — regravação em produção espera aprovação
+do operador):** (a) 2× livelo-aliexpress: tipo `compra`→acúmulo em parceiro + revisão de
+nota (o "25%" é na verdade "25 pontos/dólar"); (b) bradesco-livelo: é sorteio, não
+transferência; (c) caixa-cartao: "100%" é cashback de IOF (benefício de tarifa, candidata
+a `nao_campanha` via D-018); (d) bb-smiles-cartao: fonte linkada não sustenta o "5,5
+milhas/dólar" — item removido do rascunho e campanha para revisão; (e) bnb-azul 2026:
+corrigir vigência 2024→2026 + identidade + rescorar; (f) flyingblue compra: vigência
+28/07/2026 + dedup dos 2 registros. **Aprendizado de guardrail (aplicado no editorial
+imediatamente):** item de confiança baixa/não confirmado nunca é citado com número como
+"melhor do dia" sem link da fonte + status explícito — e número que a fonte linkada não
+sustenta sai da peça (caso BB Ourocard).
+
+**(1b) Benchmark-alvo detalhado (screencapture completo de /promocoes, colado pelo
+operador):** a página combina (i) barra de status viva ("AGORA · N bônus ativos · 1
+vence amanhã · Verificado em [data]"); (ii) tabela de ativos com Rota | Bônus (faixa,
+não só teto) | Milheiro | Vence | link "Ver análise"; (iii) **Placar histórico por
+rota** — por programa-destino, tabela DE | teto histórico (com mês/ano) | mediana |
+nº de registros; (iv) **Banco de dados por programa** — chips de média/mediana/teto/
+melhor-do-ano/nº de registros + parágrafo-síntese + histórico completo datado com
+veredito por linha. **Nosso equivalente:** mesma estrutura alimentada por `campaigns`
+(histórico já canonicalizado) + `content/forecast.json` (janelas previstas com
+probabilidade baixa/média/alta — nosso diferencial vs. o benchmark, que só olha para
+trás). **Adaptações de marca obrigatórias:** zero emoji (o benchmark usa 👍/🏆 — nós
+usamos o vocabulário TL com cor semântica), números em JetBrains Mono, veredito pela
+régua TL, não "Boa/Fraca" ad-hoc. Página atualizável (dado vivo, não lista manual) —
+alvo de M3 junto com o "Ver análise" por promoção.
+
+**(3) Predict — probabilidade sempre visível (venda orgânica).** Refinamento do operador
+sobre a proposta anterior: além da linha de cenário quando houver janela prevista, o
+editorial cita o Predict **mesmo quando a probabilidade é baixa/indefinida** — ex.: "o
+radar acompanha Esfera→Smiles (histórico típico ~70% de bônus), mas ainda não há base
+para prever a próxima janela; sem promoção à vista, a compra vale pelo que é hoje (TL
+63)". Mostra o poder da ferramenta nos dois sentidos e explica a nota. Rótulos:
+probabilidade **baixa/média/alta** por rota. A seção Predict formal (contagem de janelas
+alta-confiança) continua como em D-057; esta é a camada narrativa no corpo editorial.
+Aplicado no rascunho de hoje com dado real do forecast (`esfera→smiles`, typicalPercent
+70, confidence `em-formacao`). TL Score determinístico permanece intocado — a
+probabilidade explica a nota, nunca a altera.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
