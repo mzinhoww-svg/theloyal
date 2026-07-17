@@ -255,14 +255,20 @@ v2/
 
 ## 6. Próximo passo imediato (para o chat que retomar)
 
-1. **Re-score lado-único (Parte B)** fecha → verificar gravação (null bruto nos
-   `conta_nao_calculavel`, nada vira publicável).
-2. **Operador aprova a SPEC de cobertura de fontes** (`SPEC-SLICE-COBERTURA-FONTES.md`,
-   §7) → Frente B (reverse-lookup) primeiro, depois adapters guiados por medição.
-3. **Calibração dos vetores de score** (a frente que destrava o auto-publish, D-050):
-   quando fechar, liga a publicação automática do gate (limiar 0,75).
-4. **Track record (M3)** como conteúdo de estreia; **Deal Desk vivo** estreia quando a
-   máquina capturar a primeira oferta forte + viva + confirmada (gatilhado por oferta).
+**Fase do projeto (D-051):** saiu de *construir o motor* (provado ponta a ponta) para
+*operar e afinar*. **Frente A (adapters) ADIADA** — ranking de oferta-forte-bloqueada
+vazio (não se constrói infra de captura sem alvo medido). Frentes que rendem:
+
+1. **[PRINCIPAL] Track record / M3** — próxima frente de trabalho. `M3/SPEC-TRACK-RECORD.md`
+   escrita (4 decisões no §6). Conteúdo de estreia (prova de método), enquanto o Deal Desk
+   vivo espera oferta. **⚠️ Dependência temporal:** herda a janela confiável do predict
+   (~24m); NÃO exibe data que o sistema sabe suspeita (reconstrução temporal em curso no predict).
+2. **[CALIBRAÇÃO, caminho crítico] Revalidar a distribuição de score** contra a base
+   corrigida (D-050.1 zerou 710 brutos) → fechar os vetores → **liga o auto-publish** (D-050).
+3. **[predict] Reconstrução temporal** (~24m janela) + Fase 1a edge fn — destrava vigência
+   confiável para cobertura E track record.
+4. **Deal Desk vivo** estreia quando o calendário trouxer oferta forte + viva + confirmada
+   (o gate provado a captura). **Marco: fechar o M2** quando a calibração fechar.
 5. Atualizar este arquivo ao fechar cada slice.
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes
