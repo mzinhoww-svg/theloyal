@@ -459,5 +459,47 @@ rodada) — mantém a lógica de "observacional/analítico antes do teaser final
 sequenciamento anterior (D-053/D-054). **Modo: build aprovado — spec fecha aqui, próxima
 entrada em DECISIONS.md é o resultado do código.**
 
+## D-058 — Digest Engine v3 construído e integrado; gate 5.5 PASS nos dois casos; rascunho no Beehiiv reconstruído
+**Data:** 2026-07-17 · **Status:** Aprovada e aplicada · **Milestone:** M2 (fecho)
+Fecha a construção de D-057 em código. **Construído em `v2/lib/digest/`:**
+`ofertas-ativas.mjs` (`selecionarOfertasAtivas` reusa `passaTresPortoes` sem corte de
+veredito; `selecionarCartoesBancos` + `BANCOS_ORIGEM`), `dia-fraco.mjs` ganha
+`selecionarFechouSemana` (encerrada+TIER1+conta computável, janela 7d, sem cálculo) e
+`selecionarPredict`/`formatarTeaserPredict` (nunca revela valor/janela, só contagem),
+`gate-5-5.mjs` ganha `checkOfertasAtivas`/`checkCartoesBancos`/`checkFechouSemana`/
+`checkPredict`/`checkContaProsa` — todos rodando sempre, independente de Deals do dia.
+`content/edition.schema.json` recebeu o patch aditivo (`ofertasAtivas`, `cartoesBancos`,
+`oQueFechouSemana`, `predict`, `deal.contaProsa`/`deal.leitura`). Renderers (`email.mjs` +
+`render-beehiiv.mjs`) restruturados pra ordem D-057; Radar (janelas) e Sinais rápidos
+saem do render (absorvidos por Predict/Ofertas ativas — as funções que os geravam
+continuam testadas, só não são mais chamadas pelo renderer). 513/515 testes verdes (2
+fails pré-existentes, não relacionados).
+
+**Edição nº 1 remontada com dado 100% real** (SQL direto no momento da montagem, não
+fixture): Ofertas ativas com o único TIER1 confirmado hoje (`smiles`, bruto 55); Cartões
+& bancos com os 7 itens reais vivos (5 cartão + 2 transferência-banco); O que fechou
+nesta semana com 6 dos 7 itens reais encerrados nos últimos 7 dias (1 duplicata exata
+descartada por curadoria editorial — mesmo par origem/destino/% duas vezes seria ruído,
+não erro de dado). Predict, Loyalty Lab e Radar VPM **omitidos** — sem dado real
+suficiente hoje para uma narrativa sem fabricar tendência (regra-mãe). Salva em
+`content/editions/0001.json`.
+
+**Gate 5.5 rodado de verdade nos dois casos com a estrutura v3:**
+1. **Sem Deals do dia, dado real** (63 campanhas — 56 vivas + 7 encerradas via SQL
+   direto) → **PASS**, zero erros.
+2. **Com Deals do dia, fixture `illustrative:true` + campanhas sintéticas** cobrindo
+   todos os blocos novos (ofertasAtivas, deals via routeKey, cartoesBancos,
+   oQueFechouSemana) → **PASS**, zero erros, depois de 2 rodadas de correção (uma
+   campanha sintética sem `tipo`, um `encerrouEm`/`vigencia_fim` com componente de hora
+   que não batia string-a-string).
+
+**Beehiiv:** rascunho existente (`post_f7b2c959-8dcf-46e0-864d-f26b162a68f7`)
+**atualizado no lugar** via `edit_post_content` (doc replace) + `edit_post` (subtítulo/
+preheader sincronizados com o rename "Deals do dia") — não criado um segundo post.
+Continua `status: draft`, `scheduled_at: null`, zero destinatário notificado.
+**Editor:** `https://app.beehiiv.com/posts/f7b2c959-8dcf-46e0-864d-f26b162a68f7/edit`.
+**Preview:** `https://theloyal.beehiiv.com/p/hoje-nenhuma-oferta-passou-do-corte-e-aqui-esta-a-conta?draft=true`.
+Auto-publish continua desligado; contagem dos 5 dias úteis **não iniciada**.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
