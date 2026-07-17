@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 2,
+  "number": 41,
+  "date": "2026-07-08",
+  "weekday": "QUARTA-FEIRA",
+  "publishTime": "8H00",
+  "readingMinutes": 6,
+  "illustrative": true,
+  "subject": "Três movimentos, um deles vale olhar",
+  "preheader": "O mercado apertou junto. A conta de hoje mostra quanto.",
+  "signal": "3 programas mudaram regra de transferência na mesma semana. Quando o mercado inteiro aperta na mesma direção, o recado não é promoção. É margem — a conta abaixo mostra o CPM real de R$ 16,60 por milheiro.",
+  "deals": [
+    {
+      "category": "Transferência bonificada · Livelo → Smiles",
+      "title": "110% de bônus, mas a conta muda com o clube",
+      "context": "Vigência até quinta, 23h59. O bônus exige ativação prévia. Sem o clube, o milheiro final sobe 18%.",
+      "conta": {
+        "rows": [
+          ["custo origem", "R$ 1.394,00"],
+          ["pontos", "40.000"],
+          ["bônus", "110%"],
+          ["milhas finais", "84.000"]
+        ],
+        "result": ["CPM final", "R$ 16,60 /milheiro"]
+      },
+      "tlScore": 88,
+      "scoreBreakdown": {
+        "percentil": { "valor": 0.82, "valorBruto": 0.85, "baseN": 12, "peso": 0.45, "pesoEfetivo": 0.45, "janela": "rota-total" },
+        "eficiencia": { "valor": 0.7, "valorBruto": 0.7, "baseN": 60, "peso": 0.3, "pesoEfetivo": 0.3, "janela": "cpm-populacao-global" },
+        "raridade": { "valor": 0.65, "valorBruto": 0.65, "baseN": 4, "peso": 0.15, "pesoEfetivo": 0.15, "janela": "snapshot-rota" },
+        "abrangencia": { "valor": 1.0, "valorBruto": 1.0, "baseN": null, "peso": 0.1, "pesoEfetivo": 0.1, "janela": "publico" }
+      },
+      "verdict": "vale-agir",
+      "verdictNote": "Bom mesmo sem o clube. Ótimo com clube ativo.",
+      "vigencia": "2026-07-09T23:59:00-03:00",
+      "source": "Regulamento oficial Smiles · vigência confirmada 08/07, 6h40",
+      "sourceUrl": "https://www.smiles.com.br",
+      "entityKey": "smiles",
+      "routeKey": "livelo->smiles",
+      "firstSeen": "2026-07-07"
+    },
+    {
+      "category": "Compra de pontos · Smiles",
+      "title": "80% de desconto que ainda sai caro sem destino fechado",
+      "context": "O CPM efetivo fica acima da referência de mercado. Sem destino fechado, é capital parado.",
+      "conta": {
+        "rows": [
+          ["preço público", "R$ 45,00 /milheiro"],
+          ["desconto", "80%"],
+          ["CPM efetivo", "R$ 9,00 /milheiro"]
+        ],
+        "result": ["CPM final", "R$ 22,40 /milheiro (com taxas)"]
+      },
+      "tlScore": 72,
+      "verdict": "vale-olhar",
+      "verdictNote": "Só com destino já planejado.",
+      "vigencia": "2026-07-31T23:59:00-03:00",
+      "source": "Página oficial de compra Smiles",
+      "sourceUrl": "https://www.smiles.com.br",
+      "entityKey": "smiles",
+      "routeKey": "smiles->sem_destino",
+      "firstSeen": "2026-07-01"
+    },
+    {
+      "category": "Transferência bonificada · Esfera → Azul",
+      "title": "90% de bônus para quem já tem voo em vista",
+      "context": "Bom para emissão já planejada nos próximos meses. Ruim para estoque sem destino.",
+      "conta": {
+        "rows": [
+          ["custo origem", "R$ 900,00"],
+          ["pontos", "30.000"],
+          ["bônus", "90% → 57.000 milhas"]
+        ],
+        "result": ["CPM final", "R$ 15,79 /milheiro"]
+      },
+      "tlScore": 76,
+      "verdict": "vale-olhar",
+      "verdictNote": "Se já tem para onde ir.",
+      "vigencia": "2026-07-10T23:59:00-03:00",
+      "source": "Regulamento oficial Esfera",
+      "sourceUrl": "https://www.esfera.com.vc",
+      "entityKey": "azul",
+      "routeKey": "esfera->azul",
+      "firstSeen": "2026-07-05"
+    }
+  ],
+  "fechaLogo": [
+    {
+      "tag": "VENCE EM 48H",
+      "text": "Compra de pontos com 40% de desconto termina quinta.",
+      "cpm": "CPM R$ 24,90",
+      "note": "para assinantes do clube",
+      "vigencia": "2026-07-10T23:59:00-03:00"
+    },
+    {
+      "tag": "VENCE EM 24H",
+      "text": "Bônus Esfera → Azul termina amanhã, 23h59.",
+      "cpm": "CPM R$ 15,79",
+      "note": "vale só para quem já tem emissão planejada",
+      "vigencia": "2026-07-09T23:59:00-03:00"
+    }
+  ],
+  "contaFeita": {
+    "rows": [
+      ["custo origem", "R$ 1.394,00"],
+      ["pontos", "40.000"],
+      ["bônus", "110%"],
+      ["milhas finais", "84.000"]
+    ],
+    "result": ["CPM final", "R$ 16,60 /milheiro"]
+  },
+  "oQueEvitar": "Comprar pontos sem destino fechado só pelo desconto anunciado. A esse CPM, o estoque trava capital e ainda fica exposto a mudança de regra antes do resgate.",
+  "resumoDoDia": "3 programas apertaram a régua de pontos por real na mesma semana — Latam Pass revisou a tabela de resgate em rotas curtas, Smiles mudou a regra de expiração de 36 para 24 meses e um banco lançou transferência direta para uma aérea. Isoladamente cada mudança é pequena; juntas, sinalizam reprecificação de mercado, não uma campanha isolada.",
+  "clipping": [
+    { "title": "Latam Pass revisa tabela de resgate em rotas curtas", "url": "https://www.latampass.com.br/noticias/tabela-resgate", "source": "melhorescartoes", "tier": 2, "summary": "A companhia reduziu o teto de milhas por real em cartões de entrada, efeito a partir da próxima fatura." },
+    { "title": "Smiles altera regra de expiração para novos acúmulos", "url": "https://www.smiles.com.br/noticias/expiracao", "source": "melhoresdestinos", "tier": 2, "summary": "Pontos acumulados a partir de agosto passam a expirar em 24 meses, ante 36 hoje." },
+    { "title": "Banco lança transferência direta para aérea parceira", "url": "https://www.passageirodeprimeira.com/transferencia-direta", "source": "passageirodeprimeira", "tier": 2, "summary": "Novo convênio elimina o passo intermediário do clube de pontos para essa rota específica." },
+    { "title": "Coalizão de cashback anuncia teto mensal de acúmulo", "url": "https://www.pontospravoar.com/coalizao-teto", "source": "pontospravoar", "tier": 2, "summary": "O teto novo afeta principalmente compras recorrentes de alto valor no cartão da coalizão." },
+    { "title": "Clube de assinatura de pontos abre nova faixa de preço", "url": "https://www.tavily.com/clube-nova-faixa", "source": "tavily", "tier": 2, "summary": "A faixa intermediária reduz a mensalidade mas também reduz o bônus de transferência associado." }
+  ],
+  "radar": {
+    "note": "Projeção por recorrência do histórico do ledger. Não é veredito nem garantia — confira sempre as regras oficiais.",
+    "windows": [
+      { "label": "Latam Pass · Itaú → Latam Pass", "confidence": "alta", "window": "17 a 24 jul", "basis": "6 janelas nos últimos 12 meses, cadência mensal", "bonus": "~23%", "source": "forecast", "seriesKey": "itau-latampass", "generatedAt": "2026-07-08T06:00:00-03:00" }
+    ]
+  },
+  "shoppingWatch": [
+    { "player": "Latam Pass", "category": "smartphone", "vpmObservado": "R$ 18,20", "sampleN": 24, "source": "Catálogo público Latam Pass Shopping", "sourceUrl": "https://www.latampass.com.br/shopping", "observedAt": "2026-07-08T07:00:00-03:00" },
+    { "player": "Smiles", "category": "notebook", "vpmObservado": "R$ 21,40", "sampleN": 15, "source": "Catálogo público Smiles Shopping", "sourceUrl": "https://www.smiles.com.br/shopping" }
+  ],
+  "sinaisRapidos": [
+    { "origem": "brl", "destino": "esfera", "tipo": "compra", "brutoScore": 58, "motivoNaoQualifica": "veredito bruto \"Só para casos específicos\" abaixo do corte de Deal Desk (vale-agir/vale-olhar)" }
+  ],
+  "loyaltyLab": {
+    "titulo": "Por que a janela de calendário está seca",
+    "texto": "O intervalo entre campanhas fortes de transferência costuma se alargar no meio do trimestre — o mesmo padrão observado nas duas últimas janelas de Livelo→Latam. Isso não prevê a próxima campanha, só explica por que hoje há mais itens medianos do que fortes.",
+    "automationScore": 0.15,
+    "humanReviewed": true
+  },
+  "sources": [
+    { "label": "Regulamento oficial Smiles", "url": "https://www.smiles.com.br" },
+    { "label": "Regulamento oficial Esfera", "url": "https://www.esfera.com.vc" },
+    { "label": "Portal Livelo", "url": "https://www.livelo.com.br" }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."
+}

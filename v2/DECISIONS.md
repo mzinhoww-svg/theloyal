@@ -372,5 +372,39 @@ construir:** o golden já travado de `decisaoNoLimiar` (`coleta-tier1.test.mjs`)
 de gravação (`gravacao-tier1.mjs`) respeita esse comportamento já testado em vez de
 reescrevê-lo (D-043, dado/código vence resumo de spec).
 
+## D-055 — Digest Engine construído e integrado; gate 5.5 rodado de verdade nos dois casos (evidência)
+**Data:** 2026-07-17 · **Status:** Aprovada e aplicada · **Milestone:** M2 (fecho)
+Fecha a construção do Digest Engine (D-052/D-053/D-054) e prova o gate 5.5 contra dados
+reais, não só golden sintético. **Construído em `v2/lib/digest/`:** `mapear-contrato.mjs`
+(tradução veredito+scoreBreakdown, sem fallback silencioso), `selecionar.mjs` (3 portões +
+corte de Deal Desk + cap 3 com `cortados` reportado + Fecha Logo), `dia-fraco.mjs`
+(Clipping/Radar/Radar VPM/Sinais rápidos + `scoreAutomacaoLoyaltyLab` corte 0,85),
+`gate-5-5.mjs` (`checkComuns`/`checkComDealDesk`/`checkSemDealDesk`). `renderer/email.mjs`
+realinhado ao schema patchado (camelCase, 6 seções novas, omissão real de Deal Desk via
+marcador HTML `<!--section:deal-desk-->`, não string de prosa). `content/edition.schema.json`
+recebeu o patch aditivo (scoreBreakdown 4 componentes + `contaFeita`/`oQueEvitar`/
+`resumoDoDia`/`clipping`/`loyaltyLab`/`sinaisRapidos`). 178/178 testes verdes
+(`v2/lib/digest/*.test.mjs` + `renderer/email.test.mjs` + `v2/lib/score.test.mjs`/
+`derivacao.test.mjs`, sem regressão).
+
+**Gate 5.5 rodado de verdade (não só fixture) — dois casos:**
+1. **Sem Deal Desk, dados reais do banco vivo hoje (56 campanhas vivas via SQL direto):**
+   `selecionarDealDesk` recomputado ao vivo confirma **0 elegíveis** (único TIER 1 confirmado,
+   `smiles-desconhecido-compra-2026-07-17`, bruto 55 "Só para casos específicos", abaixo do
+   corte). `runGate55` contra o HTML renderizado de `renderer/examples/dia-fraco.json` (que já
+   espelhava esse estado real) → **PASS**, zero erros.
+2. **Com Deal Desk, fixture `illustrative:true` (`dia-forte.json`) + campanhas sintéticas
+   espelhando os 3 deals** (routeKey/tl_score_bruto/veredito_bruto): primeira rodada
+   **achou 3 problemas reais de autoria** na fixture (não do gate) — `oQueEvitar` continha
+   "corre risco" (colide com `URGENCY_RE`, falso-positivo textual do termo banido "corre"),
+   `signal`/`resumoDoDia` sem dígito (checagem estrutural INV-03). Fixture corrigida
+   (reescrita sem o termo, números concretos adicionados) → **PASS**, zero erros. Também
+   corrigido nesta rodada: `contaFeita` da fixture não batia literalmente com `deals[0].conta`
+   (falha do check de rastreabilidade) e o segundo deal não tinha `routeKey` — ambos
+   ajustados para refletir a convenção real de dados (routeKey `origem->destino`, `contaFeita`
+   idêntico ao deal de origem).
+**Achado do processo:** o gate 5.5 pegou 3 gaps de autoria reais numa fixture marcada
+illustrative — evidência de que ele funciona como auditoria independente, não decorativa.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
