@@ -159,6 +159,33 @@ gate (D-048) liga. Nunca ligar auto-publish sem o ledger capturando (perde o his
 dos primeiros dias). **Guarda de worktree (D-052.1):** todo agente nasce com checkout
 explícito do base real, nunca por herança do commit do worktree.
 
+**⏳ GATE ATIVO (D-060) — para o PRINCIPAL, ler antes de entregar a verificação
+pré-publicação.** Quando o desenho dos checks de vigência/tipo/confiança pré-publicação
+estiver pronto, a calibração mede **recall contra histórico conhecido** antes de
+qualquer threshold ir pra produção — objetivo do operador: nunca sumir com oferta real
+silenciosamente (prefere mais revisão manual a menos recall). **Fixture já pronto**
+(do benchmark milhasbot, D-059): a verificação tem que PASSAR (reconhecer como viva)
+**BNB→Azul** (vigência mal-parseada 2024 vs. real 2026, vence 17/07/2026 — classe de
+bug D-021) e **Flying Blue** (vigência `na`→indeterminada, vence 28/07/2026, real 45% OFF)
+— os dois casos que a v14/parser atual enterrou silenciosamente e só vieram à tona por
+benchmark externo. Se a verificação nova esconder qualquer um dos dois, não aprova o
+threshold sem reportar o trade-off primeiro.
+
+**Reconciliação (D-060):** o **P1 que A1 propôs** (fix `null→0` em `finite()`,
+rescore-1/2.mjs) **já foi aplicado pelo principal, independentemente** (`1fdc1fc`) —
+mesma medição (mediana 60→58, ≥70 ~13%→~9%). **P1 está resolvido, não pedir aprovação
+de novo.** P2 (teto de sanidade 200/300 p/ ghosts de percentual) segue aberto, ninguém
+tocou. **Achado colateral não resolvido:** `rescore-2.mjs` não chama
+`marcarNaoValorLadoUnico` no próprio output — rodar full-base ressuscitaria os 1.334
+brutos que D-050.1 zerou (619 ≥70). Vetores só fecham de verdade quando isso reconciliar.
+
+**⚠ Drift de sincronização (flag, sem ação unilateral):** a calibração está **23
+commits atrás** de `loyal-v2-architecture-nfvoh1` no momento deste registro (2026-07-17,
+tarde). Inclui v15 deployada, coleta TIER1 em produção, Digest Engine v3, 1º rascunho
+do Daily. Não fiz rebase — 3 PRs de calibração abertos (#106/#107/#108) apontam pro base
+atual; sincronizar exige coordenar as branches dos 3 agentes. Fica registrado para o
+operador decidir o timing, não decisão silenciosa da calibração.
+
 ### Re-score-1 dry-run na base SUJA (superado pela recanon; referência histórica)
 > Este dry-run rodou ANTES da recanonicalização. O balde 4=103 e as anomalias
 > abaixo eram sobre a base suja. O re-score-1 sobre a base SÃ (em execução) traz o
