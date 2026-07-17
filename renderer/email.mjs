@@ -7,7 +7,17 @@
 // `deal_desk`, `fecha_logo` como string única etc.) que nunca bateu com o schema
 // versionado — D-052(4) ratificou content/edition.schema.json como canônico e este
 // arquivo como o que realinha, não o contrário.
+//
+// v3 (D-057, SPEC-SLICE-DIGEST-ENGINE.md v3): ordem final da edição — Sinal do dia
+// (Resumo fundido) → Ofertas ativas → Deals do dia → Vence em até 72h → Cartões &
+// bancos → Clipping → O que fechou nesta semana → Radar VPM → Loyalty Lab → Predict.
+// `resumoDoDia` deixa de ser seção própria (fundida no Sinal do dia); `radar`
+// (janelas) migrou para dentro do teaser Predict — não renderizado mais como bloco
+// isolado aqui; `sinaisRapidos` fica obsoleto como bloco de render (absorvido por
+// `ofertasAtivas`) — a função que o gera continua testada em dia-fraco.mjs, só não
+// é mais chamada por este renderer.
 import { verdict, VERDICT_FAMILY } from "./tokens.mjs";
+import { formatarTeaserPredict } from "../v2/lib/digest/dia-fraco.mjs";
 
 function esc(s) {
   const t = String(s == null ? "" : s)
@@ -25,11 +35,25 @@ const eyebrow = (t, c = E) =>
   `<div style="font-family:'Courier New',Courier,monospace; font-size:11px; color:${c}; letter-spacing:1.5px; text-transform:uppercase; font-weight:bold;">${esc(t)}</div>`;
 const para = (t, size = 15, color = SOFT) =>
   `<p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:${size}px; line-height:1.6; color:${color};">${esc(t)}</p>`;
+const mono = (t, size = 12, color = SOFT) =>
+  `<span style="font-family:'Courier New',Courier,monospace; font-size:${size}px; color:${color};">${esc(t)}</span>`;
 
 function chip(vk) {
   const v = verdict(vk);
   const c = VERDICT_FAMILY[v.family];
   return `<span style="display:inline-block; background-color:${c.bg}; color:${c.text}; font-family:Arial,sans-serif; font-size:11px; font-weight:bold; letter-spacing:1px; padding:4px 10px;">${esc(v.label)}</span>`;
+}
+
+// Formata rota "origem->destino" (ou só origem para lado único) — o "->" vira
+// seta via esc() (mesma convenção já usada em category/tag no resto do arquivo).
+function rotaLabel(origem, destino) {
+  return destino ? `${origem}->${destino}` : String(origem || "");
+}
+function percentualLabel(percentual) {
+  return percentual !== null && percentual !== undefined ? `${percentual}%` : "—";
+}
+function dataLabel(iso) {
+  return iso ? String(iso).slice(0, 10) : "sem data";
 }
 
 // Conta Feita: bloco Ink fixo (CLAUDE.md ContaBlock — não muda em dark), mono
@@ -47,30 +71,56 @@ function contaBlock(conta) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${INK};"><tr><td style="padding:16px 18px; font-family:'Courier New',Courier,monospace; font-size:13px; line-height:1.9; color:${PAPER};">${body}</td></tr></table>`;
 }
 
-// Deal Desk: card por item. Seção inteira omitida quando deals=[] (regra-mãe,
-// D-050/D-051 — nunca card vazio/placeholder). A seção é delimitada por um
-// comentário HTML único (DEAL_DESK_SECTION_MARKER) — não pelo texto "Deal Desk"
-// isolado, porque esse texto pode aparecer legitimamente em prosa fora da seção
-// (ex.: sinaisRapidos explicando "abaixo do corte de Deal Desk"). O gate 5.5
+// Ofertas ativas (§1.1, D-057): tabela com TODO item vivo com conta computável,
+// sem corte de veredito. Leitura reusa o mesmo chip de veredito canônico.
+function ofertaAtivaRow(o) {
+  return `<tr>
+<td style="padding:8px 6px; border-bottom:1px solid ${HAIR}; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${INK};">${esc(rotaLabel(o.origem, o.destino))}</td>
+<td style="padding:8px 6px; border-bottom:1px solid ${HAIR}; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:${SOFT};">${esc(String(o.tipo || "").replace(/_/g, " "))}</td>
+<td style="padding:8px 6px; border-bottom:1px solid ${HAIR};">${mono(percentualLabel(o.percentual), 13, INK)}</td>
+<td style="padding:8px 6px; border-bottom:1px solid ${HAIR};">${mono(dataLabel(o.prazo), 12, SOFT)}</td>
+<td style="padding:8px 6px; border-bottom:1px solid ${HAIR};">${chip(o.leitura)}</td>
+</tr>`;
+}
+function ofertasAtivasTable(itens) {
+  const th = (label) => `<td style="padding:6px; font-family:Arial,sans-serif; font-size:11px; color:${MUT}; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid ${HAIR};">${esc(label)}</td>`;
+  const header = `<tr>${th("Programa/rota")}${th("Tipo")}${th("Bônus/preço")}${th("Prazo")}${th("Leitura")}</tr>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${header}${itens.map(ofertaAtivaRow).join("")}</table>`;
+}
+
+// Deals do dia (§1.2, D-057 — antes "Deal Desk"): card por item, numerado.
+// Seção inteira omitida quando deals=[] (regra-mãe, D-050/D-051 — nunca card
+// vazio/placeholder). A seção é delimitada por um comentário HTML único
+// (DEAL_DESK_SECTION_MARKER) — não pelo texto isolado, porque esse texto pode
+// aparecer legitimamente em prosa fora da seção. O gate 5.5
 // (v2/lib/digest/gate-5-5.mjs, DEAL_DESK_MARKER) procura este MESMO comentário
-// no HTML final — mudar o marcador aqui exige atualizar o gate junto.
+// no HTML final — mudar o marcador aqui exige atualizar o gate junto. O nome
+// interno da constante fica como está (implementação, não rótulo visível).
 export const DEAL_DESK_SECTION_MARKER = '<!--section:deal-desk-->';
-function dealCard(d) {
+function dealCard(d, index) {
+  const numero = typeof index === "number" ? `${index + 1}. ` : "";
+  const leituraTexto = d.leitura || d.verdictNote || "";
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${HAIR}; background-color:${SURFACE};"><tr><td style="padding:16px 18px;">
 <div style="font-family:'Courier New',Courier,monospace; font-size:11px; color:${MUT}; letter-spacing:1px; text-transform:uppercase;">${esc(d.category || "")}</div>${sp(6)}
-<div style="font-family:Georgia,serif; font-size:17px; font-weight:bold; color:${INK}; line-height:1.35;">${esc(d.title || "")}</div>${sp(8)}
+<div style="font-family:Georgia,serif; font-size:17px; font-weight:bold; color:${INK}; line-height:1.35;">${esc(numero)}${esc(d.title || "")}</div>${sp(8)}
 <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.55; color:#555555;">${esc(d.context || "")}</p>${sp(10)}
 ${contaBlock(d.conta)}${sp(10)}
+${d.contaProsa ? `${eyebrow("A conta", MUT)}${sp(4)}${para(d.contaProsa, 13, SOFT)}${sp(10)}` : ""}
 ${chip(d.verdict)}<span style="font-family:Arial,sans-serif; font-size:13px; color:${SOFT}; padding-left:8px;">${esc(d.verdictNote || "")}</span>${sp(8)}
+${leituraTexto ? `${eyebrow("Leitura", MUT)}${sp(4)}${para(leituraTexto, 13, SOFT)}${sp(8)}` : ""}
 <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:${MUT};">Fonte: ${esc(d.source || "")}</p>
 </td></tr></table>`;
 }
 
-// Fecha Logo: array de itens (tag/text/cpm/note) — não mais string única.
-function fechaItem(f) {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:4px solid #F2C94C; background-color:#FCF0CE;"><tr><td style="padding:14px 16px;">
-${eyebrow(f.tag || "", "#7A5B00")}${sp(6)}${para(f.text || "", 15)}${f.cpm ? `<p style="margin:4px 0 0; font-family:'Courier New',Courier,monospace; font-size:13px; color:${INK};">${esc(f.cpm)}</p>` : ""}${f.note ? `<p style="margin:4px 0 0; font-family:Arial,sans-serif; font-size:12px; color:${MUT};">${esc(f.note)}</p>` : ""}
-</td></tr></table>`;
+// Vence em até 72h (§1.3, D-057 — renomeação de Fecha Logo, MESMO seletor/dado
+// de fechaLogo[]): lista simples, não mais cards com tag colorida.
+function vence72hItem(f) {
+  return `<tr><td style="padding:10px 0; border-bottom:1px solid ${HAIR};">
+${eyebrow(f.tag || "", "#7A5B00")}${sp(4)}
+${para(f.text || "", 14)}
+${f.cpm ? `<div style="margin-top:2px;">${mono(f.cpm, 13, INK)}</div>` : ""}
+${f.note ? `<div style="margin-top:2px; font-family:Arial,sans-serif; font-size:11px; color:${MUT};">${esc(f.note)}</div>` : ""}
+</td></tr>`;
 }
 
 // Clipping: lista de itens TIER 2 (title/summary/link/source+tier).
@@ -83,38 +133,19 @@ function clippingItem(it) {
 </td></tr>`;
 }
 
-// Radar de janelas — confiança via família de veredito já disponível (evita
-// hex novo: alta=green, media=blue, baixa=gray).
-const RADAR_CONFIDENCE = {
-  alta: { ...VERDICT_FAMILY.green, label: "CONFIANÇA ALTA" },
-  media: { ...VERDICT_FAMILY.blue, label: "CONFIANÇA MÉDIA" },
-  baixa: { ...VERDICT_FAMILY.gray, label: "CONFIANÇA BAIXA" },
-};
-function radarRow(w) {
-  const c = RADAR_CONFIDENCE[w.confidence] || RADAR_CONFIDENCE.baixa;
-  return `<tr><td style="padding:8px 0; border-bottom:1px solid ${HAIR};">
-<div style="font-family:Arial,Helvetica,sans-serif; font-size:14px; font-weight:bold; color:${INK};">${esc(w.label || "")}${w.bonus ? ` <span style="font-family:'Courier New',Courier,monospace; font-size:13px; font-weight:normal; color:${SOFT};">${esc(w.bonus)}</span>` : ""}</div>
-<div style="font-family:'Courier New',Courier,monospace; font-size:13px; color:${SOFT};">${esc(w.window || "")}</div>
-<span style="display:inline-block; margin-top:4px; background-color:${c.bg}; color:${c.text}; font-family:Arial,sans-serif; font-size:10px; font-weight:bold; letter-spacing:1px; padding:2px 8px;">${c.label}</span>
-${w.basis ? `<div style="margin-top:4px; font-family:Arial,sans-serif; font-size:12px; color:${MUT};">${esc(w.basis)}</div>` : ""}
+// O que fechou nesta semana (§1.6, D-057): bullets de recap, sem cálculo novo.
+function fechouSemanaRow(f) {
+  const rota = rotaLabel(f.origem, f.destino);
+  const tipoLabel = String(f.tipo || "").replace(/_/g, " ");
+  const pct = percentualLabel(f.percentual);
+  return `<tr><td style="padding:6px 0; border-bottom:1px solid ${HAIR}; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:1.5; color:${SOFT};">
+<span style="color:${INK}; font-weight:bold;">${esc(rota)}</span> — ${esc(tipoLabel)}${pct !== "—" ? ` (${mono(pct, 12, SOFT)})` : ""}, encerrou em ${mono(dataLabel(f.encerrouEm), 12, SOFT)}
 </td></tr>`;
 }
 
 // Radar VPM (shoppingWatch): player/categoria/VPM em mono.
 function shoppingRow(s) {
   return `<tr><td style="padding:6px 0; border-bottom:1px solid ${HAIR}; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${SOFT};">${esc(s.player || "")} &middot; ${esc(s.category || "")}</td><td align="right" style="padding:6px 0; border-bottom:1px solid ${HAIR}; font-family:'Courier New',Courier,monospace; font-size:13px; color:${INK};">${esc(s.vpmObservado || "")}</td></tr>`;
-}
-
-// Sinais rápidos: distinto visualmente de um card de Deal Desk — sem chip,
-// sem borda de card, só linha com o motivo. NUNCA renderiza s.verdict/s.veredito
-// (o shape do schema já não tem esse campo — reforço defensivo aqui também).
-function sinalRapidoRow(s) {
-  const rota = [s.origem, s.destino].filter(Boolean).join(" &rarr; ");
-  return `<tr><td style="padding:6px 0; border-bottom:1px solid ${HAIR};">
-<span style="font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${SOFT};">${esc(rota)}</span>
-${typeof s.brutoScore === "number" ? ` <span style="font-family:'Courier New',Courier,monospace; font-size:12px; color:${MUT};">bruto ${s.brutoScore}</span>` : ""}
-<div style="font-family:Arial,Helvetica,sans-serif; font-size:12px; color:${MUT};">${esc(s.motivoNaoQualifica || "")}</div>
-</td></tr>`;
 }
 
 function sectionRow(padTop, content) {
@@ -150,18 +181,25 @@ export function renderEmail(ed) {
 ${ed.illustrative ? `<div style="font-family:Arial,sans-serif; font-size:12px; color:${MUT}; margin-top:4px;">Edição ilustrativa. Números de exemplo.</div>` : ""}
 </td></tr>`);
 
-  // Sinal do dia — obrigatório sempre.
+  // 1. Sinal do dia — obrigatório sempre. v3 (D-057 decisão 5): resumoDoDia
+  // funde aqui como 2º parágrafo, não é mais seção própria.
   P.push(`<tr><td style="padding:22px 32px; background-color:${PANEL2}; border-top:1px solid ${HAIR}; border-bottom:1px solid ${HAIR};">${eyebrow("Sinal do dia")}${sp(10)}
-<p style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:21px; line-height:1.35; color:${INK}; font-weight:bold;">${esc(ed.signal || "")}</p></td></tr>`);
+<p style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:21px; line-height:1.35; color:${INK}; font-weight:bold;">${esc(ed.signal || "")}</p>${ed.resumoDoDia ? `${sp(10)}${para(ed.resumoDoDia, 15)}` : ""}</td></tr>`);
 
-  // Deal Desk — omitido POR COMPLETO quando deals=[] (sem título, sem card).
+  // 2. Ofertas ativas (§1.1) — tabela, TODO item vivo com conta computável.
+  const ofertasAtivas = Array.isArray(ed.ofertasAtivas) ? ed.ofertasAtivas : [];
+  if (ofertasAtivas.length > 0) {
+    P.push(sectionRow(18, `${eyebrow("Ofertas ativas")}${sp(10)}${ofertasAtivasTable(ofertasAtivas)}`));
+  }
+
+  // 3. Deals do dia — omitido POR COMPLETO quando deals=[] (sem título, sem card).
   const deals = Array.isArray(ed.deals) ? ed.deals : [];
   if (deals.length > 0) {
-    const cards = deals.slice(0, 3).map(dealCard).join(sp(12));
+    const cards = deals.slice(0, 3).map((d, i) => dealCard(d, i)).join(sp(12));
     if (deals.length > 3) {
       console.error(`[renderer/email] deals.length=${deals.length} > 3 — renderizando só os 3 primeiros (aviso, não corte silencioso, D-052/S1-D3).`);
     }
-    P.push(`${DEAL_DESK_SECTION_MARKER}<tr><td style="padding:24px 32px 8px 32px;">${eyebrow("Deal Desk")}${sp(12)}${cards}</td></tr>`);
+    P.push(`${DEAL_DESK_SECTION_MARKER}<tr><td style="padding:24px 32px 8px 32px;">${eyebrow("Deals do dia")}${sp(12)}${cards}</td></tr>`);
   }
 
   // Conta Feita — contaFeita explícito, ou fallback ao primeiro deal (D-052/S1-D1).
@@ -170,52 +208,56 @@ ${ed.illustrative ? `<div style="font-family:Arial,sans-serif; font-size:12px; c
     P.push(`<tr><td style="padding:22px 32px 8px 32px;">${eyebrow("Conta feita")}${sp(10)}${contaBlock(contaFeita)}</td></tr>`);
   }
 
-  // Fecha Logo — array de itens, eixo independente de Deal Desk.
+  // 4. Vence em até 72h (renomeação de Fecha Logo, mesmo dado fechaLogo[]).
   const fechaLogo = Array.isArray(ed.fechaLogo) ? ed.fechaLogo : [];
   if (fechaLogo.length > 0) {
-    P.push(`<tr><td style="padding:18px 32px;">${eyebrow("Fecha logo")}${sp(10)}${fechaLogo.map(fechaItem).join(sp(10))}</td></tr>`);
+    P.push(sectionRow(18, `${eyebrow("Vence em até 72h")}${sp(10)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${fechaLogo.map(vence72hItem).join("")}</table>`));
   }
 
-  // O que evitar — opcional.
+  // O que evitar — opcional, junto do eixo Deals do dia/Vence 72h.
   if (ed.oQueEvitar) {
     P.push(`<tr><td style="padding:6px 32px 14px 32px;">${eyebrow("O que evitar", "#B53A3A")}${sp(6)}${para(ed.oQueEvitar, 15)}</td></tr>`);
   }
 
-  // Ordem cravada (D-053): Resumo do dia → Clipping → Radar → Radar VPM →
-  // Sinais rápidos → Loyalty Lab. Cada bloco só entra se tiver dado real
-  // (regra-mãe §2.1/§2.3) — a decisão de omitir já foi tomada por quem monta
-  // `ed` (v2/lib/digest/dia-fraco.mjs); este renderer só reflete presença/ausência.
-  if (ed.resumoDoDia) {
-    P.push(sectionRow(18, `${eyebrow("Resumo do dia")}${sp(8)}${para(ed.resumoDoDia, 15)}`));
+  // 5. Cartões & bancos (§1.4) — prosa evergreen.
+  if (ed.cartoesBancos) {
+    P.push(sectionRow(18, `${eyebrow("Cartões & bancos")}${sp(8)}${para(ed.cartoesBancos, 15)}`));
   }
 
+  // 6. Clipping — sem mudança de seleção, só de posição na ordem v3.
   if (Array.isArray(ed.clipping) && ed.clipping.length > 0) {
     const rows = ed.clipping.map(clippingItem).join("");
     P.push(sectionRow(18, `${eyebrow("Clipping")}${sp(8)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`));
   }
 
-  const radarWindows = ed.radar && Array.isArray(ed.radar.windows) ? ed.radar.windows : [];
-  if (radarWindows.length > 0) {
-    const rows = radarWindows.map(radarRow).join("");
-    P.push(sectionRow(18, `${eyebrow("Radar de janelas")}${sp(6)}${ed.radar.note ? para(ed.radar.note, 12, MUT) + sp(6) : ""}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`));
+  // 7. O que fechou nesta semana (§1.6) — bullets de recap TIER 1.
+  const oQueFechouSemana = Array.isArray(ed.oQueFechouSemana) ? ed.oQueFechouSemana : [];
+  if (oQueFechouSemana.length > 0) {
+    P.push(sectionRow(18, `${eyebrow("O que fechou nesta semana")}${sp(8)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${oQueFechouSemana.map(fechouSemanaRow).join("")}</table>`));
   }
 
+  // 8. Radar VPM — lógica/seletor inalterados (selecionarRadarVpm), só mudou
+  // de posição na ordem v3 (D-057 decisão 7: bloco próprio, não funde).
   const shoppingWatch = Array.isArray(ed.shoppingWatch) ? ed.shoppingWatch : [];
   if (shoppingWatch.length > 0) {
     const rows = shoppingWatch.map(shoppingRow).join("");
     P.push(sectionRow(18, `${eyebrow("Radar VPM &middot; Shopping")}${sp(8)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`));
   }
 
-  const sinaisRapidos = Array.isArray(ed.sinaisRapidos) ? ed.sinaisRapidos : [];
-  if (sinaisRapidos.length > 0) {
-    const rows = sinaisRapidos.map(sinalRapidoRow).join("");
-    P.push(sectionRow(18, `${eyebrow("Sinais rápidos")}${sp(8)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`));
-  }
-
+  // 9. Loyalty Lab — lógica/score de automação inalterados, só mudou de
+  // posição (D-057 decisão 8: bloco próprio, corte 0,85 inalterado).
   if (ed.loyaltyLab && ed.loyaltyLab.titulo) {
     const ll = ed.loyaltyLab;
     P.push(sectionRow(18, `${eyebrow("Loyalty Lab")}${sp(8)}
 <div style="font-family:Georgia,serif; font-size:17px; font-weight:bold; color:${INK};">${esc(ll.titulo)}</div>${sp(6)}${para(ll.texto || "", 14, "#555555")}`));
+  }
+
+  // 10. Predict (§1.7) — teaser, só contagem, nunca valor/janela. `radar`
+  // (janelas) migrou para dentro daqui (D-057 decisão 6) — não há mais bloco
+  // "Radar de janelas" próprio.
+  if (ed.predict && typeof ed.predict.ativos === "number" && ed.predict.ativos > 0) {
+    const teaser = formatarTeaserPredict(ed.predict.ativos);
+    P.push(sectionRow(18, `${eyebrow("Predict")}${sp(8)}${para(teaser, 14, SOFT)}`));
   }
 
   // Fontes — obrigatório.

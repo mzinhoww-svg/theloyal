@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "number": 41,
   "date": "2026-07-08",
   "weekday": "QUARTA-FEIRA",
@@ -9,6 +9,14 @@
   "subject": "Três movimentos, um deles vale olhar",
   "preheader": "O mercado apertou junto. A conta de hoje mostra quanto.",
   "signal": "3 programas mudaram regra de transferência na mesma semana. Quando o mercado inteiro aperta na mesma direção, o recado não é promoção. É margem — a conta abaixo mostra o CPM real de R$ 16,60 por milheiro.",
+  "resumoDoDia": "3 programas apertaram a régua de pontos por real na mesma semana — Latam Pass revisou a tabela de resgate em rotas curtas, Smiles mudou a regra de expiração de 36 para 24 meses e um banco lançou transferência direta para uma aérea. Isoladamente cada mudança é pequena; juntas, sinalizam reprecificação de mercado, não uma campanha isolada.",
+  "ofertasAtivas": [
+    { "origem": "livelo", "destino": "smiles", "tipo": "transferencia", "percentual": 110, "prazo": "2026-07-09T23:59:00-03:00", "leitura": "vale-agir" },
+    { "origem": "smiles", "destino": null, "tipo": "compra", "percentual": 80, "prazo": "2026-07-31T23:59:00-03:00", "leitura": "vale-olhar" },
+    { "origem": "esfera", "destino": "azul", "tipo": "transferencia", "percentual": 90, "prazo": "2026-07-10T23:59:00-03:00", "leitura": "vale-olhar" },
+    { "origem": "brl", "destino": "esfera", "tipo": "compra", "percentual": 35, "prazo": null, "leitura": "casos-especificos" },
+    { "origem": "livelo", "destino": "hilton", "tipo": "transferencia", "percentual": 50, "prazo": "2026-07-20T23:59:00-03:00", "leitura": "esperaria" }
+  ],
   "deals": [
     {
       "category": "Transferência bonificada · Livelo → Smiles",
@@ -32,6 +40,8 @@
       },
       "verdict": "vale-agir",
       "verdictNote": "Bom mesmo sem o clube. Ótimo com clube ativo.",
+      "contaProsa": "Com bônus de 110%, os R$ 1.394,00 investidos rendem 84.000 milhas — CPM final de R$ 16,60 /milheiro.",
+      "leitura": "Vale a pena mesmo sem o clube ativado — o CPM já bate a referência de mercado da rota. Com o clube, a vantagem cresce ainda mais.",
       "vigencia": "2026-07-09T23:59:00-03:00",
       "source": "Regulamento oficial Smiles · vigência confirmada 08/07, 6h40",
       "sourceUrl": "https://www.smiles.com.br",
@@ -110,7 +120,7 @@
     "result": ["CPM final", "R$ 16,60 /milheiro"]
   },
   "oQueEvitar": "Comprar pontos sem destino fechado só pelo desconto anunciado. A esse CPM, o estoque trava capital e ainda fica exposto a mudança de regra antes do resgate.",
-  "resumoDoDia": "3 programas apertaram a régua de pontos por real na mesma semana — Latam Pass revisou a tabela de resgate em rotas curtas, Smiles mudou a regra de expiração de 36 para 24 meses e um banco lançou transferência direta para uma aérea. Isoladamente cada mudança é pequena; juntas, sinalizam reprecificação de mercado, não uma campanha isolada.",
+  "cartoesBancos": "5 programas de cartão e 2 convênios de transferência bancária seguem com campanha viva nesta semana — Itaú lidera as transferências bonificadas para bancos parceiros, com Nubank em segundo.",
   "clipping": [
     { "title": "Latam Pass revisa tabela de resgate em rotas curtas", "url": "https://www.latampass.com.br/noticias/tabela-resgate", "source": "melhorescartoes", "tier": 2, "summary": "A companhia reduziu o teto de milhas por real em cartões de entrada, efeito a partir da próxima fatura." },
     { "title": "Smiles altera regra de expiração para novos acúmulos", "url": "https://www.smiles.com.br/noticias/expiracao", "source": "melhoresdestinos", "tier": 2, "summary": "Pontos acumulados a partir de agosto passam a expirar em 24 meses, ante 36 hoje." },
@@ -118,18 +128,12 @@
     { "title": "Coalizão de cashback anuncia teto mensal de acúmulo", "url": "https://www.pontospravoar.com/coalizao-teto", "source": "pontospravoar", "tier": 2, "summary": "O teto novo afeta principalmente compras recorrentes de alto valor no cartão da coalizão." },
     { "title": "Clube de assinatura de pontos abre nova faixa de preço", "url": "https://www.tavily.com/clube-nova-faixa", "source": "tavily", "tier": 2, "summary": "A faixa intermediária reduz a mensalidade mas também reduz o bônus de transferência associado." }
   ],
-  "radar": {
-    "note": "Projeção por recorrência do histórico do ledger. Não é veredito nem garantia — confira sempre as regras oficiais.",
-    "windows": [
-      { "label": "Latam Pass · Itaú → Latam Pass", "confidence": "alta", "window": "17 a 24 jul", "basis": "6 janelas nos últimos 12 meses, cadência mensal", "bonus": "~23%", "source": "forecast", "seriesKey": "itau-latampass", "generatedAt": "2026-07-08T06:00:00-03:00" }
-    ]
-  },
+  "oQueFechouSemana": [
+    { "origem": "livelo", "destino": "azul", "tipo": "transferencia", "percentual": 120, "encerrouEm": "2026-07-05T23:59:00-03:00" }
+  ],
   "shoppingWatch": [
     { "player": "Latam Pass", "category": "smartphone", "vpmObservado": "R$ 18,20", "sampleN": 24, "source": "Catálogo público Latam Pass Shopping", "sourceUrl": "https://www.latampass.com.br/shopping", "observedAt": "2026-07-08T07:00:00-03:00" },
     { "player": "Smiles", "category": "notebook", "vpmObservado": "R$ 21,40", "sampleN": 15, "source": "Catálogo público Smiles Shopping", "sourceUrl": "https://www.smiles.com.br/shopping" }
-  ],
-  "sinaisRapidos": [
-    { "origem": "brl", "destino": "esfera", "tipo": "compra", "brutoScore": 58, "motivoNaoQualifica": "veredito bruto \"Só para casos específicos\" abaixo do corte de Deal Desk (vale-agir/vale-olhar)" }
   ],
   "loyaltyLab": {
     "titulo": "Por que a janela de calendário está seca",
@@ -137,6 +141,7 @@
     "automationScore": 0.15,
     "humanReviewed": true
   },
+  "predict": { "ativos": 2 },
   "sources": [
     { "label": "Regulamento oficial Smiles", "url": "https://www.smiles.com.br" },
     { "label": "Regulamento oficial Esfera", "url": "https://www.esfera.com.vc" },

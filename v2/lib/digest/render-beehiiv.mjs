@@ -15,13 +15,22 @@
 // REGRA MÃE (D-053 §2.1, aplicada aqui também): sem Deal Desk, a seção
 // inteira é omitida do documento — nunca um `section` vazio.
 //
+// v3 (D-057, SPEC-SLICE-DIGEST-ENGINE.md v3): ordem final — Sinal do dia
+// (Resumo fundido) → Ofertas ativas → Deals do dia → Vence em até 72h →
+// Cartões & bancos → Clipping → O que fechou nesta semana → Radar VPM →
+// Loyalty Lab → Predict. `resumoDoDia` deixa de ser seção própria; `radar`
+// (janelas) migrou para dentro do teaser Predict; `sinaisRapidos` fica
+// obsoleto como bloco de render (absorvido por `ofertasAtivas`).
+//
 // Cores: tokens do CLAUDE.md (fill hex, não classe Tailwind — este não é
 // componente React). Números em mono via textStyle fontFamily monospace
 // (fallback do lado do Beehiiv/cliente de e-mail; sem garantia de
 // JetBrains Mono carregar, mesmo problema estrutural do e-mail cru).
+import { formatarTeaserPredict } from './dia-fraco.mjs';
+
 const INK = '#111111', PAPER = '#FAF7F0', PAPER_DARK = '#F1ECE1', SURFACE = '#FFFFFF';
 const LINE = '#E5E0D5', GRAY700 = '#3D3A34', GRAY500 = '#555555', GRAY400 = '#8A8578';
-const GREEN600 = '#00A878', GREEN100 = '#D9F4E9', YELLOW100 = '#FCF0CE';
+const GREEN600 = '#00A878', GREEN100 = '#D9F4E9';
 const RED600 = '#D64545', BLUE600 = '#315CFF';
 const MONO = 'JetBrains Mono, ui-monospace, monospace';
 
@@ -63,6 +72,17 @@ function verdictChip(verdict) {
   return `<p><span style="color: ${color}; font-family: ${MONO}; font-size: 0.75rem; font-weight: 700">${esc(label.toUpperCase())}</span></p>`;
 }
 
+// Formata rota "origem->destino" (ou só origem para lado único).
+function rotaLabel(origem, destino) {
+  return destino ? `${origem} → ${destino}` : String(origem || '');
+}
+function percentualLabel(percentual) {
+  return percentual !== null && percentual !== undefined ? `${percentual}%` : '—';
+}
+function dataLabel(iso) {
+  return iso ? String(iso).slice(0, 10) : 'sem data';
+}
+
 /** Conta (rows + result) como columns lado a lado — nunca <table> (sem borda por célula). */
 function contaBlock(conta, { onDark = false } = {}) {
   const textColor = onDark ? PAPER : GRAY700;
@@ -80,18 +100,58 @@ function contaBlock(conta, { onDark = false } = {}) {
   return rows + result;
 }
 
-/** Deal Desk — array de deals já elegíveis (o gate 5.5 confirma isso antes; este módulo só renderiza). */
-function renderDeal(d) {
+/** Ofertas ativas (§1.1, D-057): uma linha por item, columns — nunca <table>. */
+function ofertaAtivaRow(o) {
+  return columns([
+    { html: p(rotaLabel(o.origem, o.destino), { color: GRAY700, weight: '700' }), width: '28%' },
+    { html: p(String(o.tipo || '').replace(/_/g, ' '), { color: GRAY500, size: '0.8rem' }), width: '22%' },
+    { html: p(percentualLabel(o.percentual), { color: INK, mono: true }), width: '16%' },
+    { html: p(dataLabel(o.prazo), { color: GRAY500, mono: true, size: '0.8rem' }), width: '18%' },
+    { html: verdictChip(o.leitura), width: '16%' },
+  ]);
+}
+
+/** Deals do dia (§1.2, D-057 — antes "Deal Desk") — array de deals já elegíveis
+ * (o gate 5.5 confirma isso antes; este módulo só renderiza), numerado,
+ * `contaProsa`/`leitura` aditivos com fallback (leitura → verdictNote). */
+function renderDeal(d, index) {
+  const numero = typeof index === 'number' ? `${index + 1}. ` : '';
+  const leituraTexto = d.leitura || d.verdictNote || '';
   const inner = [
     eyebrow(d.category || ''),
-    heading(d.title || '', 3),
+    heading(`${numero}${d.title || ''}`, 3),
     p(d.context || '', { color: GRAY500 }),
     contaBlock(d.conta || {}),
+    d.contaProsa ? eyebrow('A conta', GRAY400) : '',
+    d.contaProsa ? p(d.contaProsa, { color: GRAY700, size: '0.85rem' }) : '',
     verdictChip(d.verdict),
     d.verdictNote ? p(d.verdictNote, { color: GRAY700, size: '0.85rem' }) : '',
+    leituraTexto ? eyebrow('Leitura', GRAY400) : '',
+    leituraTexto ? p(leituraTexto, { color: GRAY700, size: '0.85rem' }) : '',
     p(d.source || '', { color: GRAY400, size: '0.8rem' }),
   ].join('');
   return section(inner, { 'background-color': SURFACE, 'border-color': LINE, 'border-style': 'solid', 'border-width-top': 1, 'border-width-right': 1, 'border-width-bottom': 1, 'border-width-left': 1, 'padding-top': 16, 'padding-right': 18, 'padding-bottom': 16, 'padding-left': 18, 'margin-bottom': 12 });
+}
+
+/** Vence em até 72h (§1.3, D-057 — renomeação de Fecha Logo, MESMO dado
+ * fechaLogo[]): lista simples (divisor fino), não mais card com fill amarelo. */
+function vence72hItem(f) {
+  const inner = [
+    `<p><span style="color: #7A5B00; font-family: ${MONO}; font-size: 0.75rem; font-weight: 700">${esc((f.tag || '').toUpperCase())}</span></p>`,
+    p(f.text || '', { color: INK }),
+    f.cpm ? p(f.cpm, { color: GRAY700, mono: true, size: '0.85rem' }) : '',
+    f.note ? p(f.note, { color: GRAY400, size: '0.8rem' }) : '',
+  ].join('');
+  return section(inner, { 'border-color': LINE, 'border-style': 'solid', 'border-width-bottom': 1, 'padding-top': 8, 'padding-bottom': 8 });
+}
+
+/** O que fechou nesta semana (§1.6, D-057): bullet, sem cálculo novo. */
+function fechouSemanaRow(f) {
+  const rota = rotaLabel(f.origem, f.destino);
+  const tipoLabel = String(f.tipo || '').replace(/_/g, ' ');
+  const pct = percentualLabel(f.percentual);
+  const texto = `${rota} — ${tipoLabel}${pct !== '—' ? ` (${pct})` : ''}, encerrou em ${dataLabel(f.encerrouEm)}`;
+  return p(texto, { color: GRAY500, size: '0.85rem' });
 }
 
 /** Renderiza a edição inteira no dialeto Tiptap. Regra-mãe: seção sem dado real = omitida. */
@@ -102,17 +162,51 @@ export function renderBeehiivHtml(ed) {
   const metaBits = [ed.number ? `Nº ${ed.number}` : null, ed.date, ed.readingMinutes ? `${ed.readingMinutes} min` : null].filter(Boolean);
   if (metaBits.length) parts.push(p(metaBits.join(' · '), { color: GRAY400, mono: true, size: '0.8rem' }));
 
-  // Sinal do Dia — sempre presente (obrigatório no schema).
-  parts.push(section([eyebrow('Sinal do dia'), heading(ed.signal || '', 2)].join(''),
+  // 1. Sinal do Dia — sempre presente (obrigatório no schema). v3 (D-057
+  // decisão 5): resumoDoDia funde aqui como 2º parágrafo, não é mais seção própria.
+  const sinalInner = [eyebrow('Sinal do dia'), heading(ed.signal || '', 2)];
+  if (ed.resumoDoDia) sinalInner.push(p(ed.resumoDoDia, { color: GRAY700 }));
+  parts.push(section(sinalInner.join(''),
     { 'background-color': PAPER_DARK, 'padding-top': 20, 'padding-right': 20, 'padding-bottom': 20, 'padding-left': 20, 'margin-bottom': 16 }));
 
-  // Resumo do dia — prosa, distinto do Sinal (D-053). Omitido se ausente.
-  if (ed.resumoDoDia) {
-    parts.push(eyebrow('Resumo do dia', GRAY400));
-    parts.push(p(ed.resumoDoDia, { color: GRAY700 }));
+  // 2. Ofertas ativas (§1.1) — TODO item vivo com conta computável.
+  if (Array.isArray(ed.ofertasAtivas) && ed.ofertasAtivas.length > 0) {
+    parts.push(eyebrow('Ofertas ativas'));
+    for (const o of ed.ofertasAtivas) parts.push(ofertaAtivaRow(o));
   }
 
-  // Clipping — piso 5, nunca parcial (a seleção já garantiu isso a montante; aqui só renderiza).
+  // 3. Deals do dia — REGRA-MÃE: deals.length === 0 → seção OMITIDA por completo, nunca vazia.
+  if (Array.isArray(ed.deals) && ed.deals.length > 0) {
+    parts.push(eyebrow('Deals do dia'));
+    ed.deals.forEach((d, i) => parts.push(renderDeal(d, i)));
+  }
+
+  // Conta Feita — fallback: conta do primeiro deal quando ausente (D-052/S1-D1).
+  const contaFeitaSrc = ed.contaFeita || (ed.deals?.[0]?.conta ?? null);
+  if (contaFeitaSrc) {
+    parts.push(section([eyebrow('Conta feita', PAPER), contaBlock(contaFeitaSrc, { onDark: true })].join(''),
+      { 'background-color': INK, color: PAPER, 'padding-top': 18, 'padding-right': 18, 'padding-bottom': 18, 'padding-left': 18, 'margin-bottom': 16 }));
+  }
+
+  // 4. Vence em até 72h (renomeação de Fecha Logo, mesmo dado).
+  if (Array.isArray(ed.fechaLogo) && ed.fechaLogo.length > 0) {
+    parts.push(eyebrow('Vence em até 72h'));
+    for (const f of ed.fechaLogo) parts.push(vence72hItem(f));
+  }
+
+  // O que evitar
+  if (ed.oQueEvitar) {
+    parts.push(eyebrow('O que evitaria', RED600));
+    parts.push(p(ed.oQueEvitar, { color: GRAY700 }));
+  }
+
+  // 5. Cartões & bancos (§1.4) — prosa evergreen.
+  if (ed.cartoesBancos) {
+    parts.push(eyebrow('Cartões & bancos'));
+    parts.push(p(ed.cartoesBancos, { color: GRAY700 }));
+  }
+
+  // 6. Clipping — piso 5, nunca parcial (a seleção já garantiu isso a montante; aqui só renderiza).
   if (Array.isArray(ed.clipping) && ed.clipping.length >= 5) {
     parts.push(eyebrow('Clipping'));
     for (const item of ed.clipping) {
@@ -124,42 +218,14 @@ export function renderBeehiivHtml(ed) {
     }
   }
 
-  // Deal Desk — REGRA-MÃE: deals.length === 0 → seção OMITIDA por completo, nunca vazia.
-  if (Array.isArray(ed.deals) && ed.deals.length > 0) {
-    parts.push(eyebrow('Deal Desk'));
-    for (const d of ed.deals) parts.push(renderDeal(d));
+  // 7. O que fechou nesta semana (§1.6) — recap TIER 1, sem cálculo novo.
+  if (Array.isArray(ed.oQueFechouSemana) && ed.oQueFechouSemana.length > 0) {
+    parts.push(eyebrow('O que fechou nesta semana'));
+    for (const f of ed.oQueFechouSemana) parts.push(fechouSemanaRow(f));
   }
 
-  // Conta Feita — fallback: conta do primeiro deal quando ausente (D-052/S1-D1).
-  const contaFeitaSrc = ed.contaFeita || (ed.deals?.[0]?.conta ?? null);
-  if (contaFeitaSrc) {
-    parts.push(section([eyebrow('Conta feita', PAPER), contaBlock(contaFeitaSrc, { onDark: true })].join(''),
-      { 'background-color': INK, color: PAPER, 'padding-top': 18, 'padding-right': 18, 'padding-bottom': 18, 'padding-left': 18, 'margin-bottom': 16 }));
-  }
-
-  // Fecha Logo
-  if (Array.isArray(ed.fechaLogo) && ed.fechaLogo.length > 0) {
-    for (const f of ed.fechaLogo) {
-      parts.push(section([
-        `<p><span style="color: #7A5B00; font-family: ${MONO}; font-size: 0.75rem; font-weight: 700">${esc((f.tag || '').toUpperCase())}</span></p>`,
-        p(f.text || '', { color: INK }),
-        f.cpm ? p(f.cpm, { color: GRAY700, mono: true }) : '',
-      ].join(''), { 'background-color': YELLOW100, 'border-color': '#F2C94C', 'border-style': 'solid', 'border-width-left': 4, 'padding-top': 12, 'padding-right': 14, 'padding-bottom': 12, 'padding-left': 14, 'margin-bottom': 12 }));
-    }
-  }
-
-  // Radar (predicoes[] / radar.windows[]) — só janelas com dado real (seleção a montante já filtrou).
-  if (ed.radar?.windows?.length) {
-    parts.push(eyebrow('Radar de janelas'));
-    for (const w of ed.radar.windows) {
-      parts.push(columns([
-        { html: p(w.label || '', { color: GRAY700 }) },
-        { html: p(w.window || '', { color: INK, mono: true }) },
-      ]));
-    }
-  }
-
-  // Radar VPM (shoppingWatch[])
+  // 8. Radar VPM (shoppingWatch[]) — lógica/seletor inalterados, só posição
+  // (D-057 decisão 7: bloco próprio).
   if (Array.isArray(ed.shoppingWatch) && ed.shoppingWatch.length > 0) {
     parts.push(eyebrow('Radar VPM'));
     for (const s of ed.shoppingWatch) {
@@ -170,25 +236,20 @@ export function renderBeehiivHtml(ed) {
     }
   }
 
-  // Sinais rápidos — NUNCA carrega chip de veredito Deal Desk (transparência, não teaser).
-  if (Array.isArray(ed.sinaisRapidos) && ed.sinaisRapidos.length > 0) {
-    parts.push(eyebrow('Sinais rápidos', GRAY400));
-    for (const s of ed.sinaisRapidos) {
-      parts.push(p(`${s.origem || ''} → ${s.destino || ''} (${s.tipo || ''}) — ${s.motivoNaoQualifica || ''}`, { color: GRAY500, size: '0.85rem' }));
-    }
-  }
-
-  // Loyalty Lab — único bloco narrativo/gerativo.
+  // 9. Loyalty Lab — único bloco narrativo/gerativo, lógica inalterada,
+  // só posição (D-057 decisão 8: bloco próprio, corte 0,85 inalterado).
   if (ed.loyaltyLab?.texto) {
     parts.push(eyebrow('Loyalty Lab'));
     parts.push(heading(ed.loyaltyLab.titulo || '', 3));
     parts.push(p(ed.loyaltyLab.texto, { color: GRAY500 }));
   }
 
-  // O que evitar
-  if (ed.oQueEvitar) {
-    parts.push(eyebrow('O que evitaria', RED600));
-    parts.push(p(ed.oQueEvitar, { color: GRAY700 }));
+  // 10. Predict (§1.7) — teaser, só contagem, nunca valor/janela. `radar`
+  // (janelas) migrou para dentro daqui (D-057 decisão 6) — não há mais bloco
+  // "Radar de janelas" próprio.
+  if (ed.predict && typeof ed.predict.ativos === 'number' && ed.predict.ativos > 0) {
+    parts.push(eyebrow('Predict'));
+    parts.push(p(formatarTeaserPredict(ed.predict.ativos), { color: GRAY500 }));
   }
 
   // Disclaimer — sempre presente (const no schema).

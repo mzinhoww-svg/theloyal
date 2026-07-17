@@ -2,8 +2,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DISCLAIMER } from '../../../scripts/lib.mjs';
-import { checkComuns, checkComDealDesk, checkSemDealDesk, runGate55, DEAL_DESK_MARKER } from './gate-5-5.mjs';
-import { selecionarSinaisRapidos } from './dia-fraco.mjs';
+import {
+  checkComuns, checkComDealDesk, checkSemDealDesk, runGate55, DEAL_DESK_MARKER,
+  checkOfertasAtivas, checkCartoesBancos, checkFechouSemana, checkPredict, checkContaProsa,
+} from './gate-5-5.mjs';
+import { selecionarSinaisRapidos, formatarTeaserPredict } from './dia-fraco.mjs';
 
 // Estado real de hoje (2026-07-17, SPEC-SLICE-DIGEST-ENGINE.md §0): 0 elegíveis
 // a Deal Desk; o único item vivo/tier1/com-conta é bruto 55 (smiles, compra),
@@ -140,5 +143,198 @@ test('COM Deal Desk: veredito do deal não bate com {vale-agir,vale-olhar} → r
   };
   const results = checkComDealDesk(ed, [campanha]);
   assert.ok(results.some((r) => !r.ok && r.check.includes('veredito ∈')));
-  assert.ok(results.some((r) => !r.ok && r.check.includes('elegível a Deal Desk')));
+  assert.ok(results.some((r) => !r.ok && r.check.includes('elegível a Deals do dia')));
+});
+
+// ── Blocos novos da v3 (D-057) ──────────────────────────────────────────
+const CAMPANHA_CARTAO = { id: 'cartao1', tipo: 'cartao', origem_code: 'itau', destino_code: null, estado: 'ativa', tier: 2, tl_score_bruto: null, veredito_bruto: null, percentual: null, vigencia_fim: null };
+const CAMPANHA_BANCO = { id: 'banco1', tipo: 'transferencia', origem_code: 'nubank', destino_code: 'livelo', estado: 'detectada', tier: 2, tl_score_bruto: null, veredito_bruto: null, percentual: 15, vigencia_fim: null };
+const CAMPANHA_ENCERRADA_SEMANA = {
+  id: 'encerrada1', tipo: 'transferencia', origem_code: 'livelo', destino_code: 'azul', estado: 'encerrada',
+  tier: 1, tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: 120, vigencia_fim: '2026-07-12T23:59:00-03:00',
+};
+const CAMPANHAS_V3 = [...CAMPANHAS_HOJE, CAMPANHA_CARTAO, CAMPANHA_BANCO, CAMPANHA_ENCERRADA_SEMANA];
+
+function edicaoV3Valida() {
+  const base = edicaoDiaFracoValida();
+  return {
+    ...base,
+    ofertasAtivas: [
+      { origem: 'brl', destino: 'smiles', tipo: 'compra', percentual: 40, prazo: '2026-07-17T23:59:00-03:00', leitura: 'casos-especificos' },
+    ],
+    cartoesBancos: '5 cartões e 2 bancos seguem com transferência bonificada viva hoje — nenhum com TIER 1 confirmado ainda.',
+    oQueFechouSemana: [
+      { origem: 'livelo', destino: 'azul', tipo: 'transferencia', percentual: 120, encerrouEm: '2026-07-12T23:59:00-03:00' },
+    ],
+  };
+}
+
+// ── checkOfertasAtivas ──
+test('checkOfertasAtivas: golden — item recomputa limpo (passa 3 portões, leitura bate)', () => {
+  const ed = edicaoV3Valida();
+  const results = checkOfertasAtivas(ed, CAMPANHAS_V3);
+  const falhas = results.filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkOfertasAtivas: item ausente ⇒ sem checks (nada a recomputar)', () => {
+  assert.deepEqual(checkOfertasAtivas({}, CAMPANHAS_V3), []);
+});
+
+test('checkOfertasAtivas: quebrado — leitura divergente do veredito_bruto real → reprova', () => {
+  const ed = edicaoV3Valida();
+  ed.ofertasAtivas[0].leitura = 'vale-agir'; // banco diz casos-especificos
+  const results = checkOfertasAtivas(ed, CAMPANHAS_V3);
+  assert.ok(results.some((r) => !r.ok && r.check.includes('leitura bate com veredito_bruto real')));
+});
+
+test('checkOfertasAtivas: quebrado — item não localizável no banco → reprova', () => {
+  const ed = edicaoV3Valida();
+  ed.ofertasAtivas[0].origem = 'programa_fantasma';
+  const results = checkOfertasAtivas(ed, CAMPANHAS_V3);
+  assert.ok(results.some((r) => !r.ok && r.check.includes('campanha correspondente localizável')));
+});
+
+test('checkOfertasAtivas: quebrado — item não passa mais os 3 portões (estado mudou no banco) → reprova', () => {
+  const ed = edicaoV3Valida();
+  const campanhasEncerrada = CAMPANHAS_V3.map((c) => (c.id === 'smiles-desconhecido-compra-2026-07-17' ? { ...c, estado: 'encerrada' } : c));
+  const results = checkOfertasAtivas(ed, campanhasEncerrada);
+  assert.ok(results.some((r) => !r.ok && r.check.includes('passa os 3 portões')));
+});
+
+// ── checkCartoesBancos ──
+test('checkCartoesBancos: golden — prosa com número + itens reais recomputados no banco', () => {
+  const ed = edicaoV3Valida();
+  const results = checkCartoesBancos(ed, CAMPANHAS_V3);
+  const falhas = results.filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkCartoesBancos: ausente ⇒ sem checks', () => {
+  assert.deepEqual(checkCartoesBancos({}, CAMPANHAS_V3), []);
+});
+
+test('checkCartoesBancos: quebrado — prosa sem nenhum número (INV-03) → reprova', () => {
+  const ed = { ...edicaoV3Valida(), cartoesBancos: 'Cartões e bancos seguem com campanha viva, sem número específico hoje.' };
+  const results = checkCartoesBancos(ed, CAMPANHAS_V3);
+  assert.ok(results.some((r) => !r.ok && r.check.includes('cita ao menos um número')));
+});
+
+test('checkCartoesBancos: quebrado — zero itens reais no banco para embasar a prosa → reprova', () => {
+  const ed = edicaoV3Valida();
+  const results = checkCartoesBancos(ed, CAMPANHAS_HOJE); // sem CAMPANHA_CARTAO/CAMPANHA_BANCO
+  assert.ok(results.some((r) => !r.ok && r.check.includes('existe ao menos 1 item real')));
+});
+
+// ── checkFechouSemana ──
+test('checkFechouSemana: golden — item recomputa estado=encerrada/tier=1/tl_score_bruto/janela', () => {
+  const ed = edicaoV3Valida();
+  const results = checkFechouSemana(ed, CAMPANHAS_V3, { hoje: '2026-07-17' });
+  const falhas = results.filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkFechouSemana: ausente ⇒ sem checks', () => {
+  assert.deepEqual(checkFechouSemana({}, CAMPANHAS_V3, { hoje: '2026-07-17' }), []);
+});
+
+test('checkFechouSemana: quebrado — item fora da janela de 7 dias no banco → reprova', () => {
+  const campanhasForaJanela = CAMPANHAS_V3.map((c) => (c.id === 'encerrada1' ? { ...c, vigencia_fim: '2026-06-01T00:00:00-03:00' } : c));
+  const ed = { ...edicaoV3Valida(), oQueFechouSemana: [{ origem: 'livelo', destino: 'azul', tipo: 'transferencia', percentual: 120, encerrouEm: '2026-06-01T00:00:00-03:00' }] };
+  const results = checkFechouSemana(ed, campanhasForaJanela, { hoje: '2026-07-17' });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('janela de 7d')));
+});
+
+test('checkFechouSemana: quebrado — banco mostra tier 2 (não TIER 1) → reprova', () => {
+  const campanhasTier2 = CAMPANHAS_V3.map((c) => (c.id === 'encerrada1' ? { ...c, tier: 2 } : c));
+  const ed = edicaoV3Valida();
+  const results = checkFechouSemana(ed, campanhasTier2, { hoje: '2026-07-17' });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('janela de 7d')));
+});
+
+// ── checkPredict ──
+test('checkPredict: golden — ativos>0, recomputa radarDaily e teaser renderizado bate', () => {
+  const ed = { ...edicaoV3Valida(), predict: { ativos: 2 } };
+  const radarDailyWindows = [
+    { label: 'a', confidence: 'alta' }, { label: 'b', confidence: 'alta' }, { label: 'c', confidence: 'baixa' },
+  ];
+  const html = `<html>${formatarTeaserPredict(2)}</html>`;
+  const results = checkPredict(ed, { renderedHtml: html, radarDailyWindows });
+  const falhas = results.filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkPredict: ausente ⇒ sem checks (seção corretamente omitida)', () => {
+  assert.deepEqual(checkPredict({}, {}), []);
+});
+
+test('checkPredict: quebrado — ativos=0 deveria ter sido omitido → reprova', () => {
+  const ed = { predict: { ativos: 0 } };
+  const results = checkPredict(ed, {});
+  assert.ok(results.some((r) => !r.ok && r.check.includes('predict.ativos > 0')));
+});
+
+test('checkPredict: quebrado — ativos não bate com radarDaily recomputado → reprova', () => {
+  const ed = { predict: { ativos: 5 } };
+  const results = checkPredict(ed, { radarDailyWindows: [{ label: 'a', confidence: 'alta' }] });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('recomputado a partir de radarDaily')));
+});
+
+test('checkPredict: quebrado — teaser renderizado vaza valor/janela (texto escrito à mão, não formatarTeaserPredict) → reprova', () => {
+  const ed = { predict: { ativos: 1 } };
+  const html = '<html>1 previsão: Itaú → Latam Pass, ~23% na semana de 17 a 24 jul.</html>';
+  const results = checkPredict(ed, { renderedHtml: html });
+  assert.ok(results.some((r) => !r.ok && r.check.includes('teaser renderizado bate exatamente')));
+});
+
+// ── checkContaProsa ──
+test('checkContaProsa: golden — todo número da prosa tem correspondente literal em conta', () => {
+  const ed = {
+    deals: [{
+      category: 'x', title: 'x', context: 'x',
+      conta: { rows: [['custo origem', 'R$ 1.394,00'], ['bônus', '110%']], result: ['CPM final', 'R$ 16,60 /milheiro'] },
+      contaProsa: 'Com bônus de 110%, o CPM final fecha em R$ 16,60 por milheiro.',
+      verdict: 'vale-agir', source: 'x',
+    }],
+  };
+  const results = checkContaProsa(ed);
+  const falhas = results.filter((r) => !r.ok);
+  assert.deepEqual(falhas, [], `deveria passar limpo: ${JSON.stringify(falhas)}`);
+});
+
+test('checkContaProsa: ausente ⇒ sem checks para esse deal', () => {
+  const ed = { deals: [{ category: 'x', title: 'x', context: 'x', conta: { rows: [['a', 'b']], result: ['c', 'd'] }, verdict: 'vale-agir', source: 'x' }] };
+  assert.deepEqual(checkContaProsa(ed), []);
+});
+
+test('checkContaProsa: quebrado — prosa cita número que não existe na conta → reprova', () => {
+  const ed = {
+    deals: [{
+      category: 'x', title: 'x', context: 'x',
+      conta: { rows: [['bônus', '90%']], result: ['CPM final', 'R$ 15,79 /milheiro'] },
+      contaProsa: 'O bônus de 130% deixa o CPM em R$ 15,79 por milheiro.', // 130% não está na conta
+      verdict: 'vale-olhar', source: 'x',
+    }],
+  };
+  const results = checkContaProsa(ed);
+  assert.ok(results.some((r) => !r.ok && r.check.includes('correspondente literal')));
+});
+
+// ── runGate55: os blocos v3 entram na orquestração ──
+test('runGate55: edição com blocos v3 limpos ainda aprova (pass=true)', () => {
+  const ed = edicaoV3Valida();
+  const radarDailyWindows = [];
+  const r = runGate55(ed, {
+    campaignsFromDb: CAMPANHAS_V3, renderedHtml: RENDERED_HTML_SEM_DEAL_DESK,
+    radarDailyWindows, hoje: '2026-07-17',
+  });
+  assert.equal(r.pass, true, `esperava passar: ${JSON.stringify(r.errors)}`);
+});
+
+test('runGate55: leitura de ofertasAtivas divergente derruba o gate mesmo com o resto limpo', () => {
+  const ed = edicaoV3Valida();
+  ed.ofertasAtivas[0].leitura = 'vale-agir';
+  const r = runGate55(ed, { campaignsFromDb: CAMPANHAS_V3, renderedHtml: RENDERED_HTML_SEM_DEAL_DESK, hoje: '2026-07-17' });
+  assert.equal(r.pass, false);
+  assert.ok(r.errors.some((e) => e.includes('leitura bate com veredito_bruto real')));
 });

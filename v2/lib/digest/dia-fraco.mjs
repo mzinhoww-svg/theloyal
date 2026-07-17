@@ -5,9 +5,19 @@
 // nunca parcial/vazia).
 import { passaTresPortoes, elegivelDealDesk } from './selecionar.mjs';
 
-// Ordem cravada pelo operador (D-053): Resumo do dia → Clipping → Radar →
-// Radar VPM → Sinais rápidos → Loyalty Lab.
-export const ordemBlocosDiaFraco = ['resumoDoDia', 'clipping', 'radar', 'radarVpm', 'sinaisRapidos', 'loyaltyLab'];
+// Ordem final da edição, cravada pelo operador (D-057, revisão estrutural v3
+// sobre a ordem D-053/D-054): Sinal do dia (Resumo fundido, 2 parágrafos) →
+// Ofertas ativas → Deals do dia → Vence em até 72h → Cartões & bancos →
+// Clipping → O que fechou nesta semana → Radar VPM → Loyalty Lab → Predict.
+// `resumoDoDia` some da lista própria (fundiu em `sinalDoDia`); `radar`
+// (janelas) migrou para dentro de `predict`; `sinaisRapidos` fica obsoleto
+// como bloco de render (absorvido por `ofertasAtivas`) — função ainda existe
+// em dia-fraco.mjs (não apagar código testado sem instrução), só não é mais
+// chamada pelo renderer.
+export const ordemBlocosDiaFraco = [
+  'sinalDoDia', 'ofertasAtivas', 'deals', 'vence72h', 'cartoesBancos',
+  'clipping', 'oQueFechouSemana', 'radarVpm', 'loyaltyLab', 'predict',
+];
 
 /**
  * Clipping (§2.3 item 1): piso RÍGIDO de 5 itens — nunca preenche com menos.
@@ -117,4 +127,87 @@ export function scoreAutomacaoLoyaltyLab({ ancoragem, trackRecord = 0 } = {}) {
  */
 export function precisaRevisaoHumana(score) {
   return !(Number.isFinite(score) && score >= CORTE_AUTOMACAO_LOYALTY_LAB);
+}
+
+// ---------------------------------------------------------------------------
+// O que fechou nesta semana (M2 · Digest Engine v3, §1.6, D-057)
+// ---------------------------------------------------------------------------
+
+/**
+ * O que fechou nesta semana (§1.6): recap de janelas encerradas, golden-testável,
+ * SEM cálculo — só leitura. Filtro: `estado='encerrada' AND tier=1 AND
+ * tl_score_bruto IS NOT NULL AND vigencia_fim` dentro de `[hoje - janelaDias,
+ * hoje]` (inclusive). Exige TIER 1 pelo mesmo motivo de §1.1 (Ofertas ativas):
+ * um recap com número não confirmado repete o risco que D-045 existe para
+ * prevenir. `hoje` é sempre injetado pelo caller — este módulo nunca chama
+ * `new Date()` internamente (mesma disciplina de pureza de `rodarCiclo`/
+ * `planoDeGravacao`).
+ * @param {object[]} campaigns  linhas de `campaigns`
+ * @param {{hoje:string, janelaDias?:number}} opts  `hoje` (ISO date/datetime) é
+ *   OBRIGATÓRIO — sem ele o filtro de janela não tem referência e o módulo
+ *   lançaria silenciosamente uma data errada (violaria INV-16).
+ * @returns {{itens:object[], omitido:boolean}}
+ */
+export function selecionarFechouSemana(campaigns = [], { hoje, janelaDias = 7 } = {}) {
+  if (!hoje) {
+    throw new Error('selecionarFechouSemana: `hoje` é obrigatório (injetado pelo caller, nunca new Date() interno) — sem referência, a janela de 7 dias não é calculável');
+  }
+  const refMs = Date.parse(hoje);
+  if (Number.isNaN(refMs)) {
+    throw new Error(`selecionarFechouSemana: \`hoje\` inválido ("${hoje}") — ISO date/datetime esperado`);
+  }
+  const inicioMs = refMs - janelaDias * 24 * 60 * 60 * 1000;
+
+  const itens = (campaigns || [])
+    .filter((c) => {
+      if (!c) return false;
+      if (c.estado !== 'encerrada') return false;
+      if (Number(c.tier) !== 1) return false; // mesma coerção de passaTresPortoes
+      if (c.tl_score_bruto === null || c.tl_score_bruto === undefined) return false;
+      if (!c.vigencia_fim) return false;
+      const vFimMs = Date.parse(c.vigencia_fim);
+      if (Number.isNaN(vFimMs)) return false;
+      return vFimMs >= inicioMs && vFimMs <= refMs;
+    })
+    .map((c) => ({
+      origem: c.origem_code ?? null,
+      destino: c.destino_code ?? null,
+      tipo: c.tipo ?? null,
+      percentual: c.percentual ?? null,
+      encerrouEm: c.vigencia_fim,
+    }));
+  return { itens, omitido: itens.length === 0 };
+}
+
+// ---------------------------------------------------------------------------
+// Predict (M2 · Digest Engine v3, §1.7, D-057 — território M4/Predict Ledger,
+// teaser usa content/forecast.json já existente, não depende do Ledger)
+// ---------------------------------------------------------------------------
+
+/**
+ * Predict (§1.7): teaser que aparece só quando há sinal — cadência orientada a
+ * dado, não a calendário fixo (mesma barra já usada pelo Radar, D-057 decisão
+ * 4): `digest.radarDaily` com ≥1 janela `confidence==='alta'`. Contagem
+ * apenas — NUNCA retorna label/value/date da janela (o teaser não pode
+ * revelar valor previsto, regra-mãe 3/4).
+ * @param {object[]} radarDailyWindows  `digest.radarDaily` (content/forecast.json)
+ * @returns {{count:number, omitido:boolean}}
+ */
+export function selecionarPredict(radarDailyWindows = []) {
+  const count = (radarDailyWindows || []).filter((w) => w && w.confidence === 'alta').length;
+  return { count, omitido: count === 0 };
+}
+
+/**
+ * Formata o teaser do Predict — string templating puro e determinístico a
+ * partir da contagem (não é narrativa/julgamento, por isso vive aqui como
+ * função pura, não como passo de LLM a jusante). Nunca cita valor/janela
+ * prevista, nunca usa termo de urgência (URGENCY_RE), nunca promete ganho.
+ * @param {number} count
+ * @returns {string}  string vazia quando count<=0 (chamador deve omitir a seção)
+ */
+export function formatarTeaserPredict(count) {
+  if (!Number.isFinite(count) || count <= 0) return '';
+  const previsao = count === 1 ? 'previsão ativa' : 'previsões ativas';
+  return `${count} ${previsao} esta semana no radar — veja o recorte completo no Digest Pro.`;
 }

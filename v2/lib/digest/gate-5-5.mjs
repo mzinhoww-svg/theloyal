@@ -12,7 +12,10 @@
 // roda a checagem ESTRUTURAL (o texto contém dígito), não a travessia completa
 // até a linha exata do banco — isso é dívida explícita, não fingida como feita.
 import { DISCLAIMER, assertEditorialRules, isExpired } from '../../../scripts/lib.mjs';
-import { passaTresPortoes, elegivelDealDesk, selecionarDealDesk } from './selecionar.mjs';
+import { passaTresPortoes, elegivelDealDesk, selecionarDealDesk, TRES_PORTOES } from './selecionar.mjs';
+import { mapVeredito } from './mapear-contrato.mjs';
+import { BANCOS_ORIGEM } from './ofertas-ativas.mjs';
+import { selecionarPredict, formatarTeaserPredict } from './dia-fraco.mjs';
 
 const stubCheckLink = async () => true;
 
@@ -22,6 +25,13 @@ function has(v) {
 
 function temDigito(texto) {
   return typeof texto === 'string' && /\d/.test(texto);
+}
+
+// Extrai tokens numéricos (com % e separador decimal/milhar) de um texto —
+// reusado pela checagem de rastreabilidade de deal.contaProsa (§4, D-057):
+// todo número citado na prosa precisa ter correspondente literal em conta.
+function extrairNumeros(texto) {
+  return String(texto || '').match(/\d+(?:[.,]\d+)*%?/g) || [];
 }
 
 // ---------------------------------------------------------------------------
@@ -127,7 +137,7 @@ export function checkComDealDesk(edition = {}, campaignsFromDb = []) {
     const elegivel = elegivelDealDesk(campanha);
     results.push({
       ok: elegivel,
-      check: `${tag}: elegível a Deal Desk recomputado no banco`,
+      check: `${tag}: elegível a Deals do dia recomputado no banco`,
       detail: elegivel ? 'ok' : `veredito_bruto do banco="${campanha.veredito_bruto}" não cruza o corte`,
     });
 
@@ -191,7 +201,7 @@ export function checkSemDealDesk(edition = {}, campaignsFromDb = [], renderedHtm
   const marcadorAusente = !String(renderedHtml || '').includes(dealDeskMarker);
   results.push({
     ok: marcadorAusente,
-    check: 'seção Deal Desk AUSENTE do HTML renderizado (não vazia — ausente)',
+    check: 'seção Deals do dia AUSENTE do HTML renderizado (não vazia — ausente)',
     detail: marcadorAusente ? `marcador "${dealDeskMarker}" não encontrado no HTML` : `marcador "${dealDeskMarker}" encontrado — renderer publicou seção vazia`,
   });
 
@@ -214,8 +224,8 @@ export function checkSemDealDesk(edition = {}, campaignsFromDb = [], renderedHtm
   const { selecionados } = selecionarDealDesk(campaignsFromDb);
   results.push({
     ok: selecionados.length === 0,
-    check: 'recomputa: o conjunto elegível a Deal Desk no banco é genuinamente vazio',
-    detail: selecionados.length === 0 ? 'zero elegíveis recomputados' : `${selecionados.length} elegível(is) no banco — edição não deveria estar sem Deal Desk`,
+    check: 'recomputa: o conjunto elegível a Deals do dia no banco é genuinamente vazio',
+    detail: selecionados.length === 0 ? 'zero elegíveis recomputados' : `${selecionados.length} elegível(is) no banco — edição não deveria estar sem Deals do dia`,
   });
 
   if (Array.isArray(edition.sinaisRapidos)) {
@@ -243,15 +253,232 @@ export function checkSemDealDesk(edition = {}, campaignsFromDb = [], renderedHtm
 }
 
 // ---------------------------------------------------------------------------
+// §3.4 — checks dos blocos novos da v3 (D-057) — independentes de Deals do
+// dia estar presente ou não, por isso rodam sempre, fora dos dois ramos acima.
+// ---------------------------------------------------------------------------
+
+/**
+ * Ofertas ativas: cada linha recomputa `passaTresPortoes` direto no banco
+ * (mesmo padrão de `checkComDealDesk`, sem o filtro de veredito por cima) e
+ * a `leitura` bate com o `veredito_bruto` real daquele item — mesmo risco do
+ * `contaFeita` desalinhado (D-055) aplicado aqui.
+ * @param {object} edition
+ * @param {object[]} campaignsFromDb
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkOfertasAtivas(edition = {}, campaignsFromDb = []) {
+  const results = [];
+  const itens = Array.isArray(edition.ofertasAtivas) ? edition.ofertasAtivas : [];
+  if (itens.length === 0) return results;
+
+  itens.forEach((item, i) => {
+    const rota = item.destino ? `${item.origem}->${item.destino}` : `${item.origem}`;
+    const tag = `ofertasAtivas[${i}] (${rota})`;
+    const candidato = campaignsFromDb.find(
+      (c) => c && c.origem_code === item.origem && (c.destino_code ?? null) === (item.destino ?? null) && c.tipo === item.tipo,
+    );
+
+    if (!candidato) {
+      results.push({
+        ok: false,
+        check: `${tag}: campanha correspondente localizável no banco`,
+        detail: 'não encontrada em campaignsFromDb por origem/destino/tipo',
+      });
+      return;
+    }
+
+    const passa3 = passaTresPortoes(candidato);
+    results.push({
+      ok: passa3,
+      check: `${tag}: passa os 3 portões recomputado direto no banco`,
+      detail: passa3 ? 'ok' : `falhou: estado=${candidato.estado}, tier=${candidato.tier}, tl_score_bruto=${candidato.tl_score_bruto}`,
+    });
+
+    let leituraEsperada = null;
+    try {
+      leituraEsperada = mapVeredito(candidato.veredito_bruto);
+    } catch {
+      leituraEsperada = null;
+    }
+    const bate = leituraEsperada !== null && leituraEsperada === item.leitura;
+    results.push({
+      ok: bate,
+      check: `${tag}: leitura bate com veredito_bruto real do banco`,
+      detail: bate ? 'ok' : `leitura da edição="${item.leitura}", veredito_bruto do banco="${candidato.veredito_bruto}" (mapeado="${leituraEsperada}")`,
+    });
+  });
+
+  return results;
+}
+
+/**
+ * Cartões & bancos: quando `cartoesBancos` (prosa) está presente, checa
+ * rastreabilidade estrutural número↔banco (mesmo padrão INV-03 do Resumo do
+ * dia) e recomputa o filtro (`tipo='cartao' OR (transferencia AND origem_code
+ * ∈ bancosOrigem)`, estado vivo) direto em `campaignsFromDb` para confirmar
+ * que existe dado real capaz de embasar a prosa (regra-mãe: nunca fabricar
+ * texto sem lastro).
+ * @param {object} edition
+ * @param {object[]} campaignsFromDb
+ * @param {{bancosOrigem?:string[]}} opts
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkCartoesBancos(edition = {}, campaignsFromDb = [], { bancosOrigem = BANCOS_ORIGEM } = {}) {
+  const results = [];
+  if (!has(edition.cartoesBancos)) return results;
+
+  results.push({
+    ok: temDigito(edition.cartoesBancos),
+    check: 'cartoesBancos cita ao menos um número (checagem estrutural, INV-03)',
+    detail: temDigito(edition.cartoesBancos) ? 'contém dígito' : 'cartoesBancos sem nenhum número — genérico demais',
+  });
+
+  const bancos = new Set(bancosOrigem);
+  const filtro = (campaignsFromDb || []).filter(
+    (c) => c && TRES_PORTOES.estadosVivo.includes(c.estado) && (c.tipo === 'cartao' || (c.tipo === 'transferencia' && bancos.has(c.origem_code))),
+  );
+  results.push({
+    ok: filtro.length > 0,
+    check: 'cartoesBancos: existe ao menos 1 item real (tipo=cartao OU transferencia+banco) vivo no banco para embasar a prosa',
+    detail: filtro.length > 0 ? `${filtro.length} item(ns) reais recomputados` : 'zero itens reais recomputados — prosa não pode ser fabricada sem dado (regra-mãe)',
+  });
+
+  return results;
+}
+
+/**
+ * O que fechou nesta semana: cada item recomputa `estado='encerrada' AND
+ * tier=1 AND tl_score_bruto IS NOT NULL AND vigencia_fim` na janela dos 7
+ * dias direto no banco — sem cálculo novo, só leitura conferida.
+ * @param {object} edition
+ * @param {object[]} campaignsFromDb
+ * @param {{hoje?:string, janelaDias?:number}} opts  `hoje` ausente ⇒ usa `edition.date`
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkFechouSemana(edition = {}, campaignsFromDb = [], { hoje, janelaDias = 7 } = {}) {
+  const results = [];
+  const itens = Array.isArray(edition.oQueFechouSemana) ? edition.oQueFechouSemana : [];
+  if (itens.length === 0) return results;
+
+  const ref = hoje || edition.date;
+  const refMs = Date.parse(ref);
+  const inicioMs = Number.isNaN(refMs) ? NaN : refMs - janelaDias * 24 * 60 * 60 * 1000;
+
+  itens.forEach((item, i) => {
+    const rota = item.destino ? `${item.origem}->${item.destino}` : `${item.origem}`;
+    const tag = `oQueFechouSemana[${i}] (${rota})`;
+    const candidato = campaignsFromDb.find(
+      (c) => c && c.origem_code === item.origem && (c.destino_code ?? null) === (item.destino ?? null) && c.tipo === item.tipo && c.vigencia_fim === item.encerrouEm,
+    );
+
+    if (!candidato) {
+      results.push({
+        ok: false,
+        check: `${tag}: campanha correspondente localizável no banco`,
+        detail: 'não encontrada em campaignsFromDb por origem/destino/tipo/vigencia_fim',
+      });
+      return;
+    }
+
+    const vFimMs = Date.parse(candidato.vigencia_fim);
+    const dentroJanela = !Number.isNaN(refMs) && !Number.isNaN(vFimMs) && vFimMs >= inicioMs && vFimMs <= refMs;
+    const ok = candidato.estado === 'encerrada' && Number(candidato.tier) === 1 && candidato.tl_score_bruto !== null && candidato.tl_score_bruto !== undefined && dentroJanela;
+    results.push({
+      ok,
+      check: `${tag}: estado=encerrada AND tier=1 AND tl_score_bruto not null AND vigencia_fim na janela de ${janelaDias}d recomputado`,
+      detail: ok ? 'ok' : `estado=${candidato.estado}, tier=${candidato.tier}, tl_score_bruto=${candidato.tl_score_bruto}, vigencia_fim=${candidato.vigencia_fim}, dentroJanela=${dentroJanela}`,
+    });
+  });
+
+  return results;
+}
+
+/**
+ * Predict: quando presente, `ativos` deve ser > 0 (senão deveria ter sido
+ * omitido, regra-mãe) e — quando `radarDailyWindows` é injetado — recomputa
+ * que `digest.radarDaily` tem de fato ≥1 janela `confidence='alta'` (mesmo
+ * padrão de negação de "projeção sem lastro" do Radar da v2). Lint reforçado:
+ * quando `renderedHtml` é injetado, o teaser renderizado precisa bater
+ * EXATAMENTE com `formatarTeaserPredict(ativos)` — a única forma sancionada
+ * de produzir esse texto — nunca um texto escrito à mão que possa vazar
+ * valor/janela prevista.
+ * @param {object} edition
+ * @param {{renderedHtml?:string, radarDailyWindows?:object[]}} opts
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkPredict(edition = {}, { renderedHtml = '', radarDailyWindows } = {}) {
+  const results = [];
+  if (!has(edition.predict)) return results;
+
+  const ativos = edition.predict.ativos;
+  const valido = typeof ativos === 'number' && ativos > 0;
+  results.push({
+    ok: valido,
+    check: 'predict.ativos > 0 (senão deveria ter sido omitido, regra-mãe)',
+    detail: `ativos=${ativos}`,
+  });
+
+  if (Array.isArray(radarDailyWindows)) {
+    const { count } = selecionarPredict(radarDailyWindows);
+    const bate = count === ativos;
+    results.push({
+      ok: bate,
+      check: 'predict.ativos recomputado a partir de radarDaily (confidence=alta) bate',
+      detail: bate ? 'ok' : `edition.predict.ativos=${ativos}, recomputado a partir de radarDailyWindows=${count}`,
+    });
+  }
+
+  if (valido && renderedHtml) {
+    const teaserEsperado = formatarTeaserPredict(ativos);
+    const presente = String(renderedHtml).includes(teaserEsperado);
+    results.push({
+      ok: presente,
+      check: 'predict: teaser renderizado bate exatamente com formatarTeaserPredict (nunca texto custom com valor/janela)',
+      detail: presente ? 'ok' : `teaser esperado "${teaserEsperado}" não encontrado literalmente no HTML — texto pode ter sido escrito à mão e vazar valor/janela`,
+    });
+  }
+
+  return results;
+}
+
+/**
+ * `deal.contaProsa` (quando presente): todo número citado tem correspondente
+ * literal em `deal.conta.rows`/`conta.result` — não pode introduzir número
+ * que não esteja na tabela estruturada (mesmo espírito do check de
+ * `contaFeita`).
+ * @param {object} edition
+ * @returns {Array<{ok:boolean, check:string, detail:string}>}
+ */
+export function checkContaProsa(edition = {}) {
+  const results = [];
+  const deals = Array.isArray(edition.deals) ? edition.deals : [];
+
+  deals.forEach((deal, i) => {
+    if (!has(deal.contaProsa)) return;
+    const tag = `deals[${i}].contaProsa`;
+    const numerosProsa = extrairNumeros(deal.contaProsa);
+    const textoConta = JSON.stringify(deal.conta ?? {});
+    const semCorrespondencia = numerosProsa.filter((n) => !textoConta.includes(n));
+    results.push({
+      ok: semCorrespondencia.length === 0,
+      check: `${tag}: todo número citado tem correspondente literal em conta.rows/result`,
+      detail: semCorrespondencia.length === 0 ? 'ok' : `número(s) sem correspondência: ${semCorrespondencia.join(', ')}`,
+    });
+  });
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // Orquestração
 // ---------------------------------------------------------------------------
 
 /**
  * @param {object} edition
- * @param {{campaignsFromDb?:object[], renderedHtml?:string, checkLink?:(url:string)=>Promise<boolean>, dealDeskMarker?:string}} ctx
+ * @param {{campaignsFromDb?:object[], renderedHtml?:string, checkLink?:(url:string)=>Promise<boolean>, dealDeskMarker?:string, radarDailyWindows?:object[], bancosOrigem?:string[], hoje?:string}} ctx
  * @returns {{pass:boolean, errors:string[], warnings:string[]}}
  */
-export function runGate55(edition, { campaignsFromDb = [], renderedHtml = '', checkLink = stubCheckLink, dealDeskMarker } = {}) {
+export function runGate55(edition, { campaignsFromDb = [], renderedHtml = '', checkLink = stubCheckLink, dealDeskMarker, radarDailyWindows, bancosOrigem, hoje } = {}) {
   const results = [...checkComuns(edition)];
 
   const deals = Array.isArray(edition?.deals) ? edition.deals : [];
@@ -260,6 +487,13 @@ export function runGate55(edition, { campaignsFromDb = [], renderedHtml = '', ch
   } else {
     results.push(...checkSemDealDesk(edition, campaignsFromDb, renderedHtml, { dealDeskMarker }));
   }
+
+  // Blocos v3 (D-057) — independentes de Deals do dia, sempre checados.
+  results.push(...checkOfertasAtivas(edition, campaignsFromDb));
+  results.push(...checkCartoesBancos(edition, campaignsFromDb, { bancosOrigem }));
+  results.push(...checkFechouSemana(edition, campaignsFromDb, { hoje: hoje || edition?.date }));
+  results.push(...checkPredict(edition, { renderedHtml, radarDailyWindows }));
+  results.push(...checkContaProsa(edition));
 
   const errors = results.filter((r) => !r.ok).map((r) => `${r.check}: ${r.detail}`);
   const warnings = [];

@@ -1,23 +1,28 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "number": 1,
   "date": "2026-07-17",
   "weekday": "SEXTA-FEIRA",
   "publishTime": "8H00",
-  "readingMinutes": 3,
+  "readingMinutes": 4,
   "subject": "Hoje nenhuma oferta passou do corte — e aqui está a conta",
-  "preheader": "56 candidatos vivos, 1 com fonte TIER 1 confirmada. Nenhum vale Deal Desk hoje.",
-  "signal": "Hoje 56 candidatos estavam vivos no radar; só 1 tinha fonte TIER 1 confirmada (Smiles, compra de pontos com 375% de bônus sobre o lote). A conta desse item fechou em bruto 55, banda \"Só para casos específicos\" — abaixo do corte de Deal Desk (vale-agir/vale-olhar). Nenhum item entra na recomendação hoje.",
+  "preheader": "56 candidatos vivos, 1 com fonte TIER 1 confirmada. Nenhum vale Deals do dia hoje.",
+  "signal": "Hoje 56 candidatos estavam vivos no radar; só 1 tinha fonte TIER 1 confirmada (Smiles, compra de pontos com 375% de bônus sobre o lote). A conta desse item fechou em bruto 55, banda \"Só para casos específicos\" — abaixo do corte de Deals do dia (vale-agir/vale-olhar). Nenhum item entra na recomendação hoje.",
+  "resumoDoDia": "O mercado ficou concentrado em cartão e transferência bancária hoje: 7 campanhas vivas nessa frente (5 cartões, 2 convênios de transferência). Nos últimos 7 dias, 7 janelas de transferência bonificada encerraram — a maior parte envolvendo Itaú/Inter/Azul (115% de bônus) e o convênio Amex Membership Rewards para Hilton e LifeMiles.",
+  "ofertasAtivas": [
+    { "origem": "smiles", "destino": "sem_destino", "tipo": "compra", "percentual": 375, "prazo": "2026-07-17", "leitura": "casos-especificos" }
+  ],
   "deals": [],
   "fechaLogo": [
     {
       "tag": "VENCE HOJE",
       "text": "Compra de pontos Smiles com 375% de bônus sobre o lote vence hoje (17/07) — não é recomendação, é aviso de prazo.",
       "cpm": "bruto 55 · Só para casos específicos",
-      "note": "não cruza o corte de Deal Desk; listado por urgência de calendário, não por valor",
+      "note": "não cruza o corte de Deals do dia; listado por urgência de calendário, não por valor",
       "vigencia": "2026-07-17"
     }
   ],
+  "cartoesBancos": "5 programas de cartão e 2 convênios de transferência bancária seguem com campanha viva hoje. Itaú aparece em duas frentes (cartão para Azul Fidelidade e para Latam Pass); Caixa tem cartão com 100% de bônus na régua; Banco do Brasil e Accor completam a lista de cartões; Bradesco e C6 respondem pelos dois convênios de transferência.",
   "clipping": [
     { "title": "Air France reformula lounge La Première no Aeroporto de Paris", "url": "https://passageirodeprimeira.com/air-france-reabre-lounge-la-premiere-aeroporto-paris-cdg/", "source": "passageirodeprimeira", "tier": 2, "summary": "A companhia reabriu o lounge La Première em Paris-CDG com novo design, spa ampliado e suítes privativas." },
     { "title": "Inter oferece 54% de desconto na compra de pontos Loop", "url": "https://passageirodeprimeira.com/inter-oferece-54-de-desconto-na-compra-de-pontos-loop/", "source": "passageirodeprimeira", "tier": 2, "summary": "Desconto anunciado pelo Super App em lotes de 1.000 a 20.000 pontos Loop, conversíveis em milhas, fatura ou cashback." },
@@ -26,8 +31,13 @@
     { "title": "Embarque com reconhecimento facial chega à Qatar Airways", "url": "https://pontospravoar.com/embarque-com-reconhecimento-facial-chega-a-qatar-airways/", "source": "pontospravoar", "tier": 2, "summary": "Parceria com o Aeroporto Internacional de Hamad e a Sita elimina a apresentação de documentos em check-in, bagagem e embarque." },
     { "title": "Hotéis em Belo Horizonte com diárias a partir de R$ 138", "url": "https://pontospravoar.com/reserve-hoteis-belo-horizonte-diarias-partir-138-reais/", "source": "pontospravoar", "tier": 2, "summary": "Seleção de hotéis Accor na cidade com faixa de preço para diferentes perfis de viagem." }
   ],
-  "sinaisRapidos": [
-    { "origem": "brl", "destino": "smiles", "tipo": "compra", "brutoScore": 55, "motivoNaoQualifica": "veredito bruto \"Só para casos específicos\" abaixo do corte de Deal Desk (vale-agir/vale-olhar)" }
+  "oQueFechouSemana": [
+    { "origem": "membership_rewards", "destino": "hilton", "tipo": "hotelaria", "percentual": 20, "encerrouEm": "2026-07-14" },
+    { "origem": "itau", "destino": "azul_fidelidade", "tipo": "transferencia", "percentual": 115, "encerrouEm": "2026-07-15" },
+    { "origem": "multiplos_cartoes", "destino": "smiles", "tipo": "transferencia", "percentual": 70, "encerrouEm": "2026-07-10" },
+    { "origem": "azul_fidelidade", "destino": "inter", "tipo": "transferencia", "percentual": 115, "encerrouEm": "2026-07-10" },
+    { "origem": "inter", "destino": "azul_fidelidade", "tipo": "transferencia", "percentual": 115, "encerrouEm": "2026-07-10" },
+    { "origem": "membership_rewards", "destino": "lifemiles", "tipo": "transferencia", "percentual": 15, "encerrouEm": "2026-07-15" }
   ],
   "sources": [
     { "label": "Página oficial de compra Smiles", "url": "https://www.smiles.com.br" }

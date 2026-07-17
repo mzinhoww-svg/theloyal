@@ -83,8 +83,26 @@
     },
     "sinaisRapidos": {
       "type": "array",
-      "description": "Itens que passam os 3 portões mas não o corte de veredito de Deal Desk — transparência, não teaser. NUNCA carrega chip de veredito (D-053 §2.3 item 4).",
+      "description": "Itens que passam os 3 portões mas não o corte de veredito de Deal Desk — transparência, não teaser. NUNCA carrega chip de veredito (D-053 §2.3 item 4). OBSOLETO como bloco de render próprio na v3 (D-057): absorvido por `ofertasAtivas`. Campo aditivo mantido no schema por compatibilidade; a função `selecionarSinaisRapidos` continua testada, só não é mais chamada pelo renderer.",
       "items": { "$ref": "#/$defs/sinalRapido" }
+    },
+    "ofertasAtivas": {
+      "type": "array",
+      "description": "Ofertas ativas (M2 · Digest Engine v3, §1.1, D-057): TODO item vivo com conta computável (passaTresPortoes), sem o corte de veredito de Deal Desk por cima. `leitura` reusa o vocabulário canônico de veredito (kebab-case, mesmo $defs/verdict) — nunca um rótulo compacto paralelo.",
+      "items": { "$ref": "#/$defs/ofertaAtiva" }
+    },
+    "cartoesBancos": {
+      "type": "string",
+      "description": "Cartões & bancos (§1.4, D-057): parágrafo editorial evergreen sobre campanhas de cartão e transferência bancária vivas. Aceita TIER 2 (panorama, não recomendação). Prosa redigida a jusante sobre os itens de `selecionarCartoesBancos` (v2/lib/digest/ofertas-ativas.mjs) — mesma disciplina de `resumoDoDia`."
+    },
+    "oQueFechouSemana": {
+      "type": "array",
+      "description": "O que fechou nesta semana (§1.6, D-057): recap de janelas encerradas nos últimos 7 dias, TIER 1 confirmado, sem reabrir cálculo de score (só leitura).",
+      "items": { "$ref": "#/$defs/fechouSemanaItem" }
+    },
+    "predict": {
+      "$ref": "#/$defs/predict",
+      "description": "Predict (§1.7, D-057): teaser que aparece só quando ≥1 janela `confidence='alta'` existe em `digest.radarDaily` (content/forecast.json). Ausente ou `ativos:0` ⇒ seção omitida (regra-mãe). NUNCA revela valor/janela prevista — só a contagem."
     }
   },
   "$defs": {
@@ -148,7 +166,9 @@
         "scoreBreakdown": { "$ref": "#/$defs/scoreBreakdown" },
         "entityKey": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Chave canônica do deal em content/entities (identidade do Fio na consolidação Weekly). Ausente ⇒ não rastreável na Weekly (aviso, não erro)." },
         "routeKey": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*->[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Rota origem->destino normalizada (entity keys), para deals de transferência. Identidade estável independente de vigencia_fim (ADR-RADAR-009)." },
-        "firstSeen": { "type": "string", "format": "date", "description": "1ª aparição do fato (ISO date). Distingue NOVO de SEGUE na consolidação Weekly sem heurística." }
+        "firstSeen": { "type": "string", "format": "date", "description": "1ª aparição do fato (ISO date). Distingue NOVO de SEGUE na consolidação Weekly sem heurística." },
+        "contaProsa": { "type": "string", "description": "Paráfrase em prosa dos mesmos números de `conta` (§1.2, D-057) — não recalcula, é redação sobre o dado que já existe. Gate 5.5 verifica que todo número citado aqui tem correspondente literal em `conta.rows`/`conta.result`." },
+        "leitura": { "type": "string", "description": "Parágrafo de interpretação/uso do deal (§1.2, D-057), mais denso que `verdictNote`. Ausência ⇒ render cai para `verdictNote` (fallback, mesmo padrão de `contaFeita`/D-052)." }
       }
     },
     "shopping": {
@@ -239,6 +259,42 @@
         "tipo": { "type": "string" },
         "brutoScore": { "type": "integer", "minimum": 0, "maximum": 100 },
         "motivoNaoQualifica": { "type": "string", "description": "Por que não cruzou o corte de Deal Desk (ex: veredito bruto abaixo de vale-olhar)." }
+      }
+    },
+    "ofertaAtiva": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origem", "tipo", "leitura"],
+      "description": "Uma linha da tabela Ofertas ativas (§1.1, D-057) — todo item vivo com conta computável (passaTresPortoes), sem corte de veredito.",
+      "properties": {
+        "origem": { "type": "string", "description": "origem_code" },
+        "destino": { "type": ["string", "null"], "description": "destino_code, ou null para lado único (ex.: compra de pontos)" },
+        "tipo": { "type": "string", "description": "Taxonomia D-001, ex: transferencia_bonificada, compra_pontos" },
+        "percentual": { "type": ["number", "null"], "description": "Bônus/desconto observado. null quando o tipo não usa percentual (ex.: pontos_mais_dinheiro, D-031)." },
+        "prazo": { "type": ["string", "null"], "format": "date-time", "description": "vigencia_fim (ISO). null = vigência indeterminada ('sem data' no render)." },
+        "leitura": { "$ref": "#/$defs/verdict", "description": "Vocabulário canônico de veredito (D-057 decisão 1) — nunca um 2º vocabulário paralelo." }
+      }
+    },
+    "fechouSemanaItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origem", "tipo", "encerrouEm"],
+      "description": "Um item de 'O que fechou nesta semana' (§1.6, D-057): recap, sem cálculo novo — só leitura de `estado='encerrada' AND tier=1 AND tl_score_bruto IS NOT NULL` na janela de 7 dias.",
+      "properties": {
+        "origem": { "type": "string", "description": "origem_code" },
+        "destino": { "type": ["string", "null"], "description": "destino_code, ou null para lado único" },
+        "tipo": { "type": "string" },
+        "percentual": { "type": ["number", "null"] },
+        "encerrouEm": { "type": "string", "format": "date-time", "description": "vigencia_fim (ISO) — quando a janela encerrou." }
+      }
+    },
+    "predict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ativos"],
+      "description": "Teaser do Predict (§1.7, D-057) — território M4 (Predict Ledger), usa content/forecast.json já existente. NUNCA carrega label/value/window da previsão, só a contagem.",
+      "properties": {
+        "ativos": { "type": "integer", "minimum": 0, "description": "Quantidade de janelas com confidence='alta' em digest.radarDaily. 0 ⇒ seção deveria ter sido omitida (regra-mãe)." }
       }
     }
   }

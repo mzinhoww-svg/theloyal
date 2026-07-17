@@ -1,4 +1,5 @@
-// Smoke test do renderer realinhado (SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md §6/§9).
+// Smoke test do renderer realinhado (SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md §6/§9,
+// atualizado para a estrutura v3 do Digest Engine — D-057).
 // node --test renderer/email.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,29 +19,78 @@ test('dia-forte: renderiza sem lançar, HTML bem formado (doctype + html + body 
   assert.match(html, /<\/body><\/html>$/);
 });
 
-test('dia-forte: contém a seção Deal Desk (3 deals)', () => {
+test('dia-forte: contém a seção Deals do dia (3 deals)', () => {
   const html = renderEmail(diaForte);
-  assert.ok(html.includes(DEAL_DESK_MARKER), 'HTML deveria conter o marcador Deal Desk');
+  assert.ok(html.includes(DEAL_DESK_MARKER), 'HTML deveria conter o marcador de Deals do dia');
+  assert.ok(html.includes('Deals do dia'));
   assert.equal((html.match(/Regulamento oficial/g) || []).length >= 1, true);
 });
 
-test('dia-forte: fechaLogo renderiza os 2 itens (array, não string única)', () => {
+test('dia-forte: deals numerados ("1. ", "2. ", "3. ")', () => {
   const html = renderEmail(diaForte);
+  assert.ok(html.includes('1. 110% de bônus'));
+  assert.ok(html.includes('2. 80% de desconto'));
+  assert.ok(html.includes('3. 90% de bônus'));
+});
+
+test('dia-forte: deal com contaProsa/leitura renderiza "A conta" e "Leitura" (§1.2, D-057)', () => {
+  const html = renderEmail(diaForte);
+  assert.ok(html.includes('>A conta<'));
+  assert.ok(html.includes('rendem 84.000 milhas'));
+  assert.ok(html.includes('>Leitura<'));
+  assert.ok(html.includes('já bate a referência de mercado'));
+});
+
+test('dia-forte: fechaLogo (Vence em até 72h) renderiza os 2 itens (array, não string única)', () => {
+  const html = renderEmail(diaForte);
+  assert.ok(html.includes('Vence em até 72h'));
   assert.ok(html.includes('VENCE EM 48H'));
   assert.ok(html.includes('VENCE EM 24H'));
 });
 
-test('dia-forte: renderiza os blocos novos na ordem cravada (Resumo → Clipping → Radar → Radar VPM → Sinais rápidos → Loyalty Lab)', () => {
+test('dia-forte: Ofertas ativas renderiza os 5 itens em tabela', () => {
+  const html = renderEmail(diaForte);
+  assert.ok(html.includes('Ofertas ativas'));
+  assert.equal((html.match(/&rarr;/g) || []).length >= 3, true, 'rotas com destino usam seta (origem->destino)');
+});
+
+test('dia-forte: renderiza os blocos na ordem final v3 (D-057) — Sinal do dia → Ofertas ativas → Deals do dia → Vence 72h → Cartões & bancos → Clipping → O que fechou → Radar VPM → Loyalty Lab → Predict', () => {
   const html = renderEmail(diaForte);
   const idx = (needle) => html.indexOf(needle);
-  const resumo = idx('Resumo do dia');
-  const clipping = idx('Clipping');
-  const radar = idx('Radar de janelas');
+  const sinal = idx('Sinal do dia');
+  const ofertas = idx('Ofertas ativas');
+  const deals = idx('Deals do dia');
+  const vence72h = idx('Vence em até 72h');
+  const cartoes = idx('Cartões &amp; bancos');
+  const clipping = idx('>Clipping<');
+  const fechouSemana = idx('O que fechou nesta semana');
   const radarVpm = idx('Radar VPM');
-  const sinais = idx('Sinais rápidos');
   const lab = idx('Loyalty Lab');
-  assert.ok(resumo > 0 && clipping > resumo && radar > clipping && radarVpm > radar && sinais > radarVpm && lab > sinais,
-    `ordem inesperada: resumo=${resumo} clipping=${clipping} radar=${radar} radarVpm=${radarVpm} sinais=${sinais} lab=${lab}`);
+  const predict = idx('>Predict<');
+  assert.ok(
+    sinal >= 0 && ofertas > sinal && deals > ofertas && vence72h > deals && cartoes > vence72h &&
+    clipping > cartoes && fechouSemana > clipping && radarVpm > fechouSemana && lab > radarVpm && predict > lab,
+    `ordem inesperada: sinal=${sinal} ofertas=${ofertas} deals=${deals} vence72h=${vence72h} cartoes=${cartoes} clipping=${clipping} fechouSemana=${fechouSemana} radarVpm=${radarVpm} lab=${lab} predict=${predict}`,
+  );
+});
+
+test('dia-forte: Sinal do dia funde resumoDoDia como 2º parágrafo (não é mais seção própria, D-057 decisão 5)', () => {
+  const html = renderEmail(diaForte);
+  assert.ok(!html.includes('>RESUMO DO DIA<'), 'não deveria haver eyebrow própria "Resumo do dia"');
+  assert.ok(html.includes('Latam Pass revisou a tabela de resgate'));
+});
+
+test('dia-forte: Predict renderiza o teaser formatado, nunca o valor/janela previstos', () => {
+  const html = renderEmail(diaForte);
+  assert.ok(html.includes('2 previsões ativas esta semana no radar'));
+  assert.ok(html.includes('Digest Pro'));
+});
+
+test('dia-forte: Cartões & bancos e O que fechou nesta semana renderizam prosa/bullet reais', () => {
+  const html = renderEmail(diaForte);
+  assert.ok(html.includes('Itaú lidera as transferências bonificadas'));
+  assert.ok(html.includes('120%'));
+  assert.ok(html.includes('2026-07-05'));
 });
 
 test('dia-forte: contaFeita explícito é usado (não o fallback do primeiro deal)', () => {
@@ -55,9 +105,9 @@ test('dia-forte: color-scheme travado light no head', () => {
 });
 
 // ── dia fraco: a garantia central do template (§4/§9 da spec) ──
-test('dia-fraco: deals=[] → seção Deal Desk AUSENTE do HTML (não vazia, ausente)', () => {
+test('dia-fraco: deals=[] → seção Deals do dia AUSENTE do HTML (não vazia, ausente)', () => {
   const html = renderEmail(diaFraco);
-  assert.ok(!html.includes(DEAL_DESK_MARKER), 'HTML não deveria conter o marcador Deal Desk quando deals=[]');
+  assert.ok(!html.includes(DEAL_DESK_MARKER), 'HTML não deveria conter o marcador de Deals do dia quando deals=[]');
 });
 
 test('dia-fraco: signal presente e explica a ausência com números reais', () => {
@@ -66,31 +116,44 @@ test('dia-fraco: signal presente e explica a ausência com números reais', () =
   assert.match(diaFraco.signal, /\d/);
 });
 
+test('dia-fraco: Ofertas ativas aparece mesmo sem Deals do dia (§1.1 — sustenta o dia fraco, D-057 §3)', () => {
+  const html = renderEmail(diaFraco);
+  assert.ok(html.includes('Ofertas ativas'));
+  assert.ok(html.includes('SÓ PARA CASOS ESPECÍFICOS'));
+});
+
 test('dia-fraco: sem contaFeita e sem deals → bloco "Conta feita" não aparece (nada para elevar)', () => {
   const html = renderEmail(diaFraco);
   assert.ok(!html.includes('Conta feita'));
 });
 
-test('dia-fraco: Fecha Logo pode aparecer mesmo sem Deal Desk (eixo independente, §1.4)', () => {
+test('dia-fraco: Vence em até 72h pode aparecer mesmo sem Deals do dia (eixo independente, §1.3)', () => {
   const html = renderEmail(diaFraco);
-  assert.ok(html.includes('Fecha logo'));
+  assert.ok(html.includes('Vence em até 72h'));
   assert.ok(html.includes('VENCE HOJE'));
 });
 
-test('dia-fraco: sinaisRapidos renderiza sem nenhum chip de veredito de Deal Desk', () => {
+test('dia-fraco: Predict ausente (0 janelas confidence=alta é o estado real, §1.7) → seção omitida', () => {
   const html = renderEmail(diaFraco);
-  assert.ok(html.includes('Sinais rápidos'));
-  // Nenhum dos rótulos de veredito de Deal Desk pode aparecer perto de "Sinais rápidos"
-  const secao = html.slice(html.indexOf('Sinais rápidos'), html.indexOf('Loyalty Lab'));
-  for (const rotulo of ['VALE AGIR', 'VALE OLHAR', 'SÓ PARA CASOS']) {
-    assert.ok(!secao.includes(rotulo), `"${rotulo}" não deveria aparecer na seção Sinais rápidos`);
-  }
+  assert.ok(!html.includes('>Predict<'));
+});
+
+test('dia-fraco: Cartões & bancos renderiza a prosa evergreen', () => {
+  const html = renderEmail(diaFraco);
+  assert.ok(html.includes('Cartões &amp; bancos'));
+  assert.ok(html.includes('Itaú e Nubank concentram'));
+});
+
+test('dia-fraco: O que fechou nesta semana renderiza o recap TIER 1', () => {
+  const html = renderEmail(diaFraco);
+  assert.ok(html.includes('O que fechou nesta semana'));
+  assert.ok(html.includes('2026-07-12'));
 });
 
 test('dia-fraco: Clipping renderiza os 5 itens com link, resumo e fonte+tier', () => {
   const html = renderEmail(diaFraco);
-  const secao = html.slice(html.indexOf('>Clipping<'), html.indexOf('Sinais rápidos'));
-  assert.equal((secao.match(/TIER 2/g) || []).length, 5, 'a seção Clipping (isolada da prosa do Resumo do dia) deve ter exatamente 5 itens TIER 2');
+  const secao = html.slice(html.indexOf('>Clipping<'), html.indexOf('O que fechou nesta semana'));
+  assert.equal((secao.match(/TIER 2/g) || []).length, 5, 'a seção Clipping deve ter exatamente 5 itens TIER 2');
 });
 
 test('dia-fraco: color-scheme travado light no head (mesma garantia dos dois casos)', () => {

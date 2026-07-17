@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "number": 65,
   "date": "2026-07-17",
   "weekday": "SEXTA-FEIRA",
@@ -8,6 +8,10 @@
   "subject": "Hoje nenhuma oferta passou do corte — e aqui está a conta",
   "preheader": "54 candidatos vivos, 1 com fonte TIER 1 confirmada. Nenhum vale Deal Desk hoje.",
   "signal": "Hoje 54 candidatos estavam vivos; só 1 tinha fonte TIER 1 confirmada (smiles, compra de pontos); a conta desse item fechou em bruto 55, banda \"Só para casos específicos\" — abaixo do corte de Deal Desk (vale-olhar/vale-agir). Nenhum item entra na recomendação hoje.",
+  "resumoDoDia": "O mercado de pontos ficou quieto hoje: nenhuma campanha de transferência bonificada nova foi detectada, e o único movimento de compra de pontos confirmado por fonte oficial (Smiles) não passou da banda mediana. Três fontes TIER 2 registraram ajustes menores de regra em programas de cartão, sem repercussão imediata em CPM.",
+  "ofertasAtivas": [
+    { "origem": "brl", "destino": "smiles", "tipo": "compra", "percentual": 40, "prazo": "2026-07-17T23:59:00-03:00", "leitura": "casos-especificos" }
+  ],
   "deals": [],
   "fechaLogo": [
     {
@@ -18,7 +22,7 @@
       "vigencia": "2026-07-17T23:59:00-03:00"
     }
   ],
-  "resumoDoDia": "O mercado de pontos ficou quieto hoje: nenhuma campanha de transferência bonificada nova foi detectada, e o único movimento de compra de pontos confirmado por fonte oficial (Smiles) não passou da banda mediana. Três fontes TIER 2 registraram ajustes menores de regra em programas de cartão, sem repercussão imediata em CPM.",
+  "cartoesBancos": "5 programas de cartão e 2 convênios de transferência bancária seguem com campanha viva hoje — nenhum ainda com fonte TIER 1 confirmada, por isso ficam fora do Deal Desk. Itaú e Nubank concentram os movimentos de transferência observados esta semana.",
   "clipping": [
     { "title": "Programa de cartão ajusta pontos por real em categoria de combustível", "url": "https://www.melhorescartoes.com.br/ajuste-combustivel", "source": "melhorescartoes", "tier": 2, "summary": "Redução pontual na categoria, sem mudança na tabela geral do cartão." },
     { "title": "Clube de milhas abre lista de espera para nova faixa", "url": "https://www.melhoresdestinos.com.br/clube-lista-espera", "source": "melhoresdestinos", "tier": 2, "summary": "Faixa nova ainda sem preço público confirmado — tratado como especulação até confirmação oficial." },
@@ -26,8 +30,8 @@
     { "title": "Programa aéreo mantém tabela de resgate inalterada no mês", "url": "https://www.pontospravoar.com/tabela-mantida", "source": "pontospravoar", "tier": 2, "summary": "Confirma ausência de reajuste após rumor circulando em fóruns na semana passada." },
     { "title": "Banco testa transferência fracionada para clube de pontos", "url": "https://www.tavily.com/transferencia-fracionada", "source": "tavily", "tier": 2, "summary": "Piloto restrito a parte da base — sem página pública de regulamento ainda." }
   ],
-  "sinaisRapidos": [
-    { "origem": "brl", "destino": "smiles", "tipo": "compra", "brutoScore": 55, "motivoNaoQualifica": "veredito bruto \"Só para casos específicos\" abaixo do corte de Deal Desk (vale-agir/vale-olhar)" }
+  "oQueFechouSemana": [
+    { "origem": "livelo", "destino": "smiles", "tipo": "transferencia", "percentual": 80, "encerrouEm": "2026-07-12T23:59:00-03:00" }
   ],
   "loyaltyLab": {
     "titulo": "Por que a janela de campanhas fortes está seca",
