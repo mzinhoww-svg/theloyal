@@ -10,7 +10,8 @@
 > (score, probabilidade, conta, percentil, CPM) sai de SQL/função pura testada.
 > A LLM escreve, explica, audita — **nunca calcula**. Quebrou isso, quebrou o v2.
 >
-> **Última atualização:** 2026-07-17 (após aplicar ratios 012/013 + fix do helper).
+> **Última atualização:** 2026-07-17 (v1 — após recanonicalização dos 13 self-loops
+> gravada; re-score-1 sobre base sã EM EXECUÇÃO). Ratios 012/013 + fix do helper já feitos.
 
 ---
 
@@ -40,16 +41,19 @@ integração: `claude/loyalty-landing-page-v1-7vbjq7`.
 | Extrator de preço (compra_pontos) | ✅ merged | `lib/cpm/extrator-preco.mjs` |
 | Tabela de ratios (012 DDL + 013 seed) | ✅ **merged (#102) + aplicado neste turno** | `custo_base_ratio`, `PROPOSTA-RATIOS.md` |
 | Helper `cpmDeCustoBase` | ✅ **fix do default aplicado neste turno** | `lib/cpm/custo-base.mjs` |
-| Re-score-1 (dry-run, D-038) | ✅ rodado, **NÃO gravado** (draft PR #103) | `M2/rescore/`, `M2/RESCORE-1-DRYRUN.md` |
+| Re-score-1 (dry-run, D-038) | ✅ rodado na base suja (draft PR #103) | `M2/rescore/`, `M2/RESCORE-1-DRYRUN.md` |
+| Guard de self-loop no matcher | ✅ **permanente (D-041 R4 rev.)** | `identidade.mjs` `resolverCampanha` |
+| Recanonicalização dos 13 self-loops | ✅ **gravada + limpa (self-loops→0)** | `SPEC-SLICE-RECANONICALIZACAO.md`, trilha `campanha_versoes` |
+| Re-score-1 sobre base sã (grava) | 🔄 **EM EXECUÇÃO** (agente worktree) | `M2/RESCORE-1-BASE-SA.md` (a sair) |
 
 **O que foi feito neste turno (2026-07-17):**
-1. `custo_base_ratio` (012) criada no banco; seed de **8 ratios aprovados**
-   populado (013): 3 `alta` (par exato) + 5 `media` (inferido do destino).
-   Origens de banco NÃO registradas (CPM null por natureza). Pares sem evidência
-   → sem linha (contrato: ausência/NULL ⇒ CPM null).
-2. `cpmDeCustoBase`: removido o default `ratioBase = 1` → `ratio` agora é
-   **obrigatório**; omitido/NULL/NaN/≤0 ⇒ `null`. Trava em teste
-   (`custo-base.test.mjs`, "CONTRATO D-039"). 9/9 verde.
+1. Ratios: `custo_base_ratio` (012 DDL) + seed **8 ratios aprovados** (013) no banco.
+2. `cpmDeCustoBase`: `ratio` agora **obrigatório** (sem default 1); omitido/NULL ⇒ `null` (D-039). Trava em teste.
+3. **Recanonicalização (slice fechada):** guard de self-loop permanente no matcher
+   (`transferencia` com origem_code=destino_code → revisão, seed INTACTO — D-041 R4
+   revisado: PagoGol É Smiles, de-aliasar corromperia o mapa). Os 13 self-loops →
+   `identidade_id=NULL` (revisão, convenção M1) + trilha; `loop→loop` descartado.
+   **Base sã = 3.330 resolvidos** (era 3.343); em revisão 291. Self-loops→0. Suíte 111 verde.
 
 **Ratios populados (`custo_base_ratio`):**
 ```
@@ -57,10 +61,13 @@ alta : livelo→azul_fidelidade 1 · livelo→latam_pass 1 · livelo→connectmi
 media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera→azul_fidelidade 1 · esfera→connectmiles 0.3333
 ```
 
-### Re-score-1 dry-run — o resultado que aguarda leitura do operador
+### Re-score-1 dry-run na base SUJA (superado pela recanon; referência histórica)
+> Este dry-run rodou ANTES da recanonicalização. O balde 4=103 e as anomalias
+> abaixo eram sobre a base suja. O re-score-1 sobre a base SÃ (em execução) traz o
+> balde 4 recalculado — é ele que vale. Mantido aqui como baseline de comparação.
 - **Fidelidade 6/6 golden** com o engine **importado** (zero fork): A=77 B=59
   C=79 D=37 E=44 F=27. 32 testes verdes.
-- **Balde 4 (chave) = 103**: candidatos alto-valor + conta fechável +
+- **Balde 4 (chave) = 103** (base suja): candidatos alto-valor + conta fechável +
   alcançáveis pelos 4 crawlers (Smiles/Livelo/Esfera/TAP). Por programa: smiles
   42, livelo 15, esfera 14, azul_fidelidade 13, latam_pass 10, accor 3, amazon 3,
   outro 2, connectmiles 1. Outros baldes: B1=293, B2=1.445 (beco), B3=1.857,
@@ -78,27 +85,31 @@ media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera
 
 ## 2. Blockers abertos (o que trava o próximo passo)
 
-1. **[OPERADOR] Ler o balde 4 (103) + anomalias do re-score-1.** É a decisão de
-   produto que libera (a) a slice de gravação do re-score e (b) a release do
-   backup. Trazido a ele ao fim deste turno.
-2. **[ENGENHARIA, pré-gravação] Canonicalização torta por programa.** Self-loops
-   de transferência (`x→x`), `sem_destino` dominante em vários programas, score
-   uniforme em destinos não-discriminantes. **Ordem do operador: parar antes de
-   gravar se achar isso.** → recanonicalizar antes do re-score-2.
-3. **[SEQUÊNCIA] Re-score-2 com CPM vivo.** Agora que ratios (012/013) +
-   custo-base (011) estão aplicados, o CPM de `transferencia` é reconstruível
-   para os 8 pares populados. O re-score-2 usa CPM vivo (não mais só o bruto sem
-   eficiência). Depende de (2) resolvido.
-4. **[DÍVIDA] `tem_tier1` vem de `campaigns.tier===1`** no runner (default de
-   `montarEntradas`) porque `campanha_fontes` está vazia. Quando encher, deve vir
-   de lá (INV-02). Registrado.
+1. **[EM EXECUÇÃO] Re-score-1 sobre a base sã.** Agente delegado pontuando os 3.330
+   resolvidos; grava `tl_score_bruto` se o dry-run passar limpo. Próximo ponto de
+   parada real → operador lê o **balde 4 recalculado** + a **recomendação de backup**.
+2. **[OPERADOR, após (1)] Balde 4 recalculado + release do backup.** Decisão de
+   produto que libera B3 (confirmar TIER 1 nos alcançáveis) e a soltura do backup
+   `campaigns_bkp_prev2_20260716` (preso até re-score verde).
+3. **[SEQUÊNCIA] Re-score-2 com CPM vivo.** Ratios (012/013) + custo-base (011)
+   aplicados → CPM de `transferencia` reconstruível nos 8 pares. O re-score-2 tira
+   metade da base da banda neutra 65 (D-042). Depende de (1) gravado.
+4. **[DÍVIDA nomeada — D-042] Derivação de lado-único.** Os 1.220 `sem_destino`
+   `lado_unico` (merchant/shopping) — como pontuam sem rota, resolver no re-score-2
+   dentro do vetor de derivação existente. Não abre slice nova.
+5. **[DÍVIDA] `tem_tier1` vem de `campaigns.tier===1`** no runner (default de
+   `montarEntradas`) porque `campanha_fontes` está vazia. Quando encher, vem de lá (INV-02).
 
 ---
 
 ## 3. Decisões travadas (fonte de verdade: `v2/DECISIONS.md`)
 
-**Não re-litigar.** ADRs **D-001..D-039** em `v2/DECISIONS.md`; invariantes
-**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Os que mais pegam no dia a dia:
+**Não re-litigar.** ADRs **D-001..D-043** em `v2/DECISIONS.md`; invariantes
+**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Recentes (D-040..043): recanon = só
+self-loops (sem_destino/banda-65 são derivação, não identidade); triagem R1–R5 +
+guard permanente de self-loop; banda neutra CPM-cego é correta; **modo de operação
+D-043** (autonomia dentro de slice aprovada; **dado vence instrução do operador
+quando contradiz** — precedente PagoGol=Smiles). Os que mais pegam no dia a dia:
 
 - **INV-12** — determinismo: número vem de código puro testado; nada de SQL que
   re-implementa e diverge do JS (o dry-run mostrou ~2pt de gap SQL×JS → o runner
@@ -149,7 +160,7 @@ media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera
 
 ```
 v2/
-  DECISIONS.md            ADRs D-001..D-039 (fonte de verdade das decisões)
+  DECISIONS.md            ADRs D-001..D-043 (fonte de verdade das decisões)
   REQUIREMENTS.md         INV-01..INV-16 (invariantes)
   HANDOFF-CHAT.md         este arquivo
   lib/
@@ -166,24 +177,28 @@ v2/
   golden/                 AMOSTRA-100-ROTULADA, score.mjs (labeler), METRICAS 9/9
   M2/
     SPEC-SLICE-4-TLSCORE-ENGINE.md
+    SPEC-SLICE-RECANONICALIZACAO.md  triagem R1–R5 + guard (D-040/041/042)
     PROPOSTA-VETOR-DERIVACAO.md   6 golden (A..F)
     PROPOSTA-CUSTO-BASE.md        custo-base por moeda
     PROPOSTA-RATIOS.md            vetor de ratios (aprovado, populado em 013)
-    RESCORE-1-DRYRUN.md           relatório do re-score-1 (baldes + anomalias)
+    RESCORE-1-DRYRUN.md           re-score-1 na base SUJA (superado)
+    RESCORE-1-BASE-SA.md          re-score-1 na base SÃ (a sair do agente)
     rescore/                      runner (importa engine), golden-replay, out/
 ```
 
-**PRs relevantes:** #102 ratios (merged), #103 re-score dry-run (draft, aberto —
-não gravar até operador ler o balde 4).
+**PRs relevantes:** #102 ratios (merged), #103 re-score dry-run base suja (draft),
+#104 ratios+recanon+handoff (draft, watched). Re-score-1 base sã: worktree do agente.
 
 ---
 
 ## 6. Próximo passo imediato (para o chat que retomar)
 
-1. Operador lê o balde 4 (103) + anomalias → decide gravação + release do backup.
-2. Se aprovado: recanonicalizar self-loops / `sem_destino` dominante (blocker 2).
-3. Re-score-2 com CPM vivo (ratios já aplicados) → dry-run → gravar.
-4. Atualizar este arquivo ao fechar a slice.
+1. Re-score-1 sobre base sã (EM EXECUÇÃO) fecha → operador lê **balde 4 recalculado
+   por programa** + **read do backup** (liberar/segurar). Este é o ponto de parada real.
+2. Se gravou limpo: libera B3 (confirmar TIER 1 nos alcançáveis) + decide backup.
+3. Re-score-2 com CPM vivo (ratios 012/013 já aplicados) → tira base da banda 65 → dry-run → gravar.
+4. B3 nos alcançáveis → **primeiro Deal Desk**.
+5. Atualizar este arquivo ao fechar cada slice.
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes
 de comprar, transferir ou resgatar.*
