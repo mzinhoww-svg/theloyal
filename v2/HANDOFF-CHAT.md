@@ -10,10 +10,17 @@
 > (score, probabilidade, conta, percentil, CPM) sai de SQL/função pura testada.
 > A LLM escreve, explica, audita — **nunca calcula**. Quebrou isso, quebrou o v2.
 >
-> **Última atualização:** 2026-07-17 (v2 — MARCO: pipeline M2 provado ponta a ponta.
-> Re-score-1 e re-score-2 (CPM vivo) gravados e verificados. Primeiro item real
-> (`livelo→azul`) atravessou a máquina inteira e validou a tese. Deal Desk vivo
-> hoje = vazio-honesto por falta de TIER 1. Próxima slice: coleta TIER 1 (3 partes).
+> **Última atualização:** 2026-07-17 (v3 — coleta TIER 1 provada (gate de confiança
+> operando no lote-1), vetor lado-único re-scorado. **Princípio de lançamento travado
+> (D-050): o produto NÃO espera estar pronto — está; espera OFERTA FORTE. Estreia
+> RECUSANDO, não performando.** Próxima frente: cobertura de fontes.
+>
+> **Leitura para os três chats (D-050):** a máquina está provada ponta a ponta. O
+> Deal Desk vivo é gatilhado por **oferta** (forte + viva + confirmada), não por data.
+> Auto-publish desligado até a **calibração** fechar os vetores de score. Frentes
+> ativas: **cobertura de fontes** (ver a próxima oferta forte) + **track record**
+> (conteúdo de estreia) + **calibração** (régua). O gate já captura a oferta forte no
+> instante em que ela aparecer.
 
 ---
 
@@ -97,33 +104,38 @@ media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera
 
 ---
 
-## 2. Blockers abertos (o que trava o próximo passo)
+## 2. Frentes ativas (o produto está pronto; espera oferta — D-050)
 
-1. **[OPERADOR] Aprovar a SPEC da coleta TIER 1** (`SPEC-SLICE-COLETA-TIER1.md`).
-   Três partes: **A** automática (adapters nas vivas crawleáveis, zero carga) ∥ **B**
-   derivação lado-único (resolve D-042, corrige score dos `sem_destino`) → **C** manual
-   (fila de curadoria, corte score ≥70, depois de B). 4 decisões abertas no §8 da spec
-   (ordem/paralelização, corte, vetor-B como PROPOSTA, escala-por-público na coleta).
-2. **[DÍVIDA → vira Parte B] Derivação de lado-único (D-042).** 1.220 `sem_destino`
-   pontuam sem rota (score semi-artificial). Vira a **Parte B** da slice de coleta —
-   pré-requisito da confirmação manual (não confirmar fonte de score que vai mudar).
-3. **[DÍVIDA] `tem_tier1` vem de `campaigns.tier===1`** no runner (default de
-   `montarEntradas`) porque `campanha_fontes` estava vazia. A coleta TIER 1 vai
-   enchê-la → quando encher, `tem_tier1` deve vir de lá (INV-02).
-4. **[DÍVIDA — D-046] Track record** dos históricos de alto valor (arquivo/prova de
-   metodologia) → superfície M3, não Deal Desk vivo.
+1. **[OPERADOR] Aprovar a SPEC de cobertura de fontes** (`SPEC-SLICE-COBERTURA-FONTES.md`).
+   15/18 vivas crawleáveis sem URL oficial → invisíveis ao gate. Frente B (reverse-lookup:
+   oferta → busca página oficial, sem adapter novo) → Frente A (mais adapters, guiado por
+   medição: Azul/LATAM destinos, bancos, varejo) → Frente C (robustez). 4 decisões no §7.
+2. **[EM EXECUÇÃO] Re-score lado-único (Parte B aprovada).** Agente re-scorando os 1.220
+   `sem_destino` com LADO_UNICO_V1: fallback OFF, `conta_nao_calculavel`→não-valor (null),
+   D-037 buckets, min 3/8, versionado. Movimento modesto (54/79 saem da banda 65, nada
+   vira publicável). Grava se dry-run limpo.
+3. **[CALIBRAÇÃO] Auto-publish desligado até os vetores de score fecharem** (D-050).
+   O gate (limiar 0,75) está pronto e calibrado; publicação automática espera a régua.
+4. **[CONTEÚDO — D-046] Track record** (os 101, incl. fortes encerrados) = estreia como
+   prova de metodologia, enquanto o Deal Desk vivo aguarda oferta forte. Superfície M3.
+5. **[DÍVIDA] `tem_tier1` vem de `campaigns.tier===1`** — quando `campanha_fontes` encher
+   (coleta), passa a vir de lá (INV-02).
 
-**Já resolvidos neste turno (não são mais blockers):** re-score-1 (B4=102) e re-score-2
-(CPM vivo, B4=101, 28 conta R$) gravados+verificados; D-014 encerrado (backup trava
-solta, arquivo frio até fecho do M2); primeiro item `livelo→azul` corrigido via TIER 1
-manual (115→50, Evitaria, histórica).
+**Provado/gravado (não são mais blockers):** re-score-1 (B4=102) + re-score-2 (CPM vivo,
+B4=101, 28 conta R$); D-014 encerrado (backup arquivo frio); `livelo→azul` corrigido via
+TIER 1 manual (115→50, Evitaria, histórica); **coleta TIER 1 provada** — gate de confiança
+operou no lote-1 (`livelo→hilton` corrobora_limpo conf 1,00; `smiles` ajuste→revisão).
 
 ---
 
 ## 3. Decisões travadas (fonte de verdade: `v2/DECISIONS.md`)
 
-**Não re-litigar.** ADRs **D-001..D-047** em `v2/DECISIONS.md`; invariantes
-**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Recentes (D-040..047): recanon = só
+**Não re-litigar.** ADRs **D-001..D-050** em `v2/DECISIONS.md`; invariantes
+**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Mais recentes: **D-048** gate de confiança
+TIER 1 (determinístico, limiar auto-ajustável, piso gated, 4 travas); **D-049**
+confiança ⊥ resultado (corrobora/refuta) + 3 níveis de divergência; **D-050** lançamento
+= estreia RECUSANDO, Deal Desk gatilhado por oferta, auto-publish gated na calibração.
+Anteriores (D-040..047): recanon = só
 self-loops + guard permanente; banda neutra CPM-cego é correta; **D-043** modo de
 operação (autonomia dentro de slice aprovada; **dado vence instrução quando
 contradiz** — precedente PagoGol=Smiles); **D-044** Deal Desk = TRÊS portões (vivo
@@ -202,7 +214,13 @@ v2/
     PROPOSTA-VETOR-DERIVACAO.md   6 golden (A..F)
     PROPOSTA-CUSTO-BASE.md        custo-base por moeda
     PROPOSTA-RATIOS.md            vetor de ratios (aprovado, populado em 013)
-    SPEC-SLICE-COLETA-TIER1.md    próxima slice (3 partes: A auto ∥ B deriv → C manual)
+    SPEC-SLICE-COLETA-TIER1.md    coleta TIER 1 (gate de confiança D-048/049) — provada
+    SPEC-SLICE-COBERTURA-FONTES.md  próxima frente (reverse-lookup + mais adapters)
+    COLETA-TIER1-LOTE-1.md        lote-1 do gate (hilton limpo, smiles ajuste)
+    PROPOSTA-VETOR-LADO-UNICO.md  vetor lado-único v1 (aprovado, re-score em curso)
+    CASO-LIVELO-AZUL-DIVERGENCIA.md  primeiro item real; blog 115% × oficial (caso-fundador)
+  lib/coleta/                   confianca.mjs (gate) + coleta-tier1.mjs (runner)
+  lib/lado-unico.mjs            derivação lado-único (LADO_UNICO_V1)
     RESCORE-1-BASE-SA.md          re-score-1 base sã (B4=102, gravado)
     RESCORE-2-CPM-VIVO.md         re-score-2 CPM vivo (B4=101, 28 conta R$, gravado)
     CASO-LIVELO-AZUL-DIVERGENCIA.md  primeiro item real; blog 115% × oficial (caso-fundador)
@@ -216,14 +234,14 @@ v2/
 
 ## 6. Próximo passo imediato (para o chat que retomar)
 
-1. **Operador aprova a SPEC da coleta TIER 1** (`SPEC-SLICE-COLETA-TIER1.md`) —
-   responder as 4 decisões do §8. Não disparar agente antes disso.
-2. **Parte A (automática) ∥ Parte B (derivação lado-único)** rodam juntas: adapters
-   confirmam TIER 1 das vivas crawleáveis (corroborando termos, D-045); vetor
-   lado-único v1 (PROPOSTA) corrige o score dos `sem_destino`.
-3. **Parte C (manual)** depois da B: fila de curadoria no admin, corte ≥70, o
-   operador confirma as fontes que valem.
-4. Itens que atravessam os 3 portões → o **digest/M3** monta o Deal Desk publicável.
+1. **Re-score lado-único (Parte B)** fecha → verificar gravação (null bruto nos
+   `conta_nao_calculavel`, nada vira publicável).
+2. **Operador aprova a SPEC de cobertura de fontes** (`SPEC-SLICE-COBERTURA-FONTES.md`,
+   §7) → Frente B (reverse-lookup) primeiro, depois adapters guiados por medição.
+3. **Calibração dos vetores de score** (a frente que destrava o auto-publish, D-050):
+   quando fechar, liga a publicação automática do gate (limiar 0,75).
+4. **Track record (M3)** como conteúdo de estreia; **Deal Desk vivo** estreia quando a
+   máquina capturar a primeira oferta forte + viva + confirmada (gatilhado por oferta).
 5. Atualizar este arquivo ao fechar cada slice.
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes
