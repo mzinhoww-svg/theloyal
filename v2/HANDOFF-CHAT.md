@@ -133,8 +133,19 @@ media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera
 
 **Provado/gravado (não são mais blockers):** re-score-1 (B4=102) + re-score-2 (CPM vivo,
 B4=101, 28 conta R$); D-014 encerrado (backup arquivo frio); `livelo→azul` corrigido via
-TIER 1 manual (115→50, Evitaria, histórica); **coleta TIER 1 provada** — gate de confiança
-operou no lote-1 (`livelo→hilton` corrobora_limpo conf 1,00; `smiles` ajuste→revisão).
+TIER 1 manual (115→50, Evitaria, histórica); **coleta TIER 1 provada** (gate operou no
+lote-1: hilton corrobora_limpo 1,00, smiles ajuste→revisão); **Frente B provada** (reverse-
+lookup por sitemap oficial, 19/21→fila manual → sinal: Frente A é o desbloqueio, não a B);
+**D-050.1 aplicado** (não-valor estendido a TODOS os 1.334 `conta_nao_calculavel`; 710 brutos
+inflados de rota real → null, 375 falsos-fortes zerados).
+
+**⚠️ COORDENAÇÃO CROSS-CHAT (calibração):** o D-050.1 **zerou 710 brutos** na base de score.
+Qualquer medição de **distribuição de score** feita pelo chat de calibração **antes** desta
+correção (ex.: "v1 saudável") pode estar contaminada por 375 valores-fantasma que não existem
+mais → **revalidar a foto de distribuição contra a base corrigida** antes de calibrar peso.
+**Achado da Frente A (scores limpos):** ranking de oferta-forte-viva-bloqueada = **quase vazio**
+(1 item fraco `costa_cruzeiros` 70) → **nenhum adapter tem alvo forte hoje**; reforça D-050 —
+a base não tem oferta forte viva; a próxima vem do calendário, não de mais cobertura do estoque atual.
 
 ---
 
