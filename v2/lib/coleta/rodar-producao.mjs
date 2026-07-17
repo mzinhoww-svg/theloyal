@@ -13,6 +13,7 @@
 // campanha_fontes para ele HOJE (evita reprocessar 4x/dia com o cron de 6h).
 import { descobrirTodos, fetchOficial, coletarLote } from './coleta-tier1.mjs';
 import { planoDeGravacao, LIMIAR_PRODUCAO } from './gravacao-tier1.mjs';
+import { anotarRevisao, EVENTO_FLAG_REVISAO } from '../verificacao/integrar.mjs';
 
 const CRAWLAVEIS = ['livelo', 'smiles', 'esfera', 'tap_milesgo'];
 const PISO_VALOR = 70; // D-048 §5 — mesmo piso do dry-run, agora aplicado no filtro de entrada.
@@ -48,7 +49,10 @@ async function restInsert(url, key, path, rows) {
 export async function buscarCandidatos({ url, key }) {
   const estados = ESTADOS_VIVO.map((e) => `"${e}"`).join(',');
   const origens = CRAWLAVEIS.map((o) => `"${o}"`).join(',');
-  const select = 'id,tipo,origem_code,destino_code,publico,percentual,tl_score_bruto,veredito_bruto,override_aplicado,identidade_id,vigencia_fim,first_seen';
+  // `estado`, `notes`, `paridade`, `vigencia_fim_date` entram no select para a
+  // passada de pré-superfície (D-060/D-061) ter dado — campos aditivos que o
+  // fluxo TIER1 downstream ignora, mas os checks precisam.
+  const select = 'id,tipo,origem_code,destino_code,publico,percentual,tl_score_bruto,veredito_bruto,override_aplicado,identidade_id,estado,notes,paridade,vigencia_fim,vigencia_fim_date,first_seen';
   const path = `campaigns?select=${select}&estado=in.(${estados})&origem_code=in.(${origens})&tier=neq.1&tl_score_bruto=gte.${PISO_VALOR}&identidade_id=not.is.null`;
   const rows = await restGet(url, key, path);
   return rows.map((c) => ({
@@ -56,6 +60,9 @@ export async function buscarCandidatos({ url, key }) {
     publico: c.publico, percentual: c.percentual, tl_score_bruto: c.tl_score_bruto,
     veredito_bruto_atual: c.veredito_bruto, override_aplicado_atual: c.override_aplicado,
     identidade_id: c.identidade_id,
+    // shape que pre-superficie.mjs lê (nomes das colunas reais):
+    estado: c.estado, notes: c.notes, paridade: c.paridade,
+    vigencia_fim_date: c.vigencia_fim_date, first_seen: c.first_seen,
   }));
 }
 
@@ -90,8 +97,14 @@ export async function rodarCiclo({ url, key, hoje = new Date().toISOString().sli
   const vistos = await jaProcessadosHoje({ url, key }, hoje);
   const vivas = candidatos.filter((c) => !vistos.has(c.id));
 
+  // Pré-superfície no INGEST (D-060/D-061): todo candidato passa pelos checks
+  // ANTES de qualquer promoção a estado publicável. Flag NUNCA descarta nem
+  // bloqueia — só grava trilha de revisão (idempotente por dia) e alimenta a
+  // fila do operador. O item segue o fluxo TIER1 normal.
+  const preSuperficie = await marcarRevisaoIngest({ url, key }, vivas, hoje);
+
   if (vivas.length === 0) {
-    return { candidatos_no_banco: candidatos.length, ja_processados_hoje: candidatos.length - vivas.length, processados_agora: 0, contagens: {}, itens: [] };
+    return { candidatos_no_banco: candidatos.length, ja_processados_hoje: candidatos.length - vivas.length, processados_agora: 0, contagens: {}, itens: [], pre_superficie: preSuperficie };
   }
 
   const get = async (u) => {
@@ -115,7 +128,27 @@ export async function rodarCiclo({ url, key, hoje = new Date().toISOString().sli
     itens.push({ id: avaliado.id, acao: plano.acao, resultado: avaliado.resultado, confianca: avaliado.confianca, tl_score_bruto: original?.tl_score_bruto });
   }
 
-  return { candidatos_no_banco: candidatos.length, ja_processados_hoje: candidatos.length - vivas.length, processados_agora: vivas.length, contagens, itens, limiar_usado: limiar };
+  return { candidatos_no_banco: candidatos.length, ja_processados_hoje: candidatos.length - vivas.length, processados_agora: vivas.length, contagens, itens, limiar_usado: limiar, pre_superficie: preSuperficie };
+}
+
+/**
+ * Passada de pré-superfície no ingest: anota revisão (trilha) para cada item
+ * flagado, sem descartar. Idempotente — não duplica a trilha de um item que já
+ * foi flagado HOJE. Devolve o resumo para o relatório do ciclo.
+ */
+async function marcarRevisaoIngest({ url, key }, vivas, hoje) {
+  const { paraRevisao, trilhas, resumo } = anotarRevisao(vivas, { hoje });
+  if (trilhas.length === 0) return resumo;
+
+  // Idempotência: ids que já têm o evento de flag hoje não recebem outra trilha.
+  const jaFlagados = new Set(
+    (await restGet(url, key, `campanha_versoes?select=campaign_id&evento=eq.${EVENTO_FLAG_REVISAO}&em=eq.${hoje}`))
+      .map((r) => r.campaign_id),
+  );
+  const novas = trilhas.filter((t) => !jaFlagados.has(t.campaign_id));
+  if (novas.length > 0) await restInsert(url, key, 'campanha_versoes', novas);
+  return { ...resumo, trilhas_gravadas: novas.length, ja_flagados_hoje: trilhas.length - novas.length,
+    ids_revisao: paraRevisao.map((r) => r.item.id) };
 }
 
 // ── CLI (roda de verdade — não é dry-run; grava) ────────────────────────────
