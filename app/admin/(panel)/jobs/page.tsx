@@ -8,6 +8,7 @@ import {
   Td,
   EmptyRow,
   toneForStatus,
+  statusLabel,
   fmtDate,
 } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/SubmitButton";
@@ -53,28 +54,28 @@ function GroupTable({ jobs }: { jobs: Job[] }) {
         {jobs.length > 0 ? (
           jobs.map((j) => (
             <tr key={j.jobid}>
-              <Td className="font-mono">{j.jobname}</Td>
-              <Td className="font-mono tabular-nums text-gray-500">
+              <Td label="Job" className="font-mono">{j.jobname}</Td>
+              <Td label="Schedule" className="font-mono tabular-nums text-gray-500">
                 {j.schedule}
               </Td>
-              <Td className="font-mono text-gray-500">{j.fn_target}</Td>
-              <Td>
+              <Td label="Alvo" className="font-mono text-gray-500">{j.fn_target}</Td>
+              <Td label="Último">
                 <span className="inline-flex items-center gap-2">
                   <StatusDot tone={toneForStatus(j.last_status)} />
                   <span className="text-gray-500">
-                    {j.last_status ?? "nunca"}
+                    {j.last_status ? statusLabel(j.last_status) : "nunca rodou"}
                     {j.last_start ? ` · ${fmtDate(j.last_start)}` : ""}
                   </span>
                 </span>
               </Td>
-              <Td>
+              <Td label="Estado">
                 {j.active ? (
                   <Pill tone="green">ativo</Pill>
                 ) : (
                   <Pill tone="gray">pausado</Pill>
                 )}
               </Td>
-              <Td className="text-right">
+              <Td className="tl-cell-action text-right">
                 <ActionForm action={toggleJobAction} className="flex justify-end">
                   <input type="hidden" name="jobname" value={j.jobname} />
                   <input
@@ -85,6 +86,7 @@ function GroupTable({ jobs }: { jobs: Job[] }) {
                   <SubmitButton
                     variant={j.active ? "danger" : "default"}
                     pendingLabel="…"
+                    confirm={j.active ? "Confirmar pausa" : undefined}
                   >
                     {j.active ? "Pausar" : "Ativar"}
                   </SubmitButton>
@@ -136,7 +138,11 @@ export default async function JobsPage() {
                     <ActionForm action={bulkToggleGroupAction}>
                       <input type="hidden" name="grupo" value={g.grupo} />
                       <input type="hidden" name="active" value="false" />
-                      <SubmitButton variant="danger" pendingLabel="…">
+                      <SubmitButton
+                        variant="danger"
+                        pendingLabel="…"
+                        confirm="Pausar todo o grupo?"
+                      >
                         Pausar todos
                       </SubmitButton>
                     </ActionForm>

@@ -1,0 +1,56 @@
+kind,series,distinct_window_dates,min_date,max_date,span_days,eligibility
+# Séries de transferência reconstruídas a partir do banco vivo (qjqnqcsdnpvvmyzkavoq), 2026-07-15.
+# window_date = coalesce(vigencia_inicio, data-no-id (=vigencia_fim), vigencia_fim-valido). Normalizacao = PROGRAM_ALIASES.
+# eligibility: forecast usa >=2 datas; predict usa >=3. Total: 97 rotas / 23 clusters; 48 rotas + 11 clusters elegiveis no forecast; 30 rotas + 8 clusters no predict.
+route,itau->latampass,32,2024-02-08,2026-07-01,874,predict+forecast
+route,c6->azul,26,2024-02-27,2026-02-28,732,predict+forecast
+route,livelo->azul,24,2023-02-24,2026-07-05,1227,predict+forecast
+route,itau->azul,21,2024-02-20,2025-09-02,560,predict+forecast
+route,credicard->latampass,19,2024-02-08,2026-05-28,840,predict+forecast
+route,livelo->smiles,13,2023-02-24,2026-07-14,1236,predict+forecast
+route,esfera->smiles,13,2024-02-11,2026-07-08,878,predict+forecast
+route,livelo->latampass,13,2024-02-13,2026-06-30,868,predict+forecast
+route,esfera->azul,13,2024-02-14,2025-10-25,619,predict+forecast
+route,c6->latampass,12,2024-02-11,2025-02-01,356,predict+forecast
+route,latampass->allaccor,10,2024-03-21,2025-08-19,516,predict+forecast
+route,c6->smiles,9,2024-02-26,2025-07-09,499,predict+forecast
+route,esfera->latampass,9,2024-04-23,2025-01-21,273,predict+forecast
+route,inter->azul,7,2024-06-12,2026-07-10,758,predict+forecast
+route,desconhecido->latampass,7,2024-07-19,2024-09-30,73,predict+forecast(JUNK-ORIGIN)
+route,itau->smiles,6,2024-01-29,2026-03-01,762,predict+forecast
+route,premmia->latampass,6,2024-06-15,2025-02-15,245,predict+forecast
+route,smiles->latampass,5,2024-09-05,2026-01-01,483,predict+forecast
+route,interloop->azul,4,2024-03-29,2025-12-05,616,predict+forecast
+route,esfera->allaccor,4,2024-03-03,2024-09-05,186,predict+forecast
+route,null->latampass,4,2024-05-28,2024-09-23,118,predict+forecast(JUNK-ORIGIN)
+route,livelo->flyingblue,4,2024-07-31,2024-10-31,92,predict+forecast
+route,caixa->azul,4,2024-07-12,2024-10-08,88,predict+forecast
+route,sicredi->latampass,4,2024-07-05,2024-09-12,69,predict+forecast
+route,sicredi->smiles,4,2024-07-14,2024-09-18,66,predict+forecast
+route,portobank->azul,3,2024-07-24,2026-07-14,720,predict+forecast
+route,smiles->allaccor,3,2024-08-15,2025-11-08,450,predict+forecast
+route,interloop->smiles,3,2024-02-06,2024-11-05,273,predict+forecast
+route,banestes->azul,3,2024-02-12,2024-10-10,241,predict+forecast
+route,sicredi->azul,3,2024-09-05,2024-09-15,10,predict+forecast
+route,livelo->connectmiles,2,2023-12-12,2026-07-12,943,forecast_only(943d-ANOMALY)
+route,esfera->iberia,2,2024-10-03,2025-09-22,354,forecast_only
+route,nubank->latampass,2,2024-03-16,2024-11-25,254,forecast_only
+route,cartoes->azul,2,2024-02-21,2024-09-27,219,forecast_only(JUNK-ORIGIN)
+route,esfera->connectmiles,2,2024-02-22,2024-09-20,211,forecast_only
+route,esfera->all,2,2024-09-04,2025-04-02,210,forecast_only
+route,premmia->smiles,2,2024-09-29,2025-01-29,122,forecast_only
+route,azul->all,2,2024-06-07,2024-09-16,101,forecast_only
+route,azul->kmv,2,2024-08-15,2024-11-12,89,forecast_only
+route,sisprime->latampass,2,2024-07-11,2024-09-25,76,forecast_only
+route,smiles->all,2,2024-03-28,2024-06-10,74,forecast_only
+route,c6->livelo,2,2024-07-21,2024-09-30,71,forecast_only
+route,cartao->azul,2,2024-09-12,2024-11-19,68,forecast_only(JUNK-ORIGIN)
+route,brb->allaccor,2,2024-07-18,2024-09-18,62,forecast_only
+route,latampass->all,2,2024-11-23,2025-01-22,60,forecast_only
+route,banestes->smiles,2,2024-08-10,2024-09-28,49,forecast_only
+route,vantagens->smiles,2,2024-02-19,2024-03-18,28,forecast_only(JUNK-ORIGIN)
+route,smiles->desconhecido,2,2024-09-12,2024-09-29,17,forecast_only(JUNK-DEST)
+cluster,azul,122,2023-02-24,2026-07-14,1236,predict+forecast
+cluster,latampass,~,2024-02,2026-07,~,predict+forecast
+cluster,smiles,~,2023-02,2026-07,~,predict+forecast
+# Clusters restantes (23 total; 11 com >=2 datas, 8 com >=3) nao dumpados linha a linha aqui; ver §8.2 do documento.

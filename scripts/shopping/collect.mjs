@@ -9,7 +9,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { ADAPTERS, ADAPTER_VERSION, diagnose } from "./adapters.mjs";
 
-const SB_URL = (process.env.SUPABASE_URL || "https://qjqnqcsdnpvvmyzkavoq.supabase.co").replace(/\/+$/, "");
+// BKL-03: sem fallback hardcoded de URL.
+const SB_URL = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+if (!SB_URL) {
+  console.error("[collect] SUPABASE_URL ausente — configure o ambiente antes de rodar.");
+  process.exit(1);
+}
 const SB_KEY = process.env.SUPABASE_SERVICE_KEY?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null;
 const args = process.argv.slice(2);
 const DIAGNOSE = args.includes("--diagnose");
@@ -30,6 +35,27 @@ async function sb(path, { method = "GET", body, prefer } = {}) {
 const rpc = (fn, a = {}) =>
   fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: SB_KEY, authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" }, body: JSON.stringify(a) }).then((r) => r.json());
 
+// Flags do navegador. AutomationControlled reduz detecção de bot.
+// (--disable-http2 foi testado contra a Azul e removido: não destravou o portal
+// — só trocou a falha instantânea por timeout de 45s, inchando o run. A Azul
+// bloqueia a coleta headless no nível de rede; precisa de outra abordagem.)
+const LAUNCH_ARGS = ["--no-sandbox", "--disable-blink-features=AutomationControlled"];
+
+// goto com 1 retry para falhas transitórias, mas NÃO repete em timeout — um
+// portal que pendura (ex.: Azul) é bloqueio determinístico, não vale gastar
+// outros 25s. Timeout curto (25s) para falhar rápido nas fontes bloqueadas.
+async function gotoResilient(page, url) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
+      return;
+    } catch (e) {
+      if (attempt === 2 || /timeout/i.test(String(e))) throw e;
+      await page.waitForTimeout(1500);
+    }
+  }
+}
+
 async function collectOne(browser, source) {
   const ctx = await browser.newContext({
     locale: "pt-BR",
@@ -37,7 +63,7 @@ async function collectOne(browser, source) {
   });
   const page = await ctx.newPage();
   try {
-    await page.goto(source.product_url, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await gotoResilient(page, source.product_url);
     await page.waitForTimeout(5000);
     const adapter = ADAPTERS[source.program_code];
     if (!adapter) throw new Error(`sem adapter para ${source.program_code}`);
@@ -71,7 +97,7 @@ async function runDiagnose() {
   console.log(`[diagnose] ${sources.length} fontes · saída em ${OUT_DIR}/`);
 
   const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS });
   const report = [];
 
   for (const s of sources) {
@@ -83,7 +109,7 @@ async function runDiagnose() {
     const page = await ctx.newPage();
     const entry = { source_id: s.id, program_code: s.program_code, url: s.product_url, slug };
     try {
-      await page.goto(s.product_url, { waitUntil: "domcontentloaded", timeout: 45000 });
+      await gotoResilient(page, s.product_url);
       await page.waitForTimeout(5000);
       const d = await diagnose(page, s.program_code);
       writeFileSync(`${OUT_DIR}/${slug}.html`, await page.content());
@@ -132,7 +158,7 @@ async function main() {
 
   // 3. navegador
   const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS });
   let ok = 0, fail = 0, obs = 0;
 
   for (const s of sources) {

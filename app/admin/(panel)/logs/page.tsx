@@ -1,12 +1,12 @@
 import { getRecentRuns, rest, type PipelineRun } from "@/lib/admin-db";
 import {
   PageHeader,
-  StatusDot,
+  StatusCell,
   Table,
   Th,
   Td,
   EmptyRow,
-  toneForStatus,
+  statusLabel,
   fmtDate,
 } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/admin/SubmitButton";
@@ -85,12 +85,12 @@ export default async function LogsPage({
         <select
           name="status"
           defaultValue={status}
-          className="min-h-[36px] rounded border border-line bg-surface px-2 text-sm text-ink"
+          className="min-h-[44px] rounded border border-line bg-surface px-2 text-sm text-ink"
         >
           <option value="">status: todos</option>
           {statuses.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {statusLabel(s)}
             </option>
           ))}
         </select>
@@ -99,7 +99,7 @@ export default async function LogsPage({
           name="q"
           defaultValue={q}
           placeholder="buscar na mensagem…"
-          className="min-h-[36px] min-w-[220px] flex-1 rounded border border-line bg-surface px-3 text-sm text-ink"
+          className="min-h-[44px] min-w-[220px] flex-1 rounded border border-line bg-surface px-3 text-sm text-ink"
         />
         <SubmitButton variant="default">Buscar</SubmitButton>
       </form>
@@ -118,18 +118,15 @@ export default async function LogsPage({
           {filtered.length > 0 ? (
             filtered.map((r, i) => (
               <tr key={`${r.source}-${r.label}-${i}`}>
-                <Td className="whitespace-nowrap font-mono tabular-nums text-gray-500">
+                <Td label="Data/hora" className="whitespace-nowrap font-mono tabular-nums text-gray-500">
                   {fmtDate(r.when)}
                 </Td>
-                <Td className="text-gray-500">{r.source}</Td>
-                <Td className="font-mono">{r.label}</Td>
-                <Td>
-                  <span className="inline-flex items-center gap-2">
-                    <StatusDot tone={toneForStatus(r.status)} />
-                    {r.status ?? "—"}
-                  </span>
+                <Td label="Origem" className="text-gray-500">{r.source}</Td>
+                <Td label="Job / Produto" className="font-mono">{r.label}</Td>
+                <Td label="Status">
+                  <StatusCell status={r.status} />
                 </Td>
-                <Td className="text-gray-500">{r.message || "—"}</Td>
+                <Td label="Mensagem" className="text-gray-500">{r.message || "—"}</Td>
               </tr>
             ))
           ) : (
@@ -137,7 +134,7 @@ export default async function LogsPage({
           )}
         </tbody>
       </Table>
-      <p className="mt-2 text-xs text-gray-400">
+      <p className="mt-2 text-xs text-gray-500">
         Exibindo {filtered.length} de {rows.length} registros recentes.
       </p>
     </>

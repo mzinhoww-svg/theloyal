@@ -9,17 +9,20 @@ import {
 import { bucketByDay, deriveAttention, needsReview } from "@/lib/admin-series";
 import {
   StatCard,
+  Card,
+  CardLabel,
   AttentionStrip,
   GateChips,
   PageHeader,
   Pill,
-  StatusDot,
+  StatusCell,
   Table,
   Th,
   Td,
   EmptyRow,
   toneForStatus,
   toneForVerdict,
+  statusLabel,
   fmtDate,
 } from "@/components/admin/ui";
 
@@ -110,19 +113,15 @@ export default async function DashboardPage() {
       </section>
 
       <section className="mt-4 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
-        <div className="relative h-full overflow-hidden rounded-lg border border-line bg-surface p-4">
-          <span
-            className="absolute left-0 top-0 h-full w-1 bg-line"
-            aria-hidden="true"
-          />
-          <div className="text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+        <Card>
+          <CardLabel tone={last ? toneForStatus(last.status) : undefined}>
             Última rodada editorial
-          </div>
+          </CardLabel>
           {last ? (
             <div className="mt-2 flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <Pill tone={toneForStatus(last.status)}>
-                  {last.status ?? "—"}
+                  {statusLabel(last.status)}
                 </Pill>
                 <span className="font-mono text-xs tabular-nums text-gray-500">
                   {fmtDate(last.started_at)}
@@ -134,9 +133,9 @@ export default async function DashboardPage() {
               />
             </div>
           ) : (
-            <div className="mt-2 text-sm text-gray-400">sem rodadas</div>
+            <div className="mt-2 text-sm text-gray-500">Nenhuma rodada ainda.</div>
           )}
-        </div>
+        </Card>
         <StatCard
           label="Notícias com erro"
           value={newsErro}
@@ -170,21 +169,22 @@ export default async function DashboardPage() {
             {runList.length > 0 ? (
               runList.slice(0, 8).map((r, i) => (
                 <tr key={`${r.jobname}-${i}`}>
-                  <Td className="font-mono">{r.jobname}</Td>
-                  <Td>
-                    <span className="inline-flex items-center gap-2">
-                      <StatusDot tone={toneForStatus(r.status)} />
-                      {r.status ?? "—"}
-                    </span>
+                  <Td label="Job" className="font-mono">{r.jobname}</Td>
+                  <Td label="Status">
+                    <StatusCell status={r.status} />
                   </Td>
-                  <Td className="font-mono tabular-nums text-gray-500">
+                  <Td label="Início" className="font-mono tabular-nums text-gray-500">
                     {fmtDate(r.start_time)}
                   </Td>
-                  <Td className="text-gray-500">{r.return_message ?? "—"}</Td>
+                  <Td label="Retorno" className="text-gray-500">{r.return_message ?? "—"}</Td>
                 </tr>
               ))
             ) : (
-              <EmptyRow cols={4} label="sem execuções registradas" />
+              <EmptyRow
+                cols={4}
+                label="Nenhuma execução registrada"
+                hint="Os crons de coleta e análise aparecem aqui assim que rodam. Dispare um em Crons."
+              />
             )}
           </tbody>
         </Table>
@@ -210,35 +210,39 @@ export default async function DashboardPage() {
             {recentCampaigns.length > 0 ? (
               recentCampaigns.map((c) => (
                 <tr key={c.id}>
-                  <Td className="whitespace-nowrap font-medium">
+                  <Td label="Rota" className="whitespace-nowrap font-medium">
                     {c.origem}
                     <span className="text-gray-400"> → </span>
                     {c.destino}
                   </Td>
-                  <Td className="text-gray-500">{c.tipo}</Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td label="Tipo" className="text-gray-500">{c.tipo}</Td>
+                  <Td label="%" className="text-right font-mono tabular-nums">
                     {c.percentual ?? "—"}
                   </Td>
-                  <Td className="text-right font-mono tabular-nums">
+                  <Td label="TL Score" className="text-right font-mono tabular-nums">
                     {c.tl_score ?? "—"}
                   </Td>
-                  <Td>
+                  <Td label="Veredito">
                     {c.verdict ? (
                       <Pill tone={toneForVerdict(c.verdict)}>{c.verdict}</Pill>
                     ) : (
                       "—"
                     )}
                   </Td>
-                  <Td>
+                  <Td label="Status">
                     <Pill tone={toneForStatus(c.status)}>{c.status}</Pill>
                   </Td>
-                  <Td className="font-mono tabular-nums text-gray-500">
+                  <Td label="Vence" className="font-mono tabular-nums text-gray-500">
                     {c.vigencia_fim ? String(c.vigencia_fim).slice(0, 10) : "—"}
                   </Td>
                 </tr>
               ))
             ) : (
-              <EmptyRow cols={7} label="sem campanhas" />
+              <EmptyRow
+                cols={7}
+                label="Nenhuma campanha no ledger"
+                hint="Campanhas entram pela extração de notícias. Rode a análise em Crons ou colete em Notícias."
+              />
             )}
           </tbody>
         </Table>

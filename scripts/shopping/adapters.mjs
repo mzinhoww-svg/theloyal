@@ -94,10 +94,16 @@ async function priceFromPage(page, body) {
 async function extractGeneric(page, program) {
   const title = await page.title().catch(() => null);
   const body = await page.evaluate(() => document.body.innerText).catch(() => "");
-  const price = await priceFromPage(page, body);
+  const rawPrice = await priceFromPage(page, body);
 
   // Pontos padrão: primeiro número grande junto de "pontos"/"milhas".
   const std = matchPoints(body, /([\d.]{4,})\s*(?:pontos|milhas)/i);
+
+  // Sanidade: preço minúsculo (< R$10) num produto resgatável por pontos (≥ 1k)
+  // é quase certo um falso positivo — rating (ex.: 4.17), parcela ou centavos
+  // capturados pelo fallback. Nenhum item real de resgate custa < R$10. Melhor
+  // lacuna que número errado (regra "nunca chutar").
+  const price = rawPrice != null && rawPrice < 10 && (std ?? 0) >= 1000 ? null : rawPrice;
   // Pontos elite/clube: contexto "clube", "elite", "a partir de".
   const elite = matchPoints(body, /(?:clube|elite|a partir de)[^\d]{0,20}([\d.]{4,})\s*(?:pontos|milhas)/i);
   // Híbrido: "N pontos + R$ X".
@@ -133,7 +139,7 @@ export const ADAPTERS = {
   smiles: (page) => extractGeneric(page, "smiles"),
 };
 
-export const ADAPTER_VERSION = "headless_v2";
+export const ADAPTER_VERSION = "headless_v4";
 
 // Coleta de diagnóstico: além do resultado do adapter, devolve os "candidatos"
 // que a página renderizada expõe, para afinar os seletores por portal. Não

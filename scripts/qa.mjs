@@ -3,8 +3,18 @@
 // Uso: node scripts/qa.mjs   (rode `npm run render` antes, para o e-mail existir)
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { DISCLAIMER, EMOJI_RE, URGENCY_RE, collectStrings, listEditionFiles, loadEdition } from "./lib.mjs";
-import { validateEdition } from "./validate.mjs";
+import { DISCLAIMER, assertEditorialRules, editorialRuleMessage, listEditionFiles, loadEdition } from "./lib.mjs";
+import { validateEdition, validateRadarConsistency } from "./validate.mjs";
+
+const FORECAST_PATH = "content/forecast.json";
+function loadForecastArtifact() {
+  if (!existsSync(FORECAST_PATH)) return null;
+  try {
+    return JSON.parse(readFileSync(FORECAST_PATH, "utf8"));
+  } catch {
+    return null;
+  }
+}
 
 const blocks = [];
 const warns = [];
@@ -13,8 +23,13 @@ const block = (m) => blocks.push(m);
 const warn = (m) => warns.push(m);
 const pass = (m) => passes.push(m);
 
-// Componentes onde hex é permitido (exceção do mascote/gráficos).
-const HEX_EXEMPT = new Set(["PontoMascot.tsx", "graphics.tsx"]);
+// Componentes onde hex é permitido (exceção do mascote/gráficos e do card OG,
+// asset visual gerado via Satori/next-og que não aceita classes do tema).
+const HEX_EXEMPT = new Set([
+  "PontoMascot.tsx",
+  "graphics.tsx",
+  "opengraph-image.tsx",
+]);
 // Cores default do Tailwind proibidas. gray/green/blue/yellow/red são tokens
 // redefinidos da marca — permitidos.
 const DEFAULT_COLOR_RE = /\b(?:bg|text|border|from|to|via|ring|fill|stroke|divide|placeholder|decoration|accent|outline)-(?:white|black|slate|zinc|neutral|stone|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose|amber|orange|lime)(?:-\d{2,3})?\b/;
@@ -39,7 +54,7 @@ function auditSource() {
     if (!HEX_EXEMPT.has(base) && HEX_RE.test(src)) { block(`Hex hardcoded em componente: ${f}`); hexHits++; }
     if (DEFAULT_COLOR_RE.test(src)) { block(`Cor default do Tailwind em ${f}: ${src.match(DEFAULT_COLOR_RE)[0]}`); defaultHits++; }
   }
-  if (!hexHits) pass("Nenhum hex hardcoded fora de PontoMascot/graphics");
+  if (!hexHits) pass("Nenhum hex hardcoded fora de PontoMascot/graphics/opengraph-image");
   if (!defaultHits) pass("Nenhuma cor default do Tailwind (bg-white/slate/indigo…)");
 
   // Disclaimer obrigatório no footer e na metodologia. Check semântico
@@ -65,11 +80,16 @@ function auditSource() {
 function auditEditions() {
   const files = listEditionFiles();
   if (!files.length) { warn("Nenhuma edição em content/editions/"); return; }
+  const forecastArtifact = loadForecastArtifact();
   for (const f of files) {
     const ed = loadEdition(`content/editions/${f}`);
     const r = validateEdition(ed);
     if (r.errors.length) r.errors.forEach((m) => block(`JSON Nº ${ed.number}: ${m}`));
     else pass(`JSON Nº ${ed.number}: validação editorial OK`);
+    // Contenção C0: Radar do Daily não pode contradizer o forecast automático.
+    const rc = validateRadarConsistency(ed, forecastArtifact);
+    rc.errors.forEach((m) => block(`Radar Nº ${ed.number}: ${m}`));
+    rc.warnings.forEach((m) => warn(`Radar Nº ${ed.number}: ${m}`));
   }
 }
 
@@ -80,13 +100,19 @@ function auditEmailDir(dir) {
     const tag = `E-mail ${dir}/${f}`;
     const html = readFileSync(join(dir, f), "utf8");
     const textish = html.replace(/<[^>]+>/g, " ");
-    if (EMOJI_RE.test(textish)) block(`${tag}: emoji no corpo`);
-    if (URGENCY_RE.test(textish)) block(`${tag}: urgência artificial`);
+    // Emoji/urgência no HTML renderizado. O dado interno/CMI é checado na FONTE
+    // (JSON, via validate/pro/weekly); re-escanear o HTML geraria falso-positivo
+    // na metodologia, que legitimamente promete "sem dados internos / CMI".
+    for (const v of assertEditorialRules({ body: textish })) {
+      if (v.rule === "interno") continue;
+      block(`${tag}: ${editorialRuleMessage(v)}`);
+    }
     if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
+    if (/The Loyalty\b/.test(html)) block(`${tag}: marca antiga "The Loyalty" no HTML — use "The Loyal"`);
     if (/<script/i.test(html)) block(`${tag}: contém <script> (proibido em e-mail)`);
     if (/(?:src|background)\s*=?\s*["']?https?:\/\//i.test(html) || /url\(\s*https?:/i.test(html)) block(`${tag}: carrega recurso externo (deve ser self-contained)`);
     if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
-    if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: sem emoji/urgência, self-contained, disclaimer presente`);
+    if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: sem emoji/urgência/CMI, self-contained, disclaimer presente`);
   }
 }
 
@@ -97,10 +123,38 @@ function auditEmail() {
   auditEmailDir("out/weekly");
 }
 
+// ---------- 4. Página web gerada (archive) — fecha o gap P2.13 ----------
+// O QA antes só auditava e-mail; a superfície web (out/web/*.html, gerada por
+// `npm run render:web`) passa pelo mesmo rigor: regras invioláveis + amarelo como
+// texto + disclaimer. Self-contained não se aplica (a web pode carregar assets).
+function auditWebDir(dir) {
+  if (!existsSync(dir)) return;
+  for (const f of readdirSync(dir).filter((n) => n.endsWith(".html"))) {
+    const tag = `Web ${dir}/${f}`;
+    const html = readFileSync(join(dir, f), "utf8");
+    const textish = html.replace(/<[^>]+>/g, " ");
+    // Ver auditEmailDir: 'interno' é checado na fonte JSON, não no HTML.
+    for (const v of assertEditorialRules({ body: textish })) {
+      if (v.rule === "interno") continue;
+      block(`${tag}: ${editorialRuleMessage(v)}`);
+    }
+    if (/color:\s*#F2C94C/i.test(html)) block(`${tag}: amarelo (#F2C94C) usado como texto`);
+    if (/The Loyalty\b/.test(html)) block(`${tag}: marca antiga "The Loyalty" no HTML — use "The Loyal"`);
+    if (!html.includes(DISCLAIMER)) block(`${tag}: disclaimer oficial ausente`);
+    if (!blocks.some((m) => m.startsWith(tag))) pass(`${tag}: regras invioláveis OK, disclaimer presente`);
+  }
+}
+
+function auditWeb() {
+  if (!existsSync("out/web")) { warn("out/web ausente — rode `npm run render:web` para auditar a superfície web"); return; }
+  auditWebDir("out/web");
+}
+
 function main() {
   auditSource();
   auditEditions();
   auditEmail();
+  auditWeb();
 
   console.log("== TL QA ==");
   passes.forEach((m) => console.log(`  ✓ ${m}`));

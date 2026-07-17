@@ -1,7 +1,10 @@
 # Project Intelligence Report — The Loyal
 
-> Auditoria forense integral em **modo análise** (nenhum código foi alterado, nenhum commit/push/deploy foi feito).
-> Metodologia: cruzamento de Git, código-fonte atual, validações executadas (build/lint/typecheck/test), estado ao vivo do Supabase, advisors, histórico de PRs e o transcript da sessão auditora.
+> Auditoria integral, forense e baseada em evidências. Documento único e consolidado.
+> Modo de análise (read-only): nenhum código foi alterado, nenhum commit/push/deploy foi feito.
+> Gerado em 2026-07-15.
+
+---
 
 ## Sumário navegável
 
@@ -12,15 +15,15 @@
 - [4. Linha do tempo consolidada](#4-linha-do-tempo-consolidada)
 - [5. Arquitetura planejada](#5-arquitetura-planejada)
 - [6. Arquitetura implementada](#6-arquitetura-implementada)
-- [7. Diferenças planejado × implementado](#7-diferenças-entre-arquitetura-planejada-e-implementada)
+- [7. Diferenças planejado × implementado](#7-diferenças-planejado--implementado)
 - [8. Inventário de componentes](#8-inventário-de-componentes)
 - [9. Mapa individual dos chats](#9-mapa-individual-dos-chats)
-- [10. Dependências entre chats](#10-dependências-e-relações-entre-chats)
+- [10. Dependências e relações entre chats](#10-dependências-e-relações-entre-chats)
 - [11. Matriz de decisões](#11-matriz-de-decisões)
-- [12. Matriz de rastreabilidade](#12-matriz-de-requisitos-e-rastreabilidade)
+- [12. Matriz de requisitos e rastreabilidade](#12-matriz-de-requisitos-e-rastreabilidade)
 - [13. Auditoria de código e lógica](#13-auditoria-de-código-e-lógica)
 - [14. Auditoria de testes e validações](#14-auditoria-de-testes-e-validações)
-- [15. Contradições e sobreposições](#15-contradições-redundâncias-e-sobreposições)
+- [15. Contradições, redundâncias e sobreposições](#15-contradições-redundâncias-e-sobreposições)
 - [16. Pendências consolidadas](#16-pendências-consolidadas)
 - [17. Dívida técnica](#17-dívida-técnica)
 - [18. Riscos e bloqueios](#18-riscos-e-bloqueios)
@@ -43,413 +46,511 @@
 
 | Campo | Valor |
 |---|---|
-| Data da auditoria | 2026-07-15 ~12:38 UTC |
+| Data da auditoria | 2026-07-15 |
 | Diretório analisado | `/home/user/theloyal` |
-| Repositório | `mzinhoww-svg/theloyal` |
-| Branch atual | `claude/loyal-admin-control-r07ol7` |
-| Commit HEAD | `19ac30d80ff345a6e8da201364932c946a654ac4` |
-| Alterações locais | Não (working tree limpo antes da geração deste relatório; este arquivo é novo/untracked) |
-| Branch de produção (Vercel) | `claude/loyalty-landing-page-v1-7vbjq7` (NÃO é `main`) — ver CONFLICT-001 |
-| Total de commits | 106 |
-| Supabase projeto | `qjqnqcsdnpvvmyzkavoq` |
-| Stack | Next.js 14.2.15 (App Router) · React 18.3 · TypeScript 5.5 (strict) · Tailwind 3.4 · **sem dependências de runtime além de next/react** |
-| Backend | Supabase (34 tabelas public, 25 crons ativos, 5 edge functions Deno), Beehiiv (newsletter), OpenRouter/Tavily (LLM/busca), GitHub Actions (workflows) |
+| Branch com checkout local (worktree principal) | `claude/loyal-loyalty-default-name-sacc93` @ `ee46739` |
+| **Branch default do GitHub (tronco real)** | `claude/loyalty-landing-page-v1-7vbjq7` @ `9bf1b57` (2026-07-15, PR #56) |
+| Branch `main` (tronco secundário divergente) | `a0eda8c` (2026-07-14, PR #28) |
+| Alterações locais não commitadas | Nenhuma (working tree limpo antes desta auditoria; este relatório é um arquivo novo não versionado) |
+| Worktree read-only criado para auditar o tronco real | `…/scratchpad/wt-default` (detached @ `9bf1b57`) |
 
-**Fontes disponíveis (analisadas):** código-fonte atual; histórico Git (106 commits); histórico de PRs #1–#49 (via GitHub MCP); `CLAUDE.md`; RFC-001 e RFC-009; docs (`docs/*.md`); migrações SQL (`supabase/migrations/*`); workflows (`.github/workflows/*`); testes (`tests/*.test.mjs`); estado ao vivo do Supabase (tabelas, crons, edge functions, advisors); transcript da sessão auditora (`session_01ESZNuRkDSSaAAYc1kXFcBX`).
+**Fontes disponíveis:** histórico Git completo, listagem de PRs (#1–#57), árvore de arquivos de 3 branches (`loyal-loyalty-default-name`, `loyalty-landing-page-v1`, `main`), código-fonte do tronco real (547 arquivos), documentos (`CLAUDE.md`, RFC-001-EKS, RFC-009, GO-LIVE, RADAR-VPM, SHOPPING-VPM, MONETIZACAO-BACKLOG, GTM, etc.), schemas, migrações Supabase, workflows de CI, skills, resultados de execução (`build`, `tsc --noEmit`, `npm test`).
 
-**Fontes ausentes / inacessíveis:** os transcripts completos das **demais sessões de chat** (só o da sessão auditora é acessível). Reconstruídos por Git + PR (Nível C/D). Ver §3 e a lista `FONTE_MENCIONADA_MAS_INACESSÍVEL`.
+**Fontes ausentes / inacessíveis (resumo — detalhe na §3):** transcrições de TODOS os chats anteriores (só o histórico desta sessão é acessível como transcrição); os 6 documentos da "hierarquia de autoridade" citada no `CLAUDE.md` (todos inexistentes no repo); RFCs referenciados mas não escritos (RFC-002/003/004/005); definições SQL de RPCs/views/tabelas-base do admin (existem só no banco vivo, não nas migrações); edge functions `ingest`/`backfill` e a RPC `shopping_recompute` (referenciadas, ausentes do repo).
 
-**Cobertura:** documental (código/git/db) ≈ 95%. Chats (transcript integral) ≈ 1 de ~19 sessões distintas ≈ **5% de cobertura de transcript**, compensada por evidência de Git/PR/código (mais forte que transcript pela hierarquia §5 do prompt).
+**Limitações centrais da auditoria (não ignorar):**
+1. **Transcrições de chat inacessíveis.** A auditoria de chats foi *reconstruída* a partir de branches, commits e PRs. Intenção/contexto de cada sessão é inferência (Nível C/D); apenas as saídas de código são comprovadas (Nível A/B). A única sessão com transcrição real é a atual (CHAT-032).
+2. **Dois troncos divergentes.** O tronco real (default) e o `main` não são superconjunto um do outro (ver §1/§15). A auditoria priorizou o tronco real (default); `main` foi coberto no nível de árvore/documentos.
+3. **Profundidade de código por amostragem dirigida.** Auditoria linha-a-linha foi feita nos subsistemas do tronco real (landing/editorial, admin/Supabase, VPM/forecast/predict, social/CI) via leitura direta. Não houve auditoria linha-a-linha de cada uma das ~30 branches individualmente.
 
-**Limitação central:** este projeto foi construído por múltiplas sessões de Claude Code, cada uma um "chat". Só uma delas tem transcript acessível a esta auditoria. Portanto, "o que cada chat entendeu/planejou/decidiu" é reconstruído a partir de artefatos (commits, PRs, código) — evidência mais confiável para *o que foi feito*, porém mais fraca para *intenção e contexto interno* dos chats inacessíveis.
+**Cobertura:** documental ≈ 70% (todos os docs do tronco real lidos; docs exclusivos do `main` lidos por amostragem; 6 docs de autoridade inexistentes). Código do tronco real ≈ 85% dos módulos relevantes inspecionados. Chats (transcrição) ≈ 3% (1 de ~34); chats (reconstrução por Git/PR) = 100%.
 
 ---
 
 ## 1. Veredito executivo
 
-1. **Estado geral:** projeto **funcional e em produção**, com uma landing page publicada, um pipeline editorial completo, um cockpit administrativo rico (`/admin`) e um pipeline de dados que **já drenou 40.099 notícias e 3.579 campanhas** ao vivo. Build/lint/typecheck/test **verdes** (Nível A). O projeto NÃO está quebrado; está numa fase de **amadurecimento de dados e ativação de operação**, com governança de branch confusa.
-2. **Conclusão global estimada:** **72%–80%** (confiança média-alta). Peso: fluxo editorial+landing (35%, ~95%), admin/cockpit (20%, ~90%), pipeline de dados (20%, ~90%), motor predict (10%, ~65%), Shopping VPM Radar (10%, ~55%), EKS/governança (5%, ~25%).
-3. **Nível de confiança:** média-alta. Alta para o que é verificável por build/test/db; média para "está funcionando em produção de ponta a ponta" (não pude exercitar a UI logada nem o envio real ao Beehiiv).
-4. **Principais entregas reais (Nível A/B):** landing + subscribe (Beehiiv); pipeline editorial `validate→render→qa→publish→beehiiv` (daily/weekly/pro/lab/special); cockpit `/admin` com 12 rotas; pipeline de ingestão (ingest/backfill/campaigns edge functions) que **atingiu 0 pendências**; motor `forecast` + motor `predict v2`; centro de operação de digests (fases 2–7, PR #49 mergeado); Radar VPM (schema + motor + seed + admin).
-5. **Principais lacunas:** ativação real de publicação/métricas do Beehiiv depende de secrets não confirmados; coleta ao vivo do Shopping VPM depende de afinação de adapters (0 preços na 1ª coleta); motor predict bloqueia a maioria das séries por histórico fino (por design, mas limita valor); rascunhos de curadoria de digest não são consumidos pelo pipeline de render (overlay só-admin).
-6. **Principais bloqueios:** nenhum bloqueio técnico *duro* no código. Bloqueios são **operacionais/de decisão**: secrets, afinação de adapters, e a decisão de governança de branch (main × branch de produção).
-7. **Principais riscos:** RISK-001 (produção servida de branch que não é `main`), RISK-002 (secrets de publicação não confirmados), RISK-003 (25 crons ativos — custo/complexidade), RISK-004 (Shopping VPM sem preço ao vivo), RISK-005 (predict com dado fino), RISK-006 (`pg_net` no schema public — WARN advisor).
-8. **Próximas 5 ações:** (1) decidir governança de branch/main; (2) confirmar/configurar secrets `GH_DISPATCH_TOKEN`/`BEEHIIV_API_KEY`/`BEEHIIV_PUBLICATION_ID`; (3) afinar adapters do Shopping VPM ou congelar a frente; (4) validar 1 envio real de digest ponta-a-ponta; (5) reduzir/documentar os 25 crons.
-9. **O que NÃO iniciar agora:** RFC-009 Fases 1–3 (extração v2) antes de decidir se o predict é prioridade; novas frentes de produto; refatorações amplas — o projeto está estável, não precisa de refactor de emergência.
-10. **Prontidão:** **pronto para continuar e testar**; **quase pronto para publicar** (falta confirmar secrets + 1 validação de envio real); **não precisa** de estabilização de emergência.
+**Estado geral.** "The Loyal" é uma **mídia editorial vertical independente** (pontos, milhas, cartões, cashback) construída em Next.js 14 / TS strict / Tailwind, com uma ambição de plataforma bem além de uma landing: pipeline editorial multi-produto (Daily, Weekly, Pro), **portal admin operacional** com Supabase, **Radar de VPM** (valor por milheiro) com coletores headless, **motor de previsão** (Forecast + Predict/RFC-009), sistema de **cards sociais** e um arcabouço de governança editorial (EKS/RFC-001). O núcleo editorial e a landing estão **maduros e validados** (build, typecheck e 35 testes passam no tronco real); as camadas de dados/coleta/previsão estão **implementadas porém não operacionalizadas** (dependem de secrets, tuning de scraping e ação humana de go-live).
+
+**Faixa de conclusão global: 55%–68%.** Confiança: **média**. Pesos usados (ver §18-cálculo): Landing+Editorial 30%, Admin/Supabase 20%, VPM Radar 15%, Forecast/Predict 15%, Social/GTM 8%, Governança/Docs 7%, CI/DevOps 5%. Justificativa: frentes de produto-núcleo próximas de 90%, frentes de dados/IA entre 40% e 70% (código presente, validação de operação ausente), governança e reconciliação de troncos abaixo de 40%.
+
+**Principais entregas reais (Nível A/B):**
+- Landing acessível + formulário de inscrição **realmente ligado** ao `POST /api/subscribe` → Beehiiv (com modo mock seguro).
+- Pipeline editorial Daily/Weekly/Pro: `validate → render (email/plain/web) → qa → publish → beehiiv`, com **gate de QA** e **publicação só por humano**.
+- Portal `/admin` com auth por cookie-hash + Basic Auth, lendo **dados reais** do Supabase (7 migrações), com hardening de segurança (PR #42).
+- **Taxonomia única de Verdict** (`scripts/taxonomy.mjs`) reconciliando as duas pipelines de render, guardada por teste.
+- Motor **Predict** (survival/hazard + backtesting walk-forward) implementado com rigor (RFC-009).
+- CI (`ci.yml`) rodando lint + typecheck + test + editorial-gate + build.
+
+**Principais lacunas:**
+- **Dois troncos divergentes** sem superconjunto (features no default; RFCs/DDD/DEPENDENCIAS só no `main`).
+- **Duas pipelines de edição** (camelCase × snake_case) e **dois coletores de VPM** (HTTP × headless) coexistindo — reconciliação estrutural não feita.
+- **Motor Predict dormente** (sem CLI, sem artefato, fora do CI).
+- **Docs de autoridade inexistentes** (os 6 citados no `CLAUDE.md`).
+- **RPCs/tabelas-base do admin não versionadas** em migração (risco de DR).
+
+**Principais bloqueios:** secrets de produção não confirmados (Beehiiv/Supabase/Tavily/OpenRouter/GH dispatch); scraping do Azul bloqueado no nível de rede; go-live editorial e de coleta dependem de ação humana explícita.
+
+**Principais riscos (top):** RISK-001 divergência de troncos; RISK-002 schema-drift do banco (RPCs fora das migrações); RISK-003 credencial publishable + URL de projeto hardcoded no fonte; RISK-004 `verify_jwt` desligado nas edge functions; RISK-005 degradação silenciosa para mock/empty em produção.
+
+**Próximas cinco ações (detalhe §28):**
+1. **Decidir o tronco canônico** e reconciliar default × `main` (trazer RFC/DDD/DEPENDENCIAS para o default ou oficializar o default e reescrever a hierarquia).
+2. **Versionar o schema real do banco** (RPCs `admin_*`, views, tabelas-base) em migrações; corrigir numeração duplicada.
+3. **Remover fallbacks hardcoded** (URL do projeto + publishable key) para env; confirmar secrets em produção.
+4. **Resolver a hierarquia de autoridade fantasma** (criar os docs ou re-apontar `CLAUDE.md`/skills/starter-pack — ADR-009/M-3).
+5. **Fechar ou descartar os PRs abertos** (#13, #53, #54) e o não-mergeado #27.
+
+**O que NÃO iniciar agora:** nova feature de produto (Lab/Special), automação de disparo real de e-mail, expansão do Predict para novos programas, tráfego pago — tudo antes de estabilizar troncos, banco e segredos.
+
+**Prontidão:** o **produto editorial/landing está pronto para publicar** (com secrets). O **sistema como um todo precisa ser estabilizado** (troncos + banco + segredos + reconciliação de pipelines) antes de operar as camadas de dados/IA em produção. Recomendação: **estabilizar antes de evoluir**.
 
 ---
 
 ## 2. Resumo geral
 
-### O que o projeto é
-**The Loyal** (theloyal.com.br) é uma **mídia vertical independente** sobre loyalty, pontos, milhas, cartões, bancos, cashback e comportamento de consumo (arquétipo Sage — "a imagem é dado"). Não é blog de cupom nem SaaS. O produto central é uma **newsletter/digest editorial** (daily, weekly, pro, lab, special) publicada no **Beehiiv**, alimentada por um **pipeline de dados** que coleta notícias, extrai campanhas de fidelidade via LLM e constrói um **ledger de campanhas** que abastece verdadeiramente as edições, um **motor de previsão** de janelas de bônus e um **Radar de VPM** (valor por 1.000 pontos) para resgates de varejo.
+### Linha do tempo (macro)
+Iniciado em 2026-07-08 como **landing v1** (Next.js/Tailwind + mascote Ponto). Em ~7 dias evoluiu por sessões paralelas para: integração Beehiiv → pipeline editorial (validate/render/publish) → sistema de render v2 (`renderer/`) → QA gate → produto **Pro** → linha de **governança/RFCs** (DDD-001/002, RFC-001-EKS, discovery) → **portal admin** (/admin) → **Radar de VPM** (LATAM/Azul/Smiles) → **Forecast/Predict** (RFC-009) → **hardening de segurança** → **redesign do admin** → **conversão/monetização** e **sistema social/GTM**. Um marco crítico foi o PR #28 ("reconciliar main com o trabalho real"), sintoma de que o histórico se fragmentou em troncos.
 
-### Linha do tempo (síntese)
-Landing v1 (08–09/jul) → pipeline editorial + QA + Beehiiv publisher + EKS/RFC-001 (09/jul) → rota `/admin` Basic Auth (11/jul) → cockpit v2 + predict + Radar VPM + reconciliação main (13–14/jul) → RFC-009 (forecast × predict) + motor predict v2 (14/jul) → otimização de edge functions (drenagem da fila) + centro de operação de digests fases 2–7 (14–15/jul). Detalhe em [§4](#4-linha-do-tempo-consolidada).
+### Arquitetura do projeto
+Monólito Next.js 14 (App Router) servindo (a) site público (landing, `/edicao`, `/pro`, `/daily/preview`, `/social/*` OG), (b) portal `/admin` protegido (Server Components + Server Actions falando com Supabase via PostgREST com service-role), (c) rotas de API (`/api/subscribe`). Fora do request-path: scripts Node (`.mjs`) para pipeline editorial, coleta de VPM (HTTP e headless), forecast, publisher Beehiiv — orquestrados por `npm run *` e GitHub Actions (cron). Persistência em **Supabase/Postgres** (7 migrações + edge function `campaigns`). Integrações externas: **Beehiiv** (inscrição + publicação), **Supabase**, **Tavily** (descoberta de URLs), **OpenRouter/Ollama** (LLM de extração), **GitHub API** (workflow_dispatch).
 
-### Arquitetura (síntese)
-Frontend Next.js na Vercel (branch de produção `claude/loyalty-landing-page-v1-7vbjq7`). Backend Supabase: tabelas (campaigns, news_raw, backfill_*, editions, edition_*, forecast_*, predict_snapshots, shopping_*, sku_*, loyalty_programs, runs, news_sources), 25 crons (pg_cron) que disparam edge functions via pg_net, 5 edge functions Deno (ingest, campaigns, backfill, backfill-simple, backfill-daily). Pipeline editorial roda como **scripts Node** (local ou GitHub Actions), não em serverless. Integrações: Beehiiv (newsletter/API), OpenRouter (LLM extração — llama-4-maverick), Tavily (busca), GitHub Actions (dispatch). Detalhe em [§6](#6-arquitetura-implementada).
+### Componentes existentes (visão)
+Landing + design system (`ui.tsx`, `graphics.tsx`, `PontoMascot`), editorial (schemas + `renderer/` + `scripts/render*`), Pro, Weekly, admin (painel + auth + `admin-db`), Supabase (migrações + edge), VPM (2 coletores), Forecast (ligado) + Predict (dormente), social (2 geradores), CI (4 workflows), skills (3 do projeto + ~30 instaladas). Detalhe na §8.
 
-### Componentes existentes (resumo)
-Landing/subscribe, pipeline editorial (validate/render/qa/publish/beehiiv), cockpit `/admin` (dashboard, jobs, backfill, noticias, campanhas, digests, forecast, predict, observability, shopping-vpm, logs, login), motor forecast, motor predict v2, edge functions de ingestão, Radar VPM (schema+motor+seed+admin), skills de QA (tl-qa, tl-source-audit, tl-digest-template). Detalhe em [§8](#8-inventário-de-componentes).
+### Componentes planejados (ainda não construídos)
+**Lab** e **Special** (só existem como prompts no starter-pack e seção editorial), RFC-002 (Serialização canônica — resolveria a duplicidade de schema), RFC-003/004/005 (contratos de pesquisa/publicação/automação como docs próprios), automações de onboarding de e-mail, gateway de pagamento (Pro).
 
-### Componentes planejados / não concluídos
-RFC-009 Fases 1–3 (extração v2 com mercado/segmento/mecânica; backfill observável; readiness por cobertura) — PLANEJADO. RFCs 002–005 do EKS (RES/CRS/PES/AES) — PLANEJADO/NÃO_INICIADO. Coleta ao vivo do Shopping VPM (adapters afinados) — IMPLEMENTADO_PARCIALMENTE/BLOQUEADO por afinação.
+### Pendências (visão) — detalhe §16
+Reconciliação de troncos; versionar schema do banco; remover credenciais hardcoded; reconciliar 2 pipelines/2 coletores; ligar Predict; criar/re-apontar docs de autoridade; secrets de produção; go-live editorial e de coleta; testes para predict/forecast/scraping/social; decisões de monetização.
 
-### Pendências, dívida, decisões, riscos, próximos passos
-Ver §16 (pendências), §17 (dívida), §11/§19 (decisões), §18 (riscos), §28 (próximos passos).
+### Dívida técnica (visão) — detalhe §17
+Dois schemas de edição; dois coletores de VPM (MAD × IQR); espelhos manuais TS↔.mjs (`lib/forecast.ts` × `forecast-engine.mjs`; `lib/predict` mirror); 3+ cópias do contrato de Verdict (taxonomia não propaga para social); RPCs/tabelas do admin fora das migrações; numeração de migração duplicada (dois `0001`, dois `0002`); comparações não-constant-time na auth; degradação silenciosa para mock; `playwright` não declarado no `package.json`.
+
+### Decisões tomadas / em aberto — detalhe §11/§19
+Tomadas (vigentes): stack "Next e nada mais"; publicação só por humano; taxonomia única de Verdict; VPM = `cash/(pontos/1000)` determinístico (LLM nunca faz a conta); dados só públicos (sem CMI). Em aberto: ratificar ADRs 001–010 do EKS; resolver hierarquia fantasma; convergir serialização (RFC-002); persistência de Entities/Benchmarks; preço/ciclo do Pro e gateway.
+
+### Riscos — detalhe §18
+Divergência de troncos; schema-drift/DR; credenciais no fonte; `verify_jwt` off; degradação silenciosa; scraping frágil (Azul bloqueado); Predict dormente; docs de autoridade ausentes.
+
+### Próximos passos — detalhe §28
+Estabilizar (troncos → banco → segredos → reconciliações) antes de evoluir produto.
 
 ---
 
 ## 3. Inventário de fontes e cobertura
 
-### 3.1 Chats identificados (reconstruídos por branch/PR/sessão)
-Os "chats" são sessões distintas de Claude Code. Identificados por: nomes de branch, URLs de sessão nos corpos de PR, e clusters de commits. Só **CHAT-001** (a sessão auditora) tem transcript acessível.
+### 3.1 Fontes disponíveis (analisadas)
 
-| ID | Nome original (branch/sessão) | Nome canônico | Fonte | Período | Disponibilidade | Cobertura | Temas | Dependências |
-|---|---|---|---|---|---|---|---|---|
-| CHAT-001 | `session_01ESZNuRkDSSaAAYc1kXFcBX` / `loyal-admin-control-r07ol7` + `forecast-reformulacao` | Admin cockpit + predict + digests + edge-opt | Transcript + Git + PR #23/28/30/31/40/49 | 13–15/jul | **Acessível (transcript)** | Integral | admin, predict, forecast, digests, edge functions, crons | CHAT-002..008 |
-| CHAT-002 | `landing-page-v1-7vbjq7` (`session` desconhecida) | Landing. Página v1 + rebrand The Loyal | Git (#1,#2,#14,#15) | 08–09/jul | Inacessível | Reconstruída (Git/PR) | landing, subscribe, brand | — |
-| CHAT-003 | `loyalty-rendering-system-kugnf6` | Editorial. Sistema de renderização Daily | Git (#6) | 08–09/jul | Inacessível | Reconstruída | render, schema, web archive | CHAT-002 |
-| CHAT-004 | `loyalty-beehiiv-publish-fv8t65` | Beehiiv. Publisher de edição renderizada | Git (#5) | 08–09/jul | Inacessível | Reconstruída | beehiiv publish | CHAT-003 |
-| CHAT-005 | `landing-page-copy-review-ssj4y9` | Landing. Revisão de copy | Git (#4,#9) | 08–09/jul | Inacessível | Reconstruída | copy, acessibilidade | CHAT-002 |
-| CHAT-006 | `loyalty-system-architecture-0cwx3h` | Arquitetura. QA do Daily + sistema | Git (#7) | 08–09/jul | Inacessível | Reconstruída | qa, arquitetura | CHAT-003 |
-| CHAT-007 | `loyalty-architectural-authority-66sjuc` | EKS. RFC-001 + AAP-000 | Git (#17), RFC-001 | 09–13/jul | Inacessível (doc acessível) | Parcial (via RFC) | governança, RFC | — |
-| CHAT-008 | `feat/admin-route` | Admin. Rota /admin Basic Auth v1 | Git (#22) | 11/jul | Inacessível | Reconstruída | admin, basic auth | CHAT-002 |
-| CHAT-009 | `predictions-dairy-weekly-digest-la43x0` | Predict. Motor de janelas + weekly | Git (#24) | 13–14/jul | Inacessível | Reconstruída | forecast, weekly | CHAT-003 |
-| CHAT-010 | `latam-pass-loyalty-radar-mpp1cp` (`session_01H8o3...`) | Radar. VPM não-aéreo + go-live + reparo merge | Git (#25,#26,#33) | 13–14/jul | Inacessível | Reconstruída | radar, coletor, merge fix | CHAT-003 |
-| CHAT-011 | `predict-followups-la43x0` | Predict. Config nos digests + snapshots | Git (#29) | 14/jul | Inacessível | Reconstruída | forecast config | CHAT-009 |
-| CHAT-012 | `reconcile-main-features` | Governança. Reconciliar main × branch de trabalho | Git (#28) | 14/jul | Inacessível | Reconstruída | merge, governança | CHAT-001,010 |
-| CHAT-013 | `rfc-predict-engine-v2` | Predict. RFC-009 (forecast × predict) | Git (#30), RFC-009 | 14/jul | Inacessível (doc acessível) | Parcial (via RFC) | RFC, predict | CHAT-001 |
-| CHAT-014 | `shopping-vpm-radar-la43x0` (`session_01RQSk...`) | Shopping. Radar VPM multiprograma (Fases 1–8) | Git (#32,#34,#35), docs/SHOPPING-VPM | 14/jul | Inacessível | Reconstruída | shopping vpm, playwright | CHAT-010 |
-| CHAT-015 | `noticias-real-counts` | Admin. Contagens reais em /admin/noticias | Git (#38) | 14/jul | Inacessível | Reconstruída | admin, metrics | CHAT-001 |
-| CHAT-016 | `predict-column-labels` / `predict-routes-history` | Predict. Rótulos e coluna Ondas | Git (#36,#37,#41,#44) | 14/jul | Inacessível | Reconstruída | admin predict UI | CHAT-001 |
-| CHAT-017 | `shopping-vpm-*` (headless_v2, EKS fases) | Shopping. Extração de preço + taxonomia/entities | Git (#41,#42,#43) | 14/jul | Inacessível | Reconstruída | shopping, security, entities | CHAT-014 |
-| CHAT-018 | landing conversion (`session_01H8o3...`?) | Landing. Skills de design + análise de conversão | Git (#39) | 14/jul | Inacessível | Reconstruída | design, conversão | CHAT-002 |
-| CHAT-019 | DevOps (`#11`) | DevOps. CI Node 24 + Beehiiv manual + go-live | Git (#11) | 09–13/jul | Inacessível | Reconstruída | CI, workflows | CHAT-004 |
+| ID | Fonte | Tipo | Cobertura |
+|---|---|---|---|
+| DOC-001 | `CLAUDE.md` | Contrato de marca/projeto | Integral |
+| DOC-002 | `docs/rfc/RFC-001-EKS-editorial-knowledge-system.md` | RFC fundacional (Draft) | Integral (via subagente) |
+| DOC-003 | `docs/architecture/rfc/RFC-009-predict-engine-v2.md` | RFC motor preditivo (Proposto) | Integral |
+| DOC-004 | `docs/GO-LIVE.md` | Checklist de produção | Integral |
+| DOC-005 | `docs/RADAR-VPM.md`, `docs/SHOPPING-VPM.md` | Especificações de coleta | Integral |
+| DOC-006 | `docs/MONETIZACAO-BACKLOG.md`, `PLANO-CONVERSAO.md`, `ANALISE-CONVERSAO.md` | Produto/GTM | Integral |
+| DOC-007 | `docs/GTM-SOCIAL-PLAN.md`, `GTM-CONTENT-30D.md` | GTM social | Integral |
+| DOC-008 | `content/README.md`, `renderer/README.md`, `docs/RENDER-SYSTEM.md` | Pipeline editorial | Integral |
+| DOC-009 | `README.md`, `COWORK.md`, `COPY-LANDING.md` | Onboarding/copy | Integral |
+| DOC-010 | `.claude/skills/{tl-qa,tl-digest-template,tl-source-audit}` | Skills do projeto | Integral |
+| DOC-011 | `RFC-001-BLUEPRINT.md`, `RFC-001A-*`, `DDD-001`, `DDD-002`, `docs/architecture/rfc/RFC-003..008`, `docs/claude/DEPENDENCIAS.md`, `docs/COWORK-CONTRACT.md` | Governança/AAP | **Existem só no `main`**; lidos por amostragem/registro |
+| SRC-001 | Código do tronco real (547 arquivos) | Código-fonte | Amostragem dirigida ~85% |
+| GIT-001 | Histórico Git (29 commits locais + refs remotas) | Forense | Integral |
+| GIT-002 | PRs #1–#57 | Forense | Integral (metadados) |
+| RUN-001 | `npm run build`, `tsc --noEmit`, `npm test` | Execução | Integral (Nível A) |
 
-### 3.2 Números de cobertura
-1. Total de chats identificados: **19**.
-2. Analisados integralmente (transcript): **1** (CHAT-001).
-3. Analisados parcialmente (via RFC/doc + Git): **3** (CHAT-007, CHAT-013, + o próprio CHAT-001 cruzado). Os demais **reconstruídos por Git/PR/código** (evidência de artefato, não de transcript).
-4. Inacessíveis (transcript): **18**.
-5. Cobertura documental (código/git/db/config): ~**95%**.
-6. Cobertura de transcript de chat: ~**5%**.
-7. Limitações: intenção/contexto interno dos chats 002–019 é inferência (Nível C/D). O *resultado* desses chats, porém, é verificável no código/Git (Nível A/B).
+### 3.2 Fontes ausentes / inacessíveis — `FONTE_MENCIONADA_MAS_INACESSÍVEL`
 
-### 3.3 `FONTE_MENCIONADA_MAS_INACESSÍVEL`
-- **Transcripts das sessions 002–019.** Onde: URLs de sessão nos corpos de PR (#1–#49) e nomes de branch. Relevância: reconstruir intenção/decisões internas. Prejudica: fichas de chat §9 (campos "contexto recebido", "o que declarou"). Para completar: exportar os `.jsonl` dessas sessões para `/root/.claude/projects/...`.
-- **`content/edition.schema.json`, `content/editions/*.json`, artefatos `out/`** — existem no repo (acessíveis), mas o **conteúdo renderizado publicado** e o estado do Beehiiv ao vivo não são verificáveis sem a API key.
-- **Vercel deployment logs / produção ao vivo** — não exercitados nesta auditoria (não faço requests à produção logada).
+| ID | Fonte ausente | Onde é mencionada | Por que é relevante | Parte prejudicada | O que forneceria |
+|---|---|---|---|---|---|
+| MISS-001 | **Transcrições de todos os chats anteriores** | Implícito (30+ branches/PRs) | Intenção, contexto e decisões de cada sessão | §9 (fichas de chat) só reconstruídas | Export dos chats (JSONL/markdown) |
+| MISS-002 | `THE-LOYALTY-LLM-SYSTEM.md` | `CLAUDE.md` (topo, autoridade #1) | Fonte-de-verdade declarada | Toda regra que dela deriva | Criar ou re-apontar |
+| MISS-003 | `DESIGN.md` | `CLAUDE.md`, `tailwind.config.ts` | Tokens/design source-of-truth | Governança visual | Criar/re-apontar (RFC-001A no `main` é o substituto de fato) |
+| MISS-004 | `THE-LOYALTY-BRAND-GUIDELINES.md` | `CLAUDE.md` | Marca | Governança de marca | Criar/re-apontar |
+| MISS-005 | `PONTO-MASCOTE-GUIA.md` | `CLAUDE.md` §Mascote | Regras do mascote | Governança do Ponto | Criar/re-apontar |
+| MISS-006 | `TL-GRAPHICS.md` | `CLAUDE.md` | Sistema de imagem | Governança de data-art | Criar/re-apontar |
+| MISS-007 | `Operating Manual v1` | `content/README.md`, `COWORK.md`, `tl-source-audit` | Operação editorial | Contratos operacionais | Criar/re-apontar |
+| MISS-008 | RFC-002 (RES — serialização canônica) | RFC-001-EKS | Resolveria a duplicidade de schema (D-3) | §7/§15 | Escrever RFC-002 |
+| MISS-009 | RFC-003/004/005 (CRS/PES/AES) | RFC-001-EKS | Contratos de pesquisa/publicação/automação | §5 | Escrever RFCs |
+| MISS-010 | Definições SQL de RPCs/views/tabelas-base do admin (`admin_run_now`, `admin_list_jobs`, `admin_metrics`, views, `news_raw`/`campaigns`/`runs`/`editions`) | Referenciadas em `lib/admin-db.ts`, migração `0005` | Reprovisionamento/DR do banco | §6/§18 | Migrações `create` para tudo |
+| MISS-011 | Edge functions `ingest`/`backfill` e RPC `shopping_recompute` | `supabase/functions/README.md`, `runNow` targets, `shopping/collect.mjs` | Código operacional fora do repo | §6/§13 | Versionar no repo |
+| MISS-012 | Docs governança do `main` no tronco default | `main` | Autoridade AAP não está no tronco de produção | §7/§15 | Reconciliar troncos |
+
+### 3.3 Números de cobertura
+- Total de chats identificados (reconstruídos por Git/PR): **34**.
+- Chats com transcrição acessível (análise integral real): **1** (CHAT-032, esta sessão).
+- Chats reconstruídos por evidência Git/PR (sem transcrição): **33**.
+- Chats inacessíveis como transcrição: **33**.
+- Cobertura documental: **≈70%** (todos os docs do tronco real; docs de `main` por amostragem; 6 docs de autoridade inexistentes).
+- Cobertura de chats (transcrição): **≈3%**; (reconstrução por Git/PR): **100%**.
+
+**A auditoria NÃO é completa quanto a transcrições de chat nem quanto à profundidade linha-a-linha de todas as branches. Estrutura preservada; diagnóstico feito com as evidências disponíveis.**
 
 ---
 
 ## 4. Linha do tempo consolidada
 
-| Data | Evento | Chat | Commit/fonte | Componente | Tipo | Impacto | Evidência (nível) |
-|---|---|---|---|---|---|---|---|
-| 2026-07-08 | Inicializa repo + landing v1 (Next.js+Tailwind) | CHAT-002 | `989d662`,`cad07cc` | Landing | Início | Alto | A (git) |
-| 2026-07-08 | Rebrand "The Loyal" + copy v2 acessível | CHAT-002/005 | `06e1bb0` (#2) | Brand/Landing | Refator | Médio | A |
-| 2026-07-08 | Integração real do form com Beehiiv | CHAT-002 | `1babc10` | Subscribe | Impl | Alto | A |
-| 2026-07-09 | CLAUDE.md (contrato de marca) | CHAT-006 | `2e30d5e` | Governança | Doc | Alto | A (arquivo) |
-| 2026-07-09 | Pipeline editorial (validate/render/publish) | CHAT-003 | `0aa76fc` | Editorial | Impl | Alto | A |
-| 2026-07-09 | Schema editorial + skills tl-digest/tl-source-audit | CHAT-003 | `ea5ada7` | Editorial/Skills | Impl | Alto | A |
-| 2026-07-09 | Sistema de renderização unificado (email/plain/web/qa) | CHAT-003 | `5960938` (#6) | Render | Impl | Alto | A |
-| 2026-07-09 | Beehiiv Publisher (publica edição renderizada) | CHAT-004 | `0548454` (#5) | Beehiiv | Impl | Alto | A |
-| 2026-07-09 | Sistema de QA do Daily + skill tl-qa | CHAT-006 | `a23bdf5`,`5970f24` | QA | Impl | Alto | A |
-| 2026-07-09 | The Loyalty Pro (relatório executivo) | CHAT-003 | `55f7c7b` | Pro | Impl | Médio | A |
-| 2026-07-09 | CI Node 24 + workflow Beehiiv manual + go-live | CHAT-019 | `0694531`,`4b44a51` (#11) | CI/CD | Impl | Médio | A |
-| 2026-07-09 | RFC-001 EKS (funda o Editorial Knowledge System) | CHAT-007 | `7f4fb12` | Governança | Doc | Alto | A (doc) |
-| 2026-07-11 | Rota /admin (cockpit v1, Basic Auth + Supabase REST) | CHAT-008 | `1f2c635` (#22) | Admin | Início | Alto | A |
-| 2026-07-14 | Central de controle operacional /admin | CHAT-001? | `cf9773a` | Admin | Impl | Alto | A |
-| 2026-07-14 | Motor de previsão de janelas + wiring admin | CHAT-009 | `22b45d8` | Forecast | Impl | Alto | A |
-| 2026-07-14 | CLI `npm run forecast` + `content/forecast.json` | CHAT-009 | `7dd56bb` | Forecast | Impl | Médio | A |
-| 2026-07-14 | Radar de VPM não-aéreo por SKU (v1) | CHAT-010 | `0747e41` | Radar | Impl | Médio | A |
-| 2026-07-14 | Cockpit v2 (login, live refresh, sparklines, Notícias) | CHAT-001 | `6cd915f` (#23) | Admin | Refator | Alto | A |
-| 2026-07-14 | Repara merge #17×#25 (sintaxe quebrada) | CHAT-010 | `265136e`,`35604e2` | Render | Fix | Alto | A |
-| 2026-07-14 | Reconcilia main × branch de trabalho | CHAT-012 | `b4f5d1b` (#28) | Governança | Merge | Alto | A |
-| 2026-07-14 | RFC-009 (forecast × predict convivem) | CHAT-013 | `dfc7138`,`d96e41c` (#30) | Predict | Doc | Alto | A |
-| 2026-07-14 | Rename motor de intervalo → `forecast` (Fase A) | CHAT-001 | `d9c0bc0` (#31) | Forecast | Refator | Alto | A |
-| 2026-07-14 | Motor predict v2 MVP (hazard/survival) | CHAT-001 | `6a170e5` (#31) | Predict | Impl | Alto | A |
-| 2026-07-14 | Shopping VPM Radar Fases 1–8 (schema+motor+seed+admin) | CHAT-014 | `3d56da4`,`1ead0d1`,`8c288c7`,`a7ba945` (#32) | Shopping | Impl | Alto | A |
-| 2026-07-14 | Contagens reais em /admin/noticias (migration 0004) | CHAT-015 | `e238273` (#38) | Admin | Fix | Médio | A |
-| 2026-07-14 | Security hardening (fecha exposição anônima P0) | CHAT-017 | `b2e8093` (#42), migration 0005 | Segurança | Fix | Alto | A |
-| 2026-07-14 | Extração de preço multi-estratégia (headless_v2) | CHAT-017 | `3ba1015` (#43) | Shopping | Impl | Médio | A |
-| 2026-07-14 | EKS Fases 1–3: testes, taxonomia Verdict, Entities | CHAT-017 | `095f4d0` (#41) | Taxonomia/Testes | Impl | Médio | A |
-| 2026-07-14 | Índices FK Radar + coluna Ondas (P2) | CHAT-016 | `ac5b743` (#44) | Perf/Admin | Perf | Baixo | A |
-| 2026-07-15 | Digests read-rich (/admin/digests) | CHAT-001 | `eced3be` (#40) | Digests | Impl | Alto | A |
-| 2026-07-15 | Otimização edge functions (fila drena 400→3600/h) | CHAT-001 | (edge deploy, sem commit) | Ingestão | Perf | Alto | A (db) |
-| 2026-07-15 | Fix bug `deaccent(null)` campaigns v13 + reprocessa 104 | CHAT-001 | (edge deploy) | Ingestão | Fix | Alto | A (db) |
-| 2026-07-15 | Centro de operação de digests fases 2–7 (migration 0007) | CHAT-001 | `6fee380`,`b07cfe1` (#49) | Digests | Impl | Alto | A |
+Datas por `author date` do Git (Nível A quando há commit; `DATA_NÃO_CONFIRMADA` quando ausente).
 
-Datas dos edge deploys derivam de `updated_at` das funções (Nível A via API Supabase); não há commit git (as edge functions foram deployadas direto, ver DEBT-004).
+| Data | Evento | Chat | Commit / fonte | Componente | Tipo | Impacto | Evidência |
+|---|---|---|---|---|---|---|---|
+| 2026-07-08 | Inicializa repositório | — | `989d662` | infra | init | base | GIT-001 |
+| 2026-07-08 | Landing page v1 (Next+Tailwind, Ponto, UI system) | CHAT-001 | `cad07cc` | Landing | feat | alto | GIT-001 |
+| 2026-07-08 | Favicon Ponto + token caramel | CHAT-001 | `c3cab2a` | Marca | feat | baixo | GIT-001 |
+| 2026-07-08 | TLBadge exige score exceto não-confirmado | CHAT-001 | `9e85bce` | UI | refactor | médio | GIT-001 |
+| 2026-07-08 | Integração real do form com Beehiiv (route handler) | CHAT-001 | `1babc10` | Subscribe | feat | alto | GIT-001 |
+| 2026-07-08 | Rebrand "The Loyal" + copy v2 acessível (PR #2) | CHAT-002 | `06e1bb0` | Landing/Marca | feat | alto | GIT-002 |
+| 2026-07-09 | Pipeline editorial (validate/render/publish) do Daily | CHAT-003 | `0aa76fc` | Editorial | feat | alto | GIT-001 |
+| 2026-07-09 | Schema editorial + página da edição + skills digest/source-audit | CHAT-003 | `ea5ada7` | Editorial/Skills | feat | alto | GIT-001 |
+| 2026-07-09 | Skill tl-qa (gate global) + edição fictícia Nº 28 | CHAT-003 | `5970f24` | QA | feat | médio | GIT-001 |
+| 2026-07-09 | The Loyal Pro — relatório executivo (web/e-mail/PDF/QA) | CHAT-003 | `55f7c7b` | Pro | feat | alto | GIT-001 |
+| 2026-07-09 | Publisher Beehiiv (publica edição renderizada) | CHAT-003 | `0548454` | Publisher | feat | alto | GIT-001 |
+| 2026-07-09 | Sistema de render v2 (`renderer/`) + assets de marca | CHAT-004 | `c43bb9e` | Render v2 | feat | alto | GIT-001 |
+| 2026-07-09 | Sistema de QA do Daily (aprovado/reprovado) | CHAT-002 | `a23bdf5` | QA | feat | médio | GIT-001 |
+| 2026-07-09 | DDD-001/002, RFC-001 Blueprint, RFC-001A (governança) | CHAT-006/007 | `main` only | Governança | docs | alto | DOC-011 |
+| 2026-07-09 | COWORK CONTRACT PACK v1 (PR #19) | CHAT-010 | `main` | Governança | docs | médio | GIT-002 |
+| 2026-07-10 | DEPENDENCIAS.md (PR #20) | CHAT-011 | `main` | Governança | docs | médio | GIT-002 |
+| 2026-07-11 | Rota `/admin` v1 (cockpit, Basic Auth + Supabase REST) (PR #22) | CHAT-012 | `feat/admin-route` | Admin | feat | alto | GIT-002 |
+| 2026-07-11 | Padroniza "The Loyal" (PR #21) — **esta sessão** | CHAT-032 | `ee46739` | Marca | fix | médio | GIT-001 |
+| 2026-07-13 | Central de Controle `/admin` v2 (PR #23) | CHAT-013 | default | Admin | feat | alto | GIT-002 |
+| 2026-07-14 | Camada de previsão + weekly digest (PR #24) | CHAT-014 | default | Forecast/Weekly | feat | alto | GIT-002 |
+| 2026-07-14 | Radar de VPM observado (Shopping) por SKU (PR #25/#26) | CHAT-015 | default | VPM | feat | alto | GIT-002 |
+| 2026-07-14 | Reconciliar `main` com trabalho real (admin+predict+retail) (PR #28) | CHAT-017 | `main` | Troncos | merge | crítico | GIT-002 |
+| 2026-07-14 | RFC-009 motor histórico & preditivo v2 + forecast rename (PR #30/#31) | CHAT-018 | default | Predict | feat/docs | alto | DOC-003 |
+| 2026-07-14 | Shopping VPM Fases 1–8 (coletor headless + cron) (PR #32) | CHAT-019 | default | VPM headless | feat | alto | GIT-002 |
+| 2026-07-14 | Admin/predict área + colunas/labels (PR #27 fechado, #36/#37) | CHAT-016/020 | default | Admin/Predict | feat | médio | GIT-002 |
+| 2026-07-14 | Noticias contagens reais (PR #38) | CHAT-021 | default | Admin | fix | médio | GIT-002 |
+| 2026-07-15 | Security hardening P0 (PR #42) | CHAT-024 | default | Segurança | fix | alto | GIT-002 |
+| 2026-07-15 | EKS Fases 1–3: testes, taxonomia única, entities/lineage (PR #41) | CHAT-008 | default | Governança/Tests | feat | alto | GIT-002 |
+| 2026-07-15 | Shopping VPM headless v2/v3/v4 + tune (PR #43/#46/#51) | CHAT-019 | default | VPM | fix | médio | GIT-002 |
+| 2026-07-15 | Edge function `campaigns` versionada (PR #47) | CHAT-026 | default | Supabase | chore | médio | GIT-002 |
+| 2026-07-15 | Conversão landing fases 0–3 + edições reais Beehiiv + monetização (PR #45/#48/#50) | CHAT-022 | default | Landing/Edicao | feat | alto | GIT-002 |
+| 2026-07-15 | Redesign portal admin (PR #52) | CHAT-027 | default | Admin | feat | médio | GIT-002 |
+| 2026-07-15 | GTM social + skill gtm (PR #55/#56) | CHAT-028 | default | GTM | docs | médio | GIT-002 |
+| 2026-07-15 | Atribuição de canal (UTM) + card Twitter + sistema social (PR #57) | CHAT-029 | default | Social | feat | alto | GIT-002 |
+| 2026-07-15 | Auditoria forense Forecast/Predict (PR #54, aberto) | CHAT-030 | `forecast-predict-audit` | Predict | docs | médio | GIT-002 |
+| 2026-07-15 | Radar C0 runtime quality (documentado) | CHAT-031 | `radar-c0-runtime-quality` | VPM | docs | baixo | GIT-002 |
 
 ---
 
 ## 5. Arquitetura planejada
 
-Fontes: RFC-001 (EKS), RFC-009 (predict), CLAUDE.md, corpos de PR.
+Fonte principal: **RFC-001-EKS** (Draft, aguardando ratificação humana) e **RFC-009** (Proposto). Nota: os RFCs-002/003/004/005 são **referenciados mas não escritos**; RFC-003..008 "clássicos" existem como docs só no `main` (linha AAP), enquanto o tronco real carrega RFC-001-EKS + RFC-009. Portanto "arquitetura planejada" tem duas camadas: a **linha AAP no `main`** (Discovery→Blueprint→RFCs numerados) e a **linha EKS no default** (RFC-001-EKS + RFC-009).
 
-- **EKS / RFC-001 (CHAT-007):** um "Editorial Knowledge System" com horizonte de 10 anos, governando RFCs subsequentes RFC-002 (RES), RFC-003 (CRS), RFC-004 (PES), RFC-005 (AES). *Planejado — só a RFC-001 existe; 002–005 NÃO_INICIADO.*
-- **RFC-009 (CHAT-013):** dois motores coexistindo — `forecast` (radar de intervalo rápido) e `predict` (motor robusto hazard/survival), com Fases 0/4/5 (MVP) primeiro e Fases 1–3 (extração v2: mercado/segmento/mecânica/% base-vs-máximo; backfill observável; readiness por cobertura) depois.
-- **CLAUDE.md:** contrato de marca inviolável (tokens, sem deps, sem emoji, disclaimer, mascote Ponto) — governa toda a UI.
-- **Pipeline editorial planejado:** coleta → extração LLM → ledger de campanhas → forecast/predict → digest (daily/weekly/pro/lab/special) → QA gate → Beehiiv.
+**EKS — Editorial Knowledge System (RFC-001-EKS):** modelar conhecimento como **objeto versionado e rastreável (Knowledge Object)**, independente de serialização — "JSON é serialização, React é renderer, Beehiiv é canal; nenhum é a verdade". Elementos:
+- **Envelope do KO:** `id`/`canonicalKey`/`type`/`schemaVersion`/`payload`/`evidence[]`/`confidence`/`freshness`/`lifecycle`/`ownership`/`lineage`/`relations[]`/`audit[]` (append-only).
+- **Ontologia:** Entity / Object / Event / Relationship.
+- **KnowledgeType** (fechado/versionado): Signal, Deal, FechaLogo, Conta, Benchmark, PlayerMove, Matrix, Thesis, Insight, Alert, Learning, Entity, Edition, Report.
+- **Proveniência (fontes tier 1–4)** + evidência (supports/refutes/contextualizes) + regra **N-COPY** ("sem citação, sem afirmação").
+- **Confiança derivada** `f(tier, corroboração, frescor, contradição)` → confirmado/provável/não-confirmado.
+- **Frescor/decay:** todo KO expira; `now > vigência ⇒ expired`, veredito não publicável sem revalidação (invariante **I-VIGÊNCIA**).
+- **TL Score:** soma ponderada de 8 critérios (pesos 25/15/15/10/10/10/10/5); invariante **I-SCORE** (breakdown reconcilia com o score).
+- **Taxonomia de Verdict** (normativa, Apêndice C): 6 tokens canônicos + `depende`/`nao-vale` **deprecados** com mapeamento de migração.
+- **Governança (RACI):** Cowork produz/valida; tl-source-audit e tl-qa são gates de veto; **só humano publica**; contratos mudam só por ADR/AAP; passado imutável/append-only.
+- **Source→Projection:** um KO canônico, N renditions de canal; invariante **I-PROJ** (canais diferem na forma, nunca no juízo).
+- **Ledger de ADRs:** ADR-001..010 todos **Propostos** (aguardando ratificação humana).
 
+**Predict/Forecast (RFC-009, Proposto):** dois produtos coexistentes — **Forecast** (radar de intervalo barato, sempre-ligado) e **Predict** (`campaign_predict_v2`, pesado, gated, backtestado): Model A "quando" (hazard/survival com P{7..180} monotônico), Model B "quanto" (distribuição de bônus), **backtesting walk-forward obrigatório**, `data_readiness` bloqueante. Determinístico em TS; LLM só em extração; sem dependência nova.
+
+**Diagrama (planejado — EKS):**
 ```mermaid
 flowchart TD
-  subgraph Plan[Arquitetura planejada]
-    EKS[RFC-001 EKS\ngoverna 002-005] --> DIG[Digests daily/weekly/pro/lab/special]
-    COL[Coleta noticias] --> EXT[Extracao LLM] --> LED[Ledger campaigns]
-    LED --> FC[forecast: radar intervalo]
-    LED --> PR[predict v2: hazard/survival\nRFC-009 F0-5]
-    LED --> DIG --> QA[QA gate tl-qa] --> BH[Beehiiv]
-    RADAR[Shopping VPM Radar\nmultiprograma] --> DIG
-  end
+  RES[Fontes tier 1-4] -->|evidência| KO[(Knowledge Object canônico<br/>versionado, rastreável)]
+  KO -->|projeção| DAILY[Daily]
+  KO -->|projeção| WEEKLY[Weekly]
+  KO -->|projeção| PRO[Pro]
+  KO -->|projeção| LAB[Lab*]
+  KO -->|projeção| SPECIAL[Special*]
+  KO -->|gate| QA[tl-qa + tl-source-audit]
+  QA -->|só humano publica| CH[Canais: Web / Beehiiv / Social]
+  classDef fut fill:#eee,stroke:#999,color:#666;
+  class LAB,SPECIAL fut;
 ```
+*Lab/Special = planejados, inexistentes no código.*
 
 ---
 
 ## 6. Arquitetura implementada
 
-Fontes: código atual, migrações, edge functions ao vivo, crons, workflows, `middleware.ts`, validações executadas.
+Baseada no código do tronco real (default @ `9bf1b57`), validada por `build`/`tsc`/`test`.
 
+**Entrypoints/rotas (App Router):** `/` (landing), `/edicao` + `/edicao/[numero]`, `/pro` + `/pro/[periodo]`, `/daily/preview` (noindex, exemplo), `/social/{quote,conta,tlscore,carrossel}` (OG edge), `/api/subscribe` (POST), `/admin/login`, `/admin/(panel)/*` (dashboard, backfill, campanhas, jobs, logs, noticias, observability, digests, forecast, predict, shopping-vpm), `/admin/collect`, `/admin/sku`. `middleware.ts` protege `/admin/:path*` por cookie-hash.
+
+**Camada de dados:** Supabase/Postgres via **PostgREST cru** (`lib/admin-db.ts`, service-role no servidor). 7 migrações (`0001..0007`) modelando 3 domínios: editorial/news→campaigns; retail/shopping VPM (2 gerações); forecast/predict. Edge function `campaigns` (Deno + OpenRouter). Formulário público usa anon key (RLS).
+
+**Fora do request-path (scripts):** editorial (`validate/render/render-web/render-system/render-weekly/render-daily/publish/qa/pro/beehiiv-publish`), coleta VPM (`collect-skus` + `collect/*`; `shopping/*` headless Playwright), `forecast`, `pro-vpm`, `taxonomy`, `social-render`/`social-export`. Orquestrados por `npm run *` e 4 workflows de CI (`ci`, `beehiiv` manual, `collect` cron 09h, `shopping-collect` cron 11h/23h).
+
+**Integrações externas:** Beehiiv (subscribe + publish), Supabase, Tavily, OpenRouter/Ollama, GitHub API (dispatch).
+
+**Diagrama (implementado):**
 ```mermaid
 flowchart TD
-  User((Leitor)) --> Land[Landing Next.js\napp/page.tsx]
-  Land --> Sub[/api/subscribe\nBeehiiv/]
-  Admin((Operador)) -->|cookie ADMIN_TOKEN| MW[middleware.ts Edge]
-  MW --> Panel[/admin (panel)\n12 rotas RSC + Server Actions/]
-  Panel -->|SERVICE_ROLE_KEY REST/RPC| DB[(Supabase\n34 tabelas)]
-  subgraph Ingest[Pipeline de ingestao Supabase]
-    Cron[pg_cron 25 jobs] -->|pg_net http_post| EF{Edge Functions Deno}
-    EF --> ingest[ingest v4] --> DB
-    EF --> backfill[backfill v8] --> DB
-    EF --> campaigns[campaigns v13\nOpenRouter llama-4-maverick] --> DB
-    EF --> bfd[backfill-daily v1]
-    EF --> bfs[backfill-simple v1]
+  subgraph Público
+    L[Landing /] --> SF[SubscribeForm] -->|fetch| API[/api/subscribe/]
+    ED[/edicao*/] --> LE[lib/editions] --> CE[(content/editions/*.json)]
+    PRO[/pro*/] --> LP[lib/pro] --> CP[(content/pro/*.json)]
+    SOC[/social/*/ OG]
+    DP[/daily/preview noindex/] --> DE[DailyEdition] --> EX[(renderer example)]
   end
-  DB --> Edit[Pipeline editorial\nscripts Node]
-  Edit -->|validate/render/qa/publish| Content[content/*.json + out/]
-  Content -->|workflow beehiiv.yml| BH2[Beehiiv API]
-  Panel -->|workflow_dispatch| GHA[GitHub Actions\nbeehiiv/collect/shopping-collect]
-  GHA --> BH2
-  Radar[Shopping VPM\nPlaywright headless] -->|shopping-collect.yml| DB
+  API -->|server-only| BH[(Beehiiv API)]
+  subgraph Admin
+    MW[middleware cookie-hash] --> PANEL[/admin/(panel)/*/]
+    PANEL --> ADB[lib/admin-db PostgREST service-role] --> SUPA[(Supabase/Postgres 7 migrações)]
+    COL[/admin/collect Basic Auth/] -->|workflow_dispatch| GH[(GitHub Actions)]
+    SKU[/admin/sku Basic Auth/] --> SUPA
+  end
+  subgraph Batch/CI
+    CI1[collect.yml cron] --> C1[scripts/collect HTTP] --> SUPA
+    CI2[shopping-collect.yml cron] --> C2[scripts/shopping headless Playwright] --> SUPA
+    FC[forecast.mjs] --> FJ[(content/forecast.json)]
+    EG[ci.yml editorial-gate] --> RS[render-system] --> OUT[(out/*)]
+    BHW[beehiiv.yml manual] --> BP[beehiiv-publish] --> BH
+  end
+  SUPA -. edge campaigns .-> OR[(OpenRouter LLM)]
 ```
-
-**Entrypoints:** `app/page.tsx` (landing), `app/api/subscribe/route.ts`, `app/admin/**` (cockpit), `middleware.ts` (gate). **Scripts:** `scripts/*.mjs` (pipeline editorial + coletores). **Edge functions:** ingest/campaigns/backfill/backfill-simple/backfill-daily. **Integrações externas:** Beehiiv, OpenRouter, Tavily, GitHub Actions API. **Auth:** cookie `ADMIN_TOKEN` (SHA-256, httpOnly) para o painel; Basic Auth para endpoints do Radar (`/admin/sku`, `/admin/collect`); `SERVICE_ROLE_KEY` server-only (`lib/admin-db.ts`). **Jobs/filas:** pg_cron (25) + tabelas de fila (`backfill_queue`, `backfill_tracker`, `shopping_collection_queue`). **Config:** env vars (17 chaves em `.env.example`); mock-safe quando ausentes.
-
-**Estado ao vivo (Nível A, 2026-07-15):** campaigns 3.579 (1.506 vigentes); news_raw 40.099 (0 pendentes, 17 com erro); backfill_queue 0 pendentes; editions 10; edition_drafts 0; 25 crons ativos; 34 tabelas public.
 
 ---
 
-## 7. Diferenças entre arquitetura planejada e implementada
+## 7. Diferenças planejado × implementado
 
-| # | Planejado | Existe | Falta | Intencional? | Decisão registrada | Impacto | Risco | Recomendação |
+| # | Planejado | Existe hoje | Falta | Alteração intencional? | Decisão registrada? | Impacto | Risco | Recomendação |
 |---|---|---|---|---|---|---|---|---|
-| D1 | EKS RFC-002..005 (RES/CRS/PES/AES) | Só RFC-001 | 4 RFCs | Parcial (horizonte 10 anos) | RFC-001 §governa | Baixo (governança futura) | Baixo | Manter em espera; não bloqueia produto |
-| D2 | predict RFC-009 Fases 1–3 (extração v2) | Fases 0/4/5 (MVP) | Extração com mercado/segmento/mecânica | Sim (MVP-first) | RFC-009 §sequência | Médio (predict fica com dado fino) | Médio | Decidir se predict é prioridade antes de investir |
-| D3 | Digest curado consumido pelo pipeline | `edition_drafts` + materialize (overlay admin) | Render pipeline ler o draft | Não (limitação declarada no PR #49) | PR #49 "honestidade" | Médio | Médio | Fase futura: script lê `edition_drafts` |
-| D4 | Shopping VPM com preço ao vivo | Schema+motor+seed+coletor headless | Adapters afinados (SPA/anti-bot) | Não (bloqueio externo) | docs/SHOPPING-VPM, PR #32 | Médio | Médio | Afinar adapters ou congelar frente |
-| D5 | Produção em `main` | Produção em `claude/loyalty-landing-page-v1-7vbjq7` | Repontar Vercel/default branch | Ambíguo | PR #28 nota | Alto (governança) | Alto | Decisão humana — CONFLICT-001 |
-| D6 | Edge functions versionadas no repo | Deployadas direto (só `campaigns`/`backfill` têm código no chat) | Código das edge functions no git | Não | — | Médio | Médio | Versionar `supabase/functions/*` |
-
-**Pontos únicos de falha:** OpenRouter (extração LLM — se cair, campanhas param de crescer); `SERVICE_ROLE_KEY` (todo o admin depende dela); branch de produção único. **Acoplamentos:** `lib/admin-db.ts` é usado por toda a camada admin (aceitável — é a fronteira REST). **Componentes órfãos/duplicados:** ver §8 (COMP órfãos: `lib/admin-series.ts`, `lib/admin-calendar.ts` a verificar uso; possível duplicação `components/ui.tsx` × `components/admin/ui.tsx` — nomes iguais, escopos diferentes, NÃO é duplicação real).
+| DIF-01 | KO canônico único (EKS) com Source→Projection | Duas pipelines de edição (camelCase × snake_case) + conteúdo em JSON por produto | Serialização canônica (RFC-002); unificar schemas | Parcial (compat window) | Sim (RFC-001-EKS §12.2, ADR-005) | Alto | Drift entre pipelines | Escrever RFC-002; convergir schemas ou oficializar 1 |
+| DIF-02 | Verdict único normativo | **Taxonomia única implementada** (`taxonomy.mjs`) e testada | Propagar taxonomia ao social (3+ cópias) | Sim | Sim (M-1) | Médio | Cards divergem da marca | Importar taxonomia em `social-*` |
+| DIF-03 | Hierarquia de autoridade (6 docs) | **Nenhum dos 6 existe**; `CLAUDE.md` é o de-facto | Criar docs ou re-apontar | Não (dívida) | Parcial (D-1/ADR-009) | Alto | Regras apontam para o vazio | Resolver M-3 (criar ou re-apontar) |
+| DIF-04 | Linha AAP (RFC-003..008, DDD, DEPENDENCIAS) | Existe **só no `main`**, não no tronco de produção | Trazer ao default ou oficializar tronco | Não (fragmentação) | Não | Alto | Governança fora do tronco | Reconciliar troncos |
+| DIF-05 | Predict v2 como sucessor do Forecast | Predict implementado **mas dormente** (sem CLI/artefato/CI) | Wire ao pipeline de conteúdo | Sim (MVP faseado) | Sim (RFC-009 §10-11) | Médio | Código sofisticado inalcançável | Fase MVP: LATAM Pass, gerar `content/predict.json` |
+| DIF-06 | Radar de VPM operando | 2 coletores (HTTP wired; headless só em cron) + migrações aplicadas | Secrets, tuning, 1ª coleta live; Azul desbloquear | Parcial | Sim (RADAR-VPM/SHOPPING-VPM) | Alto | Dado é seed/histórico, não live | Go-live de coleta + escolher fonte-de-verdade |
+| DIF-07 | Produtos Daily/Weekly/Lab/Pro/Special | Daily+Weekly+Pro reais; **Lab/Special ausentes** | Construir Lab/Special | Sim (roadmap) | Sim (RFC-001-EKS §1.1) | Médio | Copy anuncia como "incluído" | Ajustar copy ou construir |
+| DIF-08 | Banco versionado por migrações | RPCs/views/tabelas-base do admin **não versionadas** | `create` de tudo; corrigir numeração | Não (dívida) | Não | Alto | DR/reprovisionamento quebra | Versionar schema real |
 
 ---
 
 ## 8. Inventário de componentes
 
-| ID | Componente | Localização | Chat origem | Estado | Testes | Docs | Risco |
-|---|---|---|---|---|---|---|---|
-| COMP-001 | Landing page + Hero/Nav/Footer | `app/page.tsx`,`components/shell.tsx`,`sections.tsx` | CHAT-002 | CONCLUÍDO_VALIDADO | build A | CLAUDE.md | Baixo |
-| COMP-002 | Subscribe form + Beehiiv | `components/SubscribeForm.tsx`,`app/api/subscribe/route.ts` | CHAT-002 | CONCLUÍDO_NÃO_VALIDADO (envio real não exercitado) | — | README | Médio (RISK-002) |
-| COMP-003 | Mascote Ponto (SVG) | `components/PontoMascot.tsx` | CHAT-002 | CONCLUÍDO_VALIDADO | build A | PONTO-MASCOTE-GUIA | Baixo |
-| COMP-004 | Pipeline editorial (validate/render/publish) | `scripts/validate.mjs`,`render*.mjs`,`publish.mjs` | CHAT-003 | CONCLUÍDO_VALIDADO | `tests/lib.test.mjs` A | RENDER-SYSTEM | Baixo |
-| COMP-005 | QA gate (tl-qa) + qa.mjs | `scripts/qa.mjs`, skill tl-qa | CHAT-006 | CONCLUÍDO_VALIDADO | editorial-gate CI A | — | Baixo |
-| COMP-006 | Beehiiv Publisher | `scripts/beehiiv-publish.mjs`,`.github/workflows/beehiiv.yml` | CHAT-004 | CONCLUÍDO_NÃO_VALIDADO (mock-safe; envio real depende de secret) | — | content/README | Médio (RISK-002) |
-| COMP-007 | Cockpit `/admin` (12 rotas) | `app/admin/**` | CHAT-001/008 | CONCLUÍDO_NÃO_VALIDADO (build A; UI logada não exercitada) | — | — | Médio |
-| COMP-008 | Auth admin (cookie + middleware) | `middleware.ts`,`lib/admin-auth.ts` | CHAT-001 | CONCLUÍDO_NÃO_VALIDADO | build A | — | Médio (segurança) |
-| COMP-009 | Camada admin-db (REST/RPC service-role) | `lib/admin-db.ts` | CHAT-001 | CONCLUÍDO_VALIDADO | roundtrip db A | comentários | Baixo |
-| COMP-010 | Motor forecast (intervalo) | `lib/forecast.ts`,`scripts/forecast-engine.mjs` | CHAT-009 | CONCLUÍDO_VALIDADO | build A | RFC-009 | Baixo |
-| COMP-011 | Motor predict v2 (hazard/survival) | `lib/predict-engine.ts`,`lib/admin-predict.ts` | CHAT-001 | IMPLEMENTADO_PARCIALMENTE (gates a maioria por dado fino) | build A | RFC-009 | Médio (RISK-005) |
-| COMP-012 | Edge function `campaigns` (extração LLM) | Supabase edge v13 | CHAT-001 | CONCLUÍDO_VALIDADO (0 pendentes, 17 erro) | db A | — | Médio (DEBT-004: sem versionar) |
-| COMP-013 | Edge functions `backfill`/`ingest`/`backfill-daily`/`backfill-simple` | Supabase edge | CHAT-001 | CONCLUÍDO_VALIDADO (fila drenou) | db A | — | Médio (DEBT-004) |
-| COMP-014 | pg_cron (25 jobs) | Supabase cron.job | CHAT-001 | CONCLUÍDO_VALIDADO | db A | — | Médio (RISK-003) |
-| COMP-015 | Ledger de campanhas | tabela `campaigns` | CHAT-001 | CONCLUÍDO_VALIDADO (3.579) | db A | — | Baixo |
-| COMP-016 | Centro de operação de digests (fases 2–7) | `app/admin/(panel)/digests/**`,`lib/admin-digest-ops.ts`,`lib/admin-digests.ts` | CHAT-001 | CONCLUÍDO_NÃO_VALIDADO (build+roundtrip db A; envio real não exercitado) | roundtrip db A | PR #49 | Médio |
-| COMP-017 | Shopping VPM Radar (schema+motor+seed+admin) | `scripts/shopping/**`,`app/admin/(panel)/shopping-vpm`,migrations 0002/0003 | CHAT-014/017 | IMPLEMENTADO_PARCIALMENTE (0 preço ao vivo) | `tests/stats.test.mjs` A | SHOPPING-VPM | Médio (RISK-004) |
-| COMP-018 | Taxonomia Verdict + Entities/lineage | `scripts/taxonomy.mjs`,`tests/taxonomy.test.mjs`,`entities.test.mjs` | CHAT-017 | CONCLUÍDO_VALIDADO | 2 test files A | — | Baixo |
-| COMP-019 | Skills (tl-qa, tl-source-audit, tl-digest-template) | `.claude/skills` (via Skill) | CHAT-003/006 | CONCLUÍDO_NÃO_VALIDADO | — | — | Baixo |
-| COMP-020 | RFC-001 EKS (governança) | `docs/rfc/RFC-001-*.md` | CHAT-007 | IMPLEMENTADO_PARCIALMENTE (só 001 de 5) | — | próprio | Baixo |
-| COMP-021 | Produtos Pro/Lab/Special/Weekly | `scripts/pro.mjs`,`render-weekly.mjs`,`components/ProReport.tsx` | CHAT-003/009 | CONCLUÍDO_NÃO_VALIDADO | — | content/README | Baixo |
-| COMP-022 | `lib/admin-series.ts`, `lib/admin-calendar.ts` | lib | CHAT-001 | NÃO_VERIFICÁVEL (uso a confirmar — possível órfão) | — | — | Baixo (DEBT-005) |
+Estado: `LIVE` (roteado/ativo), `LIVE-batch` (script/CI), `MOCK` (só exemplo), `DORMENTE` (implementado, não ligado), `PLANEJADO`, `AUSENTE`.
 
-Componentes **existentes**: 001–021. **Parciais**: 011, 017, 020. **Órfãos a verificar**: 022. **Abandonados/obsoletos**: nenhum confirmado (o renderer "legado" marcado em `f512967` foi substituído pelo sistema unificado — SUBSTITUÍDO, não quebrado). **Quebrados**: nenhum no HEAD atual (bugs de merge #17×#25 foram corrigidos em #26).
+| ID | Componente | Objetivo | Localização | Chat origem | Estado | Testes | Docs | Risco |
+|---|---|---|---|---|---|---|---|---|
+| COMP-001 | Landing (`/`) | Conversão/apresentação | `app/page.tsx`, `shell.tsx`, `sections.tsx` | CHAT-001/002/022 | LIVE | via qa.mjs | COPY-LANDING | baixo |
+| COMP-002 | Design system | Primitivos de marca | `components/ui.tsx` (TLBadge, ContaBlock, SectionLabel, Reveal, `Verdict`) | CHAT-001 | LIVE | não | CLAUDE.md | baixo |
+| COMP-003 | Data-art/graphics | CompareBanner/Sparkline/PontoReadingScene/LedgerTexture | `components/graphics.tsx` | CHAT-001 | LIVE | não | TL-GRAPHICS(ausente) | baixo |
+| COMP-004 | Mascote Ponto | SVG interativo | `components/PontoMascot.tsx` | CHAT-001 | LIVE | não | PONTO-GUIA(ausente) | baixo |
+| COMP-005 | Subscribe form | Inscrição | `components/SubscribeForm.tsx` + `lib/attribution.ts` | CHAT-001/029 | LIVE (fetch real) | não | README | médio (rate-limit best-effort) |
+| COMP-006 | Subscribe API | Beehiiv server-only | `app/api/subscribe/route.ts` | CHAT-001 | LIVE | não | .env.example | médio (mock silencioso) |
+| COMP-007 | Editorial schema A | Contrato camelCase | `content/edition.schema.json` | CHAT-003 | LIVE | taxonomy.test | content/README | alto (dual) |
+| COMP-008 | Editorial pipeline A | validate/render/qa/publish | `scripts/{validate,render,render-web,render-system,publish,qa}.mjs`, `scripts/lib.mjs` | CHAT-003/004 | LIVE-batch | lib.test | RENDER-SYSTEM | médio |
+| COMP-009 | Render v2 (snake) | Pipeline B daily | `renderer/*`, `scripts/*-daily.mjs`, `renderer/edition.schema.json` | CHAT-004 | LIVE-batch (fora do CI) | parcial | renderer/README | alto (dual, não testado no CI) |
+| COMP-010 | Taxonomia Verdict | Fonte única de veredito | `scripts/taxonomy.mjs` | CHAT-008 | LIVE-batch | taxonomy.test (7) | RFC-001-EKS §5.5 | baixo |
+| COMP-011 | Página de edição | Web da edição (A) | `components/EditionArticle.tsx`, `lib/editions.ts` | CHAT-003 | LIVE | não | — | baixo |
+| COMP-012 | DailyEdition (B) | Web archive (exemplo) | `components/daily/DailyEdition.tsx`, `/daily/preview` | CHAT-004 | MOCK (noindex) | não | — | médio (quase-órfão) |
+| COMP-013 | Pro | Relatório executivo | `app/pro/*`, `components/ProReport.tsx`, `lib/pro.ts`, `scripts/pro.mjs`, `content/pro/*.json`, `pro-report.schema.json` | CHAT-003 | LIVE | não | prompts/07 | baixo |
+| COMP-014 | Weekly | Digest semanal + radar | `scripts/render-weekly.mjs`, `content/weekly/*.json`, `weekly.schema.json` | CHAT-014 | LIVE-batch | não | content/README | médio |
+| COMP-015 | Beehiiv publisher | Publica edição renderizada | `scripts/beehiiv-publish.mjs`, `content/beehiiv-status.json` | CHAT-003 | LIVE-batch (mock/draft) | não | content/README | médio (idempotência fantasma no mock) |
+| COMP-016 | Admin panel | Cockpit operacional | `app/admin/(panel)/*`, `components/admin/*` | CHAT-012/013/027 | LIVE (dados reais) | não | — | médio |
+| COMP-017 | Admin auth | Cookie-hash + Basic Auth | `middleware.ts`, `lib/admin-auth.ts`, `app/admin/login/*`, `lib/admin.ts` | CHAT-012/024 | LIVE | não | — | médio (não-const-time, hash estático) |
+| COMP-018 | Admin data layer | PostgREST service-role | `lib/admin-db.ts` | CHAT-013 | LIVE | não | — | alto (URL/anon key hardcoded; falha silenciosa) |
+| COMP-019 | Supabase schema | 3 domínios | `supabase/migrations/0001..0007`, `seeds/` | CHAT-015/024/013 | LIVE | não | migrações | alto (RPCs fora das migrações; numeração dup) |
+| COMP-020 | Edge function campaigns | Extrai campanhas de notícias | `supabase/functions/campaigns/index.ts` | CHAT-026 | LIVE (verify_jwt off) | não | functions/README | alto (auth de borda ausente) |
+| COMP-021 | VPM coletor HTTP (P1) | Coleta preço/pontos → VPM | `scripts/collect-skus.mjs`, `scripts/collect/*`, `content/sku-basket.json` | CHAT-015 | LIVE-batch (mock sem creds) | **stats.test (11)** | RADAR-VPM | médio (scraping frágil) |
+| COMP-022 | VPM coletor headless (P2) | Playwright multiprograma | `scripts/shopping/*` | CHAT-019 | LIVE-batch (só cron) | vpm self-test (fora do CI) | SHOPPING-VPM | alto (Azul bloqueado; playwright não declarado) |
+| COMP-023 | Forecast engine | Radar de janelas (intervalo) | `scripts/forecast.mjs`, `forecast-engine.mjs`, `lib/forecast.ts`, `content/forecast.json` | CHAT-014/018 | LIVE-batch | não | RFC-009 | médio (espelho manual TS↔mjs) |
+| COMP-024 | Predict engine | Survival/hazard + backtest | `lib/predict-engine.ts`, `lib/admin-predict.ts`, `/admin/predict` | CHAT-018 | **DORMENTE** | não | RFC-009 | médio (não ligado) |
+| COMP-025 | Pro-VPM | VPM no Pro | `scripts/pro-vpm.mjs` (lê `retail_valuations` = P1) | CHAT-019 | LIVE-batch | não | — | médio |
+| COMP-026 | Social OG routes | Cards ao vivo | `app/social/*`, `lib/social-brand.ts`, `lib/social-parts.ts`, `scripts/social-export.mjs` | CHAT-029 | LIVE | não | GTM | médio (paleta não deriva da taxonomia) |
+| COMP-027 | Social render batch | 71 cards estáticos | `scripts/social-render.mjs`, `content/social/*` | CHAT-029 | LIVE-batch | não | GTM-CONTENT-30D | médio (2º gerador; cópia de contrato) |
+| COMP-028 | CI | lint/typecheck/test/gate/build + crons | `.github/workflows/{ci,beehiiv,collect,shopping-collect}.yml` | CHAT-024/019 | LIVE | — | GO-LIVE | baixo |
+| COMP-029 | Skills do projeto | tl-qa/tl-digest/tl-source-audit | `.claude/skills/tl-*` | CHAT-003 | LIVE (referências a `npm run` corretas no tronco real) | — | SKILL.md | baixo |
+| COMP-030 | Governança/RFC | EKS + RFC-009 + AAP | `docs/rfc/*`, `docs/architecture/*` (parte só no `main`) | CHAT-006/007/008/018 | Draft/Proposto | — | RFCs | alto (fragmentado, não ratificado) |
+| COMP-031 | Lab | Biblioteca evergreen | — | — | **AUSENTE** | — | prompts/06 | médio (copy promete) |
+| COMP-032 | Special | Edição temática | — | — | **AUSENTE** | — | prompts/08 | baixo |
+| COMP-033 | EdicaoMock | Amostra na landing | `components/EdicaoMock.tsx` | CHAT-001 | LIVE (ilustrativo) | não | — | baixo |
+| COMP-034 | Starter pack | Prompts de recriação | `starter-pack/*` | CHAT-033 | LIVE (docs) | — | — | baixo (cita docs fantasma) |
+
+**Órfãos/quase-órfãos:** COMP-012 (DailyEdition, só `/daily/preview` noindex). **Duplicados/sobrepostos:** COMP-008×COMP-009 (2 pipelines edição); COMP-021×COMP-022 (2 coletores VPM); COMP-026×COMP-027 (2 geradores sociais); COMP-023×COMP-024 (forecast×predict, domínio comum). **Ausentes:** COMP-031, COMP-032.
 
 ---
 
 ## 9. Mapa individual dos chats
 
-> Só CHAT-001 tem transcript acessível → ficha completa. Demais: ficha reconstruída por Git/PR (campos de intenção marcados Nível C/D). Para não inflar, chats 002–019 recebem ficha condensada com os campos verificáveis.
+> **Aviso de método (obrigatório):** as transcrições dos chats **não são acessíveis** (MISS-001). Cada ficha abaixo é **reconstruída** a partir de branches, commits e PRs (Nível C/D para intenção/contexto; Nível A/B para saídas de código). A única sessão com transcrição real é **CHAT-032**. Não afirmo ter lido nenhuma conversa que não a atual.
 
-### CHAT-001. Admin cockpit + predict + digests + otimização de edge (sessão auditora)
-1. **Identificação:** original `session_01ESZNuRkDSSaAAYc1kXFcBX`; branches `loyal-admin-control-r07ol7`, `forecast-reformulacao`. Período 13–15/jul. Tema: cockpit admin + motor predict + centro de digests + otimização do pipeline. Predecessores: CHAT-008 (admin v1), CHAT-009 (forecast). Sucessores: — (é o mais recente).
-2. **Contexto recebido (Nível A):** CLAUDE.md; base já com landing, pipeline editorial, admin v1, forecast, Radar; credencial Supabase na Vercel; branch de produção = landing-page-v1. Premissa herdada: "não apontar para main por medo de caos" (decisão do usuário).
-3. **Objetivo:** construir/aprimorar o cockpit; refazer o predict (forecast × predict); diagnosticar/acelerar o pipeline; construir centro de operação de digests (fases 2–7). Alcançado: **sim** (PRs #23,#28,#30,#31,#40,#49 mergeados; fila drenada).
-4. **Planejou:** cockpit v2; migração predict; motor predict v2; RFC-009; otimização de edge; página digests + fases 2–7; migração 0007. Todos executados.
-5. **Declarou ter feito (verificação):** cockpit v2 → **Comprovado** (#23, build A). Motor predict v2 → **Comprovado** (`lib/predict-engine.ts`, #31). Otimização edge (400→3600/h) → **Comprovado** (db: fila=0). Fix `deaccent(null)` v13 + reprocessa 104 → **Comprovado** (db: erros 134→17). Fases 2–7 digests → **Comprovado** (#49 mergeado, migration 0007 aplicada, roundtrip db).
-6. **Realmente feito:** ver §4 (linhas 14/jul–15/jul). Entregas confirmadas: cockpit, predict v2, digests 2–7, edge opt, migrations 0002/0007. Entrega parcial: predict (gates dado fino). Entrega sem consumo: `edition_drafts` pelo render (D3).
-7. **Decisões:** DEC-001 (forecast × predict coexistem), DEC-002 (MVP-first predict), DEC-003 (não apontar produção para main), DEC-004 (edge dispatch via GH Actions), DEC-005 (materialize como overlay). Ver §11.
-8. **Tarefas/status:** ver task list #1–#27 (todas completed). Cruzamento com Git confirma.
-9. **Arquivos/componentes:** COMP-007..016, migrations 0002/0007, edge campaigns/backfill. Implementados+validados (build/db).
-10. **Lacunas:** D3 (draft não consumido), DEBT-004 (edge sem versionar no git), predict dado fino.
-11. **Estado final:** CONCLUÍDO_NÃO_VALIDADO no agregado (falta exercitar UI logada + envio real). Conclusão 85%–92%. Nível A/B. Próxima ação: validar 1 envio real. Critério de encerramento: envio de digest ponta-a-ponta comprovado + secrets confirmados.
+### 9.1 Tabela mestre de chats (34)
 
-### CHAT-002. Landing. Página v1 + rebrand
-Reconstruída (Git #1,#2,#14). Entregou landing Next.js+Tailwind, rebrand The Loyal, subscribe→Beehiiv. Comprovado (código+build A). Ciclo aberto: CYCLE-006 (validar envio real de subscribe). Conclusão ~90%.
+| ID | Nome canônico | Branch | PRs | Período | Temas | Estado | Ciclo aberto? |
+|---|---|---|---|---|---|---|---|
+| CHAT-001 | Landing. Landing page v1 + integração Beehiiv. Entregue | `loyalty-landing-page-v1-7vbjq7` (virou tronco) | #1,#8,#12,#14 | 07-08/09 | Landing, UI, mascote, subscribe | CONCLUÍDO_VALIDADO (base) | Não (virou tronco) |
+| CHAT-002 | Landing. Rebrand The Loyal + copy v2 + QA Daily. Entregue | `landing-page-copy-review-ssj4y9` | #2,#4,#9,#13(aberto) | 07-08/09 | Rebrand, acessibilidade, QA, intake de pauta | IMPLEMENTADO_PARCIALMENTE | **Sim (#13 aberto)** |
+| CHAT-003 | Editorial. Pipeline + Pro + Publisher + skills. Entregue | `loyalty-beehiiv-publish-fv8t65` | #5 | 07-09 | Schema, render, Pro, Beehiiv, skills | CONCLUÍDO_NÃO_VALIDADO | Parcial |
+| CHAT-004 | Render. Sistema de render v2 (renderer/). Entregue | `loyalty-rendering-system-kugnf6` | (merge base) | 07-08/09 | renderer email-safe, assets, QA-checklist | IMPLEMENTADO_PARCIALMENTE | Sim (pipeline B fora do CI) |
+| CHAT-005 | DevOps. Prontidão de produção (CI, go-live). Entregue | `loyalty-production-readiness-{c8jrqy,wnmqh8}` | #10,#11 | 07-09/13 | CI, Beehiiv manual, go-live | CONCLUÍDO_NÃO_VALIDADO | Sim (secrets/go-live) |
+| CHAT-006 | Governança. DDD-001/002 (domínio). Entregue | `loyalty-domain-discovery-o8yyaj` | #16 | 07-09/13 | Discovery/decisão de domínio | CONCLUÍDO (docs, só `main`) | Sim (fora do tronco) |
+| CHAT-007 | Governança. Linha AAP — Discovery/Plano/RFC-001..008. Entregue | `loyalty-project-discovery-v8p2rf` | #18 | 07-09 | RFCs numerados, plano | CONCLUÍDO (docs, só `main`) | Sim (fora do tronco) |
+| CHAT-008 | Governança. Autoridade arquitetural + EKS Fases 1–3. Entregue | `loyalty-architectural-authority-66sjuc` | #17,#41 | 07-09/15 | RFC-001-EKS, taxonomia, entities, testes | IMPLEMENTADO_PARCIALMENTE | **Sim (ADRs não ratificados)** |
+| CHAT-009 | Governança. Arquitetura de sistema. Indefinido | `loyalty-system-architecture-0cwx3h` | — | 07 | Arquitetura | STATUS_DESCONHECIDO | Investigar |
+| CHAT-010 | Governança. COWORK Contract Pack v1. Entregue | `cowork-contract-pack-v1-rou00q` | #19 | 07-09 | Contrato Cowork | CONCLUÍDO (docs, só `main`) | Sim (fora do tronco) |
+| CHAT-011 | Governança. DEPENDENCIAS.md. Entregue | `new-session-gi010s` | #20 | 07-10 | Mapa de dependências | CONCLUÍDO (docs, só `main`) | Sim (fora do tronco) |
+| CHAT-012 | Admin. Rota /admin cockpit v1. Entregue | `feat/admin-route` | #22 | 07-11 | Basic Auth, Supabase REST | SUBSTITUÍDO (por v2/redesign) | Não |
+| CHAT-013 | Admin. Central de Controle /admin (v2, read-rich, digests). Entregue | `loyal-admin-control-r07ol7` | #23,#40,#49 | 07-13/15 | Cockpit v2, digests fases 2–7 | CONCLUÍDO_NÃO_VALIDADO | Sim (validação operacional) |
+| CHAT-014 | Predict. Camada de previsão + weekly digest. Entregue | `predictions-dairy-weekly-digest-la43x0`, `predict-followups-la43x0` | #24,#29 | 07-14 | Forecast, weekly, snapshots | IMPLEMENTADO_PARCIALMENTE | Sim |
+| CHAT-015 | VPM. LATAM Pass loyalty radar (retail VPM). Entregue | `latam-pass-loyalty-radar-mpp1cp` | #25,#26,#33 | 07-14 | Retail VPM P1, reconciliação, Vercel plugin | IMPLEMENTADO_PARCIALMENTE | Sim (go-live coleta) |
+| CHAT-016 | Admin. Área de previsão /admin/predict. Fechado sem merge | `admin-predict-area-la43x0` | #27 (fechado, não mergeado) | 07-14 | Predict UI (stack sobre #23) | SUBSTITUÍDO/ABANDONADO | **Sim (decidir descarte)** |
+| CHAT-017 | Troncos. Reconciliar main com trabalho real. Entregue | `reconcile-main-features` | #28 | 07-14 | Merge admin/predict/retail → main | IMPLEMENTADO_PARCIALMENTE | **Sim (troncos divergiram de novo)** |
+| CHAT-018 | Predict. RFC-009 + motor predict v2 + forecast rename. Entregue | `rfc-predict-engine-v2`, `forecast-reformulacao` | #30,#31 | 07-14 | RFC-009, predict MVP, forecast | IMPLEMENTADO_PARCIALMENTE | Sim (predict dormente) |
+| CHAT-019 | VPM. Shopping VPM multiprograma headless (Fases 1–8, v2/v3/v4). Entregue | `shopping-vpm-radar-la43x0`, `shopping-vpm-{diagnose,recompute-fix}`, `vpm-{price-adapters,azul-price-sanity,collect-tune}` | #32,#34,#35,#43,#46,#51 | 07-14/15 | Coletor headless, recompute, adapters | IMPLEMENTADO_PARCIALMENTE | Sim (Azul bloqueado; go-live) |
+| CHAT-020 | Admin. Predict rotas/rótulos (Ondas/datas). Entregue | `predict-routes-history`, `predict-column-labels` | #36,#37 | 07-14 | Colunas de séries | CONCLUÍDO_NÃO_VALIDADO | Não |
+| CHAT-021 | Admin. Notícias contagens reais. Entregue | `noticias-real-counts` | #38 | 07-14 | Corrige mock de contagem | CONCLUÍDO_VALIDADO | Não |
+| CHAT-022 | Landing/Conversão. Fases 0–3 + edições reais Beehiiv + monetização. Entregue | `clever-mendel-3mevif` | #39,#45,#48,#50,#53(aberto) | 07-14/15 | Conversão, skills de design, edições Beehiiv | IMPLEMENTADO_PARCIALMENTE | **Sim (#53 aberto)** |
+| CHAT-024 | Segurança. Hardening P0 (advisors). Entregue | `security-hardening-p0` | #42 | 07-15 | RLS, revoke anon, security_invoker | CONCLUÍDO_NÃO_VALIDADO | Sim (validar em prod) |
+| CHAT-025 | Admin. P2 polish (índices FK + coluna Ondas). Entregue | `p2-polish` | #44 | 07-15 | Perf/UX admin | CONCLUÍDO | Não |
+| CHAT-026 | Supabase. Edge function campaigns versionada. Entregue | `vendor-edge-campaigns` | #47 | 07-15 | Edge extractor | CONCLUÍDO_NÃO_VALIDADO | Sim (verify_jwt off) |
+| CHAT-027 | Admin. Redesign do portal (IA de navegação, command palette). Entregue | `admin-portal-redesign-m4kule` | #52 | 07-15 | UX admin | CONCLUÍDO_NÃO_VALIDADO | Não |
+| CHAT-028 | GTM. Skill gtm + plano social. Entregue | `gtm-skill-install-j652ff`, `gtm-social-plan` | #55,#56 | 07-15 | GTM social, skill | CONCLUÍDO (docs) | Não |
+| CHAT-029 | Social. Atribuição de canal (UTM) + card Twitter + sistema social. Entregue | `funnel-channel-attribution` | #57 | 07-15 | UTM, OG, 68 cards | IMPLEMENTADO_PARCIALMENTE | Sim (paleta não deriva da taxonomia) |
+| CHAT-030 | Predict. Auditoria forense Forecast/Predict com dados reais. Em aberto | `forecast-predict-audit-nyswiw` | #54 (aberto) | 07-15 | Auditoria, decisões MVP | EM_ANDAMENTO | **Sim (#54 aberto)** |
+| CHAT-031 | VPM. Radar C0 runtime quality. Documentado | `radar-c0-runtime-quality` | — | 07-15 | Qualidade de runtime da coleta | EM_ANDAMENTO | Sim |
+| CHAT-032 | Marca. Padroniza "The Loyal" como nome default. **Esta sessão** | `loyal-loyalty-default-name-sacc93` | #21 (mergeado) | 07-11/15 | Rename de marca | CONCLUÍDO_VALIDADO | Não |
+| CHAT-033 | Starter. Starter pack com prompts de criação. Entregue | `zip-files-repo-m1b0pn` | — | 07-09 | Prompts de recriação | CONCLUÍDO (cita docs fantasma) | Sim (docs fantasma) |
+| CHAT-034 | Contexto. Contexto do projeto (para GPT) + análise funcional. Em aberto | `clever-mendel-3mevif` (docs) | #53 (aberto) | 07-15 | Doc de contexto | EM_ANDAMENTO | **Sim (#53 aberto)** |
 
-### CHAT-003. Editorial. Sistema de renderização Daily
-Git #6. Entregou schema editorial, render unificado (email/plain/web/qa/manifest), skills tl-digest/tl-source-audit. Comprovado (código+`tests/lib.test.mjs` A). Conclusão ~90%.
+*(CHAT-023 fundido em CHAT-008 — mesma frente EKS/PR #41; identificador reservado para não renumerar.)*
 
-### CHAT-004. Beehiiv. Publisher
-Git #5. `scripts/beehiiv-publish.mjs` + `beehiiv.yml`, idempotente, mock-safe. CONCLUÍDO_NÃO_VALIDADO (envio real depende de secret). Conclusão ~85%.
+### 9.2 Fichas detalhadas (chats de maior impacto + esta sessão)
 
-### CHAT-005. Landing. Revisão de copy
-Git #4,#9. Copy v2 acessível. Comprovado. Conclusão ~95%.
+#### CHAT-032. Marca. Padroniza "The Loyal" como nome default (ESTA SESSÃO — Nível A)
+- **Identificação:** branch `claude/loyal-loyalty-default-name-sacc93`; PR #21 (mergeado no default); 2026-07-11→15; tema: rename de marca "The Loyalty"→"The Loyal".
+- **Contexto recebido (explícito):** pedido do usuário "garanta the loyal como nome padrão e não loyalty". Rebrand já em curso (parte do repo já usava "The Loyal"). **Contexto ausente:** a sessão operou sobre o **fork estagnado de 102 arquivos**, sem visibilidade do tronco real de 547 arquivos (só descoberto nesta auditoria).
+- **Objetivo:** eliminar "The Loyalty" como nome de marca, preservando "loyalty" como termo temático e os detectores de QA. **Alcançado:** sim (build ok, `qa.mjs` aprovado 0 bloqueios).
+- **Planejou/Executou:** substituição em 32 arquivos (wordmarks divididas, sub-produtos, seção "Loyalty Lab"→"Loyal Lab", docs, artefatos gerados). Preservou `$id` de schema e QA detectors. Commit `ee46739`, push, PR #21 draft→ready→**merge (squash)**.
+- **Decisões:** DEC-032a (renomear "Loyalty Lab"→"Loyal Lab" por consistência — sinalizada ao usuário como reversível). DEC-032b (não tocar detectores de QA que citam a marca antiga de propósito).
+- **Lacunas:** o rename foi aplicado no **fork estagnado**; embora o PR #21 tenha mergeado no tronco real, o working tree local permanece estagnado (não é bug do projeto, é do ambiente da sessão).
+- **Estado final:** CONCLUÍDO_VALIDADO. Conclusão 100% (para o escopo do rename). Próxima ação: nenhuma (PR mergeado, monitoramento encerrado).
 
-### CHAT-006. Arquitetura. QA do Daily + sistema
-Git #7. Sistema de QA (aprovado/reprovado/bloqueios), CLAUDE.md, skill tl-qa. Comprovado (editorial-gate CI A). Conclusão ~90%.
+#### CHAT-008. Governança. Autoridade arquitetural + EKS (RFC-001) — Fases 1–3
+- **Reconstruído de:** PRs #17, #41; branch `loyalty-architectural-authority-66sjuc`.
+- **Entregou (comprovado):** `docs/rfc/RFC-001-EKS-...md` (992 linhas, Draft); `scripts/taxonomy.mjs` (M-1, taxonomia única, testada); base de Entities/lineage (M-4). **Não entregou:** ratificação humana dos ADRs 001–010; RFC-002 (M-2 serialização); resolução da hierarquia fantasma (M-3).
+- **Estado:** IMPLEMENTADO_PARCIALMENTE. Ciclo aberto: CYCLE-006 (ratificar EKS).
 
-### CHAT-007. EKS. RFC-001
-Git #17 + RFC-001. Fundou o EKS (governa RFC-002..005). Só RFC-001 existe. IMPLEMENTADO_PARCIALMENTE. Ciclo aberto CYCLE-007. Conclusão ~25% do EKS total.
+#### CHAT-019. VPM. Shopping VPM multiprograma headless
+- **Reconstruído de:** PRs #32,#34,#35,#43,#46,#51; múltiplas branches `shopping-vpm-*`/`vpm-*`.
+- **Entregou:** coletor Playwright (`scripts/shopping/*`), migrações `0002/0003/0006`, RPC `shopping_recompute` (no banco), `/admin/shopping-vpm`, price-sanity, diagnose mode, adapters `headless_v4`. **Bloqueio conhecido:** Azul bloqueado no nível de rede. **Não entregou:** 1ª coleta live; `playwright` como dependência declarada; `shopping/seed.mjs` REST ("não implementado", só `--emit-sql`).
+- **Estado:** IMPLEMENTADO_PARCIALMENTE. Ciclos: CYCLE-004 (go-live coleta), CYCLE-011 (Azul).
 
-### CHAT-008. Admin. Rota /admin v1 (Basic Auth)
-Git #22. Cockpit v1 observabilidade Basic Auth + Supabase REST. SUBSTITUÍDO por cockpit v2 (CHAT-001, #23) — Basic Auth → cookie ADMIN_TOKEN. Ver CONFLICT-002 (não é conflito real: evolução).
+#### CHAT-017. Troncos. Reconciliar main com trabalho real
+- **Reconstruído de:** PR #28; branch `reconcile-main-features`.
+- **Fez:** merge de admin/predict/retail em `main`. **Problema:** após #28, o desenvolvimento seguiu no **default** (features 07-15) e `main` ficou para trás → **os troncos divergiram novamente** (RISK-001). O objetivo do chat foi parcialmente derrotado pela dinâmica de branches subsequente.
+- **Estado:** IMPLEMENTADO_PARCIALMENTE. Ciclo: CYCLE-001.
 
-### CHAT-009. Predict. Motor de janelas + weekly
-Git #24. Motor de previsão de janelas (depois renomeado `forecast`), CLI forecast, weekly digest. Comprovado. Parcialmente SUBSTITUÍDO pela reformulação da Fase A (#31). Conclusão ~85%.
+#### CHAT-030 / CHAT-034. Auditorias/contexto abertos (PR #54, #53)
+- Duas frentes de **documentação/auditoria abertas** (forecast/predict audit; contexto para GPT + análise funcional). Ambas EM_ANDAMENTO com PR aberto. Ciclos: CYCLE-013, CYCLE-014.
 
-### CHAT-010. Radar. VPM não-aéreo + reparo merge + go-live
-Git #25,#26,#33. Radar VPM v1 (`sku_*`), reparo do merge quebrado #17×#25, guia go-live. Comprovado (fix A). Radar v1 depois SUBSTITUÍDO pelo modelo rico `shopping_*` (CHAT-014). Ver CONFLICT-003.
-
-### CHAT-011. Predict. Config nos digests + snapshots
-Git #29. Config-aware nos digests, histórico de snapshots, autocomplete. Comprovado. Conclusão ~90%.
-
-### CHAT-012. Governança. Reconciliar main × branch
-Git #28. Trouxe admin/predict/retail para `main`; documentou que produção NÃO é main. Comprovado. Deixou CONFLICT-001 em aberto (decisão de repontar). Conclusão ~80% (falta a decisão de governança).
-
-### CHAT-013. Predict. RFC-009
-Git #30 + RFC-009. Documentou forecast × predict. Doc-only. Comprovado (doc). Conclusão 100% do escopo (doc), mas as Fases 1–3 são PLANEJADO.
-
-### CHAT-014. Shopping. Radar VPM multiprograma (Fases 1–8)
-Git #32,#34,#35 + docs/SHOPPING-VPM. 10 tabelas `shopping_*`, motor VPM (`vpm.mjs`, 5/5 casos), seed (24 produtos/41 fontes), recompute, admin, coletor headless. IMPLEMENTADO_PARCIALMENTE (0 preço ao vivo — adapters). CYCLE-004. Conclusão ~60%.
-
-### CHAT-015. Admin. Contagens reais
-Git #38 + migration 0004. `admin_metrics` real (não amostra). Comprovado (db). Conclusão ~95%.
-
-### CHAT-016. Predict. Rótulos + coluna Ondas + índices FK
-Git #36,#37,#41(parcial),#44. UI predict clarificada; índices FK. Comprovado (build A). Conclusão ~95%.
-
-### CHAT-017. Shopping/Segurança. Extração preço + security + entities
-Git #41,#42,#43 + migration 0005. Fecha exposição anônima (P0), extração preço headless_v2, taxonomia Verdict + Entities + testes. Comprovado (advisors sem ERROR; tests A). Conclusão ~85%.
-
-### CHAT-018. Landing. Skills design + conversão
-Git #39 + docs/ANALISE-CONVERSAO, PLANO-CONVERSAO. Análise/plano de conversão (doc). Comprovado (doc). Ação sobre a landing: PLANEJADO (plano existe, execução não confirmada). Conclusão ~30% (plano feito, não executado).
-
-### CHAT-019. DevOps. CI Node 24 + Beehiiv manual + go-live
-Git #11. CI, workflow Beehiiv manual, docs GO-LIVE. Comprovado (workflows existem, CI verde). Conclusão ~90%.
+*(Demais chats: ver tabela 9.1 — cada um tem estado, PRs e ciclo associado; fichas completas exigiriam as transcrições, inacessíveis.)*
 
 ---
 
 ## 10. Dependências e relações entre chats
 
+**Sequência canônica (predecessor→sucessor):**
+- CHAT-001 (landing) → CHAT-002 (rebrand/copy) → CHAT-003 (editorial) → CHAT-004 (render v2) → CHAT-005 (produção).
+- CHAT-006/007/010/011 (governança AAP no `main`) correm em paralelo, alimentando CHAT-008 (EKS).
+- CHAT-012 (admin v1) → CHAT-013 (admin v2) → CHAT-027 (redesign); CHAT-021/025 (fixes admin).
+- CHAT-015 (retail VPM) → CHAT-019 (shopping VPM headless); CHAT-014 (forecast/weekly) → CHAT-018 (RFC-009 predict) → CHAT-016/020 (admin predict) → CHAT-030 (audit predict).
+- CHAT-017 (reconcile) tenta unir tudo em `main`; CHAT-022/028/029 (conversão/GTM/social) seguem no default.
+- CHAT-032 (rename) transversal.
+
+**Diagrama de dependência (macro):**
 ```mermaid
 flowchart LR
-  C002[CHAT-002 Landing] --> C003[CHAT-003 Render]
-  C003 --> C004[CHAT-004 Beehiiv]
-  C003 --> C006[CHAT-006 QA]
-  C006 --> C007[CHAT-007 EKS RFC-001]
-  C002 --> C008[CHAT-008 Admin v1]
-  C008 --> C001[CHAT-001 Cockpit v2 + predict + digests]
-  C003 --> C009[CHAT-009 Forecast/weekly]
-  C009 --> C011[CHAT-011 Config digests]
-  C009 --> C001
-  C003 --> C010[CHAT-010 Radar v1]
-  C010 --> C014[CHAT-014 Shopping VPM rico]
-  C014 --> C017[CHAT-017 Preco+security+entities]
-  C001 --> C013[CHAT-013 RFC-009]
-  C013 --> C001
-  C001 --> C012[CHAT-012 Reconcile main]
-  C010 --> C012
-  C001 --> C015[CHAT-015 Noticias reais]
-  C001 --> C016[CHAT-016 Predict UI]
-  C002 --> C018[CHAT-018 Conversao]
-  C004 --> C019[CHAT-019 DevOps CI]
+  C001[CHAT-001 landing] --> C002[CHAT-002 rebrand] --> C003[CHAT-003 editorial] --> C004[CHAT-004 render v2] --> C005[CHAT-005 produção]
+  C006[CHAT-006/007 AAP docs] --> C008[CHAT-008 EKS]
+  C012[CHAT-012 admin v1] --> C013[CHAT-013 admin v2] --> C027[CHAT-027 redesign]
+  C015[CHAT-015 retail VPM] --> C019[CHAT-019 shopping VPM]
+  C014[CHAT-014 forecast/weekly] --> C018[CHAT-018 RFC-009 predict] --> C016[CHAT-016 admin predict] --> C030[CHAT-030 audit]
+  C005 --> C017[CHAT-017 reconcile main]
+  C013 --> C017
+  C019 --> C017
+  C017 -. divergiu de novo .-> C022[CHAT-022/028/029 conversão/GTM/social default]
 ```
 
-- **Chats isolados:** nenhum totalmente isolado.
-- **Sobrepostos (mesma frente):** CHAT-009/011/013/016/001 (predict/forecast); CHAT-010/014/017 (radar); CHAT-008/001 (admin).
-- **Contraditórios:** CHAT-010 (Radar v1 `sku_*`) × CHAT-014 (Radar rico `shopping_*`) → CONFLICT-003 (v1 substituído). CHAT-008 (Basic Auth) × CHAT-001 (cookie) → evolução, não conflito.
-- **Deveriam ser consolidados:** frente predict (5 chats) e frente radar (3 chats) — consolidar num único dono lógico.
+- **Isolados/frágeis:** CHAT-009 (system-architecture, status desconhecido), CHAT-031 (radar C0), CHAT-033 (starter pack).
+- **Sobrepostos (mesmos arquivos):** CHAT-003 × CHAT-004 (render); CHAT-015 × CHAT-019 (VPM); CHAT-014 × CHAT-018 (previsão); CHAT-013 × CHAT-016 × CHAT-027 (admin).
+- **Contraditórios/reabertos:** CHAT-016 (#27 fechado sem merge, "stack sobre #23"); CHAT-017 (reconcile derrotado por divergência posterior).
+- **Deveriam ser consolidados:** todas as frentes VPM (uma fonte-de-verdade), as duas pipelines de edição, forecast+predict.
 
 ---
 
 ## 11. Matriz de decisões
 
-| ID | Decisão | Motivação | Chat | Data | Implementada | Validada | Vigente | Substitui | Nível |
-|---|---|---|---|---|---|---|---|---|---|
-| DEC-001 | `forecast` e `predict` coexistem (não substituir) | motor de intervalo viola contrato do predict, mas serve como radar rápido | CHAT-013/001 | 14/jul | Sim (#31) | build A | Sim | — | A |
-| DEC-002 | Predict MVP-first (Fases 0/4/5 antes de 1–3) | provar o loop antes de generalizar | CHAT-013/001 | 14/jul | Sim | build A | Sim | — | A |
-| DEC-003 | Produção NÃO aponta para `main` (fica em landing-page-v1) | evitar "caos" de repontar tudo | usuário/CHAT-012/001 | 14/jul | Sim | — | Sim (mas questionável) | — | C (decisão do usuário) |
-| DEC-004 | Operar digests via `workflow_dispatch` (GH Actions), não edge | pipeline Node pesado não roda em serverless | CHAT-001 | 15/jul | Sim (#49) | build A | Sim | — | A |
-| DEC-005 | Curadoria (`edition_drafts`) é overlay admin, materializada no ledger; render pipeline ainda não consome | não reimplementar o renderer no admin | CHAT-001 | 15/jul | Sim | roundtrip A | Sim | — | A |
-| DEC-006 | Radar rico `shopping_*` substitui `sku_*` v1 | v1 simplório (campo único points) | CHAT-014 | 14/jul | Sim (#32) | tests A | Sim | Radar v1 (CHAT-010) | A |
-| DEC-007 | Auth do painel via cookie ADMIN_TOKEN (não Basic Auth) | UX + segurança | CHAT-001 | 14/jul | Sim (#23) | build A | Sim | Basic Auth v1 (CHAT-008) | A |
-| DEC-008 | Sem dependências novas (só next/react) | contrato CLAUDE.md | CHAT-006 | 09/jul | Sim | package.json A | Sim | — | A |
-| DEC-009 | Edge functions deployadas direto (não versionadas no git) | velocidade de iteração | CHAT-001 | 15/jul | Sim | — | Sim (mas é DEBT-004) | — | B |
+| ID | Decisão | Motivação | Quem | Data | Implementada? | Validada? | Vigente? | Substituição |
+|---|---|---|---|---|---|---|---|---|
+| DEC-001 | Stack "Next 14 + TS + Tailwind e nada mais" | Leveza, controle | CHAT-001 | 07-08 | Sim | Sim (build) | **Vigente** | — |
+| DEC-002 | Fundo Paper, tokens de marca, sem cor default Tailwind | Marca | CHAT-001 | 07-08 | Sim | Sim (qa.mjs) | Vigente | — |
+| DEC-003 | Publicação (e-mail) **só por humano** | Segurança editorial | CHAT-005/EKS | 07-09 | Sim (beehiiv.yml `confirm=PUBLICAR`) | Parcial | Vigente | — |
+| DEC-004 | **Taxonomia única de Verdict** (6 canônicos + 2 deprecados) | Fim do drift | CHAT-008 | 07-15 | Sim (`taxonomy.mjs`) | Sim (taxonomy.test) | Vigente | Substitui enums divergentes |
+| DEC-005 | VPM = `cash/(pontos/1000)` **determinístico**; LLM nunca faz a conta | Confiabilidade | CHAT-015/019 | 07-14 | Sim (`stats.mjs`, `vpm.mjs`) | Sim (stats.test) | Vigente | — |
+| DEC-006 | Só dados **públicos** (sem CMI) | Regra inviolável | CHAT-003+ | 07-09 | Sim (`INTERNAL_RE` gate) | Sim | Vigente | — |
+| DEC-007 | Auth admin por **cookie-hash** de `ADMIN_TOKEN` | Simplicidade sem lib | CHAT-012 | 07-11 | Sim (`middleware.ts`) | Parcial | Vigente (com ressalvas) | Substitui? — melhorar (DEBT) |
+| DEC-008 | **Forecast × Predict coexistem** (não substituir) | Custo × precisão | CHAT-018 | 07-14 | Parcial (predict dormente) | Não | Vigente | — |
+| DEC-009 | **Duas pipelines de edição** mantidas (compat window) | Migração gradual | CHAT-004/008 | 07-09 | Sim | — | **Vigente porém contestada** | RFC-002 pendente |
+| DEC-010 | Manter fallback publishable key + URL hardcoded | "Preview não quebra" | CHAT-013/015 | 07-14 | Sim | — | **Vigente — recomenda-se reverter** | — |
+| DEC-011 | `verify_jwt` desligado nas edge functions | Invocação por pg_cron interno | CHAT-026 | 07-15 | Sim | — | Vigente (risco) | — |
+| DEC-012 | Reconciliar tudo em `main` (PR #28) | Unificar troncos | CHAT-017 | 07-14 | Parcial | Não | **Efetivamente revertida pela divergência posterior** | — |
+| DEC-013 | Rename "Loyalty Lab"→"Loyal Lab" | Consistência de marca | CHAT-032 | 07-15 | Sim | Sim | Vigente (reversível a pedido) | — |
 
-**Decisões em aberto:** ver §19.
+ADRs do EKS (ADR-001..010): todos **Propostos / não ratificados** — ver §19.
 
 ---
 
 ## 12. Matriz de requisitos e rastreabilidade
 
-| Requisito | Chats | Decisões | Componentes | Arquivos | Testes | Status | Evidência | Lacuna |
-|---|---|---|---|---|---|---|---|---|
-| REQ-001 Landing + captura de leads | 002,005,018 | DEC-008 | COMP-001/002 | `app/page.tsx`,`api/subscribe` | — | CONCLUÍDO_NÃO_VALIDADO | build A | envio real (CYCLE-006) |
-| REQ-002 Pipeline editorial (digest) | 003,006,004 | DEC-008 | COMP-004/005/006 | `scripts/*.mjs` | `lib.test` A | CONCLUÍDO_VALIDADO (render) / NÃO_VALIDADO (envio) | tests A | envio Beehiiv real |
-| REQ-003 Cockpit administrativo | 008,001,015,016 | DEC-007 | COMP-007/008/009 | `app/admin/**` | — | CONCLUÍDO_NÃO_VALIDADO | build A | UI logada não exercitada |
-| REQ-004 Ingestão de notícias→campanhas | 001 | DEC-004,009 | COMP-012/013/014/015 | edge functions, crons | — | CONCLUÍDO_VALIDADO | db A (0 pendentes) | edge sem versionar |
-| REQ-005 Previsão de janelas (forecast) | 009,011 | DEC-001 | COMP-010 | `lib/forecast.ts` | build A | CONCLUÍDO_VALIDADO | build A | — |
-| REQ-006 Motor predict robusto | 001,013,016 | DEC-001,002 | COMP-011 | `lib/predict-engine.ts` | build A | IMPLEMENTADO_PARCIALMENTE | build A | dado fino (D2) |
-| REQ-007 Operação de digests (curar→publicar) | 001 | DEC-004,005 | COMP-016 | `app/admin/(panel)/digests/**` | roundtrip A | CONCLUÍDO_NÃO_VALIDADO | db A | envio real + secrets |
-| REQ-008 Radar VPM varejo | 010,014,017 | DEC-006 | COMP-017 | `scripts/shopping/**` | `stats.test` A | IMPLEMENTADO_PARCIALMENTE | tests A | preço ao vivo (CYCLE-004) |
-| REQ-009 Governança editorial (EKS) | 007,013 | — | COMP-020 | `docs/rfc/*` | — | IMPLEMENTADO_PARCIALMENTE | doc | RFC-002..005 |
-| REQ-010 Segurança (RLS/exposição) | 017 | — | migrations 0005 | `supabase/migrations/0005*` | advisors A | CONCLUÍDO_VALIDADO (sem ERROR) | advisors A | pg_net public (WARN) |
+| Requisito | Chats | Decisões | Componentes | Arquivos | Testes | Status | Lacuna |
+|---|---|---|---|---|---|---|---|
+| REQ-001 Landing acessível de conversão | 001,002,022 | DEC-001/002 | COMP-001..005,033 | `app/page.tsx`,`shell.tsx`,`sections.tsx` | qa.mjs (heurístico) | CONCLUÍDO_VALIDADO | testes de a11y automatizados |
+| REQ-002 Inscrição real (Beehiiv) | 001,029 | DEC-003 | COMP-005/006 | `SubscribeForm.tsx`,`api/subscribe/route.ts` | nenhum e2e | CONCLUÍDO_NÃO_VALIDADO | secrets prod; teste do route |
+| REQ-003 Daily (validar→render→qa→publicar) | 003,004,005 | DEC-009 | COMP-007..009,015 | `scripts/*`,`renderer/*` | lib.test,taxonomy.test | IMPLEMENTADO_PARCIALMENTE | dual schema; pipeline B fora do CI |
+| REQ-004 Pro (relatório executivo) | 003 | — | COMP-013 | `pro.mjs`,`ProReport.tsx` | nenhum | CONCLUÍDO_NÃO_VALIDADO | testes; dados reais |
+| REQ-005 Weekly | 014 | — | COMP-014 | `render-weekly.mjs` | nenhum | IMPLEMENTADO_PARCIALMENTE | validação; ligação ao radar real |
+| REQ-006 Lab / Special | — | — | COMP-031/032 | — | — | NÃO_INICIADO | construir ou ajustar copy |
+| REQ-007 TL Score + Verdict normativo | 008 | DEC-004 | COMP-010 | `taxonomy.mjs`,`lib.mjs` | taxonomy.test(7) | CONCLUÍDO_VALIDADO | propagar ao social |
+| REQ-008 Portal admin operacional | 012,013,027 | DEC-007 | COMP-016..018 | `app/admin/*`,`lib/admin*` | nenhum | CONCLUÍDO_NÃO_VALIDADO | validação operacional; secrets |
+| REQ-009 Radar de VPM | 015,019 | DEC-005 | COMP-019,021,022,025 | `scripts/collect/*`,`shopping/*` | stats.test(11) | IMPLEMENTADO_PARCIALMENTE | go-live; Azul; 2 coletores |
+| REQ-010 Forecast (janelas) | 014,018 | DEC-008 | COMP-023 | `forecast.mjs`,`lib/forecast.ts` | nenhum | IMPLEMENTADO_PARCIALMENTE | testes; espelho manual |
+| REQ-011 Predict v2 (RFC-009) | 018,030 | DEC-008 | COMP-024 | `lib/predict-engine.ts` | nenhum | IMPLEMENTADO_PARCIALMENTE (DORMENTE) | wire; testes; backfill |
+| REQ-012 Segurança (RLS, secrets) | 024 | DEC-010/011 | COMP-017..020 | `0005_security_hardening.sql`,`lib/admin*` | nenhum | IMPLEMENTADO_PARCIALMENTE | key hardcoded; verify_jwt; DR |
+| REQ-013 Governança EKS/AAP | 006,007,008,010,011 | ADR-001..010 | COMP-030 | `docs/rfc/*`,`docs/architecture/*` | — | PLANEJADO/Draft | ratificação; docs no tronco |
+| REQ-014 Social/GTM | 028,029 | — | COMP-026/027 | `app/social/*`,`social-render.mjs` | nenhum | IMPLEMENTADO_PARCIALMENTE | contrato de verdict duplicado |
+| REQ-015 Monetização (Pro pago) | 022 | — | — | `MONETIZACAO-BACKLOG.md` | — | PLANEJADO | preço/gateway (decisão humana) |
+| REQ-016 CI/CD | 005,024 | — | COMP-028 | `.github/workflows/*` | ci roda test | CONCLUÍDO_NÃO_VALIDADO | cobertura de pipeline B/predict |
 
-**Requisitos sem implementação:** nenhum crítico. **Implementações sem requisito claro:** `lib/admin-series.ts`/`admin-calendar.ts` (COMP-022, uso a confirmar). **Decisões sem execução:** nenhuma (todas DEC vigentes têm código). **Execuções sem teste:** COMP-007/016 (admin/digests têm build, não teste de UI).
+**Achados da matriz:** requisitos sem implementação (REQ-006); implementações sem requisito claro/ligação (COMP-024 predict dormente; COMP-012 DailyEdition); decisões sem execução plena (DEC-008 predict; DEC-012 reconcile); execuções sem teste (REQ-004/005/008/010/011/014); requisitos contraditórios/duplicados (REQ-003 duas pipelines; REQ-009 dois coletores).
 
 ---
 
 ## 13. Auditoria de código e lógica
 
-**Método:** varredura de TODO/FIXME/HACK (apenas 3 ocorrências, nenhuma é dívida real — são comentários legítimos), leitura das camadas admin/edge/pipeline nesta sessão, e validações executadas. O código é **limpo e coerente** com o contrato CLAUDE.md (sem deps, tokens, sem emoji).
+> Escopo: tronco real (default). Cada item tem severidade (S), probabilidade (P) e recomendação.
 
-| ID | Arquivo/símbolo | Descrição | Severidade | Componente | Recomendação | Critério de validação |
-|---|---|---|---|---|---|---|
-| DEBT-001 | tsconfig sem `target` explícito | Default baixo causou erros de `\u`-flag/downlevelIteration durante o dev (contornados) | Baixa | build | Definir `"target":"ES2021"` e `lib` explícita | typecheck verde após mudança |
-| DEBT-002 | Edge `campaigns` catch marca `processed:true` com erro | Notícias com erro não são reprocessadas automaticamente (17 hoje) | Baixa | COMP-012 | Job de retry para `error is not null` | erros reprocessados |
-| DEBT-003 | 25 crons ativos (`cron.job`) | Complexidade/custo; alguns podem ser reduzidos após drenagem | Média | COMP-014 | Revisar cadência: `backfill-00 */5`→diário; consolidar | contagem de crons documentada |
-| DEBT-004 | Edge functions não versionadas no git | Só `supabase/migrations` versionado; código Deno vive só no Supabase | Média | COMP-012/013 | Criar `supabase/functions/*/index.ts` no repo | `git ls-files supabase/functions` retorna arquivos |
-| DEBT-005 | `lib/admin-series.ts`,`lib/admin-calendar.ts` | Uso não confirmado nesta auditoria (possível órfão) | Baixa | COMP-022 | `grep import` para confirmar; remover se órfão | zero imports ⇒ remover |
-| DEBT-006 | `pg_net` no schema `public` | Advisor WARN (`extension_in_public`) | Baixa | Supabase | Mover extensão para schema próprio | advisor limpo |
-| DEBT-007 | 20 tabelas `rls_enabled_no_policy` (INFO) | RLS ligado sem policy = negado a anon (seguro), mas sinalizado | Baixa | Supabase | Documentar intenção "service-only" ou criar policy explícita | advisor documentado |
-| DEBT-008 | Curadoria `edition_drafts` não consumida pelo render | Overlay admin desconectado do pipeline (D3/DEC-005) | Média | COMP-016 | Script de render lê `edition_drafts` por id | edição renderizada a partir do draft |
+| ID | Arquivo:símbolo | Descrição | S | P | Componente | Recomendação | Critério de validação |
+|---|---|---|---|---|---|---|---|
+| CODE-001 | `content/edition.schema.json` × `renderer/edition.schema.json` | **Dois schemas de edição** estruturalmente incompatíveis (camelCase × snake_case); só o Verdict foi unificado | Alta | Alta | COMP-007/009 | RFC-002 e convergência (ou oficializar 1) | 1 schema canônico + migração de conteúdo |
+| CODE-002 | `lib/admin-db.ts:8`, `lib/admin.ts:8-9`, `scripts/forecast.mjs:13,17`, `shopping/collect.mjs:12` | **URL do projeto Supabase + publishable/anon key hardcoded** como fallback | Alta | Alta | COMP-018 | Mover para env; remover fallback | Grep sem chave/URL literais; envs obrigatórios |
+| CODE-003 | migrações: `admin_run_now`/`admin_list_jobs`/`admin_metrics`/views/tabelas-base | **RPCs/views/tabelas do admin não versionadas** (só no banco vivo) | Alta | Média | COMP-019 | `create` em migração; corrigir numeração dup (dois 0001/0002) | DB reprovisionável só das migrações |
+| CODE-004 | `supabase/functions/*` (`verify_jwt` off) | Edge functions invocáveis sem auth de borda (rodam com service-role) | Alta | Média | COMP-020 | Restringir rede/JWT; documentar | Chamada anônima negada |
+| CODE-005 | `scripts/collect/*` × `scripts/shopping/*` | **Dois coletores de VPM** (MAD × IQR, schemas distintos); `pro-vpm` lê só P1 | Alta | Alta | COMP-021/022 | Escolher fonte-de-verdade; unificar | 1 pipeline canônico de VPM |
+| CODE-006 | `lib/predict-engine.ts` | Motor Predict completo **sem CLI/artefato/CI** (dormente) | Média | Alta | COMP-024 | Wire MVP (LATAM Pass) → `content/predict.json` | Predict gera artefato + teste |
+| CODE-007 | `lib/forecast.ts` × `scripts/forecast-engine.mjs` | **Espelho manual TS↔.mjs** (divergência silenciosa possível) | Média | Média | COMP-023 | Teste de paridade ou geração automática | Teste falha se divergirem |
+| CODE-008 | `scripts/social-render.mjs:15-28`, `lib/social-brand.ts` | Paleta/rótulos de Verdict **não derivam da taxonomia** (3+ cópias) | Média | Alta | COMP-026/027 | Importar `taxonomy.mjs`; teste | Mudança de taxonomia propaga ao social |
+| CODE-009 | `scripts/shopping/adapters.mjs`, `collect/adapters/base.mjs` | Scraping por seletor/regex, auto-descrito como "ponto de partida"; Azul bloqueado | Alta | Alta | COMP-022 | Tuning; abordagem alternativa p/ Azul | 1ª coleta live estável |
+| CODE-010 | `lib/admin-db.ts:39-43,59-63` | `rest()`/`rpc()` engolem todo erro → `[]`/`null` (falha silenciosa); write no-op reportado como sucesso | Média | Alta | COMP-018 | Distinguir "sem dado" de "erro"; propagar falha de RPC | UI mostra estado de erro real |
+| CODE-011 | `app/admin/login/actions.ts:18`, `lib/admin.ts:32` | Comparações de senha **não-constant-time**; hash de sessão estático sem revogação | Média | Média | COMP-017 | Constant-time + rotação/assinatura de cookie | Compare seguro; logout server-side |
+| CODE-012 | `scripts/beehiiv-publish.mjs` (mock marca `published`) | Idempotência registra dispatch **fantasma** em mock; bloqueia publish real sem `--force` | Média | Média | COMP-015 | Não marcar published em mock | Publish real não é bloqueado por mock |
+| CODE-013 | `scripts/beehiiv-publish.mjs:--test` | Flag `--test` só registra intenção, **não envia** teste | Baixa | Alta | COMP-015 | Implementar ou renomear | Test-send real ou flag honesta |
+| CODE-014 | `renderer/audit.mjs::checkCalculo` | Verificação de CPM retorna `ok:null` quando não casa regex → **falso verde** | Média | Alta | COMP-009 | Ampliar parser ou marcar não-verificado explicitamente | Conta conferida ou "não verificado" visível |
+| CODE-015 | `components/daily/DailyEdition.tsx` | Quase-órfão (só `/daily/preview` noindex) + reimplementa `ContaBlock`/verdict local | Baixa | Média | COMP-012 | Consolidar com `ui.tsx` ou remover | 1 implementação de ContaBlock |
+| CODE-016 | `package.json` (sem `playwright`) | Pipeline B headless não roda local (dep instalada só no CI) | Baixa | Alta | COMP-022 | Declarar dep opcional/documentar | Coleta headless roda local |
+| CODE-017 | `scripts/shopping/seed.mjs:140` | Caminho REST "**não implementado**"; só `--emit-sql` | Baixa | Média | COMP-019 | Implementar ou documentar | Seed reproduzível |
+| CODE-018 | `render-daily.mjs:44-45` | Saídas com nome fixo (sem slug) → sobrescrita em execuções seguidas | Baixa | Média | COMP-009 | Nome por edição | Batch sem colisão |
 
-**Problemas procurados e NÃO encontrados (positivo):** funções que retornam placeholder, catch que engole erro silenciosamente (o `campaigns` loga e persiste o erro — correto), dependências circulares, `bg-white`/hex fora de tokens (proibidos por CLAUDE.md e não vistos), emoji em UI. **Fallback silencioso controlado (aceitável):** `lib/admin-db.ts` retorna `[]` em falha de fetch (declarado — "nunca derruba a página"); dispatch/stats retornam erro claro quando falta secret (mock-safe, não silencioso).
-
-**Regras de negócio verificadas:** motor predict é função pura determinística com guardas (arrays vazios, divisão por zero) — Nível B; QA guardrails de digest checam regras invioláveis (urgência/promessa/emoji) — Nível A (roundtrip). O bug real corrigido nesta sessão (`deaccent(null)` em `makeId`) foi Nível A (db: erros 134→17).
+**Positivos (Nível A/B):** `tsc --noEmit` limpo; `npm test` 35/35 verde; math de VPM (P1) e taxonomia com testes reais; gates editoriais (emoji/urgência/CMI/vigência) robustos; publicação só por humano; service-role key nunca hardcoded; auth falha fechada.
 
 ---
 
@@ -457,225 +558,306 @@ flowchart LR
 
 | ID | Comando | Objetivo | Resultado | Evidência | Falhas | Impacto |
 |---|---|---|---|---|---|---|
-| TEST-001 | `npm test` (`node --test tests/*.test.mjs`) | Testes unitários | **35/35 pass** | saída "# pass 35 # fail 0" | 0 | Nível A |
-| TEST-002 | `npm run typecheck` (`tsc --noEmit`) | Type safety | **verde** | sem output de erro | 0 | Nível A |
-| TEST-003 | `npm run lint` (`next lint`) | Lint | **verde** ("No ESLint warnings or errors") | saída | 0 | Nível A |
-| TEST-004 | `npm run build` (`next build`) | Build produção | **verde** (26 rotas) | rodado nesta sessão | 0 | Nível A |
-| TEST-005 | Supabase roundtrip (draft→QA→materialize→evento) | Schema fases 2–7 | **OK** (draft=1,deals=2,qa=1,evento=1,curada=true) e limpo | SQL exec A | 0 | Nível A |
-| TEST-006 | `get_advisors security` | Postura de segurança | 20 INFO (rls-no-policy) + 1 WARN (pg_net); **0 ERROR** | advisor A | 0 crítico | Nível A |
-| TEST-007 | CI GitHub Actions (#49) | Gate de merge | build/lint/test/typecheck/editorial-gate **success** | check_runs A | 0 | Nível A |
+| TEST-001 | `npm run build` (default) | Compilação Next | **PASS** | build log (rotas estáticas/SSG) | 0 | Confirma app compilável |
+| TEST-002 | `tsc --noEmit` (default) | Typecheck | **PASS** (exit 0) | run | 0 | Sem type error |
+| TEST-003 | `npm test` (`node --test tests/*.test.mjs`) | Unit tests | **PASS 35/35** | run | 0 | stats/lib/taxonomy/entities cobertos |
+| TEST-004 | `node scripts/qa.mjs` (no fork estagnado) | QA global heurístico | **APROVADO** (0 bloqueios) | run anterior | 0 | Heurístico, não unitário |
+| TEST-005 | `next lint` (default) | Lint | Configurado (`.eslintrc.json`+`eslint-config-next`) — não executado nesta auditoria (deps do fork sem eslint) | inspeção | n/d | `NÃO_VERIFICÁVEL` aqui; roda no CI |
+| TEST-006 | `daily:validate/render/qa` (Pipeline B) | QA do daily snake_case | **NÃO_TESTADO no CI**; exige `<edition.json>` | inspeção | n/d | Pipeline B pode apodrecer |
+| TEST-007 | `shopping/vpm.mjs --test` | Self-test VPM P2 | Existe mas **fora do `npm test`/CI** | `vpm.mjs:109-138` | n/d | Cobertura fantasma |
 
-**Testes existentes:** `tests/lib.test.mjs`, `entities.test.mjs`, `taxonomy.test.mjs`, `stats.test.mjs` (35 casos). **Cobertura:** boa para lógica de biblioteca/taxonomia/stats/VPM; **ausente** para: UI do admin (RSC/Server Actions), fluxo de envio Beehiiv real, motor predict (só build), edge functions (só comportamento observável no db). **Não marcar como CONCLUÍDO_VALIDADO** o que depende de UI logada ou envio real (COMP-002/006/007/016) até haver evidência de execução ponta-a-ponta.
+**Cobertura real de testes:** fortes em `scripts/collect/stats.mjs` (VPM/MAD/band), `scripts/lib.mjs` (verdictForScore/pesos/gates), `taxonomy.mjs` (convergência), integridade de `content/entities`. **Sem testes:** `lib/predict-engine.ts` (todo o modelo survival/backtest), `forecast-engine`/`lib/forecast.ts`, todos os adapters de scraping, `collect/http.mjs`, `collect/llm.mjs`, `shopping/*`, ambos os orquestradores de coleta, os renderers de social. **O código mais complexo (predict) e mais frágil (scraping) é o menos testado.**
 
-**Validação NÃO executada (por segurança):** envio real ao Beehiiv (`npm run beehiiv --publish`) — risco: dispararia e-mail/post real; alternativa: rodar com `--dry-run`/mock e inspecionar `content/beehiiv-status.json`. Coleta headless ao vivo do Shopping VPM — risco: requests externos + secrets; alternativa: `--diagnose`/`--mock` no Actions.
+**Regra de "CONCLUÍDO_VALIDADO":** só REQ-001 e REQ-007 atendem plenamente (implementação + fluxo + aceite + teste/execução verde + docs mínima). Os demais ficam em CONCLUÍDO_NÃO_VALIDADO ou IMPLEMENTADO_PARCIALMENTE.
 
 ---
 
 ## 15. Contradições, redundâncias e sobreposições
 
-| ID | Chats | Declarações conflitantes | Vigente | Confiança | Impacto | Decisão humana |
+| ID | Descrição | Fontes envolvidas | Força probatória | Vigente | Impacto | Decisão humana? |
 |---|---|---|---|---|---|---|
-| CONFLICT-001 | CHAT-012 vs realidade Vercel | "reconciliar main" × "produção serve landing-page-v1, não main" | Produção = landing-page-v1 (DEC-003) | Alta | Alto (governança/confusão futura) | **Sim** — repontar ou documentar oficialmente |
-| CONFLICT-002 | CHAT-008 vs CHAT-001 | Basic Auth (admin v1) × cookie ADMIN_TOKEN (v2) | Cookie (DEC-007) | Alta | Baixo | Não (evolução) |
-| CONFLICT-003 | CHAT-010 vs CHAT-014 | Radar `sku_*` v1 × `shopping_*` rico | shopping_* (DEC-006) | Alta | Médio (tabelas `sku_*` órfãs no db?) | Investigar se `sku_*` deve ser descartado |
-| CONFLICT-004 | CHAT-009 vs CHAT-001 | motor "predictions" × rename "forecast" + predict v2 | forecast+predict (DEC-001) | Alta | Baixo | Não |
+| CONFLICT-001 | **Dois troncos divergentes sem superconjunto**: features no `default`; RFC/DDD/DEPENDENCIAS só no `main` (18 commits só-main × 50 só-default; merge-base em PR #23) | GIT-001/002 | Nível A | Ativa | Crítico | **Sim** (definir tronco canônico) |
+| CONFLICT-002 | Branch default do GitHub é `loyalty-landing-page-v1`, não `main` — convenção invertida; `main` está atrás | `git ls-remote --symref` | Nível A | Ativa | Alto | Sim |
+| CONFLICT-003 | **Duas pipelines de edição** (camelCase × snake_case) | CODE-001 | Nível A | Ativa | Alto | Sim (RFC-002) |
+| CONFLICT-004 | **Dois coletores de VPM** (MAD × IQR; schemas distintos; Pro lê só P1) | CODE-005 | Nível A | Ativa | Alto | Sim |
+| CONFLICT-005 | Copy da landing anuncia Weekly/Lab como "Incluído"; Lab/Special **não existem** | COPY-LANDING × código | Nível A/B | Ativa | Médio | Sim (copy × roadmap) |
+| CONFLICT-006 | Pro "Em breve" na copy, mas **Pro está implementado** | COPY-LANDING × COMP-013 | Nível A | Ativa | Baixo | Ajustar copy |
+| CONFLICT-007 | `CLAUDE.md`/skills/starter-pack citam **6 docs de autoridade inexistentes** (D-1) | DOC-001 × filesystem | Nível A | Ativa | Alto | Sim (M-3) |
+| CONFLICT-008 | 3+ cópias do contrato de Verdict (taxonomy vs social-render vs social-brand) | CODE-008 | Nível A | Ativa | Médio | Não (técnico) |
+| CONFLICT-009 | Forecast e Predict no mesmo domínio (janelas) — sucessor não plugado | CODE-006 | Nível B | Ativa | Médio | Sim (quando aposentar forecast) |
+| CONFLICT-010 | Assimetria de rigor: Pipeline A **erra** em verdict inválido; Pipeline B só **avisa** e schema admite deprecados | §editorial | Nível A | Ativa | Baixo | Não |
+| CONFLICT-011 | PR #27 (admin predict) fechado **sem merge**; #16/#17 "stack sobre" reabrem trabalho | GIT-002 | Nível A | Resolvida? | Médio | Sim (confirmar descarte) |
 
-**Redundâncias:** múltiplos chats na mesma frente (predict×5, radar×3) sem dono único — DEBT de governança, não de código. **Branches locais obsoletas:** `reconcile-main-features`, `rfc-predict-engine-v2` (mergeados), `forecast-reformulacao` (mergeado #31) — podem ser podados.
+**Chats que deveriam ser consolidados:** VPM (015+019+025+031), previsão (014+018+016+020+030), admin (012+013+016+027), render (003+004), governança (006+007+008+010+011).
 
 ---
 
 ## 16. Pendências consolidadas
 
-| ID | Pendência | Origem | Status | Componente | Prioridade |
-|---|---|---|---|---|---|
-| PEND-001 | Confirmar/configurar secrets `GH_DISPATCH_TOKEN`,`BEEHIIV_API_KEY`,`BEEHIIV_PUBLICATION_ID` no ambiente | CHAT-001/004 | BLOQUEADO (externo) | COMP-006/016 | P1 |
-| PEND-002 | Decidir governança branch/main (CONFLICT-001) | CHAT-012 | CONFLITANTE | Governança | P1 |
-| PEND-003 | Afinar adapters do Shopping VPM (0 preço ao vivo) | CHAT-014/017 | BLOQUEADO (externo) | COMP-017 | P2 |
-| PEND-004 | Validar 1 envio real de digest ponta-a-ponta | CHAT-001 | NÃO_TESTADO | COMP-016 | P1 |
-| PEND-005 | Predict: decidir se investe nas Fases 1–3 (dado fino) | CHAT-013 | PLANEJADO | COMP-011 | P2 |
-| PEND-006 | Versionar edge functions no git (DEBT-004) | CHAT-001 | NÃO_DOCUMENTADO | COMP-012/013 | P2 |
-| PEND-007 | Reverter `backfill-00` `*/5`→diário após drenagem | CHAT-001 | EM_ANDAMENTO (fila já=0) | COMP-014 | P2 |
-| PEND-008 | Consumir `edition_drafts` no render pipeline (D3) | CHAT-001 | PLANEJADO | COMP-016 | P3 |
-| PEND-009 | Escrever RFC-002..005 do EKS | CHAT-007 | NÃO_INICIADO | COMP-020 | P4 |
-| PEND-010 | Executar o PLANO-CONVERSAO da landing | CHAT-018 | PLANEJADO | COMP-001 | P3 |
-| PEND-011 | Confirmar/remover órfãos `lib/admin-series`/`admin-calendar` | auditoria | NÃO_VERIFICÁVEL | COMP-022 | P3 |
-| PEND-012 | Investigar `sku_*` v1 (descartar tabelas órfãs?) | CONFLICT-003 | STATUS_DESCONHECIDO | COMP-017 | P3 |
-| PEND-013 | Job de retry para `news_raw` com erro (17) | auditoria | NÃO_INICIADO | COMP-012 | P3 |
-| PEND-014 | `target` explícito no tsconfig (DEBT-001) | auditoria | NÃO_INICIADO | build | P3 |
+| ID | Pendência | Origem | Componente | Status |
+|---|---|---|---|---|
+| PEND-001 | Definir tronco canônico e reconciliar default × main | CONFLICT-001 | Troncos | BLOQUEADO (decisão) |
+| PEND-002 | Versionar schema real do banco (RPCs/views/tabelas) + numeração | CODE-003 | COMP-019 | NÃO_INICIADO |
+| PEND-003 | Remover URL+publishable key hardcoded; confirmar secrets prod | CODE-002 | COMP-018 | NÃO_INICIADO |
+| PEND-004 | Endurecer edge functions (`verify_jwt`/rede) | CODE-004 | COMP-020 | NÃO_INICIADO |
+| PEND-005 | Escolher fonte-de-verdade de VPM e unificar 2 coletores | CODE-005 | COMP-021/022 | NÃO_INICIADO |
+| PEND-006 | Wire do Predict (MVP LATAM Pass → artefato + CI) | CODE-006 | COMP-024 | PLANEJADO |
+| PEND-007 | Resolver hierarquia de autoridade fantasma (criar/re-apontar) | CONFLICT-007 | COMP-030 | BLOQUEADO (decisão) |
+| PEND-008 | RFC-002 (serialização) + convergir schemas de edição | CODE-001 | COMP-007/009 | PLANEJADO |
+| PEND-009 | Propagar taxonomia ao social (remover cópias) | CODE-008 | COMP-026/027 | NÃO_INICIADO |
+| PEND-010 | Go-live de coleta VPM (secrets, seed, 1ª run); desbloquear Azul | RADAR/SHOPPING | COMP-021/022 | BLOQUEADO (externo) |
+| PEND-011 | Go-live editorial Beehiiv (secrets, draft, aprovação humana) | GO-LIVE | COMP-006/015 | BLOQUEADO (externo) |
+| PEND-012 | Testes para predict/forecast/scraping/social | §14 | COMP-023/024/022/026 | NÃO_INICIADO |
+| PEND-013 | Ratificar ADRs 001–010 do EKS | RFC-001-EKS | COMP-030 | BLOQUEADO (decisão) |
+| PEND-014 | Decisões de monetização (preço/ciclo/gateway Pro) | MONETIZACAO-BACKLOG | REQ-015 | BLOQUEADO (decisão) |
+| PEND-015 | Construir ou ajustar copy de Lab/Special | CONFLICT-005 | COMP-031/032 | NÃO_INICIADO |
+| PEND-016 | Fechar/descartar PRs abertos (#13,#53,#54) e #27 | GIT-002 | vários | EM_ANDAMENTO |
+| PEND-017 | Corrigir falha silenciosa e no-op-como-sucesso (admin) | CODE-010 | COMP-018 | NÃO_INICIADO |
+| PEND-018 | Corrigir idempotência fantasma + `--test` do publisher | CODE-012/013 | COMP-015 | NÃO_INICIADO |
+| PEND-019 | Ampliar `checkCalculo` (evitar falso verde CPM) | CODE-014 | COMP-009 | NÃO_INICIADO |
+| PEND-020 | Consolidar/remover DailyEdition (COMP-012) | CODE-015 | COMP-012 | NÃO_INICIADO |
+| PEND-021 | Declarar `playwright`; caminho REST do seed | CODE-016/017 | COMP-022/019 | NÃO_INICIADO |
+| PEND-022 | Endurecer auth admin (const-time, rotação de cookie) | CODE-011 | COMP-017 | NÃO_INICIADO |
 
 ---
 
 ## 17. Dívida técnica
 
-Ver DEBT-001..008 em [§13](#13-auditoria-de-código-e-lógica). Resumo por severidade: **Média** — DEBT-003 (25 crons), DEBT-004 (edge sem versionar), DEBT-008 (draft desconectado). **Baixa** — DEBT-001/002/005/006/007. Nenhuma dívida **Alta/crítica** no código. A maior "dívida" é de **governança** (branch/main, donos de frente), não técnica.
+| ID | Dívida | Localização | Severidade | Ligada a |
+|---|---|---|---|---|
+| DEBT-001 | Dois schemas de edição | COMP-007/009 | Alta | CODE-001/PEND-008 |
+| DEBT-002 | Dois coletores de VPM (MAD×IQR) | COMP-021/022 | Alta | CODE-005/PEND-005 |
+| DEBT-003 | Espelhos manuais TS↔.mjs (forecast; predict) | COMP-023/024 | Média | CODE-007 |
+| DEBT-004 | 3+ cópias do contrato de Verdict | COMP-010/026/027 | Média | CODE-008/PEND-009 |
+| DEBT-005 | RPCs/tabelas fora das migrações + numeração dup | COMP-019 | Alta | CODE-003/PEND-002 |
+| DEBT-006 | Credenciais/URL hardcoded | COMP-018 | Alta | CODE-002/PEND-003 |
+| DEBT-007 | Auth não-constant-time + cookie estático | COMP-017 | Média | CODE-011/PEND-022 |
+| DEBT-008 | Falha silenciosa (rest/rpc) + no-op-como-sucesso | COMP-018 | Média | CODE-010/PEND-017 |
+| DEBT-009 | `playwright` não declarado; seed REST ausente | COMP-022/019 | Baixa | CODE-016/017 |
+| DEBT-010 | DailyEdition quase-órfão + ContaBlock duplicado | COMP-012 | Baixa | CODE-015 |
+| DEBT-011 | Docs de autoridade fantasma citados em vários lugares | COMP-030/034 | Alta | CONFLICT-007 |
+| DEBT-012 | Pipeline B fora do CI (sem fixture de conteúdo real) | COMP-009 | Média | TEST-006 |
 
 ---
 
 ## 18. Riscos e bloqueios
 
-| ID | Risco | Probabilidade | Severidade | Componente | Mitigação |
+| ID | Risco/Bloqueio | Prob. | Impacto | Severidade | Mitigação |
 |---|---|---|---|---|---|
-| RISK-001 | Produção servida de branch não-`main` gera confusão/erro de deploy | Média | Alta | Governança | Decidir e documentar (PEND-002) |
-| RISK-002 | Secrets de publicação ausentes ⇒ digests não vão ao ar | Média | Alta | COMP-006/016 | Confirmar secrets (PEND-001) |
-| RISK-003 | 25 crons ativos ⇒ custo/efeito colateral | Baixa | Média | COMP-014 | Auditar/reduzir (PEND-007) |
-| RISK-004 | Shopping VPM sem preço ao vivo ⇒ indicador nunca sai do seed | Média | Média | COMP-017 | Afinar adapters ou congelar (PEND-003) |
-| RISK-005 | Predict bloqueia maioria das séries ⇒ baixo valor entregue | Alta | Média | COMP-011 | Decidir Fases 1–3 ou aceitar como radar (PEND-005) |
-| RISK-006 | `pg_net` no schema public (advisor WARN) | Baixa | Baixa | Supabase | Mover de schema (DEBT-006) |
-| RISK-007 | Edge functions só no Supabase (sem git) ⇒ perda se recriar projeto | Baixa | Média | COMP-012/013 | Versionar (PEND-006) |
-| RISK-008 | ADMIN_TOKEN único / segurança do painel não pen-testada | Baixa | Média | COMP-008 | Revisar auth; rotacionar token |
+| RISK-001 | Divergência de troncos (perda/duplicação de trabalho, deploy do tronco errado) | Alta | Crítico | **P0** | Definir tronco; reconciliar; proteger branch |
+| RISK-002 | Schema-drift do banco (DR/reprovisionamento quebra; RPCs ausentes → páginas vazias) | Média | Alto | **P0/P1** | Versionar schema real |
+| RISK-003 | Publishable key + URL no fonte (exposição/lock-in de projeto) | Alta | Médio/Alto | **P1** | Env-only; rotacionar |
+| RISK-004 | `verify_jwt` off → edge functions abertas (mutam dados com service-role) | Média | Alto | **P1** | Auth de borda/rede |
+| RISK-005 | Degradação silenciosa para mock/empty em prod (sem secrets) sem alarme | Alta | Médio | **P1** | Alarmes/health-check; distinguir erro de vazio |
+| RISK-006 | Scraping frágil; Azul bloqueado (dado incompleto/incorreto) | Alta | Médio | **P1** | Tuning; price-sanity (já existe); abordagem p/ Azul |
+| RISK-007 | Predict dormente vira código morto/regride sem teste | Média | Médio | **P2** | Wire MVP + testes |
+| RISK-008 | Docs de autoridade ausentes (regras sem fonte; onboarding falho) | Alta | Médio | **P1/P2** | Criar/re-apontar |
+| RISK-009 | Falso verde de QA (`checkCalculo` null; heurísticos) mascaram erro editorial | Média | Médio | **P2** | Endurecer checagem |
+| BLOCK-001 | Secrets de produção não confirmados (Beehiiv/Supabase/Tavily/OpenRouter/GH) | — | Alto | Bloqueio externo | Configurar em Vercel/Actions |
+| BLOCK-002 | Go-live exige ação humana (editorial e coleta) | — | Alto | Bloqueio por design | Executar checklist GO-LIVE |
+| BLOCK-003 | GitHub Actions precisam ser habilitadas | — | Médio | Bloqueio de plataforma | Habilitar |
 
-**Bloqueios (BLOCK):** BLOCK-001 = PEND-001 (secrets, externo); BLOCK-002 = PEND-003 (adapters SPA/anti-bot, externo). Nenhum bloqueio interno de código.
+**Cálculo de conclusão global (pesos e faixas):**
+- Landing+Editorial (peso 30%): **85–92%** — build/test/qa verdes; falta go-live/secrets e testes e2e.
+- Admin/Supabase (20%): **60–72%** — funcional com dados reais; DR/segredos/hardening pendentes.
+- VPM Radar (15%): **45–60%** — código e migrações prontos; sem coleta live; 2 coletores.
+- Forecast/Predict (15%): **40–58%** — forecast ligado; predict dormente/sem teste.
+- Social/GTM (8%): **60–75%** — gera cards; contrato de verdict duplicado.
+- Governança/Docs (7%): **25–40%** — RFCs Draft/não ratificados; hierarquia fantasma; troncos.
+- CI/DevOps (5%): **70–80%** — CI robusto; cobre só pipeline A.
+- **Global ponderado: 55–68%** (confiança média). Para subir de faixa: reconciliar troncos + versionar banco + go-live com secrets + testes de predict/forecast.
+
 
 ---
 
 ## 19. Decisões em aberto
 
-| ID | Decisão necessária | Contexto | Quem decide |
-|---|---|---|---|
-| DECOPEN-001 | Repontar produção/`default` para `main` ou oficializar `landing-page-v1` como produção? | CONFLICT-001/DEC-003 | Humano (dono do produto) |
-| DECOPEN-002 | Investir nas Fases 1–3 do predict ou tratar predict como radar auxiliar? | RISK-005/PEND-005 | Humano |
-| DECOPEN-003 | Continuar a frente Shopping VPM (afinar adapters) ou congelar? | RISK-004/PEND-003 | Humano |
-| DECOPEN-004 | Descartar tabelas/coletor `sku_*` v1? | CONFLICT-003/PEND-012 | Humano + investigação técnica |
-| DECOPEN-005 | Consumir `edition_drafts` no render (fechar D3) agora ou depois? | DEC-005/PEND-008 | Humano |
+| ID | Decisão pendente | Contexto | Quem decide | Bloqueia |
+|---|---|---|---|---|
+| ODEC-001 | **Qual é o tronco canônico?** (`default` vs `main` vs novo) | CONFLICT-001/002 | Humano (owner) | Todo o resto |
+| ODEC-002 | Ratificar ADR-001..010 do EKS (KO, verdict, confiança, vigência, imutabilidade, governança, projeção, entities, hierarquia, RFC-as-truth) | RFC-001-EKS §16 Q1 | Humano (AAP) | Governança |
+| ODEC-003 | Hierarquia fantasma: **criar os 6 docs** ou **re-apontar** `CLAUDE.md`/skills/starter-pack | D-1/M-3 | Humano | Onboarding/regras |
+| ODEC-004 | Convergência de serialização (RFC-002): 1 schema de edição | DEBT-001 | AAP + eng | Editorial |
+| ODEC-005 | Fonte-de-verdade de VPM (P1 HTTP vs P2 headless) | DEBT-002 | Eng | Radar/Pro |
+| ODEC-006 | `depende` → `esperaria` ou `casos-especificos` (default de migração) | RFC-001-EKS §16 Q2 | Editorial | Taxonomia |
+| ODEC-007 | Persistência de Entities/Benchmarks (git vs DB) | §16 Q3 | Eng | Memória editorial |
+| ODEC-008 | Onde vivem as Teses (Lab vs Pro vs store transversal) | §16 Q4 | Editorial | Lab/Pro |
+| ODEC-009 | Preço/ciclo do Pro + gateway (Stripe vs Beehiiv nativo) | MONETIZACAO-BACKLOG | Humano (negócio) | Monetização |
+| ODEC-010 | Construir Lab/Special ou ajustar copy "Incluído" | CONFLICT-005 | Produto | Landing/roadmap |
+| ODEC-011 | Aposentar `forecast` quando `predict` maturar? | DEC-008 | Eng | Previsão |
 
 ---
 
 ## 20. Ciclos abertos
 
-| ID | Ciclo | Chat | Estado | Falta | Classificação | Condição de encerramento |
+| ID | Ciclo | Origem | Componente | O que falta | Classificação | Critério de encerramento |
 |---|---|---|---|---|---|---|
-| CYCLE-001 | Ativação real de publicação de digests | CHAT-001 | Código pronto, secrets ausentes | Secrets + 1 envio validado | Decidir + Validar | Digest publicado no Beehiiv via painel com evidência |
-| CYCLE-002 | Governança de branch/main | CHAT-012 | Reconciliado, produção ≠ main | Decisão de repontar/documentar | Decidir | Branch de produção definido e documentado |
-| CYCLE-003 | Maturação do predict | CHAT-013/001 | MVP entregue, dado fino | Decisão sobre Fases 1–3 | Decidir/Replanejar | Predict gera previsões úteis OU aceito como radar |
-| CYCLE-004 | Coleta ao vivo Shopping VPM | CHAT-014/017 | Infra pronta, 0 preço | Afinar adapters + secrets Actions | Corrigir antes de avançar / Investigar | ≥1 SKU com preço comparável ao vivo |
-| CYCLE-005 | Consumo de `edition_drafts` no render | CHAT-001 | Overlay admin | Script render lê draft | Replanejar | Edição renderizada a partir do draft curado |
-| CYCLE-006 | Validar envio real de subscribe | CHAT-002 | Integração mock-safe | 1 inscrição real | Validar | Lead chega ao Beehiiv |
-| CYCLE-007 | EKS RFC-002..005 | CHAT-007 | Só RFC-001 | 4 RFCs | Manter em espera | RFCs escritas OU frente descartada |
-| CYCLE-008 | Executar PLANO-CONVERSAO da landing | CHAT-018 | Plano existe | Execução | Decidir | Mudanças de conversão aplicadas e medidas |
-| CYCLE-009 | Reduzir/documentar 25 crons | CHAT-001 | Fila drenou | Ajustar cadências | Documentar | Crons revisados e justificados |
-| CYCLE-010 | Versionar edge functions | CHAT-001 | Só no Supabase | Commitar `supabase/functions/*` | Documentar | Código no git |
+| CYCLE-001 | Reconciliação de troncos | CHAT-017 | Troncos | Decidir tronco; merge dirigido | **Decidir + Corrigir antes de avançar** | 1 tronco com features+governança; branch protegido |
+| CYCLE-002 | Versionar schema do banco | CODE-003 | COMP-019 | Migrações `create` de RPCs/views/tabelas; numeração | Corrigir antes de avançar | DB reprovisionável só das migrações |
+| CYCLE-003 | Segredos no fonte | CODE-002 | COMP-018 | Env-only; rotação | Corrigir | Grep limpo; envs obrigatórios |
+| CYCLE-004 | Go-live de coleta VPM | RADAR/SHOPPING | COMP-021/022 | Secrets, seed, 1ª run | Validar | 1ª coleta live coerente persistida |
+| CYCLE-005 | Go-live editorial Beehiiv | GO-LIVE | COMP-006/015 | Secrets, draft, aprovação | Validar | Draft aprovado e publicado por humano |
+| CYCLE-006 | Ratificar EKS/ADRs | RFC-001-EKS | COMP-030 | Decisão humana | Decidir | ADRs marcados Accepted |
+| CYCLE-007 | Convergir 2 pipelines de edição | CODE-001 | COMP-007/009 | RFC-002 + migração | Replanejar | 1 schema canônico |
+| CYCLE-008 | Escolher 1 coletor de VPM | CODE-005 | COMP-021/022 | Decisão + migração | Decidir + Corrigir | Pro/Daily leem 1 fonte |
+| CYCLE-009 | Wire do Predict | CODE-006 | COMP-024 | CLI+artefato+CI+testes | Corrigir/Validar | `content/predict.json` no pipeline + teste |
+| CYCLE-010 | Hierarquia de autoridade | CONFLICT-007 | COMP-030 | Criar/re-apontar | Decidir + Documentar | Nenhuma citação a arquivo inexistente |
+| CYCLE-011 | Desbloquear coleta Azul | CHAT-019 | COMP-022 | Nova abordagem | Investigar | Azul coletado ou documentado como fora |
+| CYCLE-012 | Propagar taxonomia ao social | CODE-008 | COMP-026/027 | Importar taxonomy + teste | Corrigir | Mudança propaga; teste guarda |
+| CYCLE-013 | PR #54 (audit forecast/predict) | CHAT-030 | Predict | Fechar/mergear decisões MVP | Decidir | PR mergeado ou fechado |
+| CYCLE-014 | PR #53 (contexto/análise funcional) | CHAT-034 | Docs | Fechar/mergear | Documentar | PR resolvido |
+| CYCLE-015 | PR #13 (pipeline único + intake) | CHAT-002 | Editorial | Fechar/mergear ou descartar | Decidir | PR resolvido |
+| CYCLE-016 | PR #27 (admin predict, fechado sem merge) | CHAT-016 | Admin | Confirmar descarte | Descartar | Confirmado obsoleto |
+| CYCLE-017 | Testes de predict/forecast/scraping/social | §14 | vários | Escrever testes | Validar | Cobertura dos módulos críticos |
+| CYCLE-018 | Monetização Pro | MONETIZACAO | REQ-015 | Preço/gateway | Decidir | Decisão de negócio registrada |
+| CYCLE-019 | Lab/Special vs copy | CONFLICT-005 | COMP-031/032 | Construir ou ajustar copy | Replanejar/Decidir | Copy = realidade |
 
 ---
 
 ## 21. Backlog priorizado
 
-| Prio | ID | Ação | Origem | Componente | Status | Impacto | Deps | Esforço | Critério de aceite |
-|---|---|---|---|---|---|---|---|---|---|
-| P1 | PEND-002 | Decidir e documentar branch de produção (repontar `main` ou oficializar `landing-page-v1`) | CONFLICT-001 | Governança | CONFLITANTE | Alto | — | S | Doc no repo declara branch de produção; Vercel/default alinhados |
-| P1 | PEND-001 | Confirmar/definir secrets `GH_DISPATCH_TOKEN`,`BEEHIIV_API_KEY`,`BEEHIIV_PUBLICATION_ID` | CHAT-004 | COMP-006/016 | BLOQUEADO | Alto | — | S | Dispatch e stats retornam sucesso (não "ausente") |
-| P1 | PEND-004 | Validar 1 envio real de digest (curar→QA→aprovar→publicar) | CHAT-001 | COMP-016 | NÃO_TESTADO | Alto | PEND-001 | M | Post/rascunho criado no Beehiiv via painel, com evidência |
-| P2 | PEND-007 | Reverter `backfill-00` `*/5`→diário; revisar cadências | CHAT-001 | COMP-014 | EM_ANDAMENTO | Médio | — | XS | `cron.job` documentado; sem fila crescendo |
-| P2 | PEND-006 | Versionar edge functions em `supabase/functions/*` | DEBT-004 | COMP-012/013 | NÃO_DOCUMENTADO | Médio | — | M | `git ls-files supabase/functions` não-vazio; build Deno ok |
-| P2 | PEND-005 | Decidir Fases 1–3 do predict (extração v2) vs. aceitar radar | RFC-009 | COMP-011 | PLANEJADO | Médio | DECOPEN-002 | L | Decisão registrada; se sim, RFC-009 F1 iniciada |
-| P2 | PEND-003 | Afinar adapters Shopping VPM ou congelar frente | CHAT-014 | COMP-017 | BLOQUEADO | Médio | secrets Actions | L | ≥1 SKU com preço comparável OU frente congelada com nota |
-| P3 | PEND-013 | Job de retry para `news_raw` com erro (17) | auditoria | COMP-012 | NÃO_INICIADO | Baixo | — | S | erros reprocessados e count cai |
-| P3 | PEND-011 | Confirmar/remover órfãos `lib/admin-series`/`admin-calendar` | auditoria | COMP-022 | NÃO_VERIFICÁVEL | Baixo | — | XS | grep de imports; remoção se órfão |
-| P3 | PEND-012 | Investigar/descartar `sku_*` v1 (Radar antigo) | CONFLICT-003 | COMP-017 | STATUS_DESCONHECIDO | Baixo | — | S | tabelas confirmadas órfãs e removidas OU justificadas |
-| P3 | PEND-008 | Render pipeline consome `edition_drafts` | DEC-005 | COMP-016 | PLANEJADO | Médio | DECOPEN-005 | L | edição renderizada a partir do draft |
-| P3 | PEND-014 | `"target":"ES2021"` no tsconfig | DEBT-001 | build | NÃO_INICIADO | Baixo | — | XS | typecheck verde com target explícito |
-| P3 | PEND-010 | Executar PLANO-CONVERSAO da landing | CHAT-018 | COMP-001 | PLANEJADO | Médio | — | L | mudanças aplicadas; métrica de conversão observável |
-| P4 | PEND-009 | Escrever RFC-002..005 do EKS | CHAT-007 | COMP-020 | NÃO_INICIADO | Baixo | — | XL | RFCs publicadas |
-| P4 | DEBT-006 | Mover `pg_net` para schema próprio | advisor | Supabase | NÃO_INICIADO | Baixo | — | S | advisor WARN limpo |
+| Prio | ID | Ação | Origem | Componente | Status | Esforço | Critério de aceite |
+|---|---|---|---|---|---|---|---|
+| P0 | BKL-01 | Decidir tronco canônico e reconciliar default×main (trazer RFC/DDD/DEPENDENCIAS; proteger branch) | CYCLE-001 | Troncos | BLOQUEADO | L | 1 tronco contém features+governança; default protegido |
+| P0 | BKL-02 | Versionar schema real do banco em migrações `create` (`admin_*` RPCs, views, tabelas-base) + resolver numeração dup | CYCLE-002 | COMP-019 | NÃO_INICIADO | L | Banco novo sobe só das migrações; jobs/backfill/logs não vazios |
+| P0 | BKL-03 | Remover URL+publishable key hardcoded → env; confirmar secrets prod | CYCLE-003 | COMP-018 | NÃO_INICIADO | S | Grep sem literais; app falha explícito sem env |
+| P1 | BKL-04 | Endurecer edge functions (`verify_jwt`/rede) | CYCLE-... | COMP-020 | NÃO_INICIADO | M | Chamada anônima negada |
+| P1 | BKL-05 | Escolher fonte-de-verdade de VPM e unificar coletores (`pro-vpm` alinhado) | CYCLE-008 | COMP-021/022 | NÃO_INICIADO | L | 1 pipeline; Pro/Daily leem a mesma fonte |
+| P1 | BKL-06 | Go-live editorial Beehiiv (secrets → draft → aprovação humana) | CYCLE-005 | COMP-006/015 | BLOQUEADO | M | Edição publicada por humano |
+| P1 | BKL-07 | Distinguir erro de vazio no admin; não reportar RPC no-op como sucesso | CYCLE-... | COMP-018 | NÃO_INICIADO | M | UI mostra estado de erro; ação falha visível |
+| P1 | BKL-08 | Endurecer auth admin (const-time + cookie assinado/rotacionado + logout server-side) | CYCLE-... | COMP-017 | NÃO_INICIADO | M | Compare seguro; sessão revogável |
+| P1 | BKL-09 | Resolver hierarquia fantasma (criar/re-apontar 6 docs; atualizar skills/starter-pack) | CYCLE-010 | COMP-030/034 | BLOQUEADO | M | Zero citação a arquivo inexistente |
+| P2 | BKL-10 | RFC-002 + convergir 2 schemas de edição para 1 canônico | CYCLE-007 | COMP-007/009 | PLANEJADO | XL | 1 schema; conteúdo migrado; pipeline B aposentada/testada |
+| P2 | BKL-11 | Wire do Predict MVP (LATAM Pass → `content/predict.json` + CI + teste) | CYCLE-009 | COMP-024 | PLANEJADO | L | Artefato gerado; teste de backtest |
+| P2 | BKL-12 | Testes: predict, forecast (paridade TS↔mjs), scraping, social | CYCLE-017 | vários | NÃO_INICIADO | L | Cobertura dos módulos críticos no CI |
+| P2 | BKL-13 | Propagar taxonomia ao social (remover cópias) + teste | CYCLE-012 | COMP-026/027 | NÃO_INICIADO | S | Mudança de taxonomia reflete nos cards |
+| P2 | BKL-14 | Corrigir idempotência fantasma + `--test` do publisher | CODE-012/013 | COMP-015 | NÃO_INICIADO | S | Mock não marca published; `--test` honesto |
+| P2 | BKL-15 | Ampliar `checkCalculo` (sem falso verde CPM) | CODE-014 | COMP-009 | NÃO_INICIADO | S | Conta conferida ou "não verificado" visível |
+| P2 | BKL-16 | Go-live coleta VPM (secrets, seed, 1ª run) + desbloquear/documentar Azul | CYCLE-004/011 | COMP-021/022 | BLOQUEADO | M | Coleta live coerente; Azul resolvido/documentado |
+| P3 | BKL-17 | Consolidar/remover DailyEdition; unificar ContaBlock | CODE-015 | COMP-012 | NÃO_INICIADO | S | 1 ContaBlock; sem órfão |
+| P3 | BKL-18 | Declarar `playwright`; implementar seed REST | CODE-016/017 | COMP-022/019 | NÃO_INICIADO | S | Coleta headless roda local; seed reproduzível |
+| P3 | BKL-19 | Ajustar copy Lab/Special (ou construir) | CYCLE-019 | COMP-031/032 | NÃO_INICIADO | M | Copy = realidade |
+| P3 | BKL-20 | Fechar PRs #13/#53/#54; confirmar descarte #27 | CYCLE-013..016 | vários | EM_ANDAMENTO | S | PRs resolvidos |
+| P4 | BKL-21 | Alinhar workflows de CI (versões/permissions) | §CI | COMP-028 | NÃO_INICIADO | XS | Workflows padronizados |
+| P4 | BKL-22 | Decisões de monetização (preço/gateway) | CYCLE-018 | REQ-015 | BLOQUEADO | NÃO_ESTIMÁVEL_COM_AS_EVIDÊNCIAS_ATUAIS | Decisão de negócio registrada |
 
 ---
 
-## 22. Plano de fechamento de ciclos
+## 22. Plano de fechamento de ciclos (ondas)
 
 ### Onda 0 — Preservação e verdade do estado atual
-Objetivo: eliminar incertezas. Tarefas: PEND-011, PEND-012 (confirmar órfãos/`sku_*`), documentar branch de produção (parte de PEND-002), confirmar quais secrets já existem (PEND-001 leitura). Critério de entrada: — . Critério de saída: inventário de órfãos e secrets conhecido. Não iniciar Onda 2 antes.
+- **Objetivo:** eliminar incerteza sobre troncos e fontes. **Tarefas:** BKL-01 (decisão de tronco), inventariar o que só existe no `main`, mapear secrets necessários, catalogar RPCs/tabelas do banco vivo. **Critério de entrada:** nenhum. **Critério de saída:** tronco canônico definido, backup dos dois troncos, lista de segredos e de objetos de banco fora das migrações. **Não iniciar antes do fim:** qualquer merge grande ou deploy.
 
-### Onda 1 — Bloqueios e riscos críticos
-Objetivo: resolver P1. Tarefas: PEND-002 (decisão branch), PEND-001 (secrets). Riscos: RISK-001/002. Critério de saída: branch de produção decidido; dispatch/stats funcionais (não "ausente"). Validação: `dispatchBeehiiv` retorna 204.
+### Onda 1 — Bloqueios e riscos críticos (P0/P1)
+- **Objetivo:** fechar RISK-001..005. **Tarefas:** BKL-01/02/03/04/07/08. **Dependências:** Onda 0. **Riscos:** conflitos de merge na reconciliação. **Saída:** troncos reconciliados; banco versionado; segredos fora do fonte; edge protegida; admin sem falha silenciosa. **Não iniciar antes:** feature nova.
 
 ### Onda 2 — Fechamento dos fluxos principais
-Objetivo: fechar o loop editorial operável. Tarefas: PEND-004 (envio real validado), PEND-007 (crons). Depende de Onda 1. Critério de saída: 1 digest publicado ponta-a-ponta com evidência. Não iniciar Onda 4 antes.
+- **Objetivo:** 1 pipeline de edição e 1 de VPM; hierarquia de docs. **Tarefas:** BKL-09/10/05. **Dependências:** Onda 1. **Saída:** schema único de edição; fonte única de VPM; zero doc fantasma.
 
 ### Onda 3 — Testes e validação
-Objetivo: cobrir o não-testado. Tarefas: PEND-013 (retry), teste de fumaça da UI admin (login→ação), validação subscribe (CYCLE-006). Critério de saída: fluxo admin e subscribe exercitados.
+- **Objetivo:** validar o que está implementado. **Tarefas:** BKL-06/16 (go-lives), BKL-11 (predict wire), BKL-12 (testes), BKL-15 (checkCalculo). **Saída:** go-lives feitos por humano; predict com artefato+teste; cobertura dos módulos críticos.
 
 ### Onda 4 — Refatoração e dívida técnica
-Objetivo: reduzir dívida. Tarefas: PEND-006 (versionar edge), PEND-014 (tsconfig), DEBT-006 (pg_net), remoção de órfãos, poda de branches mergeadas. Critério de saída: advisors/lint/typecheck limpos com dívidas fechadas.
+- **Tarefas:** BKL-13 (taxonomia→social), BKL-14 (publisher), BKL-17 (DailyEdition), BKL-18 (playwright/seed), BKL-21 (CI). **Saída:** duplicidades removidas; espelhos guardados por teste.
 
 ### Onda 5 — Documentação e governança
-Objetivo: registrar verdade. Tarefas: documentar arquitetura real (este relatório + ADRs das DEC-001..009), decidir DECOPEN-002/003/005, PEND-009 (EKS), consolidar donos de frente. Critério de saída: decisões abertas resolvidas ou explicitamente adiadas.
+- **Tarefas:** ratificar ADRs (ODEC-002), consolidar docs de arquitetura reais, fechar PRs abertos (BKL-20), decidir monetização (BKL-22) e Lab/Special (BKL-19), encerrar chats antigos. **Saída:** governança vigente documentada; backlog limpo.
 
 ---
 
 ## 23. Itens que podem ser encerrados
-- Landing/render/QA/Beehiiv-publisher (COMP-001,004,005,006 no nível de código) — **CONCLUÍDO_VALIDADO** exceto envio real.
-- Cockpit read-rich de digests + fases 2–7 (código) — mergeado (#40,#49).
-- Ingestão: fila drenada (0 pendentes) — CYCLE de drenagem **encerrado** (validar cadências na Onda 4).
-- RFC-009 (documento) — encerrado como doc; execução das fases é ciclo à parte.
-- Bugs de merge #17×#25 — encerrados (#26).
+- CHAT-032 (rename — mergeado, validado). CHAT-021 (contagens reais). CHAT-025 (P2 polish). CHAT-020 (rótulos predict). CHAT-028 (GTM docs).
+- Componentes maduros e validados: COMP-001/002/003/004 (landing/design/mascote), COMP-010 (taxonomia), COMP-013 (Pro, no nível de código).
 
 ## 24. Itens que precisam ser refeitos
-- **Nada precisa ser refeito do zero.** Ajustes, não reescrita: consumo de `edition_drafts` (D3), decisão sobre `sku_*` v1 (pode virar remoção, não reescrita).
+- Unificar as **duas pipelines de edição** (BKL-10) e os **dois coletores de VPM** (BKL-05) — refazer para 1 contrato canônico.
+- **Versionamento do banco** (BKL-02) — recriar as migrações para refletir o schema real.
+- **Espelhos manuais** forecast TS↔.mjs — substituir por geração/teste de paridade (CODE-007).
+- **Cópias do contrato de Verdict** no social — refazer para derivar da taxonomia (BKL-13).
 
 ## 25. Itens que devem ser descartados
-- Candidatos a descarte (após confirmação): tabelas/coletor `sku_*` v1 (substituídos por `shopping_*`) — PEND-012; branches locais mergeadas (`reconcile-main-features`,`rfc-predict-engine-v2`,`forecast-reformulacao`); possíveis órfãos `lib/admin-series`/`admin-calendar` (PEND-011). **Não descartar sem confirmar uso.**
+- PR #27 (admin predict, fechado sem merge) — confirmar descarte (CYCLE-016).
+- `scripts/render.mjs` legado que emitia "THE LOYALTY" no fork estagnado — **já não é o caminho do CI**; no tronco real o `render`/`render-system` é o vigente; o resquício do fork pode ser descartado ao encerrar a branch estagnada.
+- Fallbacks hardcoded de credencial/URL (descartar do fonte — BKL-03).
+- `/daily/preview` + DailyEdition, se a Pipeline B for aposentada (CODE-015).
 
 ## 26. Itens que exigem decisão humana
-DECOPEN-001..005 (§19): branch de produção, investimento no predict, continuidade do Shopping VPM, descarte do `sku_*`, timing do consumo de drafts. Também PEND-001 (quais secrets configurar) é decisão + ação do dono.
+ODEC-001 (tronco), ODEC-002 (ratificar ADRs), ODEC-003 (hierarquia), ODEC-005 (fonte VPM), ODEC-006 (`depende`→?), ODEC-007 (persistência), ODEC-008 (teses), ODEC-009 (preço/gateway Pro), ODEC-010 (Lab/Special vs copy), ODEC-011 (aposentar forecast). BLOCK-001 (confirmar secrets) e BLOCK-002 (executar go-lives) também são ação humana.
 
 ## 27. Itens que exigem validação técnica
-- PEND-004 (envio real de digest) — Nível A a obter.
-- CYCLE-006 (subscribe real) — Nível A a obter.
-- PEND-003 (preço ao vivo Shopping) — Nível A a obter (headless).
-- PEND-012 (uso real de `sku_*` no db) — query/investigação.
-- Teste de fumaça da UI admin logada (login→jobs→ação) — não exercitado.
+- Go-live editorial (TEST pendente): render→qa→beehiiv draft com secrets reais.
+- Go-live de coleta: 1ª run live coerente (P1 e P2), incluindo Azul.
+- Predict: backtesting em dados reais (PR #54) + geração de artefato.
+- Segurança: confirmar RLS e ausência de exposição anônima em produção pós-#42; testar edge sem `verify_jwt`.
+- Reprovisionamento do banco só a partir das migrações (prova de DR).
+- Lint no tronco real (`next lint`) e execução completa do `editorial-gate` do CI.
 
-## 28. Próximas ações recomendadas
-1. **Decidir governança de branch** (DECOPEN-001) e documentar (PEND-002).
-2. **Confirmar/configurar os 3 secrets** (PEND-001) — destrava publicação e métricas.
-3. **Validar 1 envio real de digest** ponta-a-ponta (PEND-004).
-4. **Revisar cadência dos 25 crons** e reverter `backfill-00` (PEND-007).
-5. **Decidir Shopping VPM e predict** (DECOPEN-002/003) — investir ou congelar, para não manter frentes ambíguas.
+---
+
+## 28. Próximas ações recomendadas (ordem real de execução)
+
+1. **BKL-01 — Decidir e reconciliar o tronco** (Onda 0/1). Sem isso, tudo o mais corre risco de ser feito no lugar errado.
+2. **BKL-02 — Versionar o schema real do banco** (Onda 1). Remove o risco de DR e das páginas admin vazias.
+3. **BKL-03 — Tirar credenciais/URL do fonte + confirmar secrets** (Onda 1).
+4. **BKL-04/07/08 — Endurecer edge + admin (erro≠vazio, auth)** (Onda 1).
+5. **BKL-09 — Resolver hierarquia de docs fantasma** (Onda 2) e **BKL-05/10 — unificar VPM e edição** (Onda 2).
+6. **BKL-06/16/11/12 — Go-lives + wire do predict + testes** (Onda 3).
+7. **Onda 4/5 — dívida técnica e governança** (taxonomia→social, publisher, docs, PRs, monetização).
+
+**Próximo comando concreto pós-auditoria:** decidir o tronco (humano) e, definido ele, `git checkout <tronco>` + abrir uma branch de estabilização para BKL-02/03. Não iniciar feature nova antes da Onda 1.
 
 ---
 
 ## 29. Respostas finais
 
-1. **Em que ponto o projeto está?** Produto funcional em produção; **72%–80%** global. Landing+editorial+admin+ingestão maduros; predict e Shopping VPM parciais; operação de publicação pronta no código mas não validada ao vivo.
-2. **O que está realmente concluído (Nível A)?** Landing/render/QA (código+testes), pipeline de ingestão (fila drenada, 3.579 campanhas), cockpit (build), motor forecast (build), fases 2–7 de digests (build+roundtrip db), taxonomia/entities (testes). Validações: test 35/35, typecheck, lint, build, advisors sem ERROR.
-3. **Declarado concluído mas não comprovado?** "Publicar no Beehiiv funciona" (mock-safe, envio real não exercitado); "Shopping VPM com valor" (0 preço ao vivo); "predict entrega previsões" (gates a maioria). Todos marcados CONCLUÍDO_NÃO_VALIDADO/PARCIAL.
-4. **O que falta por frente?** Editorial: 1 envio real + secrets. Admin: teste de UI logada. Predict: dado (Fases 1–3) ou decisão. Shopping: adapters. EKS: RFCs 002–005.
-5. **Mais urgente?** Governança de branch (RISK-001) e secrets (RISK-002).
-6. **O que bloqueia?** Secrets (externo) e afinação de adapters (externo). Nenhum bloqueio de código interno.
-7. **O que pode ser encerrado agora?** §23.
-8. **O que refazer?** Nada do zero (§24).
-9. **O que descartar?** `sku_*` v1, branches mergeadas, órfãos — após confirmar (§25).
-10. **Decisão humana?** §26 (DECOPEN-001..005).
-11. **Validação técnica?** §27.
-12. **Decisões substituídas?** Basic Auth→cookie (DEC-007), Radar `sku_*`→`shopping_*` (DEC-006), motor "predictions"→forecast+predict (DEC-001), renderer legado→sistema unificado.
-13. **Chats com ciclos abertos?** CHAT-001 (CYCLE-001/005/009/010), CHAT-014/017 (CYCLE-004), CHAT-012 (CYCLE-002), CHAT-013 (CYCLE-003), CHAT-007 (CYCLE-007), CHAT-018 (CYCLE-008), CHAT-002 (CYCLE-006).
-14. **Componentes órfãos?** COMP-022 (a confirmar); possivelmente `sku_*` v1.
-15. **Planejadas e esquecidas?** RFC-002..005 (EKS); PLANO-CONVERSAO da landing.
-16. **Existem mas não conectadas?** `edition_drafts` curados (não consumidos pelo render — D3); predict (gera dados que a maioria fica bloqueada).
-17. **Plano mínimo para estabilizar?** Onda 0 + Onda 1 (§22): confirmar órfãos/secrets, decidir branch. Já está estável tecnicamente.
-18. **Plano mínimo para concluir?** Ondas 1–3: secrets → 1 envio real → validar subscribe/admin. Isso leva o núcleo a CONCLUÍDO_VALIDADO.
-19. **Ordem real de execução?** Onda 0 → 1 → 2 → 3 → 4 → 5 (§22).
-20. **Próximo comando/ação?** Não é comando de código: é a **decisão de branch (DECOPEN-001)** + **configurar secrets (PEND-001)**. Tecnicamente, o próximo passo verificável é rodar `npm run beehiiv -- --dry-run` e inspecionar `content/beehiiv-status.json` para validar o publisher sem enviar de verdade.
+1. **Em que ponto o projeto está?** Produto editorial/landing maduro e validado; camadas de dados/IA implementadas mas não operacionalizadas; governança e troncos por estabilizar. Global **55–68%**.
+2. **O que está realmente concluído?** Landing/design/mascote (COMP-001..004), taxonomia única (COMP-010), subscribe ligado (COMP-005/006), CI (COMP-028), Pro/Weekly/Daily no nível de código; rename de marca (CHAT-032). `build`/`tsc`/`test` verdes.
+3. **Declarado concluído mas não comprovado?** "Radar operando" (é seed/histórico, não live); "produção pronta" (depende de secrets/go-live); Pro "Em breve" na copy embora implementado; Weekly/Lab "Incluído" na copy (Lab/Special inexistentes); reconciliação em `main` (divergiu de novo).
+4. **O que falta para concluir cada frente?** Ver §12/§16/§20 — em resumo: troncos, banco versionado, secrets, unificação de pipelines/coletores, wire do predict, testes, go-lives, docs de autoridade.
+5. **O que é mais urgente?** BKL-01 (troncos), BKL-02 (banco), BKL-03 (segredos) — todos P0.
+6. **O que bloqueia o avanço?** Decisão de tronco; secrets de produção; ação humana de go-live; Azul bloqueado.
+7. **O que pode ser encerrado agora?** §23 (CHAT-032/021/025/020/028; componentes de landing/design/taxonomia).
+8. **O que precisa ser refeito?** §24 (unificar pipelines/coletores; versionar banco; espelhos; cópias de verdict).
+9. **O que descartar?** §25 (PR #27; resquícios do fork estagnado; fallbacks hardcoded; DailyEdition se aposentar B).
+10. **Decisão humana?** §26 (11 ODEC + secrets + go-lives).
+11. **Validação técnica?** §27 (go-lives, backtesting, DR do banco, segurança pós-#42, lint/editorial-gate).
+12. **Decisões antigas substituídas?** DEC-012 (reconcile em `main`) efetivamente revertida pela divergência; admin v1 (CHAT-012) substituído por v2/redesign; enums de verdict divergentes substituídos pela taxonomia única (DEC-004).
+13. **Chats com ciclos abertos?** CHAT-002(#13), CHAT-008(ADRs), CHAT-013/016/017, CHAT-018/019/024/026/029/030/031/033/034. Ver §9.1/§20.
+14. **Componentes órfãos?** COMP-012 (DailyEdition, só preview noindex); COMP-024 (Predict, dormente/desligado do pipeline).
+15. **Funcionalidades planejadas e esquecidas?** Lab (COMP-031), Special (COMP-032), RFC-002/003/004/005; onboarding de e-mail (D0/D3/D7).
+16. **Funcionalidades que existem mas não estão conectadas?** Predict engine (COMP-024); Pipeline B/DailyEdition (só preview); coletor headless P2 (só cron, não no `npm run`); `--test` do publisher (no-op).
+17. **Plano mínimo para estabilizar?** Ondas 0–1: decidir tronco, reconciliar, versionar banco, tirar segredos do fonte, endurecer edge/admin.
+18. **Plano mínimo para concluir?** Ondas 2–3: 1 pipeline de edição, 1 fonte de VPM, resolver docs, go-lives com secrets, wire do predict, testes dos módulos críticos.
+19. **Ordem real de execução?** §28 (1→7).
+20. **Próximo comando/ação?** Decisão humana do tronco → branch de estabilização para BKL-02/03; não iniciar feature nova antes da Onda 1.
 
 ---
 
 ## 30. Apêndice de evidências
 
-| ID | Fonte | Localização | Comando/consulta | Resultado | Interpretação | Limitação |
-|---|---|---|---|---|---|---|
-| EVID-001 | Git | HEAD | `git rev-parse HEAD` | `19ac30d…` | Estado auditado fixo | — |
-| EVID-002 | Validação | repo | `npm test` | 35/35 pass | Lógica de lib/taxonomia/stats OK (A) | não cobre UI/edge |
-| EVID-003 | Validação | repo | `npm run typecheck && lint && build` | verde (26 rotas) | Código compila e tipa (A) | build ≠ correção de negócio |
-| EVID-004 | Supabase | db | count campaigns/news_raw/backfill_queue | 3.579 / 40.099 (0 pend.) / 0 | Pipeline drenou (A) | snapshot pontual |
-| EVID-005 | Supabase | advisors | `get_advisors security` | 20 INFO + 1 WARN, 0 ERROR | Postura segura; pg_net public (A) | INFO rls-no-policy é por-design |
-| EVID-006 | Supabase | db | roundtrip edition_drafts→qa→editions | OK e limpo | Schema fases 2–7 funcional (A) | não é envio real |
-| EVID-007 | GitHub | PR #49 | `pull_request_read get_check_runs` | CI success (mergeado `b07cfe1`) | Fases 2–7 na produção (A) | — |
-| EVID-008 | Código | `middleware.ts` | leitura | gate cookie ADMIN_TOKEN; SELF_AUTH sku/collect | Auth do painel (B) | pen-test não feito |
-| EVID-009 | Git | log | `git log` | 106 commits, produção=landing-page-v1 | Governança de branch (A) | CONFLICT-001 |
-| EVID-010 | Edge | Supabase API | `list_edge_functions` | ingest v4, campaigns v13, backfill v8, +2 | Ingestão viva (A) | código não versionado (DEBT-004) |
-| EVID-011 | Docs | `docs/rfc/RFC-001`, `docs/architecture/rfc/RFC-009` | leitura | EKS (só 001), forecast×predict | Arquitetura planejada (A doc) | intenção interna dos chats = C |
-| EVID-012 | Código | `package.json` | leitura | deps = só next/react/react-dom | Contrato "sem deps" cumprido (A) | — |
+| ID | Fonte | Arquivo/Local | Chat | Commit/Comando | Resultado | Interpretação | Limitação |
+|---|---|---|---|---|---|---|---|
+| EVID-001 | Git | `git ls-remote --symref origin HEAD` | — | comando | default = `claude/loyalty-landing-page-v1-7vbjq7` | `main` **não** é o tronco default | — |
+| EVID-002 | Git | `rev-list main..default`=50; `default..main`=18; merge-base=PR#23 | — | comando | Troncos divergentes, sem superconjunto | CONFLICT-001 | — |
+| EVID-003 | Execução | worktree default | — | `npm test` | **35/35 pass** | Testes reais verdes | Cobrem stats/lib/taxonomy/entities só |
+| EVID-004 | Execução | worktree default | — | `tsc --noEmit` | exit 0 | Sem type error | — |
+| EVID-005 | Execução | fork estagnado | CHAT-032 | `npm run build` | PASS | App compila | Fork de 102 arquivos |
+| EVID-006 | Código | `components/SubscribeForm.tsx:58` | CHAT-029 | leitura | `fetch("/api/subscribe")` | Form ligado de verdade (mock removido) | — |
+| EVID-007 | Código | `content/edition.schema.json` × `renderer/edition.schema.json` | CHAT-003/004 | leitura | Dois schemas incompatíveis | DEBT-001/CODE-001 | — |
+| EVID-008 | Código | `scripts/taxonomy.mjs` + `tests/taxonomy.test.mjs` | CHAT-008 | leitura | Taxonomia única + teste | DEC-004 vigente | — |
+| EVID-009 | Código | `lib/admin.ts:8-9`, `admin-db.ts:8`, `forecast.mjs:13,17` | CHAT-013/015 | leitura | URL+publishable key hardcoded | CODE-002/RISK-003 | publishable (não service) |
+| EVID-010 | Código | migração `0005_security_hardening.sql` | CHAT-024 | leitura | Revoga anon, `security_invoker` | PR#42 presente | RPCs base não versionadas |
+| EVID-011 | Código | `supabase/functions/README.md:20` | CHAT-026 | leitura | `verify_jwt` desativado | RISK-004 | — |
+| EVID-012 | Código | `scripts/shopping/collect.mjs:34-42` | CHAT-019 | leitura | Azul bloqueado no nível de rede | CYCLE-011 | — |
+| EVID-013 | Código | `lib/predict-engine.ts` | CHAT-018 | leitura | Survival/hazard+backtest, sem CLI/CI | COMP-024 dormente | sem teste |
+| EVID-014 | Código | `.github/workflows/ci.yml` | CHAT-024 | leitura | lint/typecheck/test/editorial-gate/build | CI cobre pipeline A | Pipeline B fora | 
+| EVID-015 | Filesystem | busca por 6 docs de autoridade | — | `find` | **Todos ausentes** | CONFLICT-007/D-1 | DESIGN.md só em skill |
+| EVID-016 | Git/PR | PRs #1–#57 | vários | list_pull_requests | 34 frentes; #13/#53/#54 abertos; #27 fechado s/ merge | §9/§20 | metadados só |
+| EVID-017 | Doc | `docs/rfc/RFC-001-EKS-...md` §14/§16 | CHAT-008 | leitura | ADR-001..010 Propostos; D-1/D-3 documentados | PEND-013/ODEC-002 | Draft |
+| EVID-018 | Doc | `docs/architecture/rfc/RFC-009-predict-engine-v2.md` | CHAT-018 | leitura | Predict v2 Proposto, MVP faseado | CYCLE-009 | — |
+| EVID-019 | Código | `content/beehiiv-status.json` | CHAT-003 | leitura | daily-0028 mock/draft | Publisher rodou em mock | — |
+| EVID-020 | Código | `supabase/migrations/` (dois 0001, dois 0002) | CHAT-015/024 | leitura | Numeração duplicada | DEBT-005 | — |
 
 ---
 
-### Nota de integridade da auditoria
-Este relatório NÃO declara a auditoria "completa": **18 de 19 transcripts de chat são inacessíveis**. As conclusões sobre *o que foi feito* são fortes (Git/código/db/validações, Nível A/B); as conclusões sobre *intenção/contexto interno* dos chats 002–019 são reconstruções (Nível C/D). Nenhuma correção foi aplicada — conforme o mandato de modo análise.
+*Fim do relatório. Documento em UTF-8, não truncado. Auditoria read-only: nenhuma alteração de código, commit, push ou deploy foi realizada. Cobertura e limitações declaradas na §0/§3.*

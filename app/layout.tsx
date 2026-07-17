@@ -21,6 +21,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.theloyal.com.br"),
   title: "The Loyal | Pontos e milhas sem pegadinha",
   description:
     "A gente faz a conta das promoções de pontos, milhas e cashback e diz, em reais, se vale a pena. E-mail grátis de 5 minutos, todo dia útil às 8h.",
@@ -30,6 +31,14 @@ export const metadata: Metadata = {
       "A gente faz a conta das promoções de pontos, milhas e cashback e diz, em reais, se vale a pena. E-mail grátis de 5 minutos, todo dia útil às 8h.",
     type: "website",
     locale: "pt_BR",
+  },
+  // Card grande no X/Twitter: a imagem OG (app/opengraph-image.tsx) e reaproveitada
+  // pelo Next como imagem do card. Essencial para o alcance no compartilhamento.
+  twitter: {
+    card: "summary_large_image",
+    title: "The Loyal | Pontos e milhas sem pegadinha",
+    description:
+      "A gente faz a conta das promoções de pontos, milhas e cashback e diz, em reais, se vale a pena. E-mail grátis de 5 minutos, todo dia útil às 8h.",
   },
 };
 
@@ -41,6 +50,11 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${inter.variable} ${jetbrains.variable}`}
       >
+        {/* Sem JS o IntersectionObserver nao dispara: garante que o conteudo
+            revelado por scroll nunca fique oculto. */}
+        <noscript>
+          <style>{`.tl-reveal{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
         <a
           href="#conteudo"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded focus:bg-ink focus:px-4 focus:py-2 focus:font-semibold focus:text-paper"

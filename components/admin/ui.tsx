@@ -68,6 +68,37 @@ export function toneForStatus(s: string | null | undefined): Tone {
   return (s && STATUS_TONE[s.toLowerCase()]) || "gray";
 }
 
+// Rótulos humanos pt-BR para status crus (pg_cron/pipeline chegam em inglês).
+// Mantém a operação legível sem espalhar strings de máquina pela UI.
+const STATUS_LABEL: Record<string, string> = {
+  succeeded: "concluído",
+  ok: "concluído",
+  done: "concluído",
+  running: "rodando",
+  scheduled: "agendado",
+  pending: "pendente",
+  failed: "falhou",
+  error: "falhou",
+  active: "ativo",
+  paused: "pausado",
+  inactive: "pausado",
+};
+export function statusLabel(s: string | null | undefined): string {
+  if (!s) return "—";
+  return STATUS_LABEL[s.toLowerCase()] ?? s;
+}
+
+// Célula/inline de status: ponto semântico + rótulo humano. Vocabulário único
+// em toda a Central (substitui o status cru espalhado nas tabelas).
+export function StatusCell({ status }: { status: string | null | undefined }) {
+  return (
+    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+      <StatusDot tone={toneForStatus(status)} />
+      <span>{statusLabel(status)}</span>
+    </span>
+  );
+}
+
 // TL Score → banda semântica (mapa do CLAUDE.md).
 export function toneForScore(n: number | null | undefined): Tone {
   if (n == null) return "gray";
@@ -146,8 +177,35 @@ export function Sparkline({
   );
 }
 
-// Card de métrica: valor mono grande, contexto, faixa de acento semântica
-// (uma cor por card) e sparkline opcional.
+// Painel base: borda completa (nunca side-stripe), Surface, radius de card.
+// Bloco genérico para conteúdo que não é métrica pura.
+export function Card({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`h-full rounded-lg border border-line bg-surface p-4 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// Rótulo de card: CAPS discreto, com ponto semântico opcional no lugar da
+// antiga faixa lateral colorida (side-stripe é ban do impeccable + regra da marca).
+export function CardLabel({ children, tone }: { children: ReactNode; tone?: Tone }) {
+  return (
+    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
+      {tone && <StatusDot tone={tone} />}
+      {children}
+    </div>
+  );
+}
+
+// Card de métrica: valor mono grande, contexto, acento semântico via ponto no
+// rótulo + cor da sparkline (uma cor por card) — sem faixa lateral.
 export function StatCard({
   label,
   value,
@@ -164,14 +222,8 @@ export function StatCard({
   href?: string;
 }) {
   const inner = (
-    <div className="relative h-full overflow-hidden rounded-lg border border-line bg-surface p-4">
-      <span
-        className={`absolute left-0 top-0 h-full w-1 ${tone ? BAR[tone] : "bg-line"}`}
-        aria-hidden="true"
-      />
-      <div className="text-xs font-semibold uppercase tracking-[0.05em] text-gray-500">
-        {label}
-      </div>
+    <div className="flex h-full flex-col rounded-lg border border-line bg-surface p-4 transition-colors group-hover:border-gray-400">
+      <CardLabel tone={tone}>{label}</CardLabel>
       <div
         className={`mt-1 font-mono text-2xl font-semibold tabular-nums ${
           tone === "red" ? "text-red-600" : "text-ink"
@@ -181,7 +233,7 @@ export function StatCard({
       </div>
       {sub != null && <div className="mt-0.5 text-xs text-gray-500">{sub}</div>}
       {spark && spark.length > 1 && (
-        <div className="mt-2">
+        <div className="mt-auto pt-3">
           <Sparkline data={spark} tone={tone ?? "green"} />
         </div>
       )}
@@ -189,7 +241,7 @@ export function StatCard({
   );
   if (href) {
     return (
-      <a href={href} className="block h-full transition-colors hover:border-gray-400">
+      <a href={href} className="group block h-full">
         {inner}
       </a>
     );
@@ -294,10 +346,12 @@ export function PageHeader({
   );
 }
 
-// Tabela: rola horizontalmente sem estourar o body; header sticky, zebra sutil.
+// Tabela responsiva: no mobile (<768px) cada linha vira um card com campos
+// rotulados (ver .tl-datatable em globals.css) — zero scroll horizontal. Acima
+// de md volta ao formato de tabela com header sticky e zebra sutil.
 export function Table({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-line bg-surface">
+    <div className="tl-datatable md:overflow-x-auto md:rounded-lg md:border md:border-line md:bg-surface">
       <table className="w-full border-collapse text-sm [&_tbody_tr:nth-child(even)]:bg-paper/40 [&_tbody_tr:hover]:bg-paper-dark/50">
         {children}
       </table>
@@ -319,14 +373,18 @@ export function Td({
   children,
   className = "",
   colSpan,
+  label,
 }: {
   children?: ReactNode;
   className?: string;
   colSpan?: number;
+  // Rótulo do campo no modo card (mobile). Espelha o texto do <Th> da coluna.
+  label?: string;
 }) {
   return (
     <td
       colSpan={colSpan}
+      data-label={label}
       className={`border-b border-line px-3 py-2 align-top text-ink ${className}`}
     >
       {children}
@@ -334,13 +392,95 @@ export function Td({
   );
 }
 
-export function EmptyRow({ cols, label }: { cols: number; label: string }) {
+// Vazio de tabela que ensina: rótulo em contraste AA + dica opcional do que
+// preenche a tabela (product.md: empty state ensina a interface, não "nada aqui").
+export function EmptyRow({
+  cols,
+  label,
+  hint,
+}: {
+  cols: number;
+  label: string;
+  hint?: ReactNode;
+}) {
   return (
     <tr>
-      <Td className="text-gray-400" colSpan={cols}>
-        <span className="block py-2">{label}</span>
+      <Td colSpan={cols} className="tl-cell-full">
+        <div className="flex flex-col gap-1 py-6 text-center">
+          <span className="text-sm font-medium text-gray-700">{label}</span>
+          {hint != null && (
+            <span className="mx-auto max-w-md text-xs text-gray-500">{hint}</span>
+          )}
+        </div>
       </Td>
     </tr>
+  );
+}
+
+// Vazio fora de tabela (seções, painéis): mesmo tom didático.
+export function EmptyState({
+  label,
+  hint,
+  action,
+}: {
+  label: string;
+  hint?: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-line bg-surface px-4 py-8 text-center">
+      <span className="text-sm font-medium text-gray-700">{label}</span>
+      {hint != null && (
+        <span className="max-w-md text-xs text-gray-500">{hint}</span>
+      )}
+      {action != null && <div className="mt-1">{action}</div>}
+    </div>
+  );
+}
+
+// Skeleton de carregamento: pulso sutil (opacity, neutraliza em reduced-motion
+// pelo reset global). Substitui spinner no meio do conteúdo (product.md).
+export function Skeleton({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`animate-pulse rounded bg-paper-dark ${className}`}
+      aria-hidden="true"
+    />
+  );
+}
+
+// Placeholder de página inteira: header + grade de métricas + tabela. Casa com
+// o ritmo real das telas para não haver salto de layout na troca de rota.
+export function PageSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Carregando">
+      <div className="mb-6 border-b border-line pb-4">
+        <Skeleton className="h-7 w-48" />
+        <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+      </div>
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-lg border border-line bg-surface p-4">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="mt-3 h-7 w-16" />
+            <Skeleton className="mt-2 h-3 w-28" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-8 overflow-hidden rounded-lg border border-line bg-surface">
+        <div className="border-b border-line px-3 py-2.5">
+          <Skeleton className="h-3 w-32" />
+        </div>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 border-b border-line px-3 py-3">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-4 w-1/5" />
+            <Skeleton className="h-4 w-1/6" />
+            <Skeleton className="ml-auto h-4 w-16" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

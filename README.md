@@ -11,15 +11,37 @@ THE-LOYALTY-LLM-SYSTEM.md > DESIGN.md > PONTO-MASCOTE-GUIA.md > TL-GRAPHICS.md.
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
-npm run build      # build de produção
+npm run dev      # http://localhost:3000
+npm run build    # build de produção (estático)
 npm run start
 npm run lint       # ESLint (next/core-web-vitals)
 npm run typecheck  # tsc --noEmit
 ```
 
-Pipeline editorial (validate → render → qa → publish → beehiiv): ver
-`content/README.md`. Produção e go-live: ver `docs/GO-LIVE.md`.
+### Qualidade
+
+```bash
+npm run lint       # next lint (eslint-config-next)
+npm run typecheck  # tsc --noEmit (TypeScript strict)
+```
+
+### Pipeline editorial (Daily)
+
+Fonte única: `content/editions/NNNN.json` (contrato em `content/edition.schema.json`).
+
+```bash
+npm run validate   # QA editorial de cada edição → out/qa/NNNN.md (bloqueia em erro)
+npm run render     # e-mail HTML + plain text + web archive + QA + manifest → out/*
+npm run qa         # QA global (landing + JSON + e-mail + web); bloqueia regra inviolável
+npm run publish    # valida + escreve content/latest.json e content/index.json (NÃO envia)
+npm run beehiiv    # publica no Beehiiv o conteúdo já renderizado (rascunho por padrão)
+npm run edition    # validate → render → publish
+npm run pro        # valida o relatório Pro e gera o resumo de e-mail
+```
+
+O CI (`.github/workflows/ci.yml`) roda lint → typecheck → validate → render → qa →
+build. O workflow `publish.yml` regenera artefatos e prepara PR/rascunho — **nunca**
+dispara envio de e-mail automaticamente.
 
 ## Estrutura
 
@@ -109,6 +131,14 @@ inscrição e o Publisher operam em **modo mock** (sucesso/dry-run simulado).
 O envio das edições é feito pelo Publisher (`npm run beehiiv`, ver `content/README.md`):
 publica a peça já renderizada no Beehiiv, por padrão só como **rascunho**, com QA gate,
 idempotência e ledger em `content/beehiiv-status.json`.
+
+## MCP — servidor Rams
+
+O projeto registra o servidor MCP **rams** (transporte HTTP, `https://worker.rams.ai/mcp`)
+em `.mcp.json`. O token de acesso **não** fica no repositório: defina a variável de
+ambiente `RAMS_API_KEY` (o valor `rams_...`) na máquina ou no ambiente remoto do
+Claude Code — o `.mcp.json` referencia `${RAMS_API_KEY}` no header `Authorization`.
+Sem a variável, o servidor simplesmente não autentica; nada quebra no build.
 
 ## Produção / go-live
 

@@ -39,7 +39,7 @@ export function Reveal({
 /* Label canonico de secao: linha 1px + CAPS (DESIGN.md Section Divider) */
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-4 border-t border-line pt-4">
+    <div className="mb-3 border-t border-line pt-4">
       <span className="tl-label">{children}</span>
     </div>
   );
