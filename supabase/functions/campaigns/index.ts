@@ -31,6 +31,12 @@
 //     year-shift com recall dos gaps sujos (canônico 943d antes escapava).
 //   • NÃO muda makeId, chave de upsert (id) nem schema — Fase 1b (dedup por
 //     identidade) fica de fora deste deploy.
+//
+// v16 — LEDGER DE CUSTO LLM (M2.5, REQ-34): cada notícia processada grava UMA
+//   linha em `llm_jobs` (estágio extracao_campanhas) com tokens/latência/status.
+//   É telemetria aditiva — não muda extração, schema de campaigns nem o upsert.
+//   O custo em USD é derivado no painel (tokens × preço do model_registry),
+//   nunca aqui (INV-12). Falha ao gravar o ledger NUNCA bloqueia a extração.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supa = createClient(
@@ -112,6 +118,35 @@ async function analyze(text: string, publishedAt: string | null) {
   return { json: parsed, usage: j.usage || { prompt_tokens: 0, completion_tokens: 0 } };
 }
 
+// v16 (M2.5): grava UMA linha de telemetria em `llm_jobs` por chamada de LLM.
+// Só o observado — tokens/latência/status; custo_usd fica null (o painel calcula
+// com o preço do model_registry, INV-12). Erro aqui é logado, nunca propagado —
+// telemetria não pode derrubar a extração.
+async function logLlmJob(fields: {
+  status: "ok" | "erro";
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  latenciaMs?: number;
+  erro?: string;
+  jobRef?: string;
+}) {
+  try {
+    await supa.from("llm_jobs").insert({
+      estagio: "extracao_campanhas",
+      provider: "openrouter",
+      modelo: MODEL,
+      tokens_in: fields.usage?.prompt_tokens ?? null,
+      tokens_out: fields.usage?.completion_tokens ?? null,
+      custo_usd: null,
+      latencia_ms: fields.latenciaMs ?? null,
+      status: fields.status,
+      erro: fields.erro ? String(fields.erro).slice(0, 500) : null,
+      job_ref: fields.jobRef ?? null,
+    });
+  } catch (e) {
+    console.error("Erro ao gravar llm_jobs (nao bloqueia extracao):", e);
+  }
+}
+
 // Null-safe: aceita null/undefined/nao-string sem quebrar (.normalize em null crashava).
 const deaccent = (s: unknown) =>
   (s == null ? "" : String(s)).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
@@ -186,15 +221,21 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (x: T) => Promise<R
 }
 
 async function processItem(it: any, runId: string, today: string, in3days: string): Promise<{ processed: number; extracted: number }> {
+  // v16: telemetria — só registra o job da chamada de LLM UMA vez (ok ou erro).
+  let llmLogged = false;
+  const llmStart = Date.now();
   try {
     const text = (it.content || it.title || "").trim();
     if (!text) {
       await supa.from("news_raw").update({ processed: true, process_run: runId, error: "Conteudo vazio" }).eq("id", it.id);
-      return { processed: 1, extracted: 0 };
+      return { processed: 1, extracted: 0 };  // sem texto: nenhuma chamada de LLM, nenhum job
     }
 
     // v15: passa a proveniência ao prompt como âncora de ano (prevenção).
     const { json, usage } = await analyze(text, isoOrNull(it.published_at));
+    // v16: chamada de LLM concluída → grava o job (tokens observados).
+    await logLlmJob({ status: "ok", usage, latenciaMs: Date.now() - llmStart, jobRef: it.id });
+    llmLogged = true;
     const campaigns = Array.isArray(json?.campaigns) ? json.campaigns.filter(Boolean) : [];
 
     const rows = campaigns.map((c: any) => {
@@ -278,6 +319,10 @@ async function processItem(it: any, runId: string, today: string, in3days: strin
   } catch (e: any) {
     const msg = String(e).slice(0, 500);
     console.error(`Erro no item ${it.id}:`, msg);
+    // v16: se a falha foi na PRÓPRIA chamada de LLM (analyze), registra o job
+    // como 'erro'. Se o LLM já tinha respondido (llmLogged), o job 'ok' já
+    // existe — a falha foi downstream, não conta como erro de LLM.
+    if (!llmLogged) await logLlmJob({ status: "erro", latenciaMs: Date.now() - llmStart, erro: msg, jobRef: it.id });
     await supa.from("news_raw").update({ processed: true, process_run: runId, error: msg }).eq("id", it.id);
     return { processed: 1, extracted: 0 };
   }
@@ -326,14 +371,14 @@ Deno.serve(async (req: Request) => {
       kind: "scheduled",
       status: "ok",
       campaigns_found: extracted,
-      human_note: `extract v15 ${runId}: ${processed} noticias, ${extracted} campanhas, ${restantes} pendentes${stoppedByTime ? " (parou por tempo)" : ""}`,
+      human_note: `extract v16 ${runId}: ${processed} noticias, ${extracted} campanhas, ${restantes} pendentes${stoppedByTime ? " (parou por tempo)" : ""}`,
     });
   } catch (e) {
     console.error("Erro ao logar run:", e);
   }
 
   return new Response(
-    JSON.stringify({ processadas: processed, campanhas: extracted, pendentes: restantes, parou_por_tempo: stoppedByTime, runId, modelo: MODEL, versao: "v15-ancora" }),
+    JSON.stringify({ processadas: processed, campanhas: extracted, pendentes: restantes, parou_por_tempo: stoppedByTime, runId, modelo: MODEL, versao: "v16-ledger" }),
     { headers: { "Content-Type": "application/json" } },
   );
 });

@@ -31,6 +31,14 @@ export async function insert(table, rows) {
   return { rows: await res.json() };
 }
 
+export async function select(table, query = "") {
+  if (!supabaseEnabled()) return { mock: true, rows: [] };
+  const url = `${base()}/${table}${query ? `?${query}` : ""}`;
+  const res = await fetch(url, { headers: headers() });
+  if (!res.ok) throw new Error(`supabase select ${table} ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  return { rows: await res.json() };
+}
+
 export async function patch(table, filter, patchBody) {
   if (!supabaseEnabled()) return { mock: true };
   const res = await fetch(`${base()}/${table}?${filter}`, {

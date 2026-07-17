@@ -650,5 +650,37 @@ O teto permanece no estado vigente `{compra: 300, clube: 300, padrao: 200}`
 (opção A — manter). Se o operador quis a opção B (teto 400 para compra/clube,
 banda real passa limpa e ghosts 400+ continuam flagados), corrigir aqui.
 
+## D-063 — M2.5: painel de custo LLM (llm_jobs + model_registry), emissores instrumentados
+
+Slice `SPEC-SLICE-PAINEL-CUSTO-LLM.md` executada. **Schema aditivo** (migration
+`015_llm_jobs.sql`, aplicada): `llm_jobs` (ledger de telemetria — tokens/latência/
+status por chamada; `custo_usd` fica NULL no insert) e `model_registry` (modelo +
+preço por 1k tokens por estágio). **SEM seed de preço** (INV-03): `model_registry`
+nasce vazia; preço real é INSERT a aprovar depois com fonte+data (mesmo padrão de
+`custo_base_moeda`/011). Índice de dia ancorado em UTC (`(criado_em at time zone
+'UTC')::date`) porque `timestamptz::date` não é IMMUTABLE.
+
+**Custo é derivado no painel, não no emissor** (INV-12): `custoUsd(tokens, preço)`
+em `v2/lib/painel-custo-llm.mjs`. Preço ausente OU tokens ausentes ⇒ custo **null**,
+nunca 0 coagido (0 mentiria "de graça"). Golden `painel-custo-llm.test.mjs` (12
+casos) cobre a regra. Painel = `agregarPorDiaEstagio` (espelho da consulta §4) +
+relatório de terminal `scripts/painel-custo-llm.mjs` (`npm run painel:custo`); UI
+React fica como próximo passo (spec §7).
+
+**Emissores reais instrumentados** (antes: radar tinha ZERO telemetria de custo):
+- `scripts/collect/llm.mjs` — `sameProduct`/`classifyPromo`/`extractListing` gravam
+  `radar_vpm_match`/`_promo`/`_extracao` via `llm-ledger.mjs` (mock-safe; modo mock
+  não gera job — sem token real, INV-03).
+- Edge fn `campaigns` (extração) — **deployada v16** (era v15): grava
+  `extracao_campanhas` por notícia, aditivo e não-bloqueante (falha no ledger não
+  derruba extração). Cron `extract-2h` passa a popular `llm_jobs` a cada rodada.
+
+**Meta de custo por edição = PENDENTE, não fabricada** (spec §5, INV-03): nenhum
+dos estágios roda *por causa* de uma edição — extração e Radar VPM são coleta
+contínua, e o Digest Engine (única peça que gastaria LLM por edição) não existe.
+Custo marginal de uma edição hoje ≈ R$0 (nada gasta por causa dela). Além disso, o
+custo em USD dos estágios existentes é hoje **não confirmado** — `model_registry`
+sem preço aprovado. Revisitar quando o Digest Engine especificar suas chamadas.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
