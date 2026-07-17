@@ -44,12 +44,16 @@ test('0001: Sinal do dia — h3 com a manchete + item confirmado com números em
   assert.ok(html.includes('data-background-color="#F1ECE1"'), 'caixa do sinal em paper-dark');
 });
 
-test('0001: radar sem confirmação dentro do Sinal — 4 itens linkados, TL só quando há nota', () => {
+test('0001: v4.1 — radar sem confirmação vira cards em Ofertas ativas com selo de status, fora do Sinal', () => {
   const html = renderBeehiivHtml(ed0001);
-  assert.ok(html.includes('No radar, ainda sem confirmação oficial:'));
+  assert.ok(!html.includes('No radar, ainda sem confirmação oficial'), 'rótulo confuso removido (achado do operador)');
+  const iOfertas = html.indexOf('<h2>Ofertas ativas</h2>');
   for (const r of ed0001.radarSemConfirmacao) {
-    assert.ok(html.includes(`href="${r.url}"`), `item "${r.titulo}" linkado à fonte`);
+    const iItem = html.indexOf(`href="${r.url}"`);
+    assert.ok(iItem > iOfertas, `item "${r.titulo}" linkado dentro de Ofertas ativas`);
   }
+  assert.equal((html.match(/AGUARDANDO CONFIRMAÇÃO OFICIAL/g) || []).length,
+    ed0001.radarSemConfirmacao.length, 'um selo de status por item sem confirmação');
   assert.ok(html.includes('TL 65'), 'nota presente é exibida');
   assert.ok(html.includes('vence 17/07'));
 });
@@ -60,9 +64,11 @@ test('0001: narrativa do Predict no Sinal — probabilidade visível, sem seçã
   assert.ok(!html.includes('>PREDICT<'), 'sem janela alta-confiança não há teaser formal');
 });
 
-test('0001: Ofertas ativas — rota própria (Smiles → Smiles), CPM por milheiro, leitura em caps', () => {
+test('0001: Ofertas ativas — cards empilhados (nunca columns), rota própria, CPM por milheiro, leitura em caps', () => {
   const html = renderBeehiivHtml(ed0001);
   assert.ok(html.includes('<h2>Ofertas ativas</h2>'));
+  const secOfertas = html.slice(html.indexOf('<h2>Ofertas ativas</h2>'), html.indexOf('<h2>Vence em até 72h</h2>'));
+  assert.ok(!secOfertas.includes('data-type="columns"'), 'columns quebrava no parse do Beehiiv — cards empilhados');
   assert.ok(html.includes('Smiles → Smiles'), 'compra exibe o próprio programa — regra do operador');
   assert.ok(!html.includes('sem_destino'));
   assert.ok(!/→\s*sem destino/i.test(html));

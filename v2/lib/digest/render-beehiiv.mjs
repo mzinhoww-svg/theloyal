@@ -122,23 +122,42 @@ function contaBlock(conta, { onDark = false } = {}) {
   return rows + result;
 }
 
-/** Ofertas ativas (v4): rota legível + sublinha, %, CPM, leitura — columns, nunca <table>. */
-function ofertaAtivaRow(o) {
+/**
+ * Ofertas ativas (v4.1): CARD empilhado por oferta — nunca `columns` (o parse
+ * do Beehiiv quebrava as colunas e o milheiro vazava a margem, achado do
+ * operador na revisão visual). Linha 1: rota + % + milheiro; linha 2: tipo/
+ * público/TL/prazo; linha 3: selo de leitura.
+ */
+function ofertaAtivaCard(o) {
+  const linha1 = pRaw([
+    `<strong>${esc(rotaDisplay(o))}</strong>`,
+    mono(percentualLabel(o.percentual)),
+    o.cpm ? `${mono(o.cpm)} <span style="color: ${GRAY400}; font-size: 0.7rem">por milheiro</span>` : null,
+  ].filter(Boolean).join(' · '));
   const sub = [
     `${tipoLabel(o.tipo)}${o.publico ? ` (${o.publico})` : ''}`,
     o.nota !== null && o.nota !== undefined ? `TL ${o.nota}` : null,
     o.prazo ? `vence ${formatarDiaMes(o.prazo)}` : null,
   ].filter(Boolean).join(' · ');
-  const col0 = pRaw(`<strong>${esc(rotaDisplay(o))}</strong>`) + p(sub, { color: GRAY500, size: '0.75rem' });
-  const col2 = o.cpm
-    ? pRaw(`${mono(o.cpm)} <span style="color: ${GRAY400}; font-size: 0.7rem">por milheiro</span>`)
-    : p('—', { color: GRAY400, mono: true, size: '0.85rem' });
-  return columns([
-    { html: col0, width: '34%' },
-    { html: pRaw(mono(percentualLabel(o.percentual))), width: '14%' },
-    { html: col2, width: '22%' },
-    { html: verdictChip(o.leitura), width: '30%' },
-  ]);
+  const inner = linha1 + p(sub, { color: GRAY500, size: '0.8rem' }) + verdictChip(o.leitura);
+  return section(inner, { 'background-color': SURFACE, 'border-color': LINE, 'border-style': 'solid', 'border-width-top': 1, 'border-width-right': 1, 'border-width-bottom': 1, 'border-width-left': 1, 'padding-top': 12, 'padding-right': 14, 'padding-bottom': 12, 'padding-left': 14, 'margin-bottom': 10 });
+}
+
+/**
+ * Card de oferta AINDA SEM confirmação oficial — mesma seção "Ofertas ativas"
+ * (o leitor vê tudo que está valendo num lugar só, como o benchmark), com selo
+ * de status no lugar do selo de leitura. Fonte linkada obrigatória.
+ */
+function ofertaSemConfirmacaoCard(r) {
+  const linha1 = pRaw(link(r.url, `<strong>${esc(r.titulo)}</strong>`));
+  const sub = [
+    esc(r.detalhe || ''),
+    r.nota !== null && r.nota !== undefined ? `TL ${r.nota}` : null,
+    r.vence ? `vence ${esc(formatarDiaMes(r.vence))}` : null,
+  ].filter(Boolean).join(' · ');
+  const status = pRaw(`<span style="color: ${GRAY400}; font-family: ${MONO}; font-size: 0.7rem; font-weight: 700">AGUARDANDO CONFIRMAÇÃO OFICIAL</span> <span style="color: ${GRAY400}; font-size: 0.75rem">(${esc(r.fonte)})</span>`);
+  const inner = linha1 + p(sub, { color: GRAY500, size: '0.8rem' }) + status;
+  return section(inner, { 'background-color': PAPER, 'border-color': LINE, 'border-style': 'solid', 'border-width-top': 1, 'border-width-right': 1, 'border-width-bottom': 1, 'border-width-left': 1, 'padding-top': 12, 'padding-right': 14, 'padding-bottom': 12, 'padding-left': 14, 'margin-bottom': 10 });
 }
 
 /** Deals do dia (D-057) — inalterado na v4: numerado, contaProsa/leitura aditivos. */
@@ -159,17 +178,6 @@ function renderDeal(d, index) {
     p(d.source || '', { color: GRAY400, size: '0.8rem' }),
   ].join('');
   return section(inner, { 'background-color': SURFACE, 'border-color': LINE, 'border-style': 'solid', 'border-width-top': 1, 'border-width-right': 1, 'border-width-bottom': 1, 'border-width-left': 1, 'padding-top': 16, 'padding-right': 18, 'padding-bottom': 16, 'padding-left': 18, 'margin-bottom': 12 });
-}
-
-/** Item do radar sem confirmação, dentro da caixa do Sinal do dia. */
-function radarSemConfirmacaoItem(r) {
-  const partes = [
-    `${link(r.url, `<strong>${esc(r.titulo)}</strong>`)} — ${esc(r.detalhe)}`,
-    r.nota !== null && r.nota !== undefined ? mono(`TL ${r.nota}`, { color: GRAY700, size: '0.8rem' }) : null,
-    r.vence ? `<span style="color: ${GRAY500}; font-size: 0.85rem">vence ${esc(formatarDiaMes(r.vence))}</span>` : null,
-    `<span style="color: ${GRAY400}; font-size: 0.8rem">(${esc(r.fonte)})</span>`,
-  ].filter(Boolean);
-  return pRaw(partes.join(' · '));
 }
 
 /** Fecha Logo (v4): item da caixa amarela — lead em negrito + corpo + fonte. */
@@ -197,9 +205,10 @@ export function renderBeehiivHtml(ed) {
   if (metaBits.length) parts.push(p(metaBits.join(' · '), { color: GRAY400, mono: true, size: '0.8rem' }));
 
   // 2. Sinal do dia — divisor de seção (imagem) + caixa: manchete, item
-  // confirmado (números em negrito + fonte oficial), radar sem confirmação e
-  // narrativa do Predict. Sempre presente (signal é obrigatório no schema);
-  // os sub-blocos internos seguem a regra-mãe (sem dado = ausentes).
+  // confirmado (números em negrito + fonte oficial) e narrativa do Predict.
+  // v4.1: o radar sem confirmação SAIU desta caixa — o operador achou o rótulo
+  // "no radar, sem confirmação" confuso aqui; esses itens agora aparecem em
+  // Ofertas ativas como cards com selo de status explícito.
   parts.push(img(IMG_SECAO_SINAL, 'Sinal do dia'));
   const sinalInner = [heading(ed.signal || '', 3)];
   if (ed.resumoDoDia) {
@@ -208,20 +217,20 @@ export function renderBeehiivHtml(ed) {
       : '';
     sinalInner.push(pRaw(`<span style="color: ${GRAY700}">${boldNumbers(ed.resumoDoDia)}</span>${fonteOficial}`));
   }
-  const radar = Array.isArray(ed.radarSemConfirmacao) ? ed.radarSemConfirmacao : [];
-  if (radar.length > 0) {
-    sinalInner.push(pRaw(`<strong>No radar, ainda sem confirmação oficial:</strong>`));
-    for (const r of radar) sinalInner.push(radarSemConfirmacaoItem(r));
-  }
   if (ed.predictNarrativa?.texto) sinalInner.push(p(ed.predictNarrativa.texto, { color: GRAY700 }));
   parts.push(section(sinalInner.join(''),
     { 'background-color': PAPER_DARK, 'padding-top': 20, 'padding-right': 20, 'padding-bottom': 20, 'padding-left': 20, 'margin-bottom': 16 }));
 
-  // 3. Ofertas ativas — TODO item vivo com conta feita, sem corte de veredito.
-  if (Array.isArray(ed.ofertasAtivas) && ed.ofertasAtivas.length > 0) {
+  // 3. Ofertas ativas (v4.1) — TUDO que está valendo num lugar só, como o
+  // benchmark: itens confirmados (com conta feita e leitura TL) + itens ainda
+  // aguardando confirmação oficial (selo de status no lugar da leitura).
+  const ofertas = Array.isArray(ed.ofertasAtivas) ? ed.ofertasAtivas : [];
+  const radar = Array.isArray(ed.radarSemConfirmacao) ? ed.radarSemConfirmacao : [];
+  if (ofertas.length > 0 || radar.length > 0) {
     parts.push(heading('Ofertas ativas', 2));
-    parts.push(p('O que está valendo hoje, com a conta feita e a leitura TL:', { color: GRAY500 }));
-    for (const o of ed.ofertasAtivas) parts.push(ofertaAtivaRow(o));
+    parts.push(p('Tudo que está valendo hoje. Oferta confirmada no site oficial sai com a conta feita e a leitura TL; as demais aparecem com o selo "aguardando confirmação oficial" até a regra ser confirmada.', { color: GRAY500 }));
+    for (const o of ofertas) parts.push(ofertaAtivaCard(o));
+    for (const r of radar) parts.push(ofertaSemConfirmacaoCard(r));
   }
 
   // 4. Deals do dia — REGRA-MÃE: deals.length === 0 → seção OMITIDA por completo.

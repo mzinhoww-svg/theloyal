@@ -117,10 +117,14 @@ test('dia-forte: Sinal do dia funde resumoDoDia com números em negrito + link f
   assert.ok(html.includes('>fonte oficial</a>'));
 });
 
-test('dia-forte: radar sem confirmação dentro do Sinal do dia — título linkado, TL quando há nota', () => {
+test('dia-forte: v4.1 — radar sem confirmação vira cards em Ofertas ativas com selo de status', () => {
   const html = renderEmail(diaForte);
-  assert.ok(html.includes('No radar, ainda sem confirmação oficial:'));
-  assert.ok(html.includes('Coalizão de varejo: bônus de transferência anunciado em rede social'));
+  assert.ok(!html.includes('No radar, ainda sem confirmação oficial'), 'rótulo confuso removido (achado do operador)');
+  const iOfertas = html.indexOf('Ofertas ativas');
+  const iItem = html.indexOf('Coalizão de varejo: bônus de transferência anunciado em rede social');
+  const iDeals = html.indexOf('Deals do dia');
+  assert.ok(iItem > iOfertas && iItem < iDeals, 'item sem confirmação dentro da seção Ofertas ativas');
+  assert.ok(html.includes('AGUARDANDO CONFIRMA&Ccedil;&Atilde;O OFICIAL'));
   assert.ok(html.includes('TL 61'));
   assert.ok(html.includes('(pontospravoar)'));
 });
@@ -193,9 +197,11 @@ test('dia-fraco: Fecha Logo lista os 3 itens VENCE HOJE com fonte linkada', () =
   assert.ok(html.includes('Banco do Nordeste → Azul Fidelidade'));
 });
 
-test('dia-fraco: radar sem confirmação dentro do Sinal do dia com os 4 itens e vencimentos', () => {
+test('dia-fraco: v4.1 — itens sem confirmação em Ofertas ativas (4 selos), vencimentos preservados', () => {
   const html = renderEmail(diaFraco);
-  assert.ok(html.includes('No radar, ainda sem confirmação oficial:'));
+  assert.ok(!html.includes('No radar, ainda sem confirmação oficial'));
+  assert.equal((html.match(/AGUARDANDO CONFIRMA&Ccedil;&Atilde;O OFICIAL/g) || []).length,
+    diaFraco.radarSemConfirmacao.length, 'um selo de status por item sem confirmação');
   assert.ok(html.includes('até 110% de bônus'));
   assert.ok(html.includes('Flying Blue: até 45% OFF'));
   assert.ok(html.includes('vence 28/07'));

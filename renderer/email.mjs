@@ -6,12 +6,13 @@
 // §0/§7. D-052(4) ratificou content/edition.schema.json como canônico e este
 // arquivo como o que realinha, não o contrário.
 //
-// v4 (D-059, formato aprovado pelo operador): MESMA estrutura de conteúdo do
+// v4.1 (D-059, formato aprovado pelo operador): MESMA estrutura de conteúdo do
 // render-beehiiv.mjs — imagens de template full-width (<img> é permitido em
 // e-mail), Sinal do dia como caixa com item confirmado (números em negrito +
-// fonte oficial) + radar sem confirmação + narrativa do Predict, Ofertas
-// ativas com rota legível (rotaDisplay: compra/clube exibe o próprio programa,
-// nunca "sem destino") e CPM, Fecha Logo como caixa amarela (fill yellow-100,
+// fonte oficial) + narrativa do Predict, Ofertas ativas com TUDO que está
+// valendo (confirmadas com leitura TL + itens aguardando confirmação oficial
+// com selo de status), rota legível (rotaDisplay: compra/clube exibe o próprio
+// programa, nunca "sem destino") e CPM, Fecha Logo como caixa amarela (fill yellow-100,
 // borda yellow-500 — amarelo nunca como texto), Cartões e bancos por item com
 // fonte linkada e intro EXPLICA_SEM_NOTA, Clipping ordenado por relevância e
 // SEM rótulo de tier (jargão interno não vaza, D-059), O que fechou com nomes
@@ -125,15 +126,21 @@ ${leituraTexto ? `${eyebrow("Leitura", MUT)}${sp(4)}${para(leituraTexto, 13, SOF
 </td></tr></table>`;
 }
 
-// Radar sem confirmação (v4): item dentro da caixa do Sinal do dia.
-function radarSemConfirmacaoItem(r) {
-  const partes = [
-    `${aLink(r.url, `<strong>${esc(r.titulo)}</strong>`, INK)} — ${esc(r.detalhe)}`,
-    r.nota !== null && r.nota !== undefined ? mono(`TL ${r.nota}`, 12, SOFT) : null,
-    r.vence ? `<span style="font-size:12px; color:${MUT};">vence ${esc(formatarDiaMes(r.vence))}</span>` : null,
-    `<span style="font-size:12px; color:${MUT};">(${esc(r.fonte)})</span>`,
-  ].filter(Boolean);
-  return `${paraRaw(partes.join(" &middot; "), 13, SOFT)}${sp(6)}`;
+// Oferta ainda SEM confirmação oficial (v4.1) — card na MESMA seção "Ofertas
+// ativas" (o leitor vê tudo que está valendo num lugar só), com selo de status
+// no lugar da leitura TL. Fonte linkada obrigatória.
+function ofertaSemConfirmacaoCard(r) {
+  const sub = [
+    esc(r.detalhe || ""),
+    r.nota !== null && r.nota !== undefined ? `TL ${r.nota}` : null,
+    r.vence ? `vence ${esc(formatarDiaMes(r.vence))}` : null,
+  ].filter(Boolean).join(" &middot; ");
+  const status = `<span style="font-family:'Courier New',Courier,monospace; font-size:10px; color:${MUT}; letter-spacing:1px; font-weight:bold;">AGUARDANDO CONFIRMA&Ccedil;&Atilde;O OFICIAL</span> <span style="font-family:Arial,sans-serif; font-size:11px; color:${MUT};">(${esc(r.fonte)})</span>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${HAIR}; background-color:${PAPER}; margin-bottom:8px;"><tr><td style="padding:10px 14px;">
+${paraRaw(aLink(r.url, `<strong>${esc(r.titulo)}</strong>`, INK), 13, INK)}
+${paraRaw(sub, 11, MUT)}${sp(4)}
+${status}
+</td></tr></table>`;
 }
 
 // Fecha Logo (v4): item da caixa amarela — lead em negrito + corpo + fonte.
@@ -199,8 +206,9 @@ ${ed.illustrative ? `<div style="font-family:Arial,sans-serif; font-size:12px; c
 </td></tr>`);
 
   // 2. Sinal do dia — divisor de seção (imagem) + caixa: manchete, item
-  // confirmado (números em negrito + fonte oficial), radar sem confirmação e
-  // narrativa do Predict. Sub-blocos sem dado ficam ausentes (regra-mãe).
+  // confirmado (números em negrito + fonte oficial) e narrativa do Predict.
+  // v4.1: o radar sem confirmação SAIU desta caixa (rótulo confuso, achado do
+  // operador) — os itens agora entram em Ofertas ativas com selo de status.
   P.push(templateImg(IMG_SECAO_SINAL, "Sinal do dia"));
   const sinalPartes = [
     `<p style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:21px; line-height:1.35; color:${INK}; font-weight:bold;">${esc(ed.signal || "")}</p>`,
@@ -211,20 +219,25 @@ ${ed.illustrative ? `<div style="font-family:Arial,sans-serif; font-size:12px; c
       : "";
     sinalPartes.push(`${sp(10)}${paraRaw(`${boldNumbers(ed.resumoDoDia)}${fonteOficial}`, 15, SOFT)}`);
   }
-  const radarSemConfirmacao = Array.isArray(ed.radarSemConfirmacao) ? ed.radarSemConfirmacao : [];
-  if (radarSemConfirmacao.length > 0) {
-    sinalPartes.push(`${sp(12)}${paraRaw(`<strong>No radar, ainda sem confirmação oficial:</strong>`, 14, INK)}${sp(6)}`);
-    sinalPartes.push(radarSemConfirmacao.map(radarSemConfirmacaoItem).join(""));
-  }
   if (ed.predictNarrativa && ed.predictNarrativa.texto) {
     sinalPartes.push(`${sp(6)}${para(ed.predictNarrativa.texto, 14, SOFT)}`);
   }
   P.push(`<tr><td style="padding:22px 32px; background-color:${PANEL2}; border-bottom:1px solid ${HAIR};">${sinalPartes.join("")}</td></tr>`);
 
-  // 3. Ofertas ativas (§1.1) — TODO item vivo com conta feita.
+  // 3. Ofertas ativas (v4.1) — TUDO que está valendo num lugar só: confirmadas
+  // (tabela com conta feita e leitura TL) + itens aguardando confirmação
+  // oficial (cards com selo de status).
   const ofertasAtivas = Array.isArray(ed.ofertasAtivas) ? ed.ofertasAtivas : [];
-  if (ofertasAtivas.length > 0) {
-    P.push(sectionRow(18, `${eyebrow("Ofertas ativas")}${sp(6)}${para("O que está valendo hoje, com a conta feita e a leitura TL:", 13, MUT)}${sp(8)}${ofertasAtivasTable(ofertasAtivas)}`));
+  const radarSemConfirmacao = Array.isArray(ed.radarSemConfirmacao) ? ed.radarSemConfirmacao : [];
+  if (ofertasAtivas.length > 0 || radarSemConfirmacao.length > 0) {
+    const intro = 'Tudo que está valendo hoje. Oferta confirmada no site oficial sai com a conta feita e a leitura TL; as demais aparecem com o selo "aguardando confirmação oficial" até a regra ser confirmada.';
+    const blocos = [
+      eyebrow("Ofertas ativas"), sp(6), para(intro, 13, MUT), sp(8),
+      ofertasAtivas.length > 0 ? ofertasAtivasTable(ofertasAtivas) : "",
+      ofertasAtivas.length > 0 && radarSemConfirmacao.length > 0 ? sp(10) : "",
+      radarSemConfirmacao.map(ofertaSemConfirmacaoCard).join(""),
+    ].join("");
+    P.push(sectionRow(18, blocos));
   }
 
   // 4. Deals do dia — omitido POR COMPLETO quando deals=[] (sem título, sem card).
