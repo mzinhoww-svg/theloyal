@@ -52,6 +52,27 @@ confirma que a **camada temporal do corpus está corrompida**:
   trava de anomalia + dry-run. **A origem (edge fn) precisa de correção também**, senão
   a limpeza histórica não dura.
 
+**Plano aprovado pelo operador (D-041/D-042/D-043) — ordem travada:**
+1. **Corrigir a origem PRIMEIRO** (edge fn `campaigns`): validar data, passar
+   `published_at` ao prompt, `id` sem data embutida, dedup por identidade estável. **Não
+   pode regredir o `daily` limpo** — testa contra casos que funcionam E que falham.
+2. **Só então reconstruir o histórico** (regra de ano por evidência, dry-run + amostra
+   auditável dos dois grupos, aprovação sobre a amostra, trava de anomalia).
+3. `suspect_year`/`sem_data` = **marca e exclui da série, NÃO deleta** do corpus (D-042).
+4. **Fronteira do predict v1** = número só para **~17 rotas / ~24 meses**; qualitativo no
+   resto; datada e auto-expansível (D-043).
+- **Duas aprovações do operador** antes de qualquer escrita na camada temporal: (a) a
+  correção da edge fn; (b) a regra de reconstrução.
+- **Calibração de params do predict destrava** (D-040 Parte B) só após a reconstrução,
+  quando houver série confiável para calibrar contra.
+
+**Impacto nos outros chats (ler):**
+- **Calibração:** se usou datas para qualquer coisa (percentil histórico, span), a janela
+  confiável é **~24 meses (2024-07 → 2026-07)**, não os 34 do bruto. Reavaliar inputs
+  temporais.
+- **Principal:** qualquer coisa que dependa de data de campanha herda essa limitação até
+  a reconstrução rodar.
+
 **Impacto nos outros chats:** a **calibração de score** também pode estar usando datas
 ruins (percentil histórico, re-score D-007/D-038 dependem de série temporal). O chat de
 calibração precisa checar se seus inputs temporais passam pela mesma plausibilidade antes

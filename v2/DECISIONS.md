@@ -246,5 +246,25 @@ Trava de natureza do `campaign_predict_v2` (`lib/predict-engine.ts`, RFC-009). *
 
 **Parte B — precondição de integridade temporal (bloqueante).** **Nenhum parâmetro do predict é calibrado contra backtest enquanto a camada temporal não for confiável.** O walk-forward já previne vazamento de futuro; o problema é outro: a `AUDITORIA-FORENSE-PREDICT-FORECAST.md` confirma erro de ano sistemático (77% das transferências com evento >180 d antes do `first_seen`, média +310 d) e proveniência confiável só desde 2025-12. Calibrar sobre essas datas é **otimizar para ruído** — proibido pela mesma lógica da D-014 ("score sobre base suja é lixo com casas decimais") e pela regra do próprio operador: **"backtest mal desenhado mente pior que não ter backtest".** `suspect_year` bloqueia **sem autocorrigir** (INV-16 aplicado ao tempo; a data pode legitimamente ser de campanha antiga — proveniência valida, não substitui). A calibração de params do predict fica **travada** até a slice de plausibilidade temporal (ADR-RADAR-010) fechar e as datas serem confiáveis.
 
+## D-041 — Correção temporal em duas fases: origem (edge fn) ANTES do histórico; duas aprovações antes de qualquer escrita
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Predict (chat dedicado) · Origem: diagnóstico do Agente 1
+
+O bug de ano está **vivo na extração** (edge fn `campaigns` v13; +246 transferências novas corrompidas desde a auditoria, a mais recente ainda errada). Reconstruir ~24 meses de histórico enquanto a origem corrompe é **enxugar gelo**. Ordem de execução travada:
+
+1. **Prioridade 1 — corrigir a origem (edge fn):** validar data na extração; passar `published_at` ao prompt; `id` **sem data embutida**; dedup por **identidade estável** (não `id`-com-data). Estanca o sangramento. **Restrição:** não pode regredir a coleta que já funciona — o caminho `daily` está limpo hoje; a correção é testada contra os casos que **funcionam** (daily limpo) **e** os que falham (`auto`), e verificada numa **amostra pós-deploy** (notícias novas nascem com data válida).
+2. **Prioridade 2 — reconstruir o histórico** só depois de a origem estar estancada.
+
+**Duas paradas de aprovação do operador antes de escrever na camada temporal:** (a) a correção da edge fn (propõe → revisa → dry-run/teste → deploy → verifica amostra); (b) a regra de reconstrução (§D abaixo). Nenhuma escrita na fundação sem essas duas aprovações. Mesma disciplina da canonicalização do M1: dry-run → amostra → aprovação → grava.
+
+## D-042 — `suspect_year`/`sem_data` = exclusão da série temporal, NÃO deleção do corpus
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Predict · Origem: diagnóstico do Agente 1
+
+Os ~202 corrompidos sem evidência de ano + os 191 sem data **não são apagados**. Ficam **marcados** (`suspect_year`/`sem_data`) e **saem da série temporal confiável**, mas **permanecem no corpus** para usos que não dependem de data precisa (matcher de identidade, contagem grosseira de ocorrências) e para reprocessamento futuro (se surgir outra evidência de ano). Drop físico perde informação recuperável. Mesma filosofia do backup e da fila de revisão: **marca e exclui do uso sensível, não deleta.**
+
+## D-043 — Fronteira do predict v1: número só onde há base; datada e auto-expansível
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Predict · Origem: diagnóstico do Agente 1
+
+Pós-reconstrução, o predict v1 fala com **probabilidade numérica** só para as **~17 rotas** com `base_n≥3` e série ≥12m dentro da janela confiável (**~24 meses**, 2024-07 → 2026-07). Todo o resto é **rótulo qualitativo** ("padrão recorrente, base insuficiente") — a regra de honestidade do D-040/brief. Vai ao público com essa moldura: o Pro **não promete previsão de tudo**; promete previsão honesta onde há base e **diz onde não há**. A fronteira é **datada** e **se expande sozinha** conforme a série confiável cresce (com a origem já corrigida), sem mexer no código. É a decisão de produto mais importante do predict v1.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** Backup `campaigns_bkp_prev2_20260716` retido **até o re-score (R1) confirmar em escala que a canonicalização não precisa de rollback**.
