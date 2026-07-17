@@ -1,387 +1,309 @@
-# M2 · Slice — Digest Engine (SPEC, antes de código) — v2 (emenda do operador)
+# M2 · Slice — Digest Engine (SPEC, antes de código) — v3 (revisão estrutural do operador)
 
-> **Gate de entrada:** vetores fechados (P1 aplicada e revisada — mediana 58, ≥70 8,9%,
-> n=1.996, zero regressão nos 1.334 `conta_nao_calculavel`). **Modo: build, spec primeiro.**
-> GSD2 (Milestone > Slice > Task), must-haves verificáveis, resumo por slice
-> (`gsd-output-formatter`), `structured-dev-workflow` no commit. Nenhum código nesta
-> entrega — spec + decisões para ratificar. **Não liga auto-publish, não estreia o Daily**
-> — isso só depois do gate 5.5 passar nos dois casos (com/sem Deal Desk) e 5 dias
-> consecutivos de aprovação de 1 clique (D-050 decisão 3, ainda em vigor).
+> **Gate de entrada:** vetores fechados (P1 aplicada e revisada). **Modo: spec primeiro, não
+> código.** Esta rodada **reabre o contrato** (`SPEC-SLICE-DIGEST-ENGINE.md` +
+> `content/edition.schema.json`) — não é ajuste incremental sobre a v2. **Zero escrita em
+> produção nesta entrega.** O rascunho já criado no Beehiiv (`post_f7b2c959-...`, D-056)
+> **fica parado** até esta spec fechar e o Digest Engine ser reconstruído sobre ela — não
+> republicar/reenviar nada enquanto isto está aberto.
 >
-> **v2 desta spec (commit anterior `9c39ffc`) incorpora a emenda do operador:** patch do
-> `scoreBreakdown` aprovado (deixa de ser decisão aberta); S1-D1/D2/D3 do template
-> ratificados agora (formalizados como D-052, ver `DECISIONS.md`); dois blocos novos no
-> dia fraco (Clipping, Resumo do dia) com ordem revisada; Loyalty Lab muda de "sempre
-> humano" para "automatizável por corte de score, com dependência de Ledger mapeada
-> abaixo — registrada como dívida, não bloqueante"; seleção diferencia TIER 1 (Deal Desk)
-> de TIER 2 (blocos narrativos). Tudo formalizado em D-053. Continua sendo **spec — zero
-> código, zero escrita em produção.**
+> **Histórico:** v1 (`9c39ffc`) → v2 (`4762eb8`, emenda 1: scoreBreakdown, Clipping+Resumo do
+> dia, Loyalty Lab por score, TIER2 narrativo — formalizada em D-052/D-053/D-054, **código já
+> construído e commitado** sobre a v2). **v3 (esta revisão) muda a estrutura visível da
+> edição inteira** — a referência colada pelo operador é **especificação de estrutura, não
+> de conteúdo literal** (aviso explícito do operador, respeitado aqui: nenhum texto de
+> exemplo do prompt vira conteúdo publicável).
 
 ---
 
-## 0. O que o Digest Engine é (e o que já existe para ele consumir)
+## 0. O que já existe e continua valendo (não reabre)
 
-O Digest Engine **renderiza a edição Daily a partir do que já está gravado no banco** —
-não calcula nada (INV-12: score, CPM, percentil já são determinísticos e vivem em
-`campaigns`). O trabalho dele é **seleção + montagem + contrato de saída**, três
-funções puras + um passo de render, todas testáveis com golden files.
+Princípios que não mudam nesta revisão — só a estrutura de blocos muda:
 
-**Estado real do dia, medido agora (não hipotético — é o dado vivo pós-P1):**
-
-```sql
-vivo (estado ∈ ativa/detectada/ultimos_dias):        54
-  · com tier=1 (TIER 1 confirmado):                    1
-    · com tl_score_bruto não-null (conta computável):  1
-      · com veredito_bruto ∈ {Vale agir, Vale olhar}:  0
-```
-
-**Hoje É um dia fraco, de verdade** — não um caso de teste sintético. O único item que
-passa os três portões (D-044) é `smiles-desconhecido-compra-2026-07-17`, bruto **55 "Só
-para casos específicos"**, vence hoje. Pelo D-050 decisão 1 ("não estreia com item
-morno"), isso **não é** Deal Desk. Isso confirma exatamente por que a regra 5 (dia fraco
-como estado de estreia, não fallback) é a prioridade real desta spec, não um exercício
-acadêmico — é o que a engine vai renderizar se ligada agora.
-
----
-
-## 1. Seleção e montagem — como o Digest Engine escolhe e monta os itens
-
-### 1.1 Fonte única de leitura: `campaigns` + `news_raw` (mais `campanha_fontes` quando encher — INV-02)
-
-Nenhuma tabela nova. O engine lê `campaigns` (join `campanha_fontes` quando aplicável) e
-aplica os **três portões do D-044** como filtro determinístico, **recomputado no momento
-da montagem** (nunca confia em um cache de "é Deal Desk" gravado antes):
-
-1. **Estado vivo:** `estado IN ('ativa','detectada','ultimos_dias')`.
-2. **TIER 1 confirmado:** hoje `tier = 1` (dívida INV-02 registrada — quando
-   `campanha_fontes` encher, o critério migra para lá sem mudar o contrato de saída).
-3. **Conta computável:** `tl_score_bruto IS NOT NULL` (D-050.1 já garante que
-   `conta_nao_calculavel` nunca chega aqui com número).
-
-**Emenda (D-053): TIER 2 sobe de importância, mas só para os blocos narrativos.** Os três
-portões acima + o corte de veredito (§1.2) continuam **exclusivos de TIER 1** para Deal
-Desk — isso não muda. Mas os blocos do dia fraco que são **conteúdo editorial, não
-recomendação acionável** (Clipping, Resumo do dia, Loyalty Lab — §2.3) podem puxar de
-**TIER 2**: `news_raw` (todas as fontes ativas são TIER 2 hoje — `melhorescartoes`,
-`melhoresdestinos`, `passageirodeprimeira`, `pontospravoar`, mais `tavily`) e de
-`campaigns` com `tier=2`, sem exigir os três portões nem o corte de veredito. A
-justificativa: TIER 2 já chega com boa parte da apuração feita (jornalismo/blog
-especializado real, não boato) — não serve para "isto é uma oferta que vale agir", mas
-serve de sobra para "isto aconteceu hoje no mercado" (Clipping/Resumo) ou "este é o
-padrão que observamos" (Loyalty Lab). **Continua valendo INV-01** (toda afirmação carrega
-fonte + data) mesmo nos blocos TIER 2 — a barra que cai é a de corroboração TIER 1, não a
-de proveniência.
-
-### 1.2 Corte de Deal Desk — os três portões não bastam sozinhos
-
-Passar os três portões torna o item **elegível para a listagem geral** (confirmado,
-vivo, com conta) — **não** torna elegível para **Deal Desk**. O corte de Deal Desk é o
-**veredito**: `veredito_bruto IN ('Vale agir', 'Vale olhar')` (D-050 decisão 1 — "Só para
-casos específicos" e abaixo nunca é card de estreia, mesmo vivo/TIER1/com conta). Isso é
-o que torna o "dia fraco" de hoje real: o único item elegível pelos 3 portões (bruto 55)
-**não** cruza este quarto corte.
-
-### 1.3 Ranking e cap
-
-Dos elegíveis a Deal Desk: ordenar por `tl_score_bruto DESC`; empate quebrado por
-`vigencia_fim ASC` (o que vence primeiro sobe — urgência é informação, não só valor).
-**Cap de 3** (brief + S1-D3, **ratificada — D-052**: cap de 3, sem corte silencioso). Se
-houver >3 elegíveis, o engine grava quantos ficaram de fora no relatório de montagem
-(não descarta em silêncio).
-
-### 1.4 Fecha Logo — eixo diferente de Deal Desk
-
-`fechaLogo[]` não usa o corte de veredito — usa **urgência**: `estado = 'ultimos_dias'`
-(vence em ≤72h, já é o gatilho que move o FSM para esse estado), **com ou sem** ser
-"Vale agir/olhar". É avisar o leitor que algo vivo está acabando, mesmo que não seja uma
-recomendação forte — por isso o item de bruto 55 de hoje **pode** aparecer em Fecha Logo
-(ele vence hoje) mesmo **não** aparecendo em Deal Desk. São seções com critérios
-diferentes, isso é intencional, não inconsistência.
-
-### 1.5 Mapeamento DB → contrato (função pura, golden-testável)
-
-Dois achados de tradução que o engine precisa resolver — nenhum é cálculo, são mapas
-determinísticos 1:1:
-
-**(a) Veredito: rótulo do banco → enum do schema.** `veredito_bruto` grava rótulos em
-português (`'Vale agir'`, `'Vale olhar'`, `'Só para casos específicos'`, `'Esperaria'`,
-`'Evitaria'`, `'Não confirmado'`); `content/edition.schema.json` (`$defs/verdict`) espera
-kebab-case (`vale-agir`, `vale-olhar`, `casos-especificos`, `esperaria`, `evitaria`,
-`nao-confirmado`). Precisa de **um mapa fixo, testado, sem fallback silencioso** (rótulo
-fora do mapa = erro, nunca "Não confirmado" por default).
-
-**(b) `scoreBreakdown` do schema NÃO batia com o engine real — patch APROVADO (D-052).**
-O `$defs/scoreBreakdown` do `content/edition.schema.json` descrevia um modelo de **8
-critérios** (`valor/regra/vigencia/friccao/aplicabilidade/liquidez/estoque/fontes`, pesos
-25/15/15/10/10/10/10/5) — **resíduo do modelo antigo** (pré-`score.mjs`, quando o TL
-Score chegava pronto do LLM). O engine real (`lib/score.mjs`, SLICE-4, o que a P1 acabou
-de corrigir) tem **4 componentes**: `percentil/eficiencia/raridade/abrangencia`, pesos
-`.45/.30/.15/.10` (`score_pesos.v1`), cada um com `{valor, valor_bruto, base_n, peso,
-peso_efetivo, janela}`. **Aprovado aplicar o patch aditivo agora**: novo
-`$defs/scoreBreakdown` de 4 campos (o shape real acima), versionado
-(`schemaVersion` sobe), sem remover o campo antigo de edições já publicadas que o usem
-(se houver — aditivo, não destrutivo). Isto deixa de ser decisão aberta; entra no
-escopo de código desta slice.
+- **INV-12 (determinismo primeiro):** o engine nunca calcula; lê `campaigns`/`news_raw` já
+  processados. LLM redige, nunca decide número.
+- **D-044 (3 portões):** estado vivo + TIER 1 confirmado + conta computável = elegível à
+  listagem geral. **Continua sendo o filtro-base de tudo que não é puramente evergreen.**
+- **D-050 decisão 1:** corte de veredito (`Vale agir`/`Vale olhar`) é o que separa
+  "recomendação" de "informação" — nenhum item mais fraco vira card de recomendação ativa,
+  mesmo em formato novo.
+- **D-045/D-049:** TIER 1 corrobora os TERMOS, não só a existência. Vocabulário de veredito
+  (`Vale agir`, `Vale olhar`, `Só para casos específicos`, `Esperaria`, `Evitaria`, `Não
+  confirmado`) é **grafia fixa** (CLAUDE.md) — fonte única em `veredito_bruto`/
+  `mapear-contrato.mjs`.
+- **Regra-mãe (regra 5 / §2.1 da v2):** seção sem dado real é **omitida**, nunca vazia nem
+  parcial. Aplica-se a **cada bloco novo** desta revisão, sem exceção.
+- **Módulos puros já construídos e testados** (`v2/lib/digest/`): `selecionar.mjs`
+  (`passaTresPortoes`, `elegivelDealDesk`, `selecionarDealDesk`, `selecionarFechaLogo`),
+  `mapear-contrato.mjs` (veredito + scoreBreakdown), `dia-fraco.mjs` (Clipping, Radar, Radar
+  VPM, Sinais rápidos, score de automação do Loyalty Lab), `gate-5-5.mjs`. **Reaproveitados
+  nesta revisão sempre que o contrato novo permitir** — mapa exato no §6.
 
 ---
 
-## 2. Caso "dia fraco" — estado de estreia, não fallback
+## 1. Estrutura nova (ordem da referência do operador — estrutural, não literal)
 
-### 2.1 Regra-mãe (regra 5): seção sem conteúdo é omitida, nunca vazia
+### 1.0 Sinal do dia (prosa, veredito do dia) — **sem mudança**
 
-Quando `deals.length === 0` pós-corte (§1.2), a **seção Deal Desk inteira é omitida do
-render** — sem título, sem card vazio, sem placeholder. O mesmo vale para qualquer outra
-seção opcional sem dado real (§2.3). Isto já está desenhado no template
-(`SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md` §4) — o Digest Engine só precisa alimentar o
-renderer com `deals: []` e o comportamento de omissão já existe.
+Continua exatamente como na v2 (§2.2): obrigatório sempre, prosa com número real, nunca
+genérico. `mapear-contrato.mjs` e o gate 5.5 já cobrem isto.
 
-### 2.2 Sinal do Dia carrega a honestidade — com a conta, não só a afirmação
+### 1.1 Ofertas ativas (NOVA — tabela, todas as ofertas vivas) — **reaproveita `passaTresPortoes`, zero query nova**
 
-`signal` é **obrigatório sempre** (schema já trava isso). No dia fraco, não pode ser
-genérico ("hoje não há ofertas boas") — precisa citar **o que foi avaliado e por que não
-passou**, com número real. Usando o dado de hoje como exemplo do que o texto deve conter:
-*"Hoje X candidatos vivos passaram pela régua; N tinham TIER 1 confirmado; desses, 1
-teve conta fechada — bruto 55, banda 'Só para casos específicos'. Abaixo do corte de
-Deal Desk (Vale olhar/Vale agir)."* Isso é **gerado pelo LLM a partir dos números que o
-engine já calculou** (redige, nunca calcula — INV-12); o gate 5.5 verifica que o texto
-referencia pelo menos um número/candidato real, não é template solto (§3.2).
+**Achado central desta seção: não precisa de seletor novo.** "Todo item vivo com conta
+computável" é literalmente a definição de `passaTresPortoes` (D-044) **sem** o corte de
+veredito (§1.2 da v2) aplicado por cima. Hoje isso é **1 linha** (o mesmo item de
+`smiles-desconhecido-compra-2026-07-17`, bruto 55) — porque hoje só 1 candidato passa os 3
+portões. A tabela é estruturalmente `passaTresPortoes(c) === true` para todo `c` em
+`campaigns` vivo, **sem filtrar por `elegivelDealDesk`**.
 
-### 2.3 O que entra no lugar — só dado real, nunca enchimento
+**Colunas propostas:** Programa/rota (`origem_code`→`destino_code` ou só `origem_code` para
+`lado_unico`), Tipo (`tipo`, taxonomia D-001), Bônus/preço (`percentual` formatado), Prazo
+(`vigencia_fim` ou "sem data" se vigência indeterminada), Leitura (ver decisão de rótulo
+abaixo).
 
-Regra dura: **cada bloco alternativo só entra se tiver dado real por trás; se não tiver,
-é omitido também** (a regra 2.1 se aplica recursivamente). Nenhum bloco é gerado só para
-preencher espaço. **Ordem revisada pelo operador (D-053):** Resumo do dia → Clipping →
-Radar → Radar VPM → Sinais rápidos → Loyalty Lab.
+**Decisão nomeada — rótulo da coluna "Leitura":** a referência do operador usa
+`Barato/Vale-olhar/Caro/Observar` (4 termos) — **diferente** do vocabulário canônico de
+`veredito_bruto` (5 termos: `Vale agir/Vale olhar/Só para casos específicos/Esperaria/
+Evitaria`), que é **grafia fixa** travada em CLAUDE.md e em `mapear-contrato.mjs`
+(D-045/D-049). Proposta: **reusar o vocabulário canônico direto na tabela** (`Vale agir`,
+`Vale olhar`, `Só para casos específicos`, `Esperaria`, `Evitaria` — mesmos rótulos que
+aparecem em Deals do dia), em vez de criar um segundo vocabulário paralelo para a mesma
+informação. Dois vocabulários para o mesmo dado (`veredito_bruto`) convidam divergência
+("por que a tabela diz Caro e o Deal diz Evitaria pro mesmo item?") e diluem o ativo de
+marca que é esse vocabulário. **Ratificar reuso do vocabulário canônico, ou confirmar os 4
+termos novos da referência como rótulo compacto oficial de tabela** (nesse caso preciso do
+mapa exato veredito→rótulo compacto, incluindo o que "Não confirmado" vira numa tabela).
 
-0. **Resumo do dia** — síntese editorial curta (2–4 frases) do que aconteceu no mercado
-   hoje, **distinta do Sinal do Dia** (que é veredito: "avaliamos X, nenhum passou o
-   corte"). Resumo do dia é contexto: "o que rolou" no ecossistema de pontos/milhas hoje,
-   sem julgar se algo é oferta ou não. Fonte: `news_raw` do dia (TIER 2, §1.1) +
-   `campaigns` extraídas. **Prosa, não lista** — por isso é bloco próprio, separado do
-   Clipping (item 1). Gate 5.5 verifica que cada afirmação factual do texto (evento, %,
-   programa citado) tem correspondente rastreável em `news_raw`/`campaigns` do dia
-   (mesmo princípio do INV-03, aplicado à prosa, não só a números soltos).
-1. **Clipping** (bloco novo, D-053) — lista de **≥5** notícias relevantes do dia, cada
-   uma com **resumo próprio de 1 linha** (nunca reprodução do texto de terceiro, INV-04),
-   link canônico e fonte+tier visível. Fonte: `news_raw` (TIER 2), filtrado por
-   relevância determinística (fetched_at = hoje; source ∈ news_sources ativas; dedup por
-   `content_hash`). **Piso rígido de 5 — não preenche com menos.** Medido agora: hoje
-   haveria 57 candidatos brutos no dia (`news_raw` de hoje, 4 fontes RSS + tavily),
-   folga larga acima do piso — mas o piso é o que importa no dia realmente seco, não o
-   volume de hoje. **Seção própria, não parte do Resumo do dia** — formatos diferentes
-   (lista de itens rastreáveis individualmente vs. prosa síntese) pedem checks de gate
-   diferentes (§3.3), e misturar dificultaria auditar "cada link tem resumo próprio, não
-   cópia" isoladamente. **Proposta de posição na ordem:** logo depois do Resumo do dia —
-   o leitor recebe a síntese primeiro (o que importa, em 5min, promessa da marca) e os
-   links de apoio a seguir, antes das seções prospectivas (Radar/Sinais/Lab). Ratificar
-   ou preferir Clipping antes do Resumo (itens crus primeiro, síntese depois)?
-2. **Radar (`predicoes[]` / `radar.windows[]`)** — já existe no schema como **opcional
-   com fallback** (REQ-32) e já tem fonte real (`content/forecast.json`, motor de
-   recorrência). Se há janelas com `confidence` e `basis` reais, entram. Se
-   `predicoes[]` vier vazio (`base_n` insuficiente), a seção some — não publica
-   projeção sem lastro (`base_n>=3` e série `>=12 meses`).
-3. **`shoppingWatch[]`** (Radar VPM) — dado real (`shopping_metrics`, 189 linhas
-   populadas). Mesma regra: sem amostra suficiente (`vpmObservado='n/c'` sem
-   `sampleN`), o item específico some da lista, não aparece com "n/c" vazio.
-4. **Sinais rápidos** — itens que passam os 3 portões (§1.1) mas **não** o corte de
-   veredito (ex.: o bruto 55 de hoje) — listados **sem chip de veredito de Deal Desk**
-   (nunca "Vale olhar"/"Vale agir" — evita o leitor confundir sinal fraco com
-   recomendação). É transparência ("isto existe, não recomendamos"), não teaser.
-5. **Loyalty Lab** — o único bloco **editorial/narrativo** (não numérico/lista) da
-   lista. Análise curta ancorada em padrão real observado (ex.: por que a janela de
-   calendário está seca — ligando ao achado do D-051). Fonte: TIER 1 ou TIER 2 (§1.1),
-   mais o histórico de padrões já resolvidos no Ledger quando existir (§2.4). **Gate de
-   automação redesenhado — ver §2.4.**
+**Cruzamento com D-045:** só entra na tabela o que já é TIER 1 confirmado (é isso que
+`passaTresPortoes` já garante) — **não** relaxa para TIER 2. Mostrar termo não corroborado
+numa tabela pública repetiria exatamente o caso `livelo→azul` (115% que a fonte oficial não
+sustentava) que D-045 existe para prevenir. TIER 2 continua reservado aos blocos
+evergreen/narrativos (Cartões & bancos, Clipping, O que fechou nesta semana), nunca a uma
+tabela de "ofertas vivas com número".
 
-Se **nenhum** dos 5 tiver dado real (cenário extremo, não o de hoje), a edição é só
-Sinal do Dia + disclaimer. **Isso é uma edição válida**, não um erro — é a aplicação
-mais estrita da regra-mãe.
+### 1.2 Deals do dia (numerado) — **mesma seleção, novo formato de render + 2 campos aditivos no schema**
 
-### 2.4 Loyalty Lab — de "sempre humano" para "automatizável por score", com a dependência real do Ledger mapeada
+`selecionarDealDesk` **não muda** (3 portões + corte de veredito + cap 3 + tie-break por
+`vigencia_fim`, D-044/D-050/D-052). O que muda é só a **densidade do render**: numerado
+("1. Programa — headline"), com "A conta" em prosa (não só a tabela `conta.rows`/`result`)
+e "Leitura" como parágrafo de interpretação — mais denso que o `ContaBlock` atual.
 
-**Emenda do operador (D-053):** Loyalty Lab deixa de exigir gate humano obrigatório e
-passa a ter um **score de automação determinístico** — abaixo do corte, vai a revisão
-humana; no ou acima do corte, publica direto. Mesmo desenho do gate de confiança TIER 1
-(D-048): score objetivo, nunca "nota subjetiva de LLM", piso gated, auto-ajuste só com
-volume mínimo de desfechos conhecidos.
+**Proposta de schema (aditivo, não quebra edições existentes):**
+- `deal.contaProsa` (string, opcional) — paráfrase em prosa dos mesmos números de
+  `deal.conta` (não recalcula; é redação sobre o dado que já existe). Gate 5.5 verifica que
+  todo número citado em `contaProsa` também aparece em `conta.rows`/`result` (nunca um
+  número novo introduzido só na prosa).
+- `deal.leitura` (string, opcional) — parágrafo de interpretação/uso. Distinto de
+  `verdictNote` (que continua existindo, curto, usado em Fecha Logo/tags). Ausência de
+  `leitura` ⇒ render cai para `verdictNote` (fallback, mesmo padrão de `contaFeita`/D-052).
 
-**Composição do score (proposta, a ratificar):**
-- `ancoragem` — quantas âncoras de dado real o texto cita (número + candidato nomeado
-  que bate com `origem_code`/`destino_code` conhecido, ou link do Clipping, ou janela do
-  Radar). Mínimo 2 para não ser rascunho vazio; puramente contável, não julgamento.
-- `track_record` — fração de resoluções **positivas** do **mesmo tipo de padrão** já
-  fechadas no Ledger (§2.4.1). **Sem Ledger, este componente é sempre 0** — e isso, por
-  desenho, já é o suficiente para nunca cruzar o corte (ver abaixo).
+Cap 3, TIER 1 confirmado, corte de veredito: **inalterados**.
 
-**Corte proposto: 0,85** — mais conservador que o 0,75 do gate TIER 1 (D-048), porque o
-risco de "soar promessa não verificada" em texto livre é mais difícil de conter que
-classificar uma campanha por sinais objetivos. Piso gated (baixar exige o operador),
-auto-ajuste só depois de volume mínimo de desfechos do **mesmo tipo de padrão narrativo**
-(mesma trava 3 do D-048 — não calibra com base insuficiente). **Este é o valor a
-ratificar — proponho 0,85, mas é a decisão nomeada do §4.**
+### 1.3 Vence em até 72h (lista) — **renomeação de Fecha Logo, zero mudança de seletor**
 
-#### 2.4.1 A dependência real: o que falta no Ledger antes do Loyalty Lab poder rodar sem humano
+**Achado:** `estado = 'ultimos_dias'` **já é**, por construção da FSM
+(`derivar_estado_vigencia`, migration 001), exatamente `vigencia_fim <= ref + 3 dias` — ou
+seja, "vence em até 72h" **é** a definição existente de `ultimos_dias`, não um filtro novo.
+`selecionarFechaLogo` (`v2/lib/digest/selecionar.mjs`) já implementa isso.
 
-O "Ledger" referenciado é o **Predict Ledger** (REQ-24, `ROADMAP.md` M4.3 — predições
-emitidas→resolvidas, Brier mensal), **não construído ainda** (confirmado agora: zero
-tabela, zero código; só existe como requisito em `REQUIREMENTS.md`/`ROADMAP.md`). Mapeando
-o que falta especificamente para o Loyalty Lab (não é o mesmo trabalho de destravar o
-Predict numérico, mas reaproveita a mesma arquitetura):
+**Proposta:** **renomear** a seção (rótulo "Vence em até 72h" no lugar de "Fecha Logo"),
+reformatar o render de cards-com-tag para **lista simples** (formato da referência), **sem
+tocar no seletor**. Não faz sentido as duas seções conviverem — mostrariam exatamente o
+mesmo conjunto de itens duas vezes com formatos diferentes. `selecionarFechaLogo` fica
+como está (nome da função interna pode continuar `selecionarFechaLogo` — é implementação,
+não rótulo visível).
 
-1. **A tabela/ledger em si** (M4.3) — hoje zero. Dependência dura, não é só "faltou
-   configurar".
-2. **Loyalty Lab precisa emitir suas claims em formato ledger-compatível** (alvo, janela,
-   claim, `base_n`, `emitida_em`) — trabalho **novo**, não incluído no M4.3 original (que
-   foi desenhado para probabilidade numérica do Predict, não para claim narrativa). É
-   uma extensão do formato do ledger, não um ledger paralelo — mesma tabela, tipo de
-   claim diferente.
-3. **Um passo de resolução** — algo precisa fechar a claim no fim da janela
-   (correta/errada/parcial). M4.3 já prevê isso para predições numéricas; estender para
-   claims do Loyalty Lab é trabalho adicional, não reuso automático.
-4. **Volume mínimo de resoluções do tipo "claim de Loyalty Lab"** antes do corte poder
-   auto-ajustar (mesma trava 3 do D-048).
+### 1.4 Cartões & bancos (NOVA — parágrafo editorial evergreen) — **fonte de dado proposta, decisão nomeada**
 
-**Veredito: NÃO bloqueante para esta spec — fica como dívida registrada.** M4 (Predict +
-Ledger) é milestone **posterior** ao M2 (Daily) no `ROADMAP.md`; bloquear o Digest Engine
-nisso significa esperar um milestone inteiro por um recurso que só afeta UM bloco
-opcional do dia fraco. **O engine roda com Loyalty Lab sempre em revisão humana desde o
-dia 1** — o score de automação (§2.4) existe como fórmula desde já, mas `track_record`
-sempre resolve para 0 sem Ledger, então o corte **nunca é cruzado automaticamente** até o
-Ledger existir e acumular volume — é "sempre humano" expresso como caso-limite da
-fórmula, não como exceção hard-coded separada. Quando M4.3 entregar o Ledger, a
-automação liga sem precisar redesenhar o Loyalty Lab.
+**Achado por SQL direto:** `campaigns.tipo='cartao'` já existe como valor real e populado
+(296 linhas totais, **5 vivas hoje**) — apesar de D-001 descrever isso como tipo sem enum
+próprio (mapeia para `bonus_acumulo`/`outro` na canonicalização); o valor **bruto**
+`'cartao'` continua presente na coluna e é diretamente consultável, sem precisar da
+canonicalização completa. Para o lado "bancos" (transferência bancária), não há tipo de
+entidade "banco" em `content/entities` (só `programa-origem`/`programa-cia`, 5 entradas) —
+proponho uma **lista curada de `origem_code`** de bancos observados no dado real hoje
+(`itau` 184, `inter` 117, `c6` 101, `bradesco` 37, `banco_do_brasil` 31, `nubank` 30,
+`caixa` 28, `brb` 25, `santander` 24, `btg` 23, `xp` 16, `picpay` 14 — todos com volume
+real), no mesmo padrão de `CRAWLAVEIS`/`ESTADOS_VIVO` (constante nomeada, versionada,
+extensível, não fechada). Hoje: **5 cartão vivas + 2 transferência-banco vivas = 7 itens**
+reais para o bloco.
 
----
+**Decisão nomeada:** (a) fonte = `campaigns` filtrado por `tipo='cartao' OR (tipo=
+'transferencia' AND origem_code IN <lista de bancos>)`, estado vivo, **sem** exigir TIER 1
+nem corte de veredito (é panorama editorial, não recomendação — mesmo tratamento TIER 2 dos
+blocos narrativos, D-053); (b) a prosa (parágrafo, não lista) é redigida a jusante a partir
+desses itens, com o mesmo lint de rastreabilidade número↔banco do Resumo do dia (§3). Peço
+confirmação da lista de bancos (extensível) e do critério "sem TIER 1" — alternativa mais
+conservadora seria exigir TIER 1 aqui também, ao custo de esvaziar o bloco em mais dias
+(hoje só 0 dos 7 é TIER 1 confirmado).
 
-## 3. Contrato de saída — gate 5.5, nos dois casos
+### 1.5 Clipping (bullets) — **sem mudança**
 
-O gate roda em **contexto independente do gerador** (REQ-31) — refaz os cálculos e
-recomputa os portões a partir do banco, nunca confia no JSON da edição por si só.
+Já construído (`selecionarClipping`, piso rígido de 5, `v2/lib/digest/dia-fraco.mjs`).
+Formato "bullets, título + fonte entre parênteses, com link" é compatível com o que já
+existe — é ajuste de render, não de seleção.
 
-### 3.1 Checks comuns aos dois casos (com e sem Deal Desk)
+### 1.6 O que fechou nesta semana (NOVA — bullets, recap de janelas encerradas) — **fonte de dado proposta**
 
-- Schema válido contra `content/edition.schema.json` (+ patches aditivos do §1.5/§4).
-- `disclaimer` bate **literal** com a constante (INV-09).
-- Lint de linguagem: zero emoji, zero termo da lista INV-06, zero promessa de ganho.
-- **Todo número no texto tem correspondente rastreável no banco** (INV-03) — CPM, %,
-  score, contagens do Sinal do Dia incluídas (não só os deals).
-- Links (`sourceUrl`, `url` de fontes) retornam 200.
-- `entityKey`/`routeKey` (quando presentes) existem em `content/entities`.
+**Medido por SQL direto:** `estado='encerrada'` com `vigencia_fim` nos últimos 7 dias = 54
+linhas totais; **filtrando TIER 1 confirmado + conta computável (mesmos 2 dos 3 portões,
+trocando "vivo" por "encerrada")** = **7 itens reais** — pool saudável, não vazio, não
+esparso.
 
-### 3.2 Checks exclusivos do caso COM Deal Desk (`deals.length >= 1`)
+**Proposta de seletor** (golden-testável, **sem cálculo**, só leitura — mesmo padrão de
+`selecionarFechaLogo`): `estado='encerrada' AND tier=1 AND tl_score_bruto IS NOT NULL AND
+vigencia_fim BETWEEN (ref - 7 dias) AND ref`. Cada item: "Programa — o que foi (bônus/%),
+encerrou em [data]" — sem reabrir cálculo de score (é recap, não novo veredito). **Por que
+exigir TIER 1 aqui:** um recap com número não confirmado repete o risco do §1.1 — mesmo
+princípio, mesma resposta.
 
-- Cada deal recomputado bate os **3 portões** (§1.1) direto no banco, não no JSON.
-- `veredito ∈ {vale-agir, vale-olhar}` — nenhum item mais fraco entra como Deal Desk
-  (recusa dura do D-050 decisão 1, verificada no gate, não só na seleção).
-- `tl_score_bruto` recomputado bate com o breakdown mostrado (regra existente, `>R$0,05`/
-  milheiro ou divergência de score = bloqueio, REQ-31).
-- Vigência **não vencida** na data de publicação (`isExpired` já existe em `lib.mjs`).
-- Cap de 3 respeitado; se a montagem sinalizou itens cortados, isso está no relatório do
-  gate (não é erro, é registro).
-- Se `contaFeita` presente (D-052: fallback = `conta` do primeiro item de `deals[]`
-  quando ausente), rastreia a um dos deals ou tem override explícito e válido.
+### 1.7 Predict (NOVA — teaser, aparece em alguns dias) — **território M4, decisão nomeada explícita**
 
-### 3.3 Checks exclusivos do caso SEM Deal Desk (`deals.length === 0`) — o caso novo
+**Acho relevante sinalizar antes de propor:** isto cruza para M4 (Predict Ledger, REQ-24) —
+cobrança desligada conforme o brief, e o M4 é milestone **posterior** ao M2 no `ROADMAP.md`.
+Sigo por instrução do operador (autorizado no dispatch), mas registro o cruzamento
+explicitamente — mesma disciplina do §2.4.1 da v2 para o Loyalty Lab.
 
-- **A seção Deal Desk está AUSENTE do artefato renderizado** — este check roda sobre o
-  **HTML/output final**, não só sobre o JSON de entrada (a garantia real é "nunca
-  renderizado vazio"; um JSON com `deals:[]` que ainda produz um card vazio no HTML é
-  falha do renderer, e é isso que este check pega).
-- **`signal` não é genérico**: contém pelo menos um número ou candidato nomeado
-  (regex/parser simples — não é julgamento de LLM, é checagem estrutural: presença de
-  dígito e de pelo menos um token que bata com um `origem_code`/`destino_code`
-  conhecido).
-- Gate **recomputa o zero** direto no banco (§0's query) — confirma que hoje é
-  genuinamente dia fraco, não que o JSON *disse* que era.
-- Cada bloco alternativo presente (§2.3) tem a mesma checagem de proveniência do §3.1
-  (número rastreável) — **e** nenhum item de "sinais rápidos" carrega chip de veredito
-  Deal Desk.
-- **Resumo do dia** (se presente): cada afirmação factual (evento, %, programa citado)
-  rastreável em `news_raw`/`campaigns` do dia — mesmo padrão do INV-03, aplicado à
-  prosa. Gate distingue Resumo do dia (veredito zero, é contexto) de qualquer linguagem
-  que soe recomendação — reaproveita o lint INV-06.
-- **Clipping** (se presente): **mínimo 5 itens** — presença de 1 a 4 itens é **falha do
-  gate**, não "quase lá" (o bloco deveria ter sido omitido, não publicado incompleto).
-  Cada item: link retorna 200, resumo é próprio (checagem anti-cópia, similaridade
-  contra o `content`/`title` original de `news_raw` — mesmo lint do INV-04), fonte+tier
-  exibidos.
-- Se **Loyalty Lab** está presente: gate recomputa o **score de automação** (§2.4) direto
-  do banco — se `score >= corte` (proposto 0,85), publica sem revisão adicional; se
-  `score < corte`, **exige** flag de revisão humana registrada (distinta da aprovação de
-  1 clique da edição inteira). **Sem Ledger, `track_record=0` sempre, então hoje todo
-  Loyalty Lab exige a revisão** — o gate aplica a mesma fórmula em todos os casos, não
-  uma exceção hardcoded para "Ledger não existe ainda".
+**Medido:** `content/forecast.json` tem 8 rotas/clusters com `withPrediction`, mas
+`digest.radarDaily` (o subconjunto já curado para publicação, mesmo dado que alimenta o
+Radar da v2) está **vazio hoje** — nenhuma janela com confiança suficiente para valer a
+pena mostrar um recorte. Isso é evidência de que o critério de cadência **deve ser
+orientado a dado, não a calendário fixo** (não "aparece 2x/semana", mas "aparece quando há
+sinal").
+
+**Proposta de cadência:** Predict aparece quando `digest.radarDaily` tem **≥1 janela com
+`confidence='alta'`** — mesma barra que já existe para o Radar da v2 (§2.3 item 2),
+reaproveitada sem inventar critério novo. Hoje: 0 janelas 'alta' → **omitido**, exatamente
+como qualquer outro bloco sem dado real (regra-mãe).
+
+**Proposta de conteúdo (sem entregar o forecast completo, regra-mãe 3/4 — convite, não
+pressão):** "N previsão(ões) ativa(s) esta semana no radar — veja o recorte completo no
+Digest Pro." **Nunca** mostra o valor/janela prevista, nunca usa termo de urgência
+(`URGENCY_RE` já bloqueia "última chance"/"corra"/etc.), nunca promete ganho ("acerte a
+próxima campanha" é promessa — não usar). Peço ratificação do critério de cadência
+(`confidence='alta'` em `radarDaily`) e da moldura de texto acima.
 
 ---
 
-## 4. Decisões — o que já foi ratificado nesta emenda e o que ainda precisa de você
+## 2. O que acontece com os blocos já ratificados na v2 (D-053/D-054) — pergunta explícita, não decidido sozinho
 
-**Ratificadas nesta rodada (registradas em `DECISIONS.md` D-052/D-053, não reabrir):**
+A referência do operador **não cita por nome** Resumo do dia, Radar (janelas), Radar VPM,
+Sinais rápidos nem Loyalty Lab. Como o próprio operador marcou a referência como
+"estrutura, não conteúdo literal", **não assumo silenciosamente que sumiram** — trago
+proposta de destino para cada um, para ratificar ou corrigir:
 
-- ✅ Patch aditivo do `scoreBreakdown` (4 componentes reais) — D-052.
-- ✅ S1-D1 (Conta Feita: fallback = `conta` do primeiro deal), S1-D2 (`oQueEvitar` como
-  campo opcional), S1-D3 (cap de 3 no Deal Desk, sem corte silencioso), S1-D4 (schema
-  vence, renderer realinha) — todos formalizados como D-052.
-- ✅ Clipping e Resumo do dia entram como blocos novos do dia fraco — D-053.
-- ✅ Loyalty Lab automatizável por score (fórmula do §2.4) em vez de gate humano fixo;
-  dependência do Ledger mapeada e registrada como **dívida, não bloqueio** — D-053.
-- ✅ TIER 2 alimenta os blocos narrativos (Clipping/Resumo/Loyalty Lab); Deal Desk
-  continua exclusivo de TIER 1 — D-053.
-- ✅ Critério de TIER 1 continua `tier=1` até `campanha_fontes` encher (INV-02, dívida já
-  registrada, não nova; o Digest Engine não espera essa migração para operar).
-
-**Ainda precisam de você (as únicas 2 decisões nomeadas de fato abertas):**
-
-1. **Onde o Clipping entra na ordem, e se é seção própria.** Proposta em §2.3 item 1:
-   seção **própria** (não parte do Resumo do dia — formatos e checks de gate diferentes),
-   posicionada **logo após o Resumo do dia** (síntese primeiro, links de apoio depois,
-   antes das seções prospectivas). Ratificar, ou prefere Clipping antes do Resumo (itens
-   crus primeiro)?
-2. **Corte do score de automação do Loyalty Lab.** Proposta em §2.4: **0,85**
-   (mais conservador que o 0,75 do TIER1 — texto livre carrega mais risco de soar
-   promessa que uma classificação objetiva). Piso gated, auto-ajuste só com volume
-   mínimo de resoluções no Ledger (quando existir). Ratificar 0,85, ou prefere outro
-   valor de partida?
-
-Nenhuma das duas bloqueia o restante da spec — ambas têm proposta default já registrada
-acima; sem sua resposta, o engine constrói com as propostas como estão (posição do
-Clipping conforme §2.3, corte 0,85), reversível depois sem re-trabalho estrutural.
+| Bloco (v2/D-053) | Proposta nesta v3 | Reuso de código |
+|---|---|---|
+| **Resumo do dia** | Funde com Sinal do dia (2 parágrafos numa seção só: veredito + contexto) — a referência só lista "Sinal do dia" no topo, sem item separado. | Nenhuma mudança de dado; é fusão de render. |
+| **Radar (janelas)** | Migra para dentro do teaser **Predict** (§1.7) — é literalmente o mesmo dado (`content/forecast.json`/`digest.radarDaily`), não sentido em duas seções mostrando a mesma fonte. | `selecionarRadar` (dia-fraco.mjs) reaproveitado como filtro de entrada do Predict. |
+| **Radar VPM (`shoppingWatch`)** | **Ausente da referência — não tenho proposta de fusão óbvia** (não é sobre timing de campanha como o Radar, é preço de catálogo). Pergunto direto: corta, mantém como bloco à parte fora da lista nova, ou entra em Cartões & bancos? | `selecionarRadarVpm` intacto até a decisão. |
+| **Sinais rápidos** | Absorvido pela tabela **Ofertas ativas** (§1.1) — ela já mostra todo item que passa os 3 portões sem cortar por veredito, o que inclui exatamente o que Sinais rápidos mostrava. Proponho aposentar o bloco de bullets próprio. | Lógica de filtro (`passaTresPortoes && !elegivelDealDesk`) sobrevive dentro da tabela; `selecionarSinaisRapidos` como função de bullets isolada fica obsoleta. |
+| **Loyalty Lab** | **Ausente da referência — não tenho proposta de fusão óbvia** (é o único bloco puramente narrativo/analítico; Cartões & bancos também é editorial mas tem fonte de dado estruturado por trás). Pergunto direto: funde em Cartões & bancos, mantém separado, ou corta desta rodada? Se mantido, o score de automação (corte 0,85, D-053) e a dívida do Ledger (§2.4.1 da v2) **continuam válidos sem mudança**. | `scoreAutomacaoLoyaltyLab`/`precisaRevisaoHumana` intactos até a decisão. |
 
 ---
 
-## 5. Fora de escopo desta entrega
+## 3. Dia fraco dentro da estrutura nova (decisão 6 do dispatch)
 
-- Código do engine (esta é a spec; código vem depois da ratificação do §4).
-- Ligar auto-publish ou estrear o Daily (D-050 decisão 3 continua em vigor: espera o
-  gate 5.5 passar nos dois casos + 5 dias de aprovação de 1 clique).
-- Construir o Track Record (M3, `SPEC-TRACK-RECORD.md` §6.1, construção em HOLD —
-  por isso não está na lista de blocos alternativos do §2.3 ainda).
-- Publicação via Beehiiv MCP (M2.7, coordenado com `SPEC-SLICE-VERIFICACAO-BEEHIIV-MCP.md`).
-- Painel de custo LLM (spec própria já entregue, `SPEC-SLICE-PAINEL-CUSTO-LLM.md`).
-- **Construir o Predict Ledger (M4.3)** — dependência do Loyalty Lab automatizado
-  (§2.4.1), registrada como dívida. Loyalty Lab roda com revisão humana até M4.3 entregar.
+- **Deals do dia** some quando zero elegíveis (regra-mãe intacta, sem mudança de D-050).
+- **Ofertas ativas** continua aparecendo mesmo com Deals do dia vazio — é estruturalmente o
+  que sustenta o dia fraco ser útil de ler (mostra o que existe e por que não passou o
+  corte, mesmo texto de intenção que já estava no Sinal do Dia da v2, agora também
+  tabulado). Só some se **zero** itens passam os 3 portões (cenário mais raro que "zero Deal
+  Desk" — hoje não é o caso: há 1 linha).
+- **Cartões & bancos, Clipping, O que fechou nesta semana** são evergreen — aparecem sempre
+  que houver dado real, independente do estado do Deal Desk. Mesma regra-mãe aplicada bloco
+  a bloco (Cartões & bancos com 0 itens vivos = omitido; Clipping <5 = omitido; O que
+  fechou nesta semana com 0 = omitido).
+- **Predict** aparece só quando há sinal de confiança alta (§1.7) — independente do estado
+  do Deal Desk, mas tipicamente mais raro que os outros evergreens.
 
-## 6. Definição de pronto (must-haves verificáveis)
+---
 
-1. Função de seleção pura (3 portões + corte de veredito + ranking + cap) com golden
-   files sobre fixtures reais (incluindo o dia de hoje: 54 vivo → 1 tier1 → 1 conta → 0
-   Deal Desk).
-2. Mapa veredito DB→schema testado (golden: os 6 rótulos, sem fallback silencioso).
-3. Patch do `scoreBreakdown` aplicado e populado com dado real de pelo menos 1 fixture.
-4. Renderer (já existe, `SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md`) recebendo `deals:[]` e
-   omitindo a seção — testado no artefato HTML final, não só no JSON.
-5. Gate 5.5 implementado com os quatro blocos de checks (§3.1 comum, §3.2 com Deal Desk,
-   §3.3 sem Deal Desk — incluindo Clipping piso-5 e Resumo do dia), rodando em contexto
-   independente, com golden do caso "hoje" (dia fraco real) passando limpo.
-6. Zero blocos alternativos com número/afirmação sem correspondente no banco — testado
-   com fixture onde um dos 6 candidatos do §2.3 (Resumo, Clipping, Radar, Radar VPM,
-   Sinais rápidos, Loyalty Lab) não tem dado (deve desaparecer, nunca aparecer vazio ou
-   incompleto — inclusive Clipping com <5 itens).
-7. Fórmula do score de automação do Loyalty Lab (§2.4) implementada e testada: com
-   `track_record=0` (sem Ledger), nunca cruza o corte — golden confirma "sempre humano"
-   como caso-limite da fórmula, não branch hardcoded.
-8. As 2 decisões nomeadas do §4 ratificadas (ou construído com a proposta default,
-   reversível).
+## 4. Gate 5.5 — o que muda com a estrutura nova
+
+**Continua igual (checks §3.1–§3.3 da v2, sem mudança):** schema válido, disclaimer literal,
+lint de linguagem, rastreabilidade número↔banco em `signal`, links 200,
+`entityKey`/`routeKey` conhecidos; para Deals do dia — 3 portões recomputados, veredito ∈
+{vale-agir, vale-olhar}, cap 3, vigência não vencida.
+
+**Novos checks propostos para os blocos desta v3:**
+
+- **Ofertas ativas (tabela):** cada linha recomputa `passaTresPortoes` direto no banco
+  (mesmo padrão de `checkComDealDesk`, sem o filtro de veredito); a "Leitura" de cada linha
+  bate com o `veredito_bruto` real daquele item (não pode divergir — mesmo risco do
+  `contaFeita` desalinhado, D-055).
+- **Vence em até 72h:** idêntico ao check de Fecha Logo já existente (vigência não vencida)
+  — só muda o nome do bloco no relatório do gate.
+- **Cartões & bancos:** cada afirmação da prosa rastreável em `campaigns` (mesmo padrão do
+  Resumo do dia/INV-03 aplicado à prosa); itens citados batem com o filtro
+  `tipo='cartao' OR origem_code IN <lista>` recomputado no banco.
+- **O que fechou nesta semana:** cada item recomputa `estado='encerrada' AND tier=1 AND
+  tl_score_bruto IS NOT NULL AND vigencia_fim` na janela dos 7 dias direto no banco — sem
+  cálculo novo, só leitura conferida.
+- **Predict:** quando presente, recomputa `digest.radarDaily` tem ≥1 janela `confidence=
+  'alta'` (mesmo padrão de negação de "projeção sem lastro" já usado no Radar da v2); lint
+  reforçado para garantir que o texto **nunca** cita valor/janela específica (só a
+  contagem) e nunca usa termo de `URGENCY_RE`.
+- **`deal.contaProsa`** (quando presente): todo número citado tem correspondente literal em
+  `deal.conta.rows`/`result` — não pode introduzir número que não esteja na tabela
+  estruturada (mesmo espírito do check de `contaFeita`).
+
+**Sem mudança:** a garantia estrutural central do §3.3 da v2 (seção Deal Desk ausente do
+HTML, não vazia — via `DEAL_DESK_SECTION_MARKER`) continua igual; só passa a se chamar
+"Deals do dia" no relatório.
+
+---
+
+## 5. Decisões nomeadas em aberto (resumo — nenhuma bloqueia as outras)
+
+| # | Decisão | Proposta default (se não houver resposta) |
+|---|---|---|
+| 1 | Rótulo da coluna "Leitura" em Ofertas ativas: vocabulário canônico (`Vale agir`…) ou os 4 termos novos da referência (`Barato/Caro`…)? | Vocabulário canônico (evita 2º vocabulário paralelo para o mesmo dado) |
+| 2 | Cartões & bancos: TIER 1 obrigatório ou aceita TIER 2 (mesmo tratamento de Clipping/Resumo)? | TIER 2 aceito (evergreen, sem corte de veredito) |
+| 3 | Lista curada de `origem_code` de bancos — confirma a lista observada (itau/inter/c6/bradesco/bb/nubank/caixa/brb/santander/btg/xp/picpay)? | Lista acima, extensível sem re-trabalho |
+| 4 | Cadência do Predict: `confidence='alta'` em `digest.radarDaily` é a barra certa? | Sim, reaproveita a barra já existente do Radar |
+| 5 | Resumo do dia funde com Sinal do dia, ou continua seção própria? | Funde (2 parágrafos numa seção) |
+| 6 | Radar (janelas) migra para dentro do Predict? | Sim |
+| 7 | Radar VPM (`shoppingWatch`): corta, mantém à parte, ou funde em Cartões & bancos? | **Sem proposta default — decisão genuinamente aberta, preciso da sua resposta** |
+| 8 | Loyalty Lab: funde em Cartões & bancos, mantém separado, ou corta desta rodada? | **Sem proposta default — decisão genuinamente aberta, preciso da sua resposta** |
+
+As decisões 7 e 8 são as únicas sem proposta default segura — todas as outras têm caminho
+reversível se eu construir com a proposta e você preferir outra depois.
+
+---
+
+## 6. Mapa de reuso — o que já construído continua servindo
+
+| Módulo já testado | Continua servindo em v3? |
+|---|---|
+| `selecionar.mjs` (`passaTresPortoes`, `elegivelDealDesk`, `selecionarDealDesk`, `selecionarFechaLogo`) | **Sim, 100%** — Ofertas ativas usa `passaTresPortoes` cru; Deals do dia usa `selecionarDealDesk` sem mudança; Vence em até 72h usa `selecionarFechaLogo` sem mudança. |
+| `mapear-contrato.mjs` (`mapVeredito`, `mapScoreBreakdown`) | **Sim, 100%** — vocabulário e breakdown não mudam. |
+| `dia-fraco.mjs` — `selecionarClipping` | **Sim, 100%** — Clipping sem mudança. |
+| `dia-fraco.mjs` — `selecionarRadar`, `selecionarRadarVpm` | Reaproveitados **se** as decisões 6/7 confirmarem onde eles migram. |
+| `dia-fraco.mjs` — `selecionarSinaisRapidos` | Lógica de filtro sobrevive dentro de Ofertas ativas; a função como bloco de bullets isolado fica obsoleta (decisão 8 da tabela §5 do dispatch original, já proposta no §2). |
+| `dia-fraco.mjs` — `scoreAutomacaoLoyaltyLab`, `precisaRevisaoHumana` | Reaproveitados **se** a decisão 8 mantiver Loyalty Lab (fundido ou separado). |
+| `gate-5-5.mjs` (`checkComuns`, `checkComDealDesk`, `checkSemDealDesk`) | Estrutura reaproveitada; ganha os checks novos do §4 desta spec, nomes internos podem mudar (Deal Desk→Deals do dia) sem mudar a lógica. |
+| `render-beehiiv.mjs`, `renderer/email.mjs` | **Reconstrução de render necessária** — é onde a mudança de estrutura realmente aparece; a lógica de seleção por trás é o que se preserva. |
+
+---
+
+## 7. Fora de escopo desta entrega
+
+- Código do engine (esta é a spec revisada; código só depois da ratificação do §5).
+- Qualquer escrita em produção, publicação ou reenvio do rascunho já criado no Beehiiv
+  (fica parado, D-056 registrado, sem tocar).
+- Construir o Predict Ledger (M4.3) — o teaser do §1.7 usa `content/forecast.json` já
+  existente, não depende do Ledger (isso é dependência do Loyalty Lab automatizado, §2.4.1
+  da v2, continua dívida separada).
+- Ligar auto-publish ou estrear o Daily (D-050 decisão 3 continua em vigor).
+
+## 8. Definição de pronto desta rodada (é spec — "pronto" = decisões suficientes para codar)
+
+1. Decisões 1–6 da tabela §5 ratificadas ou aceitas por proposta default.
+2. Decisões 7–8 (Radar VPM, Loyalty Lab) respondidas — são as únicas sem default seguro.
+3. Confirmação de que o rascunho parado no Beehiiv continua parado até o código desta v3
+   fechar (sem ambiguidade sobre reenviar o que já existe).
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de
 comprar, transferir ou resgatar.*
