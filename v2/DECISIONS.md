@@ -743,5 +743,37 @@ desenho de aprovação (A4); (2) resolver a sub-decisão de produto do Track B
 `campaigns_bkp_prev2_20260716` — decisão consciente do operador no fecho, nunca
 antes. Auto-publish permanece OFF.
 
+## D-065 — 4 decisões do operador no fecho do M2 (auto-publish, segmentos, cadência, backup)
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2
+
+**(1) Auto-publish com rating mínimo.** O operador liberou o envio automático,
+condicionado a um mínimo — abaixo dele, 1 clique. Rating implementado como
+**confiança de dado** (não a nota da oferta): edição é auto-elegível quando
+**gate VERDE + fila de revisão VAZIA** (zero flags de pré-superfície, D-060).
+Qualquer pendência → abaixo do mínimo → rascunho + 1 clique. `avaliarRating` em
+`scripts/daily.mjs` (+ golden `daily.test.mjs`, 4 casos). Envio real só quando
+`rating.auto && env TL_AUTOPUBLISH=on`, com **trava dura de reenvio** (uma vez
+enviado no dia, nunca reenvia). Verificado: a edição nº1 (3 flags) fica em
+rascunho mesmo com auto-publish ligado — o mínimo segura o que precisa de olho
+humano. Kill-switch: `TL_AUTOPUBLISH=off`.
+
+**(2) 6 segmentos Beehiiv — executado.** Criado o `custom_field` **perfil**
+(list, id `3f809670-5eba-4a8b-8722-51d442e43ac4`) e os 6 segmentos dinâmicos
+(iniciante / emissao planejada / heavy user / alta renda / completar saldo /
+cashback first), cada um `custom_field(perfil)=valor AND status=active`. Existem
+e nomeados (M2.7/D-008 satisfeito). Ficam com 0 membros até a **captura** popular
+o campo — o mecanismo (quiz de onboarding) segue como peça de produto pendente,
+fora deste passo.
+
+**(3) Cadência iniciada, sem travar nada.** `schedule` do `daily.yml` LIGADO
+(09:30 UTC / 06:30 BRT, seg-sex) + `TL_AUTOPUBLISH=on`. Edição limpa envia
+sozinha; qualquer flag vira rascunho + 1 clique. "Vamos acompanhando" — nada é
+bloqueado com base nisso; monitorar e ajustar o rating se necessário.
+
+**(4) Backup frio — RETIDO (melhor decisão).** `campaigns_bkp_prev2_20260716`
+**não** é dropado agora: ligar a cadência com auto-publish é justamente quando o
+rollback importa. Mantido até a cadência automatizada provar estabilidade; o
+`DROP` volta como decisão consciente depois, não neste momento.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.

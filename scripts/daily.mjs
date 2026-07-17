@@ -90,34 +90,64 @@ function escreverFilaRevisao({ ed, veredito, hoje }) {
     linhas.push(`- **${item.id}** — tipo ${item.tipo}, ${item.percentual ?? 's/%'}%, TL ${item.tl_score_bruto ?? '—'}, estado ${item.estado}`);
     for (const f of flags) linhas.push(`  - \`${f.flag}\`: ${f.motivo}`);
   }
+  const auto = veredito.pass && veredito.revisao.length === 0;
   linhas.push('', '---', '',
-    '## Aprovação (decisão humana — 1 ação)',
-    '1. Confira a fila acima e a prévia do rascunho no Beehiiv.',
-    '2. Se aprovar, dispare o envio pela ação única de publicação (workflow `Beehiiv Publish` com `confirm: PUBLICAR`, ou o botão de envio no Beehiiv).',
-    '3. Auto-publish permanece OFF: sem essa ação, o rascunho não é enviado.');
+    '## Aprovação',
+    auto
+      ? '- **Rating acima do mínimo** (gate verde, zero pendências): elegível a **envio automático** quando o auto-publish está ligado. Sem itens aqui para conferir.'
+      : `- **Rating abaixo do mínimo** (${veredito.revisao.length} pendência(s) acima): **não** automatiza — requer **1 clique** do operador.`,
+    '- 1 clique = disparar o envio pela ação única de publicação (workflow `Beehiiv Publish` com `confirm: PUBLICAR`, ou o botão de envio no Beehiiv).');
   writeFileSync(`${OUT}/${n}-revisao.md`, linhas.join('\n') + '\n');
   return `${OUT}/${n}-revisao.md`;
 }
 
-// Upsert do rascunho, idempotente por DATA. Sem BEEHIIV_API_KEY → mock: registra
-// o alvo e o hash, não chama a API. NUNCA envia (status sempre draft).
-async function upsertRascunho({ ed, html, hoje }) {
+// Rating de auto-publish (decisão do operador): a edição é AUTO-ELEGÍVEL quando
+// atinge o mínimo — gate VERDE **e** fila de revisão VAZIA (zero flags de
+// pré-superfície, D-060). Abaixo do mínimo (qualquer pendência) → NÃO automatiza,
+// vira rascunho + aprovação de 1 clique. O rating é de CONFIANÇA DE DADO, não da
+// nota da oferta: um dia fraco mas limpo pode sair sozinho; um dia com bônus alto
+// mas com item flagado espera o olho humano. Ajuste o mínimo aqui se o operador
+// quiser outra régua.
+export function avaliarRating(veredito) {
+  const pendencias = veredito?.revisao?.length ?? 0;
+  const auto = Boolean(veredito?.pass) && pendencias === 0;
+  return {
+    auto,
+    pendencias,
+    motivo: auto
+      ? 'gate verde e zero pendências de revisão — acima do mínimo, elegível a auto-publish'
+      : (!veredito?.pass ? 'gate vermelho — nunca publica' : `${pendencias} pendência(s) de revisão — abaixo do mínimo, requer 1 clique`),
+  };
+}
+
+// Upsert do rascunho, idempotente por DATA. `publicar=true` só quando a edição é
+// auto-elegível E o operador ligou o auto-publish (env TL_AUTOPUBLISH=on): aí o
+// status vai a "confirmed" (ENVIA). Caso contrário fica "draft" (1 clique).
+// Envio é idempotente: uma vez enviado num dia, nunca reenvia. Sem BEEHIIV_API_KEY
+// → mock (nunca chama a API).
+async function upsertRascunho({ ed, html, hoje, publicar = false }) {
   const ledger = loadLedger();
   const chave = ed.date; // idempotência por data da edição
   const hash = contentHash(html);
   const prev = ledger[chave];
 
-  if (prev && prev.contentHash === hash) {
+  // Trava dura de reenvio: se já foi enviado hoje, nunca reenvia (mesmo com hash novo).
+  if (prev?.enviado) {
+    log('[5/5]', `edição do dia ${chave} JÁ ENVIADA (${prev.postId}) — reenvio bloqueado (idempotente).`);
+    return { postId: prev.postId, status: 'ja-enviado', url: prev.url, enviado: true };
+  }
+  if (prev && prev.contentHash === hash && !publicar) {
     log('[5/5]', `rascunho do dia ${chave} já está no mesmo conteúdo (${prev.postId || 'mock'}) — idempotente, nada a fazer.`);
     return { postId: prev.postId, status: 'noop-idempotente', url: prev.url };
   }
 
   const apiKey = process.env.BEEHIIV_API_KEY;
   const pubId = process.env.BEEHIIV_PUBLICATION_ID;
+  const statusAlvo = publicar ? 'confirmed' : 'draft';
   let record;
   if (apiKey && pubId) {
-    // Reusa o post do dia se já existe (PATCH); senão cria (POST). Draft-only.
-    const body = { title: ed.beehiivTitle || `The Loyal Daily — ${ed.date}`, status: 'draft', body_content: html };
+    // Reusa o post do dia se já existe (PATCH); senão cria (POST).
+    const body = { title: ed.beehiivTitle || `The Loyal Daily — ${ed.date}`, status: statusAlvo, body_content: html };
     const isUpdate = Boolean(prev?.postId);
     const endpoint = isUpdate
       ? `https://api.beehiiv.com/v2/publications/${pubId}/posts/${prev.postId}`
@@ -129,11 +159,11 @@ async function upsertRascunho({ ed, html, hoje }) {
     });
     if (!r.ok) throw new Error(`Beehiiv ${isUpdate ? 'PATCH' : 'POST'} ${r.status}: ${(await r.text()).slice(0, 200)}`);
     const j = await r.json();
-    record = { postId: j?.data?.id || prev?.postId, status: isUpdate ? 'atualizado' : 'criado', url: j?.data?.web_url || prev?.url };
-    log('[5/5]', `rascunho ${record.status} no Beehiiv (${record.postId}) — status draft, sem envio.`);
+    record = { postId: j?.data?.id || prev?.postId, status: publicar ? 'ENVIADO (auto-publish)' : (isUpdate ? 'atualizado' : 'criado'), url: j?.data?.web_url || prev?.url, enviado: publicar };
+    log('[5/5]', `Beehiiv: ${record.status} (${record.postId})${publicar ? ' — status confirmed, ENVIO REAL' : ' — status draft, sem envio'}.`);
   } else {
-    record = { postId: prev?.postId || null, status: 'mock (sem BEEHIIV_API_KEY)', url: prev?.url || null };
-    log('[5/5]', `MOCK: sem credencial Beehiiv — rascunho não enviado. Alvo idempotente do dia ${chave}: ${record.postId || '(a criar na 1ª publicação real)'}. Artefato em ${OUT}/.`);
+    record = { postId: prev?.postId || null, status: `mock (sem BEEHIIV_API_KEY)${publicar ? ' — ENVIO seria disparado' : ''}`, url: prev?.url || null, enviado: false };
+    log('[5/5]', `MOCK: sem credencial Beehiiv — ${publicar ? 'ENVIO seria disparado (auto-elegível)' : 'rascunho não enviado'}. Alvo do dia ${chave}: ${record.postId || '(a criar na 1ª publicação real)'}.`);
   }
 
   ledger[chave] = { ...record, contentHash: hash, lastRun: hoje, editionNumber: ed.number };
@@ -173,11 +203,19 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  log('[4/5]', `GATE VERDE. Fila de revisão (${veredito.revisao.length} item(ns)) para o operador aprovar → ${filaPath}.`);
+  log('[4/5]', `GATE VERDE. Fila de revisão (${veredito.revisao.length} item(ns)) → ${filaPath}.`);
 
-  // 5. Rascunho idempotente draft-only.
-  const rasc = await upsertRascunho({ ed, html: beehiivHtml, hoje });
-  log('', `FIM. Rascunho: ${rasc.status}${rasc.url ? ` — ${rasc.url}` : ''}. Auto-publish OFF; envio é decisão humana.`);
+  // 5. Rating + rascunho. Auto-publish só quando: rating acima do mínimo E o
+  // operador ligou TL_AUTOPUBLISH=on. Do contrário, rascunho + 1 clique.
+  const rating = avaliarRating(veredito);
+  const autopublishLigado = process.env.TL_AUTOPUBLISH === 'on';
+  const publicar = rating.auto && autopublishLigado;
+  log('', `Rating: ${rating.auto ? 'ACIMA do mínimo' : 'ABAIXO do mínimo'} — ${rating.motivo}. Auto-publish ${autopublishLigado ? 'LIGADO' : 'desligado'} → ${publicar ? 'ENVIO AUTOMÁTICO' : 'rascunho + 1 clique'}.`);
+  const rasc = await upsertRascunho({ ed, html: beehiivHtml, hoje, publicar });
+  log('', `FIM. ${rasc.status}${rasc.url ? ` — ${rasc.url}` : ''}. ${publicar ? 'Enviado automaticamente (rating acima do mínimo).' : 'Sem envio automático — 1 clique do operador quando quiser.'}`);
 }
 
-main().catch((e) => { console.error('[daily] ERRO:', e.stack || e.message); process.exit(1); });
+// Só roda como CLI — importado (teste), NÃO dispara o pipeline.
+if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((e) => { console.error('[daily] ERRO:', e.stack || e.message); process.exit(1); });
+}
