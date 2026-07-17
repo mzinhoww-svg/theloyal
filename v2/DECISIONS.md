@@ -310,5 +310,48 @@ Correção de consistência do D-050 (decisão 4). A regra "cnc → não-valor (
 **Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** transversal (disciplina de engenharia)
 O ranking vazio da Frente A (após D-050.1 zerar os 375 falsos-fortes) provou que **não há alvo forte** para os adapters desbloquearem hoje — o `bradesco→livelo 91` que justificava adapter de banco era fantasma. Princípio consolidado, além deste caso: **não se constrói infra de captura (adapter, coletor, pipeline) sem um alvo MEDIDO para capturar.** Infra especulativa é **dívida disfarçada de progresso**. A Frente A (adapters de banco) vira prioridade **no instante em que o ranking apontar uma oferta forte viva** num programa que a justifique — não antes. **O sistema em espera honesta e produtiva é um ESTADO VÁLIDO**, não um problema a resolver com mais código. Coerente com D-050 (Deal Desk gatilhado por oferta): a próxima oferta forte vem do **calendário**, e o gate provado a captura quando vier. **Frentes que rendem sem alvo novo:** calibração (fecha os vetores → liga o auto-publish, caminho crítico) e track record / M3 (conteúdo de estreia). **Marco:** o projeto saiu da fase de **construir o motor** (provado ponta a ponta) e entra na de **operar e afinar**; vale um **fechamento de M2** quando a calibração fechar.
 
+## D-052 — Contrato do template de e-mail Daily: 4 decisões ratificadas (S1-D1..D4)
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+Ratifica as 4 decisões abertas de `SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md` §3, formalizadas
+aqui porque o handoff nunca chegou a registrá-las como ADR (gap corrigido nesta entrada).
+**(1) Conta Feita:** campo opcional `contaFeita` no schema (reusa `$defs/conta`); ausente
+⇒ fallback automático = `conta` do **primeiro** item de `deals[]`. **(2) O que evitar:**
+campo opcional `oQueEvitar` (string), mesma forma de `signal` — aditivo, não quebra
+edições existentes. **(3) Cap de Deal Desk:** **3**, sem `maxItems` no schema (decisão
+editorial, não de contrato); renderer aplica o corte e **nunca trunca em silêncio** — se
+`deals.length > 3`, registra quantos ficaram de fora. **(4) Contrato canônico:**
+`content/edition.schema.json` vence — é o único dos dois artefatos versionado com `$id`;
+`renderer/email.mjs` (que lia snake_case divergente) é **realinhado** a ele, não o
+contrário. Também aprovado nesta rodada: patch aditivo do `scoreBreakdown` (ver D-053) e
+`<meta name="color-scheme" content="light">` travado no e-mail (light-locked, já
+desenhado na spec do template).
+
+## D-053 — Digest Engine: Clipping + Resumo do dia, Loyalty Lab automatizável por score (Ledger é dívida), TIER 2 alimenta blocos narrativos
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+Emenda do operador sobre `SPEC-SLICE-DIGEST-ENGINE.md` (v1, commit `9c39ffc`) antes do
+código. Quatro mudanças: **(1) `scoreBreakdown` do schema corrigido** — o `$defs`
+antigo descrevia 8 critérios do modelo pré-`score.mjs` (resíduo do TL Score vindo pronto
+do LLM); patch aditivo agora reflete o engine real (4 componentes:
+`percentil/eficiencia/raridade/abrangencia`, pesos `.45/.30/.15/.10`, `score_pesos.v1`).
+**(2) Dois blocos novos no dia fraco:** **Resumo do dia** (síntese editorial curta do que
+aconteceu no mercado, prosa, distinta do Sinal do Dia que é veredito) e **Clipping**
+(lista de **≥5** notícias do dia com resumo próprio + link + fonte/tier — piso rígido,
+sem preencher com menos). Ordem revisada: Resumo do dia → Clipping → Radar → Radar VPM →
+Sinais rápidos → Loyalty Lab. Mesma regra-mãe (seção sem dado real = omitida, nunca
+incompleta) aplicada a ambos. **(3) Loyalty Lab deixa de exigir gate humano fixo** —
+passa a ter **score de automação determinístico** (`ancoragem` + `track_record`, corte
+proposto **0,85**, piso gated, mesmo desenho do D-048). Dependência real mapeada: o
+`track_record` vem do **Predict Ledger** (REQ-24/M4.3), que **não existe** (zero tabela,
+zero código) e precisaria de extensão própria para claims narrativas (não só
+probabilidade numérica). **Registrada como dívida, não bloqueio** — `track_record=0`
+sem Ledger é o caso-limite da fórmula, então Loyalty Lab **continua sempre em revisão
+humana até M4.3 entregar o Ledger**, sem branch hardcoded separado. **(4) TIER 2 sobe de
+importância** para os blocos narrativos (Clipping/Resumo do dia/Loyalty Lab podem puxar
+de `news_raw`/`campaigns tier=2`, sem os 3 portões nem o corte de veredito) — Deal Desk
+continua **exclusivo de TIER 1**. INV-01 (fonte+data) vale em todos os blocos; a barra
+que cai é só a de corroboração TIER 1. **2 decisões nomeadas seguem abertas** (posição
+exata do Clipping na ordem; valor final do corte 0,85) — propostas default já registradas
+em `SPEC-SLICE-DIGEST-ENGINE.md` §4, não bloqueiam a construção.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.

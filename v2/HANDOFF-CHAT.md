@@ -165,11 +165,16 @@ a base não tem oferta forte viva; a próxima vem do calendário, não de mais c
 
 ## 3. Decisões travadas (fonte de verdade: `v2/DECISIONS.md`)
 
-**Não re-litigar.** ADRs **D-001..D-050** em `v2/DECISIONS.md`; invariantes
-**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Mais recentes: **D-048** gate de confiança
-TIER 1 (determinístico, limiar auto-ajustável, piso gated, 4 travas); **D-049**
-confiança ⊥ resultado (corrobora/refuta) + 3 níveis de divergência; **D-050** lançamento
-= estreia RECUSANDO, Deal Desk gatilhado por oferta, auto-publish gated na calibração.
+**Não re-litigar.** ADRs **D-001..D-053** em `v2/DECISIONS.md`; invariantes
+**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Mais recentes: **D-052** contrato do template
+de e-mail Daily (4 decisões do `SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md` §3 — Conta Feita,
+`oQueEvitar`, cap 3, schema vence); **D-053** Digest Engine — `scoreBreakdown` corrigido
+(4 componentes reais), Clipping + Resumo do dia no dia fraco, Loyalty Lab automatizável
+por score (Ledger é dívida, não bloqueio), TIER 2 alimenta blocos narrativos. **D-048**
+gate de confiança TIER 1 (determinístico, limiar auto-ajustável, piso gated, 4 travas);
+**D-049** confiança ⊥ resultado (corrobora/refuta) + 3 níveis de divergência; **D-050**
+lançamento = estreia RECUSANDO, Deal Desk gatilhado por oferta, auto-publish gated na
+calibração.
 Anteriores (D-040..047): recanon = só
 self-loops + guard permanente; banda neutra CPM-cego é correta; **D-043** modo de
 operação (autonomia dentro de slice aprovada; **dado vence instrução quando
