@@ -256,20 +256,45 @@ v2/
 ## 6. Próximo passo imediato (para o chat que retomar)
 
 **Fase do projeto (D-051):** saiu de *construir o motor* (provado ponta a ponta) para
-*operar e afinar*. **Frente A (adapters) ADIADA** — ranking de oferta-forte-bloqueada
-vazio (não se constrói infra de captura sem alvo medido). Frentes que rendem:
+*operar e afinar*. **Frente A (adapters) ADIADA** (ranking de oferta-forte vazio). **O que
+aproxima o lançamento é a CALIBRAÇÃO fechar — não o track record.** Ordem por alavanca:
 
-1. **[PRINCIPAL] Track record / M3** — próxima frente de trabalho. `M3/SPEC-TRACK-RECORD.md`
-   escrita (4 decisões no §6). Conteúdo de estreia (prova de método), enquanto o Deal Desk
-   vivo espera oferta. **⚠️ Dependência temporal:** herda a janela confiável do predict
-   (~24m); NÃO exibe data que o sistema sabe suspeita (reconstrução temporal em curso no predict).
-2. **[CALIBRAÇÃO, caminho crítico] Revalidar a distribuição de score** contra a base
+1. **[CAMINHO CRÍTICO — calibração] Revalidar a distribuição de score** contra a base
    corrigida (D-050.1 zerou 710 brutos) → fechar os vetores → **liga o auto-publish** (D-050).
-3. **[predict] Reconstrução temporal** (~24m janela) + Fase 1a edge fn — destrava vigência
-   confiável para cobertura E track record.
-4. **Deal Desk vivo** estreia quando o calendário trouxer oferta forte + viva + confirmada
-   (o gate provado a captura). **Marco: fechar o M2** quando a calibração fechar.
-5. Atualizar este arquivo ao fechar cada slice.
+   Enquanto não fecha, o produto **não opera** (publica nada automático). É a frente que
+   **liga** o produto. (Roda no chat de calibração.)
+2. **[PARALELO — enche o produto] Track record / M3** (`M3/SPEC-TRACK-RECORD.md`, 4 decisões
+   §6). Conteúdo de estreia. **Se houver conflito de esforço, calibração vence track record**
+   (calibração liga, track record enche). **⚠️ Dep. temporal:** herda janela confiável ~24m
+   do predict; NÃO exibe data suspeita.
+3. **[predict] Reconstrução temporal** (~24m) + Fase 1a edge fn — destrava vigência confiável.
+4. **Ponto-limite (D-051):** os 3 loops de desfecho (gate/ledger, predict/série, accuracy/
+   vereditos publicados) só destravam quando o **produto OPERAR**. Além de certo ponto,
+   construir não adianta, só operar adianta. A próxima grande alavanca é **ir ao ar**.
+
+---
+
+## 7. Fechamento do M2 — checklist (saber quando parar de afinar e operar)
+
+O M2 fecha quando estes convergem → produto pronto para **operar** (estreia = track record
++ Deal Desk gatilhado por oferta). Afinar é infinito; este checklist é o freio.
+
+| item | estado |
+|---|---|
+| Motor provado ponta a ponta (canon→engine→CPM→ratio→TIER1→veredito) | ✅ |
+| Falsos-fortes limpos (não-valor consistente, D-050.1) | ✅ |
+| Gate de confiança pronto + limiar de partida 0,75 | ✅ (auto-ajuste espera ledger) |
+| Base de score corrigida (D-050.1) | ✅ |
+| **Vetores de score fechados (calibração revalida distribuição)** | ⏳ calibração |
+| **Janela temporal reconstruída (~24m)** | ⏳ predict |
+| **Track record pronto** | ⏳ principal (spec escrita) |
+| **Auto-publish ligado** (após calibração fechar) | ⏳ depende de calibração |
+| Fechar M2 → operar | ⧗ quando os ⏳ convergirem |
+
+**Pontos de decisão reais próximos (fora deles, os agentes medem — não alimentar turno):**
+(a) amostra de reconstrução do predict (operador audita antes de aplicar); (b) gates
+re-medidos da calibração (número que vira público, passa pelo operador); (c) 4 decisões
+do track record (§6). O check-in de deploy do #104 foi **desativado** (ruído; a inscrição basta).
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes
 de comprar, transferir ou resgatar.*
