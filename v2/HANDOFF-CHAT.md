@@ -115,8 +115,11 @@ media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera
    **⚠️ DEPENDÊNCIA CROSS-CHAT (predict):** a **correção da edge fn** (bug de corrupção
    temporal VIVO na extração — chat de predict) é **pré-requisito** para as campanhas
    capturadas pela cobertura terem **vigência confiável** (vigência = 1 dos 3 portões,
-   D-044). Não trava a Frente B, mas a vigência das novas só é confiável pós-correção.
-   **Ponto de alinhamento chat-principal ↔ chat-predict.**
+   D-044). **Status (do chat de predict): Fase 1a APROVADA e em implementação/teste**
+   (passar `published_at` ao prompt + validação de plausibilidade). Não trava a Frente B
+   (reverse-lookup roda), mas a vigência das novas campanhas só é confiável **depois da
+   Fase 1a deployada e comprovada em prod (yr_off→0)**. É a Fase 1a do predict que
+   destrava vigência confiável para o que a cobertura capturar. Alinhamento principal↔predict.
 2. **[EM EXECUÇÃO] Re-score lado-único (Parte B aprovada).** Agente re-scorando os 1.220
    `sem_destino` com LADO_UNICO_V1: fallback OFF, `conta_nao_calculavel`→não-valor (null),
    D-037 buckets, min 3/8, versionado. Movimento modesto (54/79 saem da banda 65, nada
