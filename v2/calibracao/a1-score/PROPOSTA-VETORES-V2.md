@@ -5,6 +5,14 @@
 > Este documento **para** no vetor. Nada foi gravado. Medições: `DISTRIBUICAO-MEDIDA.md`,
 > `sensibilidade.json`.
 
+> **REVALIDADO (2026-07-17) — `REVALIDACAO-BASE-CORRIGIDA.md`.** O veredito **"manter
+> `score_pesos.v1`"** CONTINUA VÁLIDO sobre a base de-fantasmada (mediana corrigida 58; os
+> fantasmas inflavam o motor, não escondiam sinal). A opção **`shrink_k=3`** abaixo deve
+> ser **re-medida sobre o histórico de rota corrigido** (o `base_n` muda quando os
+> zeros-fantasma saem) antes de qualquer aprovação. Duas novas propostas surgiram na
+> revalidação: **P1** (corrigir o bug `null→0` no runner) e **P2** (teto de sanidade para
+> ghosts de percentual) — ambas escrita do principal.
+
 ## Veredito de uma linha
 
 **`score_pesos.v1` (os quatro pesos): MANTER.** **`derivacao.v1` (buckets de raridade,

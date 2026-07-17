@@ -1,5 +1,13 @@
 # A1 · Distribuição medida do TL Score sobre a base sã
 
+> **REVALIDADO (2026-07-17) — ver `REVALIDACAO-BASE-CORRIGIDA.md`.** Os números deste
+> arquivo foram computados com a mesma coerção `null→0` do runner de produção (histórico
+> de rota empurra 0 para % ausente), que inflava percentil/`base_n`. A régua **corrigida**
+> é mais baixa: mediana **58** (não 60), ≥70 **~8%** (não 12,7%), banda neutra **~50%**. A
+> **forma** (pilha em 65, banda dominante, 0 publicável) e o veredito **"manter v1"** se
+> mantêm. Leia este doc pela forma; os valores finais estão na revalidação.
+
+
 > **Fase:** calibração v2 (D-051 · mede-e-propõe). **Modo:** READ-ONLY.
 > **Nada gravado** no banco nem em `score_pesos`/`derivacao_config` (dry-run, `gravou_na_base=false`).
 > **Engine:** IMPORTADO (`montarEntradas` ← `derivacao.mjs`, `calcularScore` ← `score.mjs`,
