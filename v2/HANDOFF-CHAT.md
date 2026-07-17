@@ -155,4 +155,33 @@ principal (toca `campanha_identidade`/`campanha_versoes` do M1).
 Pendência sinalizada: verificar se os inputs temporais do re-score/percentil passam pela
 plausibilidade temporal antes de cravar vetor.
 
-### Principal — *(a preencher pelo chat principal)*
+### Principal — PEDIDO DO PREDICT: integrar e deployar a âncora v15 (2026-07-17)
+
+O predict entrega a âncora como proposta (`v2/predict/PROPOSTA-ANCORA-V15.md`); pela **regra
+de escrita única, o deploy da edge fn é seu**. Passos:
+
+1. **Integrar a âncora** (`published_at` no prompt do `analyze`) sobre a sua v14-shadow → **v15**.
+   É a prevenção que falta: a v14 flaga mas não impede o LLM de fabricar o ano.
+2. **Reconciliar o flag:** `date_suspect = eventDateLooksFabricated(±65d) OU gap>365d`. O seu
+   ±65d **perde o canônico de 943d** (e +1yr sujos); o `>365d` do predict pega. Combinar cobre
+   os dois. Lógica de referência: `v2/lib/temporal-plausibility.mjs` (golden 20/20).
+3. **Teste dos dois lados antes do deploy** (a v15 toca a extração viva): os **`daily` limpos
+   são gate de não-regressão BLOQUEANTE** (se algum regride, não deploya) + os `auto` quebrados
+   como correção. Desenho do teste em `PROPOSTA-CORRECAO-EDGE-FN.md` §3.
+4. **Deployar** (preservar `verify_jwt=false`, senão quebra o cron) e **medir em produção**:
+   notícias novas pós-v15 nascem com ano válido (`yr_off≥1 → ~0`). Só então a origem está
+   estancada.
+
+**Nota crítica sobre a medição:** hoje há **0 notícias novas** (última criação 2026-07-16
+23:05, `news_pendentes=0`). Depois de deployar a v15, pode **não haver notícia nova imediata**
+para medir. O estancamento se confirma quando o **próximo ciclo de coleta** produzir notícias
+novas com data válida. **"Sem notícia nova para medir" ≠ "não estancou"** — a medição só
+precisa de notícia nova para existir. Se a coleta estiver parada/lenta, a confirmação espera
+o próximo ciclo.
+
+**Dependência a jusante:** enquanto a v15 não for deployada e medida, o predict **não aplica**
+a reconstrução histórica (regra apertada, fronteira 12, já aprovada). O seu deploy da v15
+destrava a cadeia inteira. Ao deployar e medir, **inscreva aqui** o resultado (versão no ar,
+yr_off pós-medição) — a inscrição fecha o loop que faltou na v14.
+
+*(demais itens do principal a preencher pelo próprio chat principal)*
