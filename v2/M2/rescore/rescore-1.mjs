@@ -91,7 +91,12 @@ function pesosDoBanco(row) {
 }
 
 const routeKey = (c) => `${c.tipo}|${c.origem_code}|${c.destino_code}|${c.publico}`;
-const finite = (x) => { const n = Number(x); return Number.isFinite(n) ? n : null; };
+// BUG (fix desta rodada): Number(null) === 0, então a versão antiga desta função
+// devolvia 0 para percentual/cpm ausente — o guard `!= null` a jusante não pegava
+// isso, e o 0 falso entrava no historico da rota (ECDF). null/undefined tratados
+// ANTES da coerção, para nunca virar 0 por acidente (mesmo espírito do INV-03
+// já documentado no comentário de cpmEfetivo do rescore-2).
+const finite = (x) => { if (x == null) return null; const n = Number(x); return Number.isFinite(n) ? n : null; };
 
 function programa(c) {
   if (c.destino_code && c.destino_code !== 'sem_destino') return c.destino_code;
