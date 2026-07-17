@@ -41,7 +41,18 @@ Regras:
 - NAO invente datas nem percentuais. Se a noticia nao disser, use null e confianca "baixa".
 - Se a noticia NAO for sobre campanha promocional (opiniao, tutorial, viagem), retorne {"campaigns":[]}.`;
 
-async function analyze(text: string) {
+// Fase 1a: ancora de ano. Passa a data de publicacao ao prompt para o modelo nao
+// fabricar/atrasar o ano quando o texto nao traz o ano explicito da vigencia.
+function yearAnchor(publishedAt: string | null): string {
+  if (!publishedAt || !/^\d{4}-\d{2}-\d{2}/.test(publishedAt)) return "";
+  return `\n\nData de publicacao desta noticia: ${publishedAt.slice(0, 10)}. `
+    + `Use-a como ancora de ano: se o texto nao trouxer o ANO explicito da vigencia, `
+    + `use o ano coerente com a publicacao. NUNCA gere vigencia_inicio/vigencia_fim `
+    + `anterior a data de publicacao por mais de 30 dias, a menos que o texto diga `
+    + `explicitamente que a campanha e antiga. Na duvida sobre o ano, use null e confianca "baixa".`;
+}
+
+async function analyze(text: string, publishedAt: string | null) {
   const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${OR_KEY}`, "Content-Type": "application/json" },
@@ -49,7 +60,7 @@ async function analyze(text: string) {
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM },
-        { role: "user", content: text.slice(0, 12000) },
+        { role: "user", content: text.slice(0, 12000) + yearAnchor(publishedAt) },
       ],
       temperature: 0.1,
     }),
@@ -79,6 +90,26 @@ const deaccent = (s: unknown) =>
 const makeId = (c: any) =>
   `${deaccent(c?.origem) || "desconhecido"}-${deaccent(c?.destino) || "desconhecido"}-${c?.tipo || "na"}-${c?.vigencia_fim || "na"}`;
 
+// Fase 1a: guard de plausibilidade temporal. ESPELHO de v2/lib/temporal-plausibility.mjs
+// (golden: v2/lib/temporal-plausibility.test.mjs) — mantenha as duas em sincronia.
+// NAO autocorrige a data (ADR-RADAR-010/INV-16); suspect_year sai da serie (include=false)
+// mas nao e deletado. Limiar 365d = partida, calibravel (Agente 3).
+const SUSPECT_YEAR_DAYS = 365;
+const EVENT_AFTER_SOURCE_DAYS = 30;
+const isIsoDate = (s: unknown) =>
+  typeof s === "string" && /^\d{4}-\d{2}-\d{2}/.test(s) && !Number.isNaN(Date.parse(s.slice(0, 10) + "T00:00:00Z"));
+function temporalPlausibility(vigInicio: any, vigFim: any, firstSeen: any): { status: string; include: boolean } {
+  const eventDate = isIsoDate(vigInicio) ? String(vigInicio).slice(0, 10)
+    : isIsoDate(vigFim) ? String(vigFim).slice(0, 10) : null;
+  if (eventDate == null || !isIsoDate(firstSeen)) return { status: "valid", include: true };
+  const days = Math.round(
+    (Date.parse(String(firstSeen).slice(0, 10) + "T00:00:00Z") - Date.parse(eventDate + "T00:00:00Z")) / 864e5,
+  );
+  if (days > SUSPECT_YEAR_DAYS) return { status: "suspect_year", include: false };
+  if (days < -EVENT_AFTER_SOURCE_DAYS) return { status: "event_after_source", include: true };
+  return { status: "valid", include: true };
+}
+
 // Concurrency-limited map.
 async function mapLimit<T, R>(items: T[], limit: number, fn: (x: T) => Promise<R>): Promise<R[]> {
   const out = new Array<R>(items.length);
@@ -103,8 +134,9 @@ async function processItem(it: any, runId: string, today: string, in3days: strin
       return { processed: 1, extracted: 0 };
     }
 
-    const { json, usage } = await analyze(text);
+    const { json, usage } = await analyze(text, it.published_at ?? null);
     const campaigns = Array.isArray(json?.campaigns) ? json.campaigns.filter(Boolean) : [];
+    const firstSeenVal = it.published_at || today;
 
     const rows = campaigns.map((c: any) => {
       const fim = c.vigencia_fim ?? "na";
@@ -113,6 +145,8 @@ async function processItem(it: any, runId: string, today: string, in3days: strin
         if (fim < today) status = "vencida";
         else if (fim <= in3days) status = "vence-72h";
       }
+      // Fase 1a: flag de plausibilidade (nao autocorrige; suspect sai da serie).
+      const temporal = temporalPlausibility(c.vigencia_inicio, fim, firstSeenVal);
       return {
         id: makeId(c),
         module: c.tipo,
@@ -129,10 +163,12 @@ async function processItem(it: any, runId: string, today: string, in3days: strin
         source_name: it.source,
         source_url: it.url,
         regulamento_url: c.regulamento_url,
-        first_seen: it.published_at || today,
+        first_seen: firstSeenVal,
         last_seen: today,
         observed_at: today,
         origin: "auto",
+        temporal_status: temporal.status,
+        include_in_prediction: temporal.include,
         notes: `${c.resumo || ""} [confianca:${c.confianca || "baixa"}]`,
       };
     });

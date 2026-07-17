@@ -71,7 +71,10 @@ confirma que a **camada temporal do corpus está corrompida**:
   confiável é **~24 meses (2024-07 → 2026-07)**, não os 34 do bruto. Reavaliar inputs
   temporais.
 - **Principal:** qualquer coisa que dependa de data de campanha herda essa limitação até
-  a reconstrução rodar.
+  a reconstrução rodar. **A correção da edge fn (Fase 1a) é pré-requisito para vigência
+  confiável de campanhas NOVAS** — afeta a cobertura de fontes que o principal gerencia
+  (campanhas novas passam a nascer com data válida/flagada). E a **Fase 1b é coordenada
+  com o principal** (toca a identidade M1).
 
 **Impacto nos outros chats:** a **calibração de score** também pode estar usando datas
 ruins (percentil histórico, re-score D-007/D-038 dependem de série temporal). O chat de
@@ -107,10 +110,21 @@ de cravar qualquer vetor.
 **Trava ativa:** nenhum parâmetro do predict é gravado/calibrado até a slice de
 plausibilidade temporal fechar. Backtest sobre datas corrompidas está proibido.
 
-**Próximo trabalho substantivo:** Agente 1 — **investigação de causa-raiz da corrupção
-temporal** (bug de ingestão reversível vs ausência de dado na origem). Decide se
-recuperamos parte dos ~34 meses ou se 2025-12 é o começo real. É o que destrava (ou não)
-o backtest honesto e a calibração.
+**Status (2026-07-17):** Agente 1 fechou o diagnóstico (causa-raiz sistemática, viva na
+extração). **Fase 1a implementada e testada, aguardando deploy** (1º portão):
+- `v2/lib/temporal-plausibility.mjs` + golden `…test.mjs` (**20/20 verdes**): não-regressão
+  (0 limpos viram suspect) + correção (todos os quebrados → `suspect_year`, inclui o
+  canônico e um daily sujo de 852d).
+- Edge fn `campaigns` (v14 proposta): âncora de `published_at` no prompt + guard inline +
+  colunas `temporal_status`/`include_in_prediction`. **Não muda `makeId` (isso é 1b).**
+- Migration aditiva `supabase/migrations/0008_temporal_plausibility.sql` (proposta).
+- Guard `>365d` sobre o corpus vivo: flaga **193/562** (backstop conservador de alta
+  precisão; o resto é âncora na origem + reconstrução por evidência na Fase 2).
+- **Pendente:** aprovação do operador para deploy + medição pós-deploy (yr_off≥1 → ~0).
+
+**Fase 1b = slice COORDENADA com o chat principal** (não unilateral do predict): tirar a
+data do `id` e dedup por identidade estável tocam `campanha_identidade`/`campanha_versoes`,
+construídos e usados pelo M1 (chat principal). Só roda alinhada com o dono do M1.
 
 ### Calibração — *(a preencher pelo chat de calibração)*
 Pendência sinalizada: verificar se os inputs temporais do re-score/percentil passam pela
