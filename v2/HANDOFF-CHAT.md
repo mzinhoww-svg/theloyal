@@ -32,12 +32,25 @@ confirma que a **camada temporal do corpus está corrompida**:
 - **Erro de ano sistemático:** 77% das transferências têm data de evento >180 dias antes
   do `first_seen` (média **+310 dias**); 281 datas em 2023–2024 são majoritariamente ano
   fabricado pela extração LLM.
-- **Proveniência confiável só desde 2025-12** (`observed_at`); `created_at` é todo de
-  2026-07-11..15. A história observável real é ~7 meses, **não 36** — *a confirmar após a
-  investigação de causa-raiz do Agente 1*.
 - **Span nominal ~41 meses** (`window_date` 2023-02 → 2026-07) é **artefato de erro**, não
   histórico. O caso canônico `livelo→connectmiles` gera 943 dias de intervalo a partir da
   **mesma campanha duplicada com ano inventado**.
+
+**Diagnóstico de causa-raiz FECHADO (Agente 1, banco vivo 2026-07-17) — ver
+`v2/predict/DIAGNOSTICO-CAUSA-RAIZ-TEMPORAL.md`:**
+- Erro é **SISTEMÁTICO** (ano atrasado 1–6 anos; 425/562 = 75,6% dos datados, massa em
+  +1 ano), **não aleatório** → parcialmente recuperável.
+- Nasce na **EXTRAÇÃO** (LLM da edge fn `campaigns` v13, sem validação de data) e **ainda
+  está VIVO** — quase todo em `origin='auto'`; `daily` (curadoria) está limpo; +246
+  transferências novas desde a auditoria, a mais recente (2026-07-16) ainda corrompida.
+- **~49% reconstruíveis por evidência** (token mês-ano no slug == ano de `first_seen`);
+  o resto vira `suspect_year` e sai (nunca chutado). O caso canônico fica `suspect_year`.
+- **Cobertura recuperável real: ~17 rotas** (`base_n≥3`, série≥12m) sobre **~24 meses**
+  confiáveis (2024-07 → 2026-07), com a regra de reconstrução aprovada; **~9 rotas** sem
+  ela. Não são 34 meses, nem o piso de 2025-12.
+- **Nada aplicado** — regra de correção proposta, aguardando aprovação do operador +
+  trava de anomalia + dry-run. **A origem (edge fn) precisa de correção também**, senão
+  a limpeza histórica não dura.
 
 **Impacto nos outros chats:** a **calibração de score** também pode estar usando datas
 ruins (percentil histórico, re-score D-007/D-038 dependem de série temporal). O chat de
