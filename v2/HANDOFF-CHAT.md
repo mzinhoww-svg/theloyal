@@ -82,6 +82,34 @@ alta : livelo→azul_fidelidade 1 · livelo→latam_pass 1 · livelo→connectmi
 media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera→azul_fidelidade 1 · esfera→connectmiles 0.3333
 ```
 
+### Frente CALIBRAÇÃO (régua) — chat dedicado (D-051), aberta 2026-07-17
+Chat paralelo, worktree isolado, base = este estado (nfvoh1 D-050). **Trava D-051:**
+o corpus calibra os parâmetros dos motores determinísticos (constantes versionadas),
+**nunca** substitui os motores por modelo/ML. Conta aberta é o produto. Modo dos três
+agentes: **mede-e-propõe** — nenhum parâmetro vira produção sem aprovação do operador;
+movimento que aumenta risco de publicação é gated, movimento que aumenta cautela é livre.
+
+**Foto do corpus medida (live, `qjqnqcsdnpvvmyzkavoq`, 2026-07-17):** 40.327 news_raw
+(40.321 processadas; 13.628 com ≥1 campanha) · 3.621 campanhas · **1.014 identidades**
+canônicas · span **18,0 meses** (2025-01-14→2026-07-17) · `tl_score` preenchido
+**11/3.621**, `tl_breakdown` **0** (re-score gravou agregados, breakdown por-item ainda não).
+
+**Fronteira estrutural que muda a leitura dos TRÊS chats:** a calibração da
+**distribuição** (pesos TL Score, quartis, buckets de derivação, golden) roda **agora**
+contra o corpus. Mas os dois loops que dependem de **desfecho real observado** ficam
+**bloqueados por ausência de ledger de desfechos**, e por motivo idêntico:
+- **Auto-ajuste do limiar do gate de confiança (D-048).** O limiar de PARTIDA (0,75,
+  D-050) existe e é conservador de propósito; o que **não** dá para calibrar é o
+  auto-ajuste por taxa-de-acerto — `campanha_fontes`=1, zero desfecho conhecido.
+- **Predict frequencial (REQ-24/25).** Sem camada temporal confiável + ledger de
+  predição emitida→resolvida, não há Brier para calibrar.
+
+Não é bug — é a ordem natural: mede-se o que dá contra o corpus agora; os loops de
+acerto **ligam quando houver acerto para medir** (produto operando gera histórico).
+**Cobertura de base do predict (medida hoje):** dos 1.008 pares com identidade,
+**215** têm base_n≥3 e **163** têm base_n≥3 **e** série≥12m → aptos a probabilidade
+numérica honesta; 45 robustos (≥12 e ≥12m).
+
 ### Re-score-1 dry-run na base SUJA (superado pela recanon; referência histórica)
 > Este dry-run rodou ANTES da recanonicalização. O balde 4=103 e as anomalias
 > abaixo eram sobre a base suja. O re-score-1 sobre a base SÃ (em execução) traz o

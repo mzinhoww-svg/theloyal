@@ -302,5 +302,24 @@ A máquina está **provada ponta a ponta** (caso `livelo→azul` + `livelo→hil
 5. **Cobertura de fontes é a próxima frente** (15/18 vivas crawleáveis sem URL oficial → nem chegam ao gate). Mais adapters + páginas oficiais detectáveis = maior probabilidade de capturar a próxima oferta forte quando surgir.
 **Princípio de lançamento (registrado):** *o dia fraco reportado como dia fraco* — "esta semana não há oferta que valha a pena, e aqui está por quê, com as contas" — demonstra mais credibilidade que qualquer card de 65. Nos primeiros dias, o dia fraco honesto é a **melhor propaganda** do produto. **Parâmetros aprovados nesta rodada:** Parte B — fallback cross-merchant OFF; `conta_nao_calculavel` → **não-valor** (bruto null), não desinflado; raridade buckets D-037; `min_merchant=3`/`min_tipo=8`; versionado em `derivacao_config`. Parte A — limiar 0,75, gate em confirma-e-mostra.
 
+## D-051 — TRAVA DA FASE DE CALIBRAÇÃO: o corpus calibra os motores, nunca os substitui
+**Data:** 2026-07-17 · **Status:** Aprovada (trava inviolável) · **Milestone:** Calibração (accuracy loop, brief §13) · **Origem:** abertura do chat de calibração por corpus
+
+Trava inegociável de toda a fase de calibração, registrada **antes** de qualquer agente. O corpus real (40k+ notícias processadas, ~18 meses, base sã pós-recanonicalização) **calibra os parâmetros dos motores determinísticos** — constantes de funções puras versionadas (`score_pesos`, `derivacao_config`, `custo_base_*`, limiar do gate D-048). **Nunca** substitui os motores por um modelo aprendido/ML.
+
+- **O TL Score continua conta aberta, auditável, com breakdown e fórmula.** Nada de regressor, embedding-como-score ou caixa-preta. A conta aberta **é o produto** (INV-03; tese-mãe do HANDOFF: determinismo primeiro, LLM depois — a LLM narra, nunca calcula).
+- "Treinar com o que temos" nesta fase = **medir a distribuição real e mover uma constante versionada**, jamais "trocar o motor por um modelo". Agente que interpretar o contrário **parou errado** e aborta a frente.
+- **Determinismo-primeiro vale aqui mais que em qualquer lugar:** mesmo input → mesmo output no CI; golden files ancorados à versão do parâmetro.
+
+**Disciplina de calibração (todo parâmetro):**
+1. Parâmetro calibrado vira **nova versão versionada** (`score_pesos.v1`→`.v2`, `derivacao_config` v1→v2), com **golden files travando o comportamento**, **antes/depois medido e visível**, **changelog público**, **rollback possível**. Calibração não drifta silenciosamente.
+2. **Portão do operador:** movimento que **aumenta risco de publicação exige aprovação do operador**; movimento que **aumenta cautela é livre**. O operador é o portão de toda decisão de parâmetro que vira público.
+3. Todos os agentes operam **mede-e-propõe**: não gravam versão em produção sem aprovação da proposta. Spec/proposta antes de gravar, sempre.
+4. **Caso-guia:** `livelo→azul` — blog 115% vs. oficial em escala por público 50–120% (D-048/CASO-LIVELO-AZUL). Parâmetro medido no corpus pega o que a amostra pequena não pega.
+
+**Fronteira estrutural (dois loops que NÃO calibram contra o corpus agora — só o tempo os liga):** a calibração dos motores contra a **distribuição** (pesos, quartis, buckets, golden) roda hoje. Mas os loops que dependem de **desfecho real observado** — o auto-ajuste do **limiar do gate de confiança** (D-048) e o **predict frequencial** (REQ-24/25) — ficam **bloqueados por ausência de ledger de desfechos**. Não é bug: mede-se o que dá contra o corpus agora; os loops de acerto ligam quando houver acerto para medir (produto operando gera histórico). Ver HANDOFF §1.
+
+Generaliza e sela o espírito de D-022/D-032/D-037/D-038 (parâmetro = versão, não hardcode) como **regra permanente da fase**.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
