@@ -263,14 +263,23 @@ aproxima o lançamento é a CALIBRAÇÃO fechar — não o track record.** Ordem
    corrigida (D-050.1 zerou 710 brutos) → fechar os vetores → **liga o auto-publish** (D-050).
    Enquanto não fecha, o produto **não opera** (publica nada automático). É a frente que
    **liga** o produto. (Roda no chat de calibração.)
-2. **[PARALELO — enche o produto] Track record / M3** (`M3/SPEC-TRACK-RECORD.md`, 4 decisões
-   §6). Conteúdo de estreia. **Se houver conflito de esforço, calibração vence track record**
-   (calibração liga, track record enche). **⚠️ Dep. temporal:** herda janela confiável ~24m
-   do predict; NÃO exibe data suspeita.
-3. **[predict] Reconstrução temporal** (~24m) + Fase 1a edge fn — destrava vigência confiável.
+2. **[HOLD — não construir ainda] Track record / M3** (`M3/SPEC-TRACK-RECORD.md`, 4 decisões
+   §6 **ratificadas**). Spec pronta, **construção SEGURADA** (§6.1): depende de fundação em
+   movimento (janela temporal do predict ainda não cravada; vetores não fechados). Construir
+   sobre janela que vai mudar = retrabalho. **Gatilho para construir: janela cravada E vetores
+   fechados.** Track record enche a loja; a calibração é que **abre** a loja.
+3. **[predict] Reconstrução temporal** (~24m) + reconciliação da edge fn — crava a janela
+   confiável (destrava vigência para track record E cobertura).
 4. **Ponto-limite (D-051):** os 3 loops de desfecho (gate/ledger, predict/série, accuracy/
-   vereditos publicados) só destravam quando o **produto OPERAR**. Além de certo ponto,
-   construir não adianta, só operar adianta. A próxima grande alavanca é **ir ao ar**.
+   vereditos publicados) só destravam quando o **produto OPERAR**. Construir não adianta mais;
+   só operar adianta. Próxima grande alavanca = **ir ao ar** (após calibração fechar).
+
+**Estado: TRÊS CHATS EM ESPERA COORDENADA.** O principal **não tem trabalho de caminho
+crítico próprio agora** (o caminho crítico está na calibração e no predict). Próximo movimento
+real = **calibração fechar** os vetores OU **predict cravar** a janela. Pontos de decisão do
+operador: (a) amostra de reconstrução do predict (audita); (b) gates re-medidos da calibração
+(número público); (c) construção do track record **depois** que a fundação cravar. Nenhum
+exige input por turno — o operador volta quando um agente entregar.
 
 ---
 

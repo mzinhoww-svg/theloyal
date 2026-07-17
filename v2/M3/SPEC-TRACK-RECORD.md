@@ -76,20 +76,30 @@ reconstrução em curso). Logo:
 
 ---
 
-## 6. Decisões que aguardam o operador (paro aqui — spec antes de código)
+## 6. Decisões do operador — RATIFICADAS (2026-07-17)
 
-1. **Régua de inclusão:** só banda forte na época ("Vale olhar"+, ≥70), ou incluir também
-   os **casos didáticos de recusa** (o `livelo→azul` "Evitaria" que prova o rigor)? Recomendo
-   incluir recusas selecionadas — o track record vende tanto o acerto quanto a recusa.
-2. **Janela de exibição de datas:** começar **só com ofertas dentro dos ~24 meses confiáveis**
-   (pós-reconstrução do predict), marcando as mais antigas como "período aproximado / a
-   confirmar", ou **segurar o track record inteiro** até a reconstrução fechar? Recomendo o
-   primeiro (mostra o que é seguro, marca o resto) — não bloqueia a estreia de conteúdo.
-3. **Campos do breakdown públicos:** exibir o breakdown por componente completo (transparência
-   metodológica, on-brand) ou só o TL Score + a conta (mais limpo)? Recomendo o breakdown —
-   é a prova de método.
-4. **Superfície:** página própria (`/track-record` ou similar) no site, ou seção dentro da
-   edição/digest? Decisão de produto de onde ela mora.
+1. **Régua de inclusão: ✅ inclui as recusas selecionadas.** Um track record só de boas
+   ofertas parece agregador; um que inclui "esta parecia boa e não era, veja a conta" é o
+   The Loyal. O `livelo→azul` "Evitaria" é peça-chave (prova a régua nos dois sentidos).
+2. **Janela de datas: ✅ mostra o seguro, marca o resto, não bloqueia.** Dentro dos ~24m
+   confiáveis exibe data; mais antigas = "período aproximado / a confirmar".
+3. **Campos: ✅ breakdown completo por componente.** É a prova de método — "veja a conta",
+   não "confie em nós". O breakdown É o produto.
+4. **Superfície: ✅ página própria** (`/track-record`) — ativo permanente referenciável que
+   cresce com o tempo, não conteúdo de uma edição.
+
+## 6.1 CONSTRUÇÃO EM HOLD — espera a fundação cravar (decisão de sequência)
+
+**Spec ratificada, construção SEGURADA.** O track record é conteúdo de estreia de um produto
+que **ainda não está no ar** — construí-lo agora é encher a prateleira de uma loja fechada.
+O que **abre a loja** é a **calibração fechar** (liga o auto-publish), não o track record.
+E o track record depende de **fundação ainda em movimento:** herda a **janela temporal
+confiável do predict**, que ainda não está cravada (reconstrução depende da âncora/reconciliação
+da edge fn). Construir sobre janela que vai mudar = **retrabalho garantido**. Ordem certa:
+**(1)** calibração fecha os vetores → auto-publish; **(2)** predict crava a janela ~24m; **(3)**
+só então o track record é construído sobre fundação estável (data confiável + score final);
+**(4)** fecha o M2. Não é adiar por adiar — é construir na ordem que evita retrabalho.
+Gatilho para construir: **janela temporal cravada E vetores fechados.**
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de
 comprar, transferir ou resgatar.*
