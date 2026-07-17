@@ -1,7 +1,7 @@
 # ADR-RADAR-010 — Validação de plausibilidade temporal
 
-- **Status:** proposed
-- **Data:** 2026-07-15
+- **Status:** accepted (ratificada 2026-07-17 — ver "Ratificação" abaixo)
+- **Data:** 2026-07-15 · **Ratificação:** 2026-07-17 (chat de predict, D-040)
 - **Relacionado:** arquitetura §6, §27d.2, §27d.4, §27f; ADR-RADAR-002, ADR-RADAR-009;
   `docs/AUDITORIA-FORENSE-PREDICT-FORECAST.md` §12, §26; `docs/auditoria/edge-function-campaigns.md`
 
@@ -85,3 +85,18 @@ observed_at     = 2026-07-13
 ## Critério para `accepted`
 Aprovação do usuário das flags, dos limiares iniciais, da matriz de bloqueio e do
 princípio **"proveniência valida, não substitui; nunca autocorrigir"**.
+
+## Ratificação (2026-07-17)
+Ratificada pelo operador no chat de predict (D-040), destravando a slice de
+plausibilidade temporal como **pré-requisito** de toda calibração do predict.
+
+**Ressalva explícita — o que foi ratificado e o que não:**
+- **Ratificado (final):** o *mecanismo* de detecção — as flags, a matriz de bloqueio
+  (Forecast/Predict/publicação/reprocessa/revisão), as distinções obrigatórias e o
+  princípio **"proveniência valida, não substitui; nunca autocorrigir"** (INV-16
+  aplicado ao tempo).
+- **NÃO congelado:** os **limiares numéricos** (548 d para `suspect_year`, 365 d para
+  `event_far_before_source`, `k·MAD` para `suspect_month`). São valores **de partida**
+  e são eles próprios **alvo de calibração do Agente 3** contra o corpus. Afiná-los com
+  dado **não reabre esta ADR** — a ADR ratifica a detecção de ano suspeito, não o número
+  exato do corte. Os limiares finais entram como versão calibrada, com antes/depois.
