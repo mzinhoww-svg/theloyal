@@ -153,15 +153,19 @@ export function assertEditorialRules(node, { label = "corpo editorial", disclaim
   }
 
   const sample = (arr, n) => arr.slice(0, 2).map((s) => JSON.stringify(s.slice(0, n))).join(", ");
-  const emoji = strings.filter((s) => EMOJI_RE.test(s));
+  // URLs NÃO são corpo editorial: um slug como ".../corre-30-off-nos-..." não é
+  // urgência artificial, é o endereço da fonte. Excluímos strings-URL dos lints
+  // de emoji/urgência/interno (elas são validadas por isValidLink, não aqui).
+  const editorial = strings.filter((s) => !/^\s*https?:\/\//i.test(s));
+  const emoji = editorial.filter((s) => EMOJI_RE.test(s));
   if (emoji.length) errors.push(`Emoji proibido no ${label}: ${sample(emoji, 40)}`);
   else ok.push(`Zero emoji no ${label}`);
 
-  const urgency = strings.filter((s) => URGENCY_RE.test(s));
+  const urgency = editorial.filter((s) => URGENCY_RE.test(s));
   if (urgency.length) errors.push(`Urgência artificial proibida no ${label}: ${sample(urgency, 50)}`);
   else ok.push(`Sem urgência artificial no ${label}`);
 
-  const internal = strings.filter((s) => INTERNAL_RE.test(s));
+  const internal = editorial.filter((s) => INTERNAL_RE.test(s));
   if (internal.length) errors.push(`Dado interno/CMI proibido no ${label}: ${sample(internal, 50)}`);
   else ok.push(`Sem dado interno / CMI / métrica proprietária no ${label}`);
 

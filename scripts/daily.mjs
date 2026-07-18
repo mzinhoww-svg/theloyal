@@ -25,7 +25,7 @@ import { renderBeehiivHtml } from '../v2/lib/digest/render-beehiiv.mjs';
 import { renderEmail } from '../renderer/email.mjs';
 import { gate } from '../v2/lib/gate-unico.mjs';
 import { anotarRevisao } from '../v2/lib/verificacao/integrar.mjs';
-import { montarEdicaoDoDia, resolverNumeroEdicao, reconstruirConjuntoVivo } from '../v2/lib/digest/montar-edicao.mjs';
+import { montarEdicaoDoDia, resolverNumeroEdicao, reconstruirConjuntoVivo, revalidarVigencia } from '../v2/lib/digest/montar-edicao.mjs';
 
 const LEDGER = 'content/daily-status.json';
 const OUT = 'out/daily';
@@ -214,9 +214,13 @@ async function main() {
 
   // 1+2. Fonte viva do dia + MONTAGEM da edição fresca (ou carga estática
   // quando um caminho de edição é passado explicitamente — back-compat).
-  const { rows: campaignsFromDb, newsRaw, forecast, fonte } = await carregarCampanhas({
+  const { rows: rowsBrutas, newsRaw, forecast, fonte } = await carregarCampanhas({
     campaignsPath: opts.campaigns, newsPath: opts.news, forecastPath: opts.forecast, hoje,
   });
+  // Revalidação de vigência no BOUNDARY: montagem, pré-superfície e gate veem a
+  // MESMA verdade de vigência (vencida antes de `hoje` = 'encerrada'), mesmo que
+  // o FSM do banco esteja stale. Sem isso, o gate diverge da edição montada.
+  const campaignsFromDb = revalidarVigencia(rowsBrutas, hoje);
 
   let ed;
   let edPath;

@@ -64,6 +64,27 @@ export function reconstruirEstado(row, asOf) {
  * `vigencia_fim`), e descarta o que ainda não havia sido visto (`futuro`).
  * Mantém as encerradas (o recap "O que fechou nesta semana" precisa delas).
  */
+/**
+ * Revalidação de vigência (defensiva contra `estado` STALE do FSM): uma campanha
+ * cuja vigência já passou ANTES da data da edição NÃO é oferta viva — força
+ * 'encerrada' para não vazar em Ofertas ativas / Vence em 72h, mesmo que o banco
+ * ainda a marque 'ultimos_dias'. Vencer NA data (== asOf) segue válido ("vence
+ * hoje"). Deve ser aplicada no BOUNDARY do runner, para que a montagem E o gate
+ * vejam a MESMA verdade de vigência (senão o checkFechouSemana diverge). Mesma
+ * verdade que o gate do Weekly (W) exige.
+ * @param {object[]} campaigns
+ * @param {string} asOf  YYYY-MM-DD
+ * @returns {object[]}
+ */
+export function revalidarVigencia(campaigns = [], asOf) {
+  const asOfDate = String(asOf).slice(0, 10);
+  return (Array.isArray(campaigns) ? campaigns : []).map((c) => {
+    const vfRaw = c?.vigencia_fim_date ?? c?.vigencia_fim;
+    const vf = vfRaw && /^\d{4}-\d{2}-\d{2}/.test(String(vfRaw)) ? String(vfRaw).slice(0, 10) : null;
+    return vf && vf < asOfDate ? { ...c, estado: 'encerrada' } : c;
+  });
+}
+
 export function reconstruirConjuntoVivo(rows = [], asOf) {
   const out = [];
   for (const row of rows || []) {
@@ -248,7 +269,7 @@ function construirResumo({ featured, ofertas, nVence }) {
 export function montarEdicaoDoDia({ asOf, campaigns = [], newsRaw = [], forecast = null, number }) {
   if (!asOf) throw new Error('montarEdicaoDoDia: asOf é obrigatório');
   if (!Number.isFinite(Number(number))) throw new Error('montarEdicaoDoDia: number é obrigatório');
-  const camps = Array.isArray(campaigns) ? campaigns : [];
+  const camps = revalidarVigencia(campaigns, asOf);
 
   // 1. Deal Desk (cap 3) — vazio quando não há elegível (dia fraco de 1ª classe).
   const { selecionados } = selecionarDealDesk(camps, { cap: 3 });
