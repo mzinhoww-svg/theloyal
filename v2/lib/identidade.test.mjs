@@ -108,6 +108,21 @@ test('origem genérica recuperável -> sub-motivo distinto do lixo', () => {
   assert.equal(j.revisao, 'origem_nao_resolvida');
 });
 
+test('guard self-loop (D-041): transferência origem==destino -> revisão, mapa intacto', () => {
+  // 'gol' é alias de smiles (como PagoGol na base real): smiles->gol resolve
+  // smiles->smiles = self-loop. Não emite identidade pontuável; vai p/ revisão.
+  const s = resolverCampanha({ origem: 'Smiles', destino: 'gol', tipo: 'transferencia', vigencia_fim: '2026-09-01' }, IX, '2026-07-16');
+  assert.equal(s.resolvido, false);
+  assert.equal(s.revisao, 'transferencia_self_loop');
+  assert.equal(s.origemCode, 'smiles');
+  // rota legítima (origem != destino) segue resolvendo normal — guard não vaza.
+  const ok = resolverCampanha({ origem: 'Livelo', destino: 'Smiles', tipo: 'transferencia', vigencia_fim: '2026-09-01' }, IX, '2026-07-16');
+  assert.equal(ok.resolvido, true);
+  // self-loop só vale p/ transferência: compra origem==destino não é barrada aqui.
+  const c = resolverCampanha({ origem: 'Smiles', destino: 'gol', tipo: 'compra', vigencia_fim: '2026-09-01' }, IX, '2026-07-16');
+  assert.equal(c.resolvido, true);
+});
+
 test('multi-banco: origem genérica + transferência + destino real -> multiplos_cartoes', () => {
   // "até 90% na transferência do cartão de crédito -> Smiles" (genérico legítimo)
   const m = resolverCampanha({ origem: 'cartoes', destino: 'Smiles', tipo: 'transferencia', vigencia_fim: '2026-09-01' }, IX, '2026-07-16');

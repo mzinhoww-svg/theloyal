@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 452 96" width="452" height="96" role="img" aria-label="The Loyalty">
-  <!-- Wordmark primario. Ink sobre fundo Paper/claro. Fraunces: "The" 600 + "Loyalty" 700. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 452 96" width="452" height="96" role="img" aria-label="The Loyal">
+  <!-- Wordmark primario. Ink sobre fundo Paper/claro. Fraunces: "The" 600 + "Loyal" 700. -->
   <!-- Producao (media kit/e-mail): converter o texto em contornos. No site, use components/Logo.tsx. -->
-  <text x="8" y="66" font-family="Fraunces, Georgia, serif" font-size="64" letter-spacing="-0.5" fill="#111111"><tspan font-weight="600">The </tspan><tspan font-weight="700">Loyalty</tspan></text>
+  <text x="8" y="66" font-family="Fraunces, Georgia, serif" font-size="64" letter-spacing="-0.5" fill="#111111"><tspan font-weight="600">The </tspan><tspan font-weight="700">Loyal</tspan></text>
 </svg>

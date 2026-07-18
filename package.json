@@ -23,8 +23,10 @@
     "weekly:beehiiv": "node scripts/beehiiv-publish-weekly.mjs",
     "beehiiv": "node scripts/beehiiv-publish.mjs",
     "collect": "node scripts/collect-skus.mjs",
+    "painel:custo": "node scripts/painel-custo-llm.mjs",
     "pro:vpm": "node scripts/pro-vpm.mjs",
     "edition": "node scripts/render-system.mjs && node scripts/publish.mjs",
+    "daily": "node scripts/daily.mjs",
     "daily:validate": "node scripts/validate-daily.mjs",
     "daily:render": "node scripts/render-daily.mjs",
     "daily:qa": "node scripts/qa-daily.mjs"

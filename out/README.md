@@ -1,12 +1,12 @@
 # out/ — digests renderizados
 
-Saídas prontas das edições do The Loyalty (Lab e Special). Cada peça tem quatro
+Saídas prontas das edições do The Loyal (Lab e Special). Cada peça tem quatro
 formatos. Os arquivos são versionados com `git add -f` (o `.gitignore` ignora `/out/`
 por causa do export do Next; estes são conteúdo curado, não build).
 
 ```
 out/
-  lab/       edições evergreen (Loyalty Lab)
+  lab/       edições evergreen (Loyal Lab)
     cpm.html         web (fontes via Google Fonts)
     cpm.email.html   e-mail-safe (600px, table-based, inline)
     cpm.txt          plain text

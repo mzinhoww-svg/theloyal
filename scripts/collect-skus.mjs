@@ -60,7 +60,7 @@ async function collect({ mock }) {
         // uma entrada do basket → tipicamente uma URL/observação por player
         const r = results[0] ?? { player, sku: entry, points: null, cash: null, url: src.url };
         const promo = r.points && r.cash
-          ? await classifyPromo(r.name ?? entry.canonicalName, `R$ ${r.cash}`, "")
+          ? await classifyPromo(r.name ?? entry.canonicalName, `R$ ${r.cash}`, "", runId)
           : { is_promo: false, reason: null };
         obs = { ...r, is_promo: promo.is_promo, promo_reason: promo.reason };
       }

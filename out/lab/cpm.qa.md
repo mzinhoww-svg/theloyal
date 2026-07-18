@@ -1,4 +1,4 @@
-# QA — The Loyalty Lab: "Custo por milheiro (CPM)"
+# QA — The Loyal Lab: "Custo por milheiro (CPM)"
 
 ## Estrutura (11 seções pedidas)
 - [x] 1. Título · 2. Lede · 3. O problema · 4. A definição · 5. Como funciona

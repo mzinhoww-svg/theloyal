@@ -1,0 +1,1107 @@
+{
+  "ref": "2026-07-17",
+  "limiar_partida": 0.75,
+  "piso_valor": 70,
+  "versao_confianca": "confianca.v1",
+  "contagens": {
+    "total": 18,
+    "corrobora_limpo": 1,
+    "corrobora_com_ajuste": 1,
+    "refuta": 0,
+    "evergreen": 1,
+    "encerrado": 0,
+    "sem_url_oficial": 15,
+    "publicariam_no_limiar_partida": 1
+  },
+  "itens": [
+    {
+      "id": "esfera-desconhecido-compra-2026-07-30",
+      "origem": "esfera",
+      "destino": "sem_destino",
+      "tipo": "compra",
+      "publico": "geral",
+      "pct_ingerido": 50,
+      "tl_score_bruto": 67,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "esfera-desconhecido-clube-2026-07-17",
+      "origem": "esfera",
+      "destino": "sem_destino",
+      "tipo": "clube",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 51,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "esfera-esfera-compra-2026-07-22",
+      "origem": "esfera",
+      "destino": "esfera",
+      "tipo": "compra",
+      "publico": "geral",
+      "pct_ingerido": 50,
+      "tl_score_bruto": 49,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "esfera-all accor-transferencia-2026-07-16",
+      "origem": "esfera",
+      "destino": "accor",
+      "tipo": "transferencia",
+      "publico": "geral",
+      "pct_ingerido": 20,
+      "tl_score_bruto": 41,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "esfera-esfera-compra-2026-07-31",
+      "origem": "esfera",
+      "destino": "esfera",
+      "tipo": "compra",
+      "publico": "clube",
+      "pct_ingerido": 50,
+      "tl_score_bruto": 40,
+      "passa_corte_valor": false,
+      "status_coleta": "evergreen",
+      "motivo": "regulamento sem janela de vigencia datada = evergreen (D-047), nao confirma campanha",
+      "url_oficial": "https://www.esfera.com.vc/p/compra-de-pontos/e000100033",
+      "via": "regulamento_url",
+      "sitemap_confirma": false,
+      "janela": {
+        "tem": false,
+        "texto": null,
+        "fim_date": null,
+        "confiavel": false
+      },
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0.45,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": true,
+          "peso": 0.3,
+          "contribuicao": 0.3
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": true,
+          "peso": 0.15,
+          "contribuicao": 0.15
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "esfera-esfera-clube-2026-07-17",
+      "origem": "esfera",
+      "destino": "esfera",
+      "tipo": "clube",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 27,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "livelo-hilton-hotelaria-2026-07-31",
+      "origem": "livelo",
+      "destino": "hilton",
+      "tipo": "hotelaria",
+      "publico": "geral",
+      "pct_ingerido": 50,
+      "tl_score_bruto": 65,
+      "passa_corte_valor": false,
+      "status_coleta": "campanha",
+      "motivo": "pct 50% bate na faixa do publico geral (faixa unica)",
+      "url_oficial": "https://www.livelo.com.br/livelo-para-parceiros/hilton-honors/HILTransfer",
+      "via": "regulamento_url",
+      "sitemap_confirma": true,
+      "janela": {
+        "tem": true,
+        "texto": "Válido das 10h do dia 01/07 até as 23h59 do dia 31/07/2026",
+        "fim_date": "2026-07-31",
+        "confiavel": true
+      },
+      "escala": [
+        {
+          "pct": 50,
+          "publico": "geral",
+          "trecho": "iption\":\" Válido das 10h do dia 01/07 até as 23h59 do dia 31/07/2026. 50% de bônus para to"
+        }
+      ],
+      "resultado": "corrobora_limpo",
+      "tier_casado": {
+        "pct": 50,
+        "publico": "geral"
+      },
+      "confianca": 1,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": true,
+          "peso": 0.3,
+          "contribuicao": 0.3
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": true,
+          "peso": 0.25,
+          "contribuicao": 0.25
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": true,
+          "peso": 0.15,
+          "contribuicao": 0.15
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": true,
+          "peso": 0.15,
+          "contribuicao": 0.15
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": true,
+          "peso": 0.15,
+          "contribuicao": 0.15
+        }
+      ],
+      "decisoes": {
+        "0.60": "auto: publica (3 portoes)",
+        "0.70": "auto: publica (3 portoes)",
+        "0.75": "auto: publica (3 portoes)",
+        "0.80": "auto: publica (3 portoes)",
+        "0.90": "auto: publica (3 portoes)"
+      }
+    },
+    {
+      "id": "livelo-aliexpress-compra-2026-07-21",
+      "origem": "livelo",
+      "destino": "aliexpress",
+      "tipo": "compra",
+      "publico": "geral",
+      "pct_ingerido": 25,
+      "tl_score_bruto": 60,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "livelo-aliexpress-compra-2026-07-23",
+      "origem": "livelo",
+      "destino": "aliexpress",
+      "tipo": "compra",
+      "publico": "geral",
+      "pct_ingerido": 25,
+      "tl_score_bruto": 60,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "livelo-livelo-compra-2026-07-24",
+      "origem": "livelo",
+      "destino": "livelo",
+      "tipo": "compra",
+      "publico": "geral",
+      "pct_ingerido": 55,
+      "tl_score_bruto": 51,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "livelo-livelo-compra-2026-12-31",
+      "origem": "livelo",
+      "destino": "livelo",
+      "tipo": "compra",
+      "publico": "geral",
+      "pct_ingerido": 12,
+      "tl_score_bruto": 41,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "livelo-livelo-clube-2026-07-20",
+      "origem": "livelo",
+      "destino": "livelo",
+      "tipo": "clube",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 18,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "livelo-livelo-clube-2026-12-18",
+      "origem": "livelo",
+      "destino": "livelo",
+      "tipo": "clube",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 18,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "livelo-livelo-clube-2026-08-08",
+      "origem": "livelo",
+      "destino": "livelo",
+      "tipo": "clube",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 18,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "livelo-livelo-clube-2026-07-25",
+      "origem": "livelo",
+      "destino": "livelo",
+      "tipo": "clube",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 18,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "smiles-desconhecido-compra-2026-07-17",
+      "origem": "smiles",
+      "destino": "sem_destino",
+      "tipo": "compra",
+      "publico": "clube",
+      "pct_ingerido": 375,
+      "tl_score_bruto": 55,
+      "passa_corte_valor": false,
+      "status_coleta": "campanha",
+      "motivo": "pct 375% presente em escala-por-publico (9 faixas) — separar por publico (D-047)",
+      "url_oficial": "https://www.smiles.com.br/campanhas/cm-400-20260715",
+      "via": "regulamento_url",
+      "sitemap_confirma": false,
+      "janela": {
+        "tem": true,
+        "texto": "de 31/07/2026 a 06/08/2026",
+        "fim_date": "2026-07-31",
+        "confiavel": true
+      },
+      "escala": [
+        {
+          "pct": 375,
+          "publico": null,
+          "trecho": "ora de montar o seu roteiro. Comprando milhas Smiles hoje, você ganha até 375% de bônus + "
+        },
+        {
+          "pct": 325,
+          "publico": "clube",
+          "trecho": "in-top: 20px; } } Ao fazer parte do Clube Smiles , você já começa com 325% de bônus. .atom"
+        },
+        {
+          "pct": 50,
+          "publico": "clube",
+          "trecho": "cial Diamante --> Bilhete cortesia GOL --> Created with sketchtool. % 50% de bônus com o M"
+        },
+        {
+          "pct": 315,
+          "publico": "clube",
+          "trecho": "ainda mais bônus de acordo com o seu plano de assinatura: Plano 1.000 315% de bônus + 10% "
+        },
+        {
+          "pct": 10,
+          "publico": "clube",
+          "trecho": "de acordo com o seu plano de assinatura: Plano 1.000 315% de bônus + 10% de bônus do seu p"
+        },
+        {
+          "pct": 20,
+          "publico": "clube",
+          "trecho": "eu plano = 325% de milhas bônus na compra Plano 2.000 315% de bônus + 20% de bônus do seu "
+        },
+        {
+          "pct": 30,
+          "publico": "clube",
+          "trecho": "eu plano = 335% de milhas bônus na compra Plano 5.000 315% de bônus + 30% de bônus do seu "
+        },
+        {
+          "pct": 40,
+          "publico": "clube",
+          "trecho": "eu plano = 345% de milhas bônus na compra Plano 7.000 315% de bônus + 40% de bônus do seu "
+        },
+        {
+          "pct": 60,
+          "publico": "clube",
+          "trecho": "as bônus na compra Plano 20.000 ou categoria Diamante 315% de bônus + 60% de bônus do seu "
+        }
+      ],
+      "resultado": "corrobora_com_ajuste",
+      "tier_casado": {
+        "pct": 375,
+        "publico": null
+      },
+      "confianca": 0.85,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": true,
+          "peso": 0.3,
+          "contribuicao": 0.3
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": true,
+          "peso": 0.25,
+          "contribuicao": 0.25
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": true,
+          "peso": 0.15,
+          "contribuicao": 0.15
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": true,
+          "peso": 0.15,
+          "contribuicao": 0.15
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (separar por publico, D-047)",
+        "0.70": "revisao (separar por publico, D-047)",
+        "0.75": "revisao (separar por publico, D-047)",
+        "0.80": "revisao (separar por publico, D-047)",
+        "0.90": "revisao (separar por publico, D-047)"
+      }
+    },
+    {
+      "id": "pagol-smiles-compra-2026-07-23",
+      "origem": "smiles",
+      "destino": "smiles",
+      "tipo": "compra",
+      "publico": "geral",
+      "pct_ingerido": 80,
+      "tl_score_bruto": 51,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    },
+    {
+      "id": "smiles-smiles-clube-2026-07-20",
+      "origem": "smiles",
+      "destino": "smiles",
+      "tipo": "clube",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 27,
+      "passa_corte_valor": false,
+      "status_coleta": "sem_url_oficial",
+      "motivo": "adapter/matcher nao achou URL oficial (fonte de terceiro/sem regulamento)",
+      "url_oficial": null,
+      "janela": null,
+      "escala": [],
+      "resultado": "nao_verificavel",
+      "confianca": 0,
+      "breakdown": [
+        {
+          "sinal": "fonte_oficial",
+          "presente": false,
+          "peso": 0.3,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "janela_vigencia_clara",
+          "presente": false,
+          "peso": 0.25,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "estado_vivo_200",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "publico_inequivoco",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        },
+        {
+          "sinal": "termos_legiveis",
+          "presente": false,
+          "peso": 0.15,
+          "contribuicao": 0
+        }
+      ],
+      "decisoes": {
+        "0.60": "revisao (nada a corroborar)",
+        "0.70": "revisao (nada a corroborar)",
+        "0.75": "revisao (nada a corroborar)",
+        "0.80": "revisao (nada a corroborar)",
+        "0.90": "revisao (nada a corroborar)"
+      }
+    }
+  ]
+}
