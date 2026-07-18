@@ -811,5 +811,107 @@ registradas (próximo slice):** "Ver análise" por oferta (P4, página de detalh
 e o contrato de janelas do Predict (dispatch paralelo) — hoje degrada por falta
 de janela `alta` no forecast, que é o caminho principal (D-050/D-051).
 
+## D-067 — Ratificação das decisões nomeadas de W e P (M3)
+**Data:** 2026-07-18 · **Status:** Aplicada · **Milestone:** M3
+O operador **ratificou** as 6 decisões nomeadas das specs W e P (D-066); os
+defaults sobre os quais o build foi feito ficam valendo:
+- **Weekly (W):** (a) envio **sexta 09:00 BRT** (`America/Sao_Paulo`); (b) **envio
+  único** pra base (segmentos com 0 membros até a captura, D-065); (c) **schema
+  próprio aditivo** sobre `weekly.schema.json` (não estende o Daily).
+- **/promocoes (P):** (a) histórico+ativos **públicos**, Predict em banda pública
+  com **data/valor fino gated Pro**; (b) "Ver análise" **profundo** (8 blocos) com
+  accordion como faseamento reversível; (c) rota **`/promocoes`** + item
+  "Promoções" na Nav entre Método e Edições.
+Como o #109 já mergeou o build de W e P sobre esses defaults, a ratificação
+apenas trava o que está no ar — sem novo build.
+
+## D-068 — M2.7: montagem de edição fresca do dia + fix de ordem do cron
+**Data:** 2026-07-18 · **Status:** ✅ VERIFICADO (cron aplicado; montagem provada ao vivo) · **Milestone:** M2.7
+
+**Evidência de verificação (replay + ao vivo):** replay de 2 dias reais distintos —
+**07/14 forte** (Nº0002, 8 ofertas ativas) e **02/25 fraco** (Nº0002, 2 ofertas),
+**ambos gate VERDE**, diferentes entre si e **nenhum repete a 0001**. Ao vivo:
+runner `--now 2026-07-18` sobre snapshot real → **edição nº29 (≠0001), GATE VERDE**,
+vigência-verdadeira; **idempotência confirmada** (2ª execução = 1 arquivo/data).
+A verificação contra o banco vivo (não só fixtures) pegou e corrigiu 2 defeitos
+reais: (i) `revalidarVigencia(asOf)` no boundary do runner — vencida antes da data
+da edição vira 'encerrada' (montagem, pré-superfície e gate na mesma verdade),
+mesmo com FSM stale; (ii) lint editorial passou a ignorar URLs (o "corre" de um
+slug não é urgência). Suíte 173→verde (202 com validate/renderer).
+Diagnóstico do "ingest seco" (leitura primeiro) concluiu **NENHUM (A/B)** — coleta
+e extração saudáveis (último fetch 17/07 23:00 UTC, 0 pendentes, 0 erros, yield
+~36%); a "seca" era o **backfill retroativo drenado** + madrugada BRT. Mas expôs
+dois gargalos reais pro Daily ao vivo, ambos aprovados:
+- **Fix de ordem do cron (APLICADO):** `ingest-0710` movido de `0 10 * * *`
+  (10:00 UTC / 07:00 BRT, DEPOIS do Daily) para `0 9 * * *` (09:00 UTC / 06:00
+  BRT), precedendo o Daily das 09:30 UTC com 30 min de margem. `cron.alter_job`
+  no banco vivo + snapshot `v2/db/schema-atual.sql` atualizado. Único job entre
+  09:00–09:30 UTC; nada dependia do horário antigo.
+- **Montagem DB→edição do dia (BUILD, em verificação):** o runner `daily.mjs`
+  renderizava um JSON estático (repetiria a mesma edição todo dia — causa real do
+  "estreia repetindo"). Novo passo `montarEdicaoDoDia(asOf)` seleciona do banco
+  vivo (reusando selecionar/ofertas-ativas/dia-fraco/editorial), monta uma edição
+  NOVA por data (numeração idempotente, nunca reusa a 0001), encaixa ANTES do gate
+  único no runner; dia fraco vira edição fraca válida. Provado por **replay** de
+  ≥2 dias passados → edições distintas passando o gate. **Verificação contra o
+  banco vivo feita por mim antes de tocar produção (ESCRITA UNICA).** Sem migration.
+Nota de sequência: a contagem dos 5 dias segue com o operador e **só depois** de a
+montagem provar edição fresca — não inicia sozinha.
+
+## D-080 — Preflight de lançamento: kill-switch, triagem pública, boundaries e secrets (M2.7)
+> **Numeração (faixa livre C4):** o canônico ia até D-068; a calibração ocupa
+> D-066..D-070 (task de reconciliação #25, a aplicar no merge dos PRs #106/#107/#108).
+> Para não colidir, o principal ancora em **D-080** — banda livre acima do bloco
+> contestado. Uma ADR, partes A–F (estilo D-040).
+
+Aprovada pelo operador (modo goal). Fecha os buracos que impediam o próximo cron
+de sair correto: montaria edição estática, exporia dado não confirmado no site,
+travaria dia limpo por item morto, montaria a data errada de noite, e não leria os
+secrets. **Auto-publish permanece OFF em todo este plano** — a estreia é RECUSANDO
+(D-050); tudo aqui gera RASCUNHO.
+
+- **A — Kill-switch do auto-publish (`daily.yml`, step 0).** `TL_AUTOPUBLISH: "off"`.
+  Toda rodada (schedule das 09:30 UTC ou manual) monta, passa o gate e para em
+  RASCUNHO; o envio é decisão humana de 1 clique. Só o operador liga ("on") quando
+  a calibração fechar os vetores (D-050). O cron segue ativo (queremos o rascunho
+  diário), o gatilho de envio é que fica desarmado.
+- **B — Triagem obrigatória na superfície PÚBLICA (`vw_ofertas_vivas`, migration 017, C3).**
+  A `/promocoes` lia `campaigns` direto (estado vivo + percentual) **sem** o filtro
+  de triagem da Trilha B — surfacializava, por percentual e no topo, itens `revisao`
+  (bônus alto não confirmado) e **não-triados** (INV-03). Nova view expõe só
+  `limpo`/`historico_confirmado` (JOIN LATERAL inner sobre `campanha_versoes`
+  evento=`triagem_backlog_m3`); não-triado e `revisao` ficam de fora. A página passa
+  a ler a view. **Prova:** antes, o top-5 público trazia 2 não-triados (hilton 100%,
+  flyingblue 80%); depois, `removidos_nao_confirmados=4` (2 não-triado + 2 revisao),
+  top todo `limpo`. Nada é reclassificado no banco — a view só ESCONDE do público o
+  não confirmado (D-060: flag é revisão, não some).
+- **C — Fila de revisão = só VIVOS, fonte única (`filtrarVivos`, M8).** O fetch do
+  runner traz mortas (`encerrada∧tier1`, para o recap "O que fechou"). O gate rodava
+  a pré-superfície sobre TODAS as linhas → um flag numa MORTA entrava em
+  `veredito.revisao` e **travava o auto-publish de um dia limpo**. `ESTADOS_VIVOS` +
+  `filtrarVivos` (exportados de `montar-edicao`) viram a fonte única que o gate (camada
+  de dado) e o runner (fila-artefato) partilham. **Prova (teste):** flag numa morta
+  não infla a fila nem muda o rating; flag numa VIVA continua entrando (o filtro não
+  é cego).
+- **D — `hoje` no fuso America/Sao_Paulo em todo boundary (`hojeSaoPaulo`, M9).** O
+  runner derivava `hoje` em UTC; rodada 21h–23h59 BRT cairia no DIA SEGUINTE,
+  montando edição/ledger/gate da data errada. `hojeSaoPaulo()` (Intl `en-CA`,
+  timeZone São Paulo) na origem única do `hoje` do Daily e do passo de síntese;
+  montagem/gate/ledger herdam por parâmetro. **Prova (teste):** timestamp
+  `2026-07-20T01:00:00Z` (= 22h BRT do dia 19) → `hoje` BRT = **2026-07-19**, não o
+  UTC 20.
+- **E — Preflight de secrets (`daily.yml`, step 5).** Os secrets Beehiiv/Supabase são
+  **environment secrets** (escopo Production); sem `environment: Production` no job,
+  ele não os lê e cai em mock. Declarado. E o nome real do secret é
+  **`SUPABASE_SERVICE_KEY`** (não `_ROLE_KEY`) — o yml passa esse nome (o runner já
+  aceitava os dois). **Prova:** com o environment declarado, o `workflow_dispatch`
+  loga "modo real" e gera RASCUNHO (autopublish off → não envia).
+- **F — Testes do v2 entram no CI (`test:v2`).** O job `test` do CI rodava só
+  `tests/*.test.mjs`; a suíte pura do v2 (engine/gate/montagem/síntese + os boundaries
+  M8/M9) ficava fora — provas que não guardavam. Novo `npm run test:v2` no CI. Árvore
+  inteira **441/441 verde**. **Prova de fecho (runner default):** `daily.mjs --now
+  2026-07-14` (sem `--edition`) montou **edição nº29 nova** (≠ 0001/0028), GATE VERDE,
+  única pendência = uma oferta VIVA legítima (revolut 400%), autopublish off → rascunho.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.

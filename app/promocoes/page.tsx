@@ -79,8 +79,11 @@ export default async function PromocoesPage() {
   const [placar, banco, ofertas] = await Promise.all([
     rest<PlacarRota>("vw_placar_rota?order=n_janelas.desc&limit=24"),
     rest<BancoPrograma>("vw_banco_programa?n_vivas=gt.0&order=n_vivas.desc,n_campanhas.desc&limit=40"),
+    // Ofertas vivas TRIADAS (vw_ofertas_vivas): só limpo/historico_confirmado. NUNCA
+    // campaigns direto — isso surfacializaria revisao/não-triado (não confirmado) no
+    // topo público, violando INV-03 (C3). A view já filtra estado+percentual+triagem.
     rest<Oferta>(
-      "campaigns?select=id,origem_code,destino_code,tipo,percentual,vigencia_fim_date,estado&estado=in.(ativa,detectada,ultimos_dias)&percentual=not.is.null&order=percentual.desc&limit=20",
+      "vw_ofertas_vivas?select=id,origem_code,destino_code,tipo,percentual,vigencia_fim_date,estado&order=percentual.desc&limit=20",
     ),
   ]);
 

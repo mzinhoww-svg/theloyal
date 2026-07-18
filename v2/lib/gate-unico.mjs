@@ -17,6 +17,7 @@
 import { validateEdition } from '../../scripts/validate.mjs';
 import { verificarPreSuperficie } from './verificacao/pre-superficie.mjs';
 import { runGate55 } from './digest/gate-5-5.mjs';
+import { filtrarVivos } from './digest/montar-edicao.mjs';
 
 export const CAMADAS = Object.freeze(['schema', 'dado', 'editorial']);
 
@@ -50,7 +51,10 @@ export function gate(edition, ctx = {}) {
   }
 
   // ── Camada 2: DADO (não bloqueia — flag é revisão, D-060) ────────────────
-  const { paraRevisao } = verificarPreSuperficie(campaignsFromDb);
+  // A fila de revisão é sobre OFERTAS VIVAS. O fetch do runner também traz mortas
+  // (encerrada∧tier1, para o recap); um flag numa morta NÃO pode contar como
+  // pendência que trava o auto-publish de um dia limpo (M8). Fonte única = vivos.
+  const { paraRevisao } = verificarPreSuperficie(filtrarVivos(campaignsFromDb));
 
   // ── Camada 3: EDITORIAL (bloqueia) ───────────────────────────────────────
   const editorial = runGate55(edition, {

@@ -46,6 +46,10 @@ concurrency:
 jobs:
   daily:
     runs-on: ubuntu-latest
+    # Os secrets do Beehiiv/Supabase sao ENVIRONMENT secrets (escopo Production).
+    # Sem declarar o environment, o job NAO os enxerga e cai em modo mock. Com ele,
+    # o workflow_dispatch/schedule loga "modo real" e gera RASCUNHO (autopublish off).
+    environment: Production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,12 +59,15 @@ jobs:
       - name: Rodar o Daily (draft-only, idempotente por data)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Nome real do secret no ambiente Production e SUPABASE_SERVICE_KEY (nao
+          # _ROLE_KEY). O runner aceita os dois nomes (daily.mjs), mas so este existe.
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           BEEHIIV_API_KEY: ${{ secrets.BEEHIIV_API_KEY }}
           BEEHIIV_PUBLICATION_ID: ${{ secrets.BEEHIIV_PUBLICATION_ID }}
-          # Auto-publish ligado: edicao acima do rating minimo envia sozinha.
-          # Para voltar a so-rascunho (kill-switch), troque para "off".
-          TL_AUTOPUBLISH: "on"
+          # KILL-SWITCH: auto-publish DESLIGADO. Toda rodada (schedule ou manual)
+          # gera RASCUNHO e para — o envio e decisao humana de 1 clique. So o
+          # operador liga ("on") quando a calibracao fechar os vetores (D-050).
+          TL_AUTOPUBLISH: "off"
         run: |
           ARGS=""
           if [ -n "${{ github.event.inputs.edition }}" ]; then ARGS="${{ github.event.inputs.edition }}"; fi
