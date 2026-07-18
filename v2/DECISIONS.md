@@ -3,6 +3,37 @@
 > Log de decisões do operador (ADR-style). Fonte de verdade das decisões que destravam milestones.
 > Precede o PROJECT.md §5 (que passa a apontar para cá).
 
+## Índice de alocação de faixas de numeração (C4 — governança de decisões)
+
+> **Por que existe.** As decisões nasceram em três chats paralelos que numeravam a
+> partir do mesmo ponto → colisão: predict e principal ambos com D-040..043;
+> calibração e principal ambos com D-066..068, **títulos diferentes no mesmo número**.
+> Faixas DISJUNTAS por chat matam a classe do problema: dois branches não podem mais
+> reivindicar o mesmo D-NNN.
+>
+> **Regra de governança (inviolável).** Cada chat só cria D-NNN **dentro da sua
+> faixa**. Uma decisão fora da faixa do branch é bug de governança — o gate de CI
+> `scripts/check-decisions.mjs` reprova (ver §"Gate de colisão de decisões" no fim).
+
+| Faixa | Dono | Escopo |
+|---|---|---|
+| **D-001 .. D-099** | **Principal** (mainline canônica, branch de arquitetura) | tronco: taxonomia, M1, M2, Digest Engine, Daily, preflight de lançamento |
+| **D-100 .. D-199** | **Predict** (chat `predict-engine-backtesting`) | natureza do predict, integridade temporal, fronteira de cobertura |
+| **D-200 .. D-299** | **Calibração** (chat `corpus-calibration`) | trava da fase, operação, gates A1/A2/A3, recalls standing |
+
+**Migração aplicada (2026-07-18).** As decisões que já existiam em faixa colidente
+foram **importadas ao canônico, renumeradas, sem perda de conteúdo**: predict
+D-040..043 → **D-100..103**; calibração D-066..070 → **D-200..204** (inclui a
+decisão real do operador `shrink_k` MANTIDO em 5 — D-202). Os D-040..043 e
+D-066..068 do **PRINCIPAL** ficam intactos — são decisões distintas que só
+colidiram no número. Detalhe e cross-refs reapontados em §"Reconciliação C4".
+
+**Gate de merge (trava).** Os PRs #105 (predict) e #106/#107/#108 (calibração) só
+mergeiam **depois** deste deslocamento e **removendo de seus diffs** as entradas já
+importadas aqui (rebase que dropa a cópia antiga, não a re-adiciona). O gate de CI
+`check-decisions.mjs` bloqueia mecanicamente o merge enquanto um D-NNN colidir com o
+canônico por título diferente.
+
 ## D-001 — Taxonomia canônica ratificada
 **Data:** 2026-07-16 · **Status:** Aprovada · **Milestone:** M1
 
@@ -912,6 +943,148 @@ secrets. **Auto-publish permanece OFF em todo este plano** — a estreia é RECU
   inteira **441/441 verde**. **Prova de fecho (runner default):** `daily.mjs --now
   2026-07-14` (sem `--edition`) montou **edição nº29 nova** (≠ 0001/0028), GATE VERDE,
   única pendência = uma oferta VIVA legítima (revolut 400%), autopublish off → rascunho.
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
+# ═══════════════════════════════════════════════════════════════════════════
+
+> Aplicação do índice de faixas do topo. As decisões abaixo foram **movidas para a
+> faixa do seu chat** e importadas ao canônico com conteúdo preservado; só os
+> cross-refs internos foram reapontados para os novos números. Os PRs de origem
+> (#105 predict; #106/#107/#108 calibração), no rebase, **removem suas cópias antigas**
+> (D-040..043 / D-066..070) — elas já vivem aqui, no número certo.
+
+## Faixa Predict (D-100..D-199) — importado de #105 (`predict-engine-backtesting`)
+> Renumeração: predict D-040→**D-100**, D-041→**D-101**, D-042→**D-102**, D-043→**D-103**.
+> Colidiam com os D-040..043 do PRINCIPAL (recanonicalização / modo-de-operação), que
+> ficam como estão. Conteúdo idêntico ao de #105; único cross-ref reapontado:
+> "D-040/brief"→"D-100/brief" (em D-103).
+
+## D-100 — Predict é frequencial calibrado e validado (não ML opaco); e não se calibra contra datas corrompidas
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Predict (chat dedicado) · Origem: chat de predict
+
+Trava de natureza do `campaign_predict_v2` (`lib/predict-engine.ts`, RFC-009). **Duas partes na mesma ADR** — juntas dizem *o que o predict é* e *sob que condição ele pode ser calibrado*. Uma sem a outra deixa brecha.
+
+**Parte A — trava de natureza (auditabilidade).** "Treinar o predict" = **calibrar parâmetros determinísticos e validar por backtesting walk-forward**. Nunca modelo de pesos aprendidos inexplicáveis. Cada previsão carrega `base_n`, features explícitas e é reproduzível ("este par apareceu N vezes, intervalo mediano X, última há Y, âncora Z → P na janela W"). O corpus **calibra e valida**, não substitui a heurística transparente por predição aprendida. **Regra de honestidade (lei):** probabilidade numérica só onde `base_n ≥ 3` e série ≥ 12 meses; abaixo disso, **rótulo qualitativo** ("padrão recorrente, base insuficiente"), nunca percentual. Mesma espinha do TL Score: conta aberta, não caixa-preta. *(Já é verdade em `predict-engine.ts` — determinístico, puro, sem LLM. Esta ADR trava contra regressão.)*
+
+**Parte B — precondição de integridade temporal (bloqueante).** **Nenhum parâmetro do predict é calibrado contra backtest enquanto a camada temporal não for confiável.** O walk-forward já previne vazamento de futuro; o problema é outro: a `AUDITORIA-FORENSE-PREDICT-FORECAST.md` confirma erro de ano sistemático (77% das transferências com evento >180 d antes do `first_seen`, média +310 d) e proveniência confiável só desde 2025-12. Calibrar sobre essas datas é **otimizar para ruído** — proibido pela mesma lógica da D-014 ("score sobre base suja é lixo com casas decimais") e pela regra do próprio operador: **"backtest mal desenhado mente pior que não ter backtest".** `suspect_year` bloqueia **sem autocorrigir** (INV-16 aplicado ao tempo; a data pode legitimamente ser de campanha antiga — proveniência valida, não substitui). A calibração de params do predict fica **travada** até a slice de plausibilidade temporal (ADR-RADAR-010) fechar e as datas serem confiáveis.
+
+## D-101 — Correção temporal em duas fases: origem (edge fn) ANTES do histórico; duas aprovações antes de qualquer escrita
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Predict (chat dedicado) · Origem: diagnóstico do Agente 1
+
+O bug de ano está **vivo na extração** (edge fn `campaigns` v13; +246 transferências novas corrompidas desde a auditoria, a mais recente ainda errada). Reconstruir ~24 meses de histórico enquanto a origem corrompe é **enxugar gelo**. Ordem de execução travada:
+
+1. **Prioridade 1 — corrigir a origem (edge fn):** validar data na extração; passar `published_at` ao prompt; `id` **sem data embutida**; dedup por **identidade estável** (não `id`-com-data). Estanca o sangramento. **Restrição:** não pode regredir a coleta que já funciona — o caminho `daily` está limpo hoje; a correção é testada contra os casos que **funcionam** (daily limpo) **e** os que falham (`auto`), e verificada numa **amostra pós-deploy** (notícias novas nascem com data válida).
+2. **Prioridade 2 — reconstruir o histórico** só depois de a origem estar estancada.
+
+**Duas paradas de aprovação do operador antes de escrever na camada temporal:** (a) a correção da edge fn (propõe → revisa → dry-run/teste → deploy → verifica amostra); (b) a regra de reconstrução (§D abaixo). Nenhuma escrita na fundação sem essas duas aprovações. Mesma disciplina da canonicalização do M1: dry-run → amostra → aprovação → grava.
+
+## D-102 — `suspect_year`/`sem_data` = exclusão da série temporal, NÃO deleção do corpus
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Predict · Origem: diagnóstico do Agente 1
+
+Os ~202 corrompidos sem evidência de ano + os 191 sem data **não são apagados**. Ficam **marcados** (`suspect_year`/`sem_data`) e **saem da série temporal confiável**, mas **permanecem no corpus** para usos que não dependem de data precisa (matcher de identidade, contagem grosseira de ocorrências) e para reprocessamento futuro (se surgir outra evidência de ano). Drop físico perde informação recuperável. Mesma filosofia do backup e da fila de revisão: **marca e exclui do uso sensível, não deleta.**
+
+## D-103 — Fronteira do predict v1: número só onde há base; datada e auto-expansível
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Predict · Origem: diagnóstico do Agente 1
+
+Pós-reconstrução, o predict v1 fala com **probabilidade numérica** só para as **~17 rotas** com `base_n≥3` e série ≥12m dentro da janela confiável (**~24 meses**, 2024-07 → 2026-07). Todo o resto é **rótulo qualitativo** ("padrão recorrente, base insuficiente") — a regra de honestidade do D-100/brief. Vai ao público com essa moldura: o Pro **não promete previsão de tudo**; promete previsão honesta onde há base e **diz onde não há**. A fronteira é **datada** e **se expande sozinha** conforme a série confiável cresce (com a origem já corrigida), sem mexer no código. É a decisão de produto mais importante do predict v1.
+
+## Faixa Calibração (D-200..D-299) — importado do base `corpus-calibration` (#106/#107/#108)
+> Renumeração: calibração D-066→**D-200**, D-067→**D-201**, D-068→**D-202**, D-069→**D-203**,
+> D-070→**D-204**. D-066..068 colidiam com D-066 (M3 build, #109) / D-067 (ratificação W-P,
+> #110) / D-068 (montagem, #110) do PRINCIPAL, que ficam como estão. **Decisões REAIS do
+> operador — inclui `shrink_k` MANTIDO em 5 (D-202).** Cross-refs reapontados: "filho de
+> D-066"→"filho de D-200"; "(D-066)"/"(GATE D-066)"→D-200; "(D-067.3)" e "D-052.3/D-067.3"
+> →"D-201.3"; "D-069"→"D-203".
+
+## D-200 — TRAVA DA FASE DE CALIBRAÇÃO: o corpus calibra os motores, nunca os substitui
+**Data:** 2026-07-17 · **Status:** Aprovada (trava inviolável) · **Milestone:** Calibração (accuracy loop, brief §13) · **Origem:** abertura do chat de calibração por corpus
+
+Trava inegociável de toda a fase de calibração, registrada **antes** de qualquer agente. O corpus real (40k+ notícias processadas, ~18 meses, base sã pós-recanonicalização) **calibra os parâmetros dos motores determinísticos** — constantes de funções puras versionadas (`score_pesos`, `derivacao_config`, `custo_base_*`, limiar do gate D-048). **Nunca** substitui os motores por um modelo aprendido/ML.
+
+- **O TL Score continua conta aberta, auditável, com breakdown e fórmula.** Nada de regressor, embedding-como-score ou caixa-preta. A conta aberta **é o produto** (INV-03; tese-mãe do HANDOFF: determinismo primeiro, LLM depois — a LLM narra, nunca calcula).
+- "Treinar com o que temos" nesta fase = **medir a distribuição real e mover uma constante versionada**, jamais "trocar o motor por um modelo". Agente que interpretar o contrário **parou errado** e aborta a frente.
+- **Determinismo-primeiro vale aqui mais que em qualquer lugar:** mesmo input → mesmo output no CI; golden files ancorados à versão do parâmetro.
+
+**Disciplina de calibração (todo parâmetro):**
+1. Parâmetro calibrado vira **nova versão versionada** (`score_pesos.v1`→`.v2`, `derivacao_config` v1→v2), com **golden files travando o comportamento**, **antes/depois medido e visível**, **changelog público**, **rollback possível**. Calibração não drifta silenciosamente.
+2. **Portão do operador:** movimento que **aumenta risco de publicação exige aprovação do operador**; movimento que **aumenta cautela é livre**. O operador é o portão de toda decisão de parâmetro que vira público.
+3. Todos os agentes operam **mede-e-propõe**: não gravam versão em produção sem aprovação da proposta. Spec/proposta antes de gravar, sempre.
+4. **Caso-guia:** `livelo→azul` — blog 115% vs. oficial em escala por público 50–120% (D-048/CASO-LIVELO-AZUL). Parâmetro medido no corpus pega o que a amostra pequena não pega.
+
+**Fronteira estrutural (dois loops que NÃO calibram contra o corpus agora — só o tempo os liga):** a calibração dos motores contra a **distribuição** (pesos, quartis, buckets, golden) roda hoje. Mas os loops que dependem de **desfecho real observado** — o auto-ajuste do **limiar do gate de confiança** (D-048) e o **predict frequencial** (REQ-24/25) — ficam **bloqueados por ausência de ledger de desfechos**. Não é bug: mede-se o que dá contra o corpus agora; os loops de acerto ligam quando houver acerto para medir (produto operando gera histórico). Ver HANDOFF §1.
+
+Generaliza e sela o espírito de D-022/D-032/D-037/D-038 (parâmetro = versão, não hardcode) como **regra permanente da fase**.
+
+## D-201 — Operação da calibração: guarda de base de worktree · ledger antes de auto-publish · um número de cobertura entre chats
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Calibração · **Origem:** aceite de A3 + higienes do operador · filho de D-200
+
+Três decisões operacionais da fase, aprovadas ao aceitar a metade honesta do Agente 3.
+
+**1. Guarda de base no disparo de todo agente paralelo (mata a classe, não a ocorrência).** Worktree de agente **sempre ancorado por instrução explícita no base real vigente** (`origin/claude/loyal-v2-corpus-calibration-9z2utl`, hoje `5827616`), **nunca** por herança do commit em que o worktree calhou de nascer. Sintoma observado: worktrees nasceram em `d931f1b` (pré-`v2/`); A3 e A2 **recuperaram** ramificando explicitamente do base real, mas recuperação caso-a-caso é frágil. A guarda é no **prompt de disparo** (checkout explícito do base + verificação de que `v2/` existe antes de medir), parte permanente do modo de operação de agentes paralelos.
+
+**2. Outcomes-ledger = slice futura E pré-requisito de ligar auto-publish (ordem travada).** Especificar o ledger agora, porque ele precisa **existir antes de o produto operar** para capturar desfecho desde o dia 1 — construí-lo depois perde o histórico dos primeiros dias, justo quando o limiar mais precisa aprender. **Ordem inviolável:** ledger existe e captura → produto opera gerando desfecho → ledger acumula → auto-ajuste do gate de confiança (D-048) liga. **Nunca ligar auto-publish sem o ledger capturando.** O ledger registra os sinais determinísticos de D-048 (janela de vigência, corroboração/refutação de termos em 3 níveis, oficial vs secundária, público inequívoco, estado vivo 200) **+** o desfecho `automatico_acertou × correcao_humana_posterior`, sob as 4 travas de D-048. `0,75` segue como start conservador (D-050), não calibrado até o ledger acumular.
+
+**3. Cobertura de predict = UM número oficial entre chats, conservador, sobre a janela confiável.** A foto do A3 tem dois números com definição explícita: **119** (série medida só por `first_seen`, conservador) e **163** (`first_seen→last_seen`, teto otimista). Inclinação de produto credibility-first: **o conservador (119) é o número público**, 163 como teto. **Porém a foto do A3 foi calculada sobre a série como-está**, que inclui a **corrupção temporal sistemática** que o chat de predict acabou de diagnosticar (`v2/predict/DIAGNOSTICO-CAUSA-RAIZ-TEMPORAL.md`, branch `predict-engine-backtesting-six5pq`: **75,6% dos transfer datados com ano atrasado 1–6 anos**; janela confiável **~24m, não 36**). Logo: **os 163/119 são PROVISÓRIOS** e devem ser **recalculados sobre a janela temporal confiável definida pelo chat de predict** antes de virarem número público. **Não cravar a fronteira aqui isolado; alinhar com o chat de predict** — os dois chats não podem afirmar cobertura divergente. Os 163 podem encolher quando filtrados por data confiável.
+
+## D-202 — Resolução dos gates de calibração (A1/A2/A3)
+**Data:** 2026-07-17 · **Status:** Aprovada (com 2 pendências nomeadas, depois resolvidas) · **Milestone:** Calibração · **Origem:** ruling do operador sobre os três PRs
+
+**A1 — score (#107): MANTER v1; `shrink_k` pendente de aval explícito.**
+- **`score_pesos.v1` (pesos): MANTIDO.** A medição confirmou que nenhum movimento de peso ganha discriminação honesta — só realoca o ponto fixo da banda 65 (D-042). O gargalo é **cobertura de CPM/ratio** (frente de fontes + janela confiável do predict), não o vetor.
+- **`derivacao.v1`: MANTIDO.** Buckets batem com o corpus.
+- **`shrink_k` 5→3: NÃO versionar sem aval explícito — o movimento AFROUXA.** Formula `score.mjs:46`: `pct_efetivo = (pct_bruto·base_n + 0,5·shrink_k)/(base_n+shrink_k)`. Baixar `shrink_k` **reduz** o puxão à neutra 0,5 → rota de base curta com percentil bruto alto sobe (banda neutra 44,6→40,4%). Isso **aumenta risco de publicação** em rota mal-suportada → gated (D-200). Recomendação registrada: **manter `shrink_k=5`** (ganho modesto, v1 saudável, credibility-first). Só versiona se o operador aprovar explicitamente o afrouxamento.
+- **Registro:** a calibração de A1 é um **resultado negativo bom** — mediu e não precisou mexer no vetor.
+
+**A2 — golden em escala (#108): critério N=400 APROVADO; R1/R2 decididos; R5 pendente de critério.**
+- **Critério APROVADO:** N=400 (280 pos / 120 neg), estratos por **tipo canônico** (não pelo tipo bruto do extrator — R3), lado-único, tempo (18m), programa, divergência; método determinístico `md5(estrato‖id)`; proveniência por item.
+- **R1 APROVADO — "até X%" = teto de escala oculta; percentual do público geral = `null`.** Generalização corpus-wide do D-200/caso azul: o teto do blog ("até 120%") **não** é a taxa do público geral; tratá-lo como taxa geral foi a raiz do 115% fantasma. `geral` fica `null` até a fonte oficial dar a escala. Aumenta cautela (livre), mas é convenção de rótulo → aprovada explicitamente. Afeta ~159 candidatos; **maior impacto da calibração.**
+- **R2 DECIDIDO — cashback de cartão fechado = `nao_campanha/perk` (D-018), COM teste de fronteira.** Regra-mãe: vantagem de cartão que não é ponto/milha/**cashback transferível** fica fora. **Teste (aplica o teste, não a palavra "cashback"):** o cashback é **transferível/sacável** (vira ponto transferível ou saldo resgatável → **entra**, é valor) ou fica **preso como desconto no próprio cartão** (→ **fora**, é perk)? Sem o teste o rotulador barraria cashback legítimo junto com perk.
+- **R5 PENDENTE — fronteira shopping vs bonus_acumulo.** Precisa congelar antes da massa; critério proposto trazido ao operador (ver relato do turno), aguarda ratificação. Sem R5 ratificado, a rotulação das 400 **não dispara** (GATE D-200).
+- **PMD real:** o primeiro `pontos_mais_dinheiro` real do corpus entra no escopo da massa para **aposentar os 4 sintéticos e o asterisco D-030** — mas o asterisco só sai quando o tipo tiver **base real suficiente**; até lá, sintéticos ficam marcados.
+
+**A3 — gate + predict (#106): metade aceita; cobertura PROVISÓRIA até a janela confiável.**
+- Foto de cobertura (163/119 aptos) **provisória, marcada "sobre série não-corrigida"**. O chat de predict fechou o diagnóstico temporal (janela confiável **~24 meses**, bug vivo na extração, Fase 1a aprovada para estancar). A cobertura **recalcula sobre a janela confiável** definida pelo predict antes de virar número público — **um só número oficial entre os dois chats** (D-201.3). Os 163 podem encolher filtrados por data confiável.
+
+**Gate de execução:** versiona só o aprovado; a massa do golden só roda após (1) direção do `shrink_k` confirmada [trazida: afrouxa → gated] e (2) critério de R5 ratificado. Nada versiona sem aval por parâmetro.
+
+**Fecho (2026-07-17) — as duas pendências resolvidas, massa liberada:**
+- **`shrink_k` MANTIDO em 5 por decisão do operador.** Avaliado, direção confirmada **afrouxante** (baixar reduz o puxão à neutra → base curta confia mais no bruto → item mal-suportado mais perto de acionável = risco de publicação ↑). O **gated NÃO foi destravado**: não se troca robustez por ganho modesto num produto cuja moeda é credibilidade. v1 inteiro, nada versionado.
+- **R5 RATIFICADO — mecanismo, não dono da vitrine.** **Regra de ouro:** *shopping = canal (ganho É o portal, cotado em pontos-por-real); bonus_acumulo = janela sobre acúmulo que já aconteceria (multiplicador "+X%"/"em dobro" por janela).* Superior à linha "dono da vitrine" (portais são catálogos de parcerias → vaza). **4 edge rulings** ratificados, incluindo "pontos em dobro em restaurantes" como benefício estrutural sem janela → **perk/`nao_campanha`** (D-018), não bonus_acumulo.
+- **R1 ESTENDIDO A SHOPPING.** "Até X pontos por real no Shopping" é **teto de catálogo** (poucas lojas dão X, a maioria 1–2), **não** a taxa geral do portal. Mesma convenção do R1: taxa de shopping cotada "até X" = teto → taxa geral **indeterminada**; a acionável é a da loja específica. O rotulador não crava "10 pts/real" como taxa do portal inteiro.
+- **Massa liberada:** rotulação N=400 com critério + R1(+shopping) + R2 + R5; inclui o PMD real; depois re-mede os gates (rejeição, vigência, matcher) contra o golden grande (tira o asterisco in-sample dos 86). **Números da massa/gates só ficam PÚBLICOS após revisão do operador** (número público passa pelo operador). Retorno exigido: gates re-medidos + **amostra dos 159 candidatos de divergência sob R1 (antes→depois)** — o teste real da convenção-guia em escala.
+
+## D-203 — Gate ativo: recall da verificação pré-publicação vs. histórico conhecido (BNB→Azul, Flying Blue); P1 de A1 já aplicado upstream
+**Data:** 2026-07-17 · **Status:** Registrada (gate em espera; achado de reconciliação aplicado) · **Milestone:** Calibração · **Origem:** instrução do operador + achado ao sincronizar com `loyal-v2-architecture-nfvoh1`
+
+**(1) Gate ativo (standing task, não bloqueia nada agora).** Quando o PRINCIPAL entregar o desenho da verificação pré-publicação (checks de vigência/tipo/confiança), a CALIBRAÇÃO mede recall dela contra o histórico conhecido antes de qualquer threshold ser aprovado. Objetivo do operador, explícito: **assertividade sem sumir com oferta real** — prefere guardrail com mais revisão manual a um com itens desaparecendo silenciosamente. Se recall ruim (esconde mais do que pega), reporta ANTES da aprovação.
+
+**Fixture de teste já grounded (D-059, benchmark milhasbot):** duas ofertas genuinamente vivas que JÁ ESTAVAM no banco mas sumiram do radar por bug de dado — o teste mínimo que qualquer verificação nova tem que passar:
+- **BNB→Azul (até 110%):** vigência parseada como **2024**-07-17 quando a matéria é de 2026 (classe de bug D-021, inferência de ano em extração LLM antiga) → FSM derivou `historica` → sumiu do vivo. Vence de verdade **17/07/2026**.
+- **Flying Blue (45% OFF):** vigência não extraída (`na`) → `indeterminada` → fora do filtro vivo. Vence de verdade **28/07/2026**.
+- *(terceiro caso do benchmark, `livelo-hilton`, era visível — falha editorial, não de gate; não entra no fixture de recall.)*
+
+Quando o desenho da verificação chegar: medir se ela teria flagado/escondido esses dois (deveria PASSAR os dois, com confiança correta), quantificar falso-negativo (esconde oferta viva) vs. falso-positivo (deixa passar erro real) num corpus mais amplo de casos históricos, e reportar antes de qualquer threshold entrar em produção.
+
+**(2) Achado de reconciliação — P1 de A1 (#107) JÁ FOI aplicado, independentemente, pelo principal.** Ao sincronizar contra `loyal-v2-architecture-nfvoh1`, o commit `1fdc1fc` já corrige o mesmo bug `null→0` em `finite()` (rescore-1/2.mjs) que A1 mediu e propôs como P1, com números quase idênticos (mediana 60→58, ≥70 12,6%→8,9% vs. os 12,7%→8,9% do A1). **Regravação em produção já feita**, escopo restrito aos 1.996 ids que já tinham `tl_score_bruto` (não toca os 1.334 `conta_nao_calculavel`/D-050.1). **P1 fica RESOLVIDO — não pedir aprovação de novo, já aconteceu.** **P2 (teto de sanidade 200/300 para ghosts de percentual) segue ABERTO**, não foi tocado upstream.
+
+**Achado colateral registrado pelo principal, não corrigido ainda (fora do escopo daquele commit):** `rescore-2.mjs` nunca chamou `marcarNaoValorLadoUnico` no próprio pipeline de output — rodar o runner sobre a base inteira (em vez do escopo restrito) ressuscitaria os 1.334 brutos que D-050.1 zerou (619 deles ≥70). Relevante para a calibração: os vetores só ficam genuinamente fechados quando esse gap for reconciliado — fica registrado, não é decisão da calibração resolver.
+
+**(3) Atualização pós-sync — o gate deixa de ser "standing" e vira mensurável.** Confirma-se que **a verificação pré-publicação FOI construída** (`v2/lib/verificacao/pre-superficie.mjs`, real D-060 upstream, testes verdes) e já mede exatamente os padrões do fixture acima (`vigencia_bug_ano` = padrão BNB; `valor_sem_data` = padrão Flying Blue). **P2 também está resolvido** (D-061, teto 200/piso 300 por tipo). **Ação da calibração:** medir formalmente o fixture BNB/Flying Blue contra `pre-superficie.mjs` e ampliar a medição de recall para o histórico mais amplo — a registrar quando a medição rodar.
+
+## D-204 — Papel da calibração no M3: recall do placar histórico e das janelas do Predict (gate standing, aguarda dado)
+**Data:** 2026-07-17 · **Status:** Registrada (standing, sem dado ainda) · **Milestone:** M3 · **Origem:** instrução do operador
+
+Segundo gate standing da calibração, distinto de D-203 (aquele mede a verificação pré-publicação; este mede as superfícies públicas do M3 — track record + Predict). Mesma disciplina-mãe: **assertividade sem sumir com sinal real** — o bug de vigência que enterrou BNB→Azul e Flying Blue (D-059/D-060) é o exemplo-guia de por que qualquer superfície nova precisa ser medida antes de publicar, não depois.
+
+Quando a trilha do track record (`v2/M3/SPEC-TRACK-RECORD.md`) e a reconstrução temporal do predict entregarem dado, a calibração mede:
+- **(a) Precisão do placar histórico por rota.** O track record (§3 da spec) **herda a janela de confiabilidade temporal do predict** — não pode afirmar histórico que o dado não sustenta (mesma disciplina do bug BNB/Flying Blue: data que o sistema sabe suspeita nunca aparece como se fosse confiável). Medir: quantas rotas do placar têm proveniência real vs. quantas estariam afirmando mais do que a janela confiável permite.
+- **(b) Recall das janelas do Predict.** Quantas rotas com histórico real (base_n≥3, série≥12m — cobertura já fotografada por A3, D-201.3, hoje provisória) ficam **de fora** por confiança conservadora demais no motor. Objetivo do operador, explícito: nunca sumir com sinal real por excesso de cautela — o mesmo princípio de D-203, aplicado ao lado do Predict em vez do gate de confiança.
+
+**Bloqueado por dado, não por design:** nem o track record (construção SEGURADA, §6.1 do handoff — depende de janela cravada) nem a reconstrução temporal (~24m, em curso no chat de predict) entregaram saída ainda. **Regras:** mede e propõe, nunca grava direto (D-200). Se a medição achar um trade-off ruim (esconde mais sinal real do que pega erro), reporta ANTES de qualquer threshold ser aprovado — mesmo padrão de D-203.
+
+## Gate de colisão de decisões (CI)
+`scripts/check-decisions.mjs` (rodado no job `test` do CI, ver `.github/workflows/ci.yml`) faz cumprir o índice de faixas: (1) **zero D-NNN duplicado** no próprio arquivo; (2) todo D-NNN **dentro de uma faixa declarada** no índice do topo; (3) **cross-branch** — compara `v2/DECISIONS.md` deste ref contra o do branch default e **reprova se o mesmo D-NNN existir nos dois com título diferente** (a classe de colisão do C4). É o que trava #105/#106/#107/#108 até renumerarem para sua faixa. Determinístico, sem rede além de um `git show` do default.
 
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.
