@@ -18,6 +18,27 @@
     "preheader": { "type": "string" },
     "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "signal": { "type": "string", "minLength": 1, "description": "Tese da semana" },
+    "schemaVersion": { "type": "integer", "minimum": 2, "description": "M3.1: v2 = passou pela revalidação de vigência contra o banco vivo. Ausente = legado (v1)." },
+    "dataPublicacao": { "type": "string", "format": "date", "description": "M3.1: dia em que o Weekly sai. Referência da revalidação de vigência (nada vencido nesta data sai como ativo)." },
+    "revalidacao": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "M3.1: log da revalidação de vigência contra `campaigns` vivo (gateRevalidacaoVigencia). Aditivo — ausente em edições legadas.",
+      "properties": {
+        "pass": { "type": "boolean" },
+        "log": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "segueVivo": {
+      "type": "array",
+      "description": "M3.1: itens que seguem vivos pro fim de semana — SÓ os aprovados no gate de revalidação. Sob a regra-mãe (sem dado real, some).",
+      "items": { "type": "object" }
+    },
+    "melhorPorCategoria": {
+      "type": "array",
+      "description": "M3.1: melhor da semana por categoria. Sob a regra-mãe.",
+      "items": { "type": "object" }
+    },
     "radar": {
       "type": "object",
       "description": "Radar de janelas — centro do weekly. Ausente ⇒ o render puxa digest.radarWeekly de content/forecast.json.",
