@@ -811,5 +811,41 @@ registradas (próximo slice):** "Ver análise" por oferta (P4, página de detalh
 e o contrato de janelas do Predict (dispatch paralelo) — hoje degrada por falta
 de janela `alta` no forecast, que é o caminho principal (D-050/D-051).
 
+## D-067 — Ratificação das decisões nomeadas de W e P (M3)
+**Data:** 2026-07-18 · **Status:** Aplicada · **Milestone:** M3
+O operador **ratificou** as 6 decisões nomeadas das specs W e P (D-066); os
+defaults sobre os quais o build foi feito ficam valendo:
+- **Weekly (W):** (a) envio **sexta 09:00 BRT** (`America/Sao_Paulo`); (b) **envio
+  único** pra base (segmentos com 0 membros até a captura, D-065); (c) **schema
+  próprio aditivo** sobre `weekly.schema.json` (não estende o Daily).
+- **/promocoes (P):** (a) histórico+ativos **públicos**, Predict em banda pública
+  com **data/valor fino gated Pro**; (b) "Ver análise" **profundo** (8 blocos) com
+  accordion como faseamento reversível; (c) rota **`/promocoes`** + item
+  "Promoções" na Nav entre Método e Edições.
+Como o #109 já mergeou o build de W e P sobre esses defaults, a ratificação
+apenas trava o que está no ar — sem novo build.
+
+## D-068 — M2.7: montagem de edição fresca do dia + fix de ordem do cron
+**Data:** 2026-07-18 · **Status:** cron aplicado; montagem em build/verificação · **Milestone:** M2.7
+Diagnóstico do "ingest seco" (leitura primeiro) concluiu **NENHUM (A/B)** — coleta
+e extração saudáveis (último fetch 17/07 23:00 UTC, 0 pendentes, 0 erros, yield
+~36%); a "seca" era o **backfill retroativo drenado** + madrugada BRT. Mas expôs
+dois gargalos reais pro Daily ao vivo, ambos aprovados:
+- **Fix de ordem do cron (APLICADO):** `ingest-0710` movido de `0 10 * * *`
+  (10:00 UTC / 07:00 BRT, DEPOIS do Daily) para `0 9 * * *` (09:00 UTC / 06:00
+  BRT), precedendo o Daily das 09:30 UTC com 30 min de margem. `cron.alter_job`
+  no banco vivo + snapshot `v2/db/schema-atual.sql` atualizado. Único job entre
+  09:00–09:30 UTC; nada dependia do horário antigo.
+- **Montagem DB→edição do dia (BUILD, em verificação):** o runner `daily.mjs`
+  renderizava um JSON estático (repetiria a mesma edição todo dia — causa real do
+  "estreia repetindo"). Novo passo `montarEdicaoDoDia(asOf)` seleciona do banco
+  vivo (reusando selecionar/ofertas-ativas/dia-fraco/editorial), monta uma edição
+  NOVA por data (numeração idempotente, nunca reusa a 0001), encaixa ANTES do gate
+  único no runner; dia fraco vira edição fraca válida. Provado por **replay** de
+  ≥2 dias passados → edições distintas passando o gate. **Verificação contra o
+  banco vivo feita por mim antes de tocar produção (ESCRITA UNICA).** Sem migration.
+Nota de sequência: a contagem dos 5 dias segue com o operador e **só depois** de a
+montagem provar edição fresca — não inicia sozinha.
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.

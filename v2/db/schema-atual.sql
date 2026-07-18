@@ -978,7 +978,7 @@ CREATE OR REPLACE VIEW public.shopping_sku_latest_v AS
 -- =====================================================================
 -- 7. CRONS (pg_cron) — inventário; comando real usa net.http_post p/ edge functions
 -- =====================================================================
--- ingest-0710      [0 10 * * *]   -> functions/v1/ingest
+-- ingest-0710      [0 9 * * *]    -> functions/v1/ingest  (adiantado p/ preceder o Daily 09:30 UTC — D-068)
 -- ingest-1310      [0 16 * * *]   -> functions/v1/ingest
 -- ingest-2010      [0 23 * * *]   -> functions/v1/ingest
 -- extract-2h       [*/5 * * * *]  -> functions/v1/campaigns (extração)
