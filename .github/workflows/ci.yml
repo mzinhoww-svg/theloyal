@@ -65,6 +65,12 @@ jobs:
       # M8/M9). Estavam fora do CI (so tests/ rodava); agora guardam as invariantes
       # do runner diario tambem.
       - run: npm run test:v2
+      # Gate de colisao de decisoes (C4): faixas disjuntas por chat + reprova se
+      # dois branches declaram o mesmo D-NNN com titulo diferente. Precisa do base
+      # para a checagem cross-branch (checkout raso nao traz outros refs).
+      - name: fetch base p/ gate de decisoes
+        run: git fetch --no-tags --depth=1 origin claude/loyalty-landing-page-v1-7vbjq7 || true
+      - run: npm run check:decisions
 
   editorial:
     # validate -> render -> qa -> publish compartilham o diretorio out/ e por isso

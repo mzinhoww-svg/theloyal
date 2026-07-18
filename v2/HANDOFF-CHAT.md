@@ -10,20 +10,24 @@
 > (score, probabilidade, conta, percentil, CPM) sai de SQL/função pura testada.
 > A LLM escreve, explica, audita — **nunca calcula**. Quebrou isso, quebrou o v2.
 >
-> **Última atualização:** 2026-07-17 (v3 — coleta TIER 1 provada (gate de confiança
-> operando no lote-1), vetor lado-único re-scorado. **Princípio de lançamento travado
-> (D-050): o produto NÃO espera estar pronto — está; espera OFERTA FORTE. Estreia
-> RECUSANDO, não performando.** Próxima frente: cobertura de fontes. **+ edge fn `campaigns`
-> v15 deployada: âncora de ano (Patch 1) + flag reconciliado ±65d OU gap>365 (Patch 2);
-> 20/20 dois lados, não-regressão bloqueante verde, coleta viva. Origem da corrupção
-> temporal ESTANCADA na prevenção — medição yr_off→0 confirma no próximo ciclo com nova.**
+> **Última atualização:** 2026-07-18 (v4 — **M2.7 fechado e mergeado (#110):** o runner
+> monta EDIÇÃO FRESCA do banco vivo (não mais a estática 0028), com síntese própria do
+> Clipping (anti-cópia n-grama), gate único verde. **Preflight de lançamento (D-080):**
+> kill-switch `TL_AUTOPUBLISH=off` no `daily.yml`, `/promocoes` só surfaceliza ofertas
+> TRIADAS (`vw_ofertas_vivas`, migration 017), fila de revisão = só vivos (M8), `hoje` no
+> fuso de São Paulo (M9), `environment: Production` + `SUPABASE_SERVICE_KEY`. **Auto-publish
+> segue OFF** até a calibração fechar (D-050). Suíte pura do v2 agora roda no CI (`test:v2`,
+> 441/441). **+ Governança de decisões reconciliada (C4):** índice de FAIXAS no topo do
+> `DECISIONS.md` (principal D-001..099 · predict D-100..199 · calibração D-200..299),
+> colisões importadas e renumeradas, gate de CI `check-decisions.mjs`.)
 >
-> **Leitura para os três chats (D-050):** a máquina está provada ponta a ponta. O
-> Deal Desk vivo é gatilhado por **oferta** (forte + viva + confirmada), não por data.
-> Auto-publish desligado até a **calibração** fechar os vetores de score. Frentes
-> ativas: **cobertura de fontes** (ver a próxima oferta forte) + **track record**
-> (conteúdo de estreia) + **calibração** (régua). O gate já captura a oferta forte no
-> instante em que ela aparecer.
+> **Leitura para os três chats (D-050):** a máquina está provada ponta a ponta e o Daily
+> monta fresco. O Deal Desk vivo é gatilhado por **oferta** (forte + viva + confirmada),
+> não por data. Auto-publish desligado até a **calibração** fechar os vetores de score.
+> Frentes ativas: **cobertura de fontes** + **track record** + **calibração** (régua).
+> **Governança:** cada chat só cria D-NNN na sua faixa; os PRs #105/#106/#107/#108
+> rebaseiam e renumeram para a faixa própria antes de mergear (o gate de CI trava até lá),
+> e **rebaseiam este HANDOFF em vez de substituí-lo**.
 
 ---
 
@@ -165,8 +169,13 @@ a base não tem oferta forte viva; a próxima vem do calendário, não de mais c
 
 ## 3. Decisões travadas (fonte de verdade: `v2/DECISIONS.md`)
 
-**Não re-litigar.** ADRs **D-001..D-054** em `v2/DECISIONS.md`; invariantes
-**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Mais recentes: **D-054** fecha as últimas
+**Não re-litigar.** ADRs em `v2/DECISIONS.md`, organizados por **faixa de chat**
+(índice no topo do arquivo): **principal D-001..D-080** (tronco: M1/M2/Digest/Daily/
+preflight), **predict D-100..D-103** (natureza do predict, integridade temporal,
+fronteira de cobertura), **calibração D-200..D-204** (trava da fase, operação, gates
+A1/A2/A3 — inclui `shrink_k` MANTIDO em 5, D-202 — e recalls standing D-203/D-204).
+Invariantes **INV-01..INV-16** em `v2/REQUIREMENTS.md`. Marcos recentes do tronco:
+**D-080** (preflight de lançamento) e **D-068** (montagem fresca). **D-054** fecha as últimas
 decisões nomeadas (Clipping logo após Resumo do dia; corte Loyalty Lab 0,85; limiar
 coleta TIER1 0,75; cron 6h; override `refutado_tier1`) e registra o **deploy real da
 coleta TIER 1** (edge function `coleta-tier1` v1 ACTIVE + `pg_cron` 6h, provado ao vivo:

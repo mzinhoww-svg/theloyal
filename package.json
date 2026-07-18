@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
     "test:v2": "node --test \"v2/**/*.test.mjs\" \"scripts/**/*.test.mjs\"",
+    "check:decisions": "node scripts/check-decisions.mjs",
     "validate": "node scripts/validate.mjs",
     "render": "node scripts/render.mjs",
     "render:web": "node scripts/render-web.mjs",
