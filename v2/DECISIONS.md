@@ -826,7 +826,18 @@ Como o #109 já mergeou o build de W e P sobre esses defaults, a ratificação
 apenas trava o que está no ar — sem novo build.
 
 ## D-068 — M2.7: montagem de edição fresca do dia + fix de ordem do cron
-**Data:** 2026-07-18 · **Status:** cron aplicado; montagem em build/verificação · **Milestone:** M2.7
+**Data:** 2026-07-18 · **Status:** ✅ VERIFICADO (cron aplicado; montagem provada ao vivo) · **Milestone:** M2.7
+
+**Evidência de verificação (replay + ao vivo):** replay de 2 dias reais distintos —
+**07/14 forte** (Nº0002, 8 ofertas ativas) e **02/25 fraco** (Nº0002, 2 ofertas),
+**ambos gate VERDE**, diferentes entre si e **nenhum repete a 0001**. Ao vivo:
+runner `--now 2026-07-18` sobre snapshot real → **edição nº29 (≠0001), GATE VERDE**,
+vigência-verdadeira; **idempotência confirmada** (2ª execução = 1 arquivo/data).
+A verificação contra o banco vivo (não só fixtures) pegou e corrigiu 2 defeitos
+reais: (i) `revalidarVigencia(asOf)` no boundary do runner — vencida antes da data
+da edição vira 'encerrada' (montagem, pré-superfície e gate na mesma verdade),
+mesmo com FSM stale; (ii) lint editorial passou a ignorar URLs (o "corre" de um
+slug não é urgência). Suíte 173→verde (202 com validate/renderer).
 Diagnóstico do "ingest seco" (leitura primeiro) concluiu **NENHUM (A/B)** — coleta
 e extração saudáveis (último fetch 17/07 23:00 UTC, 0 pendentes, 0 erros, yield
 ~36%); a "seca" era o **backfill retroativo drenado** + madrugada BRT. Mas expôs
