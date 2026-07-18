@@ -775,5 +775,41 @@ bloqueado com base nisso; monitorar e ajustar o rating se necessário.
 rollback importa. Mantido até a cadência automatizada provar estabilidade; o
 `DROP` volta como decisão consciente depois, não neste momento.
 
+## D-066 — M3 build (Trilhas B, W, P) sob permissão total do operador
+**Data:** 2026-07-18 · **Status:** Aplicada · **Milestone:** M3
+
+O operador setou goal explícito ("você já tem permissão para executar tudo"),
+que **supersede** a trava "não construir W/P antes da ratificação". Adotei os
+**defaults reversíveis** que eu mesmo propus nas 6 decisões nomeadas e construí.
+Nada irreversível/externo: envio de Weekly permanece gated (como o Daily);
+migrations/views são aditivas (DROP desfaz).
+
+**Trilha B (build):** 3.641 campanhas classificadas (`limpo` 981, `revisao`
+1.031, `historico_confirmado` 1.629), trilha 1:1 em `campanha_versoes`
+(`evento='triagem_backlog_m3'`), SQL validado ≡ JS. Regra do carve-out
+`historico_confirmado`: só-vigência-antiga em estado histórico/encerrado/vencido
+(estado do FSM desempata o que o `vigencia_bug_ano` não distingue). Idempotente.
+
+**Trilha W (build):** `v2/lib/weekly/revalidacao.mjs` —
+`gateRevalidacaoVigencia(itensAtivos, {dataPublicacao, campaignsVivas})` revalida
+todo item ativo contra o banco vivo na data de publicação (fecha a lacuna do
+`weekly-consolidate.mjs`, que usava vigência congelada do JSON da Daily). Golden
+T1–T7 (8 casos). `weekly.schema.json` estendido aditivamente. Decisões adotadas:
+schema próprio aditivo (já era o repo); envio/segmentação ficam gated.
+**Conflito registrado:** o Weekly já existia (schema+motor+DD-WEEKLY-001) — o
+escopo real da M3.1 é o gate de revalidação, não recriar.
+
+**Trilha P (build):** views `vw_placar_rota` (359 rotas) e `vw_banco_programa`
+(137 programas) aplicadas (aditivas, consomem a triagem B: historico_confirmado
++ limpo). Página `app/promocoes/page.tsx` (server component lendo via
+`lib/admin-db`, degrada para vazio) com 3 seções (ofertas ativas, placar
+histórico por rota, banco por programa) nos componentes canônicos + Predict em
+degradação graciosa ("sem previsão ainda", INV-03/25). Nav ganha "Promoções"
+entre Método e Edições. Decisões adotadas: histórico/ativos públicos, Predict
+banda pública (valor fino gated Pro), rota `/promocoes`. **Pendências
+registradas (próximo slice):** "Ver análise" por oferta (P4, página de detalhe)
+e o contrato de janelas do Predict (dispatch paralelo) — hoje degrada por falta
+de janela `alta` no forecast, que é o caminho principal (D-050/D-051).
+
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.

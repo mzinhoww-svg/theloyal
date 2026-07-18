@@ -18,6 +18,9 @@ export function Nav() {
           <a href="/#metodo" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
             Método
           </a>
+          <a href="/promocoes" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
+            Promoções
+          </a>
           <a href="/edicao" className="hidden min-h-11 items-center px-2 text-sm font-medium text-ink hover:text-green-700 md:inline-flex">
             Edições
           </a>
