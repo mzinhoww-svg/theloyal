@@ -13,7 +13,10 @@
 > **Última atualização:** 2026-07-17 (v3 — coleta TIER 1 provada (gate de confiança
 > operando no lote-1), vetor lado-único re-scorado. **Princípio de lançamento travado
 > (D-050): o produto NÃO espera estar pronto — está; espera OFERTA FORTE. Estreia
-> RECUSANDO, não performando.** Próxima frente: cobertura de fontes.
+> RECUSANDO, não performando.** Próxima frente: cobertura de fontes. **+ edge fn `campaigns`
+> v15 deployada: âncora de ano (Patch 1) + flag reconciliado ±65d OU gap>365 (Patch 2);
+> 20/20 dois lados, não-regressão bloqueante verde, coleta viva. Origem da corrupção
+> temporal ESTANCADA na prevenção — medição yr_off→0 confirma no próximo ciclo com nova.**
 >
 > **Leitura para os três chats (D-050):** a máquina está provada ponta a ponta. O
 > Deal Desk vivo é gatilhado por **oferta** (forte + viva + confirmada), não por data.
@@ -22,17 +25,26 @@
 > (conteúdo de estreia) + **calibração** (régua). O gate já captura a oferta forte no
 > instante em que ela aparecer.
 
+
+> **⚠ Nota de sincronização (calibração, 2026-07-17, tarde).** O cabeçalho acima e as
+> §2/§7 abaixo predatam **D-060..D-065**: a verificação pré-publicação **foi construída**
+> (`v2/lib/verificacao/pre-superficie.mjs`, D-060), **P1 e P2 já aplicados** (D-061),
+> e **auto-publish está LIGADO** desde D-065 (`TL_AUTOPUBLISH=on`, cadência 09:30 UTC
+> seg-sex, "vamos acompanhando" — não é bloqueio). `DECISIONS.md` é a fonte de verdade
+> mais fresca; este arquivo generalista fica um passo atrás entre refreshes. Ver §8
+> (Calibração) para o estado atual dessa frente.
+
 ---
 
 ## 0. REGRAS DE COORDENAÇÃO — os três chats escrevem no MESMO banco (ler antes de qualquer escrita)
 
 > **Por que existe.** Os três chats (principal, predict, calibração) operam sobre o
 > mesmo banco `qjqnqcsdnpvvmyzkavoq`. Enquanto todos estão em mede-e-propõe, sem risco.
-> Mas os três têm **escrita chegando** — calibração vai versionar parâmetro, predict vai
-> reconstruir a camada temporal, principal está aplicando não-valor e cobertura. A
-> **quase-colisão da edge fn v14** (predict quase sobrescreveu uma v14 que o principal
-> deployou sem inscrever) provou que sem regra dura os três colidem de novo. Estas duas
-> regras são **obrigatórias e precedem a escrita**, não cortesia depois.
+> Mas os três têm **escrita chegando**. A **quase-colisão da edge fn v14** (predict quase
+> sobrescreveu uma v14 que o principal deployou sem inscrever) provou que sem regra dura
+> os três colidem de novo. Estas duas regras são **obrigatórias e precedem a escrita**,
+> não cortesia depois. (Registradas originalmente pelo chat de calibração; a v15 já
+> resolveu a colisão concreta — a regra fica como prevenção permanente.)
 
 **REGRA 1 — Escrita única em produção: só o chat PRINCIPAL aplica migration e deploya edge fn.**
 Calibração e predict operam em **mede-e-propõe** e **entregam a mudança aprovada ao principal**,
@@ -47,14 +59,7 @@ agora é obrigatória e precede a escrita.
 
 **Cadeia para qualquer parâmetro que a CALIBRAÇÃO produzir:** calibração **mede e propõe** →
 operador **aprova** (todo número que vira público passa pelo operador) → **principal serializa e
-aplica** em produção. A calibração nunca versiona vetor direto no banco. Ex.: os gates re-medidos
-(precisões que podem virar públicas) passam pelo operador; se implicarem versionar um vetor
-recalibrado, a aplicação vai pelo principal, não pela calibração.
-
-**Fila de escrita inscrita (o que cada chat vai aplicar — manter atualizado):**
-- **Principal:** não-valor (`conta_nao_calculavel`→bruto null), cobertura/TIER 1 (Frente B). Aplica. **Nota de estado real (2026-07-17):** o que está em produção na edge fn de campanhas é a **v14-shadow** do principal — **flaga, não previne** — deployada **sem inscrição** (foi ela que furou a regra e propagou leitura errada).
-- **Predict:** reconstrução da camada temporal. **⚠ Correção de estado:** a **âncora da Fase 1a NÃO foi deployada** (contradição descoberta ao verificar o banco — o relato anterior de "estancado" era leitura errada, propagada pela v14-shadow não-inscrita). Origem do bug **ainda viva**. Reconstrução histórica (~24m) **pendente**. **Propõe → principal aplica com inscrição prévia.**
-- **Calibração:** `score_pesos`/`derivacao` só se recalibrados e aprovados (hoje: **v1 mantido, nada a aplicar** — D-053); golden N=400 é artefato de repo, não escrita de produção. Gates re-medidos, quando fecharem: número → operador; se implicar versionar vetor → **principal aplica**, nunca direto. **Propõe → principal aplica.**
+aplica** em produção. A calibração nunca versiona vetor direto no banco.
 
 ---
 
@@ -116,76 +121,6 @@ alta : livelo→azul_fidelidade 1 · livelo→latam_pass 1 · livelo→connectmi
 media: livelo→smiles 1 · esfera→latam_pass 1 · esfera→smiles 1 · esfera→azul_fidelidade 1 · esfera→connectmiles 0.3333
 ```
 
-### Frente CALIBRAÇÃO (régua) — chat dedicado (D-051), aberta 2026-07-17
-Chat paralelo, worktree isolado, base = este estado (nfvoh1 D-050). **Trava D-051:**
-o corpus calibra os parâmetros dos motores determinísticos (constantes versionadas),
-**nunca** substitui os motores por modelo/ML. Conta aberta é o produto. Modo dos três
-agentes: **mede-e-propõe** — nenhum parâmetro vira produção sem aprovação do operador;
-movimento que aumenta risco de publicação é gated, movimento que aumenta cautela é livre.
-
-**Foto do corpus medida (live, `qjqnqcsdnpvvmyzkavoq`, 2026-07-17):** 40.327 news_raw
-(40.321 processadas; 13.628 com ≥1 campanha) · 3.621 campanhas · **1.014 identidades**
-canônicas · span **18,0 meses** (2025-01-14→2026-07-17) · `tl_score` preenchido
-**11/3.621**, `tl_breakdown` **0** (re-score gravou agregados, breakdown por-item ainda não).
-
-**Fronteira estrutural que muda a leitura dos TRÊS chats:** a calibração da
-**distribuição** (pesos TL Score, quartis, buckets de derivação, golden) roda **agora**
-contra o corpus. Mas os dois loops que dependem de **desfecho real observado** ficam
-**bloqueados por ausência de ledger de desfechos**, e por motivo idêntico:
-- **Auto-ajuste do limiar do gate de confiança (D-048).** O limiar de PARTIDA (0,75,
-  D-050) existe e é conservador de propósito; o que **não** dá para calibrar é o
-  auto-ajuste por taxa-de-acerto — `campanha_fontes`=1, zero desfecho conhecido.
-- **Predict frequencial (REQ-24/25).** Sem camada temporal confiável + ledger de
-  predição emitida→resolvida, não há Brier para calibrar.
-
-Não é bug — é a ordem natural: mede-se o que dá contra o corpus agora; os loops de
-acerto **ligam quando houver acerto para medir** (produto operando gera histórico).
-
-**Cobertura de base do predict (A3, PR #106) — PROVISÓRIA, ver caveat:** dos 1.008
-pares, **215** têm base_n≥3; aptos a probabilidade numérica (base_n≥3 & série≥12m):
-**119** por série só-`first_seen` (conservador, **número público** credibility-first)
-ou **163** por `first_seen→last_seen` (teto otimista); 45 robustos (≥12 & ≥12m).
-Concentração: livelo/azul/esfera/smiles (mesmo núcleo de TIER 1 + ratios).
-**⚠ Recalcular sobre a janela confiável (D-052.3):** esta foto usou a série como-está,
-que carrega a **corrupção temporal sistemática** diagnosticada pelo chat de predict
-(`v2/predict/DIAGNOSTICO-CAUSA-RAIZ-TEMPORAL.md`, branch `predict-engine-backtesting-six5pq`:
-75,6% dos transfer datados com ano atrasado 1–6 anos; janela confiável **~24m, não 36**).
-119/163 podem encolher filtrados por data confiável. **Um só número oficial de cobertura
-entre os dois chats — alinhar com predict, não cravar aqui isolado.**
-
-**Ordem travada auto-publish (D-052.2):** o outcomes-ledger é **pré-requisito** de ligar
-auto-publish — ledger existe e captura → produto opera → ledger acumula → auto-ajuste do
-gate (D-048) liga. Nunca ligar auto-publish sem o ledger capturando (perde o histórico
-dos primeiros dias). **Guarda de worktree (D-052.1):** todo agente nasce com checkout
-explícito do base real, nunca por herança do commit do worktree.
-
-**⏳ GATE ATIVO (D-060) — para o PRINCIPAL, ler antes de entregar a verificação
-pré-publicação.** Quando o desenho dos checks de vigência/tipo/confiança pré-publicação
-estiver pronto, a calibração mede **recall contra histórico conhecido** antes de
-qualquer threshold ir pra produção — objetivo do operador: nunca sumir com oferta real
-silenciosamente (prefere mais revisão manual a menos recall). **Fixture já pronto**
-(do benchmark milhasbot, D-059): a verificação tem que PASSAR (reconhecer como viva)
-**BNB→Azul** (vigência mal-parseada 2024 vs. real 2026, vence 17/07/2026 — classe de
-bug D-021) e **Flying Blue** (vigência `na`→indeterminada, vence 28/07/2026, real 45% OFF)
-— os dois casos que a v14/parser atual enterrou silenciosamente e só vieram à tona por
-benchmark externo. Se a verificação nova esconder qualquer um dos dois, não aprova o
-threshold sem reportar o trade-off primeiro.
-
-**Reconciliação (D-060):** o **P1 que A1 propôs** (fix `null→0` em `finite()`,
-rescore-1/2.mjs) **já foi aplicado pelo principal, independentemente** (`1fdc1fc`) —
-mesma medição (mediana 60→58, ≥70 ~13%→~9%). **P1 está resolvido, não pedir aprovação
-de novo.** P2 (teto de sanidade 200/300 p/ ghosts de percentual) segue aberto, ninguém
-tocou. **Achado colateral não resolvido:** `rescore-2.mjs` não chama
-`marcarNaoValorLadoUnico` no próprio output — rodar full-base ressuscitaria os 1.334
-brutos que D-050.1 zerou (619 ≥70). Vetores só fecham de verdade quando isso reconciliar.
-
-**⚠ Drift de sincronização (flag, sem ação unilateral):** a calibração está **23
-commits atrás** de `loyal-v2-architecture-nfvoh1` no momento deste registro (2026-07-17,
-tarde). Inclui v15 deployada, coleta TIER1 em produção, Digest Engine v3, 1º rascunho
-do Daily. Não fiz rebase — 3 PRs de calibração abertos (#106/#107/#108) apontam pro base
-atual; sincronizar exige coordenar as branches dos 3 agentes. Fica registrado para o
-operador decidir o timing, não decisão silenciosa da calibração.
-
 ### Re-score-1 dry-run na base SUJA (superado pela recanon; referência histórica)
 > Este dry-run rodou ANTES da recanonicalização. O balde 4=103 e as anomalias
 > abaixo eram sobre a base suja. O re-score-1 sobre a base SÃ (em execução) traz o
@@ -212,8 +147,29 @@ operador decidir o timing, não decisão silenciosa da calibração.
 
 1. **[OPERADOR] Aprovar a SPEC de cobertura de fontes** (`SPEC-SLICE-COBERTURA-FONTES.md`).
    15/18 vivas crawleáveis sem URL oficial → invisíveis ao gate. Frente B (reverse-lookup:
-   oferta → busca página oficial, sem adapter novo) → Frente A (mais adapters, guiado por
-   medição: Azul/LATAM destinos, bancos, varejo) → Frente C (robustez). 4 decisões no §7.
+   oferta → busca página oficial **no sitemap oficial**, sem adapter novo) → Frente A (mais
+   adapters, priorizados por **oferta forte viva bloqueada**) → Frente C (robustez). 4
+   decisões no §7 (aguardam ratificação). 4 travamentos baqueados (gate não é pulado;
+   domínio oficial; corte por oferta-forte; URL compartilhada campanha/evergreen).
+   **⚠️ DEPENDÊNCIA CROSS-CHAT (predict):** a **correção da edge fn** (bug de corrupção
+   temporal VIVO na extração — chat de predict) é **pré-requisito** para as campanhas
+   capturadas pela cobertura terem **vigência confiável** (vigência = 1 dos 3 portões,
+   D-044). **Status: edge fn `campaigns` v15 DEPLOYADA em prod pelo principal (2026-07-17
+   14:30Z, version 15, `verify_jwt=false` preservado).** Integra a PROPOSTA-ANCORA-V15 do
+   predict sobre a v14-shadow: **Patch 1 — âncora de ano** (passa `published_at` ao prompt;
+   o LLM para de fabricar o ano na origem — a prevenção que faltava) + **Patch 2 —
+   reconciliação do flag** `date_suspect = padrão ±65d de N×365 (v14) OU gap>365d
+   (predict)`. **Teste dos dois lados, gate de não-regressão BLOQUEANTE: 20/20 no golden
+   de referência (`temporal-plausibility`) E 20/20 no flag inline da edge fn** — zero
+   limpos regridem, todos os quebrados viram suspect (inclui o canônico 943d que o ±65d
+   sozinho perdia). **Invoke pós-deploy: HTTP 200, `versao:"v15-ancora"`, run logado
+   `status ok` — coleta NÃO caiu.** Não muda makeId/upsert(id)/schema (Fase 1b fora).
+   **Medição de estancamento pendente do próximo ciclo com notícia nova:** fila vazia hoje
+   (0 novas), então yr_off→0 se confirma quando o próximo `daily` pós-v15 entrar. **Baseline
+   pré-v15 (só origem `daily`, datado n=24): 50% com yr_off (gap>365); v14 flagava 9, o
+   flag reconciliado pega 12** — os 3 extra são exatamente os gaps sujos do Patch 2. Não trava a
+   Frente B (reverse-lookup roda). A reconstrução histórica do predict e a medição yr_off→0
+   nas novas seguem a origem já estancada. Alinhamento principal↔predict fechado neste turno.
 2. **[EM EXECUÇÃO] Re-score lado-único (Parte B aprovada).** Agente re-scorando os 1.220
    `sem_destino` com LADO_UNICO_V1: fallback OFF, `conta_nao_calculavel`→não-valor (null),
    D-037 buckets, min 3/8, versionado. Movimento modesto (54/79 saem da banda 65, nada
@@ -227,18 +183,38 @@ operador decidir o timing, não decisão silenciosa da calibração.
 
 **Provado/gravado (não são mais blockers):** re-score-1 (B4=102) + re-score-2 (CPM vivo,
 B4=101, 28 conta R$); D-014 encerrado (backup arquivo frio); `livelo→azul` corrigido via
-TIER 1 manual (115→50, Evitaria, histórica); **coleta TIER 1 provada** — gate de confiança
-operou no lote-1 (`livelo→hilton` corrobora_limpo conf 1,00; `smiles` ajuste→revisão).
+TIER 1 manual (115→50, Evitaria, histórica); **coleta TIER 1 provada** (gate operou no
+lote-1: hilton corrobora_limpo 1,00, smiles ajuste→revisão); **Frente B provada** (reverse-
+lookup por sitemap oficial, 19/21→fila manual → sinal: Frente A é o desbloqueio, não a B);
+**D-050.1 aplicado** (não-valor estendido a TODOS os 1.334 `conta_nao_calculavel`; 710 brutos
+inflados de rota real → null, 375 falsos-fortes zerados).
+
+**⚠️ COORDENAÇÃO CROSS-CHAT (calibração):** o D-050.1 **zerou 710 brutos** na base de score.
+Qualquer medição de **distribuição de score** feita pelo chat de calibração **antes** desta
+correção (ex.: "v1 saudável") pode estar contaminada por 375 valores-fantasma que não existem
+mais → **revalidar a foto de distribuição contra a base corrigida** antes de calibrar peso.
+**Achado da Frente A (scores limpos):** ranking de oferta-forte-viva-bloqueada = **quase vazio**
+(1 item fraco `costa_cruzeiros` 70) → **nenhum adapter tem alvo forte hoje**; reforça D-050 —
+a base não tem oferta forte viva; a próxima vem do calendário, não de mais cobertura do estoque atual.
 
 ---
 
 ## 3. Decisões travadas (fonte de verdade: `v2/DECISIONS.md`)
 
-**Não re-litigar.** ADRs **D-001..D-050** em `v2/DECISIONS.md`; invariantes
-**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Mais recentes: **D-048** gate de confiança
-TIER 1 (determinístico, limiar auto-ajustável, piso gated, 4 travas); **D-049**
-confiança ⊥ resultado (corrobora/refuta) + 3 níveis de divergência; **D-050** lançamento
-= estreia RECUSANDO, Deal Desk gatilhado por oferta, auto-publish gated na calibração.
+**Não re-litigar.** ADRs **D-001..D-054** em `v2/DECISIONS.md`; invariantes
+**INV-01..INV-16** em `v2/REQUIREMENTS.md`. Mais recentes: **D-054** fecha as últimas
+decisões nomeadas (Clipping logo após Resumo do dia; corte Loyalty Lab 0,85; limiar
+coleta TIER1 0,75; cron 6h; override `refutado_tier1`) e registra o **deploy real da
+coleta TIER 1** (edge function `coleta-tier1` v1 ACTIVE + `pg_cron` 6h, provado ao vivo:
+0 candidatos hoje, bate com a medição prévia). **D-052** contrato do template
+de e-mail Daily (4 decisões do `SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md` §3 — Conta Feita,
+`oQueEvitar`, cap 3, schema vence); **D-053** Digest Engine — `scoreBreakdown` corrigido
+(4 componentes reais), Clipping + Resumo do dia no dia fraco, Loyalty Lab automatizável
+por score (Ledger é dívida, não bloqueio), TIER 2 alimenta blocos narrativos. **D-048**
+gate de confiança TIER 1 (determinístico, limiar auto-ajustável, piso gated, 4 travas);
+**D-049** confiança ⊥ resultado (corrobora/refuta) + 3 níveis de divergência; **D-050**
+lançamento = estreia RECUSANDO, Deal Desk gatilhado por oferta, auto-publish gated na
+calibração.
 Anteriores (D-040..047): recanon = só
 self-loops + guard permanente; banda neutra CPM-cego é correta; **D-043** modo de
 operação (autonomia dentro de slice aprovada; **dado vence instrução quando
@@ -338,15 +314,112 @@ v2/
 
 ## 6. Próximo passo imediato (para o chat que retomar)
 
-1. **Re-score lado-único (Parte B)** fecha → verificar gravação (null bruto nos
-   `conta_nao_calculavel`, nada vira publicável).
-2. **Operador aprova a SPEC de cobertura de fontes** (`SPEC-SLICE-COBERTURA-FONTES.md`,
-   §7) → Frente B (reverse-lookup) primeiro, depois adapters guiados por medição.
-3. **Calibração dos vetores de score** (a frente que destrava o auto-publish, D-050):
-   quando fechar, liga a publicação automática do gate (limiar 0,75).
-4. **Track record (M3)** como conteúdo de estreia; **Deal Desk vivo** estreia quando a
-   máquina capturar a primeira oferta forte + viva + confirmada (gatilhado por oferta).
-5. Atualizar este arquivo ao fechar cada slice.
+**Fase do projeto (D-051):** saiu de *construir o motor* (provado ponta a ponta) para
+*operar e afinar*. **Frente A (adapters) ADIADA** (ranking de oferta-forte vazio). **O que
+aproxima o lançamento é a CALIBRAÇÃO fechar — não o track record.** Ordem por alavanca:
+
+1. **[CAMINHO CRÍTICO — calibração] Revalidar a distribuição de score** contra a base
+   corrigida (D-050.1 zerou 710 brutos) → fechar os vetores → **liga o auto-publish** (D-050).
+   Enquanto não fecha, o produto **não opera** (publica nada automático). É a frente que
+   **liga** o produto. (Roda no chat de calibração.)
+2. **[HOLD — não construir ainda] Track record / M3** (`M3/SPEC-TRACK-RECORD.md`, 4 decisões
+   §6 **ratificadas**). Spec pronta, **construção SEGURADA** (§6.1): depende de fundação em
+   movimento (janela temporal do predict ainda não cravada; vetores não fechados). Construir
+   sobre janela que vai mudar = retrabalho. **Gatilho para construir: janela cravada E vetores
+   fechados.** Track record enche a loja; a calibração é que **abre** a loja.
+3. **[predict] Reconstrução temporal** (~24m) — a **reconciliação da edge fn JÁ FOI FEITA:
+   v15 no ar** (âncora + flag reconciliado; ver o bloco de dependência da Frente 1 e o
+   instrumento de medição em `v2/predict/MEDICAO-YROFF-V15.md`).
+   Crava a janela confiável (destrava vigência para track record E cobertura). **⇒ PERGUNTA
+   ABERTA AO PREDICT (responder no handoff):** a reconstrução do **histórico** depende da
+   confirmação de `yr_off→0` nas notícias **novas**, ou pode rodar **já** que a v15 está no ar?
+   Racional do operador (inclinação: rodar já): a v15 **protege o futuro** (previne ano
+   fabricado em nova extração); a reconstrução **conserta o passado** (registros antigos já
+   corrompidos, que a v15 não toca). São **conjuntos disjuntos** → a reconstrução do passado
+   não precisaria esperar a comprovação do estancamento do presente. **EXCEÇÃO que inverteria
+   a resposta:** se a reconstrução **reprocessa/reescreve registros que o cron ainda pode
+   tocar** (colisão passado×presente), aí espera a confirmação `yr_off→0` antes, para não
+   competir com a extração viva. Predict decide com base em: *a reconstrução toca linha que o
+   cron re-extrai?* Não → roda já. Sim → espera a medição do próximo ciclo.
+4. **Ponto-limite (D-051):** os 3 loops de desfecho (gate/ledger, predict/série, accuracy/
+   vereditos publicados) só destravam quando o **produto OPERAR**. Construir não adianta mais;
+   só operar adianta. Próxima grande alavanca = **ir ao ar** (após calibração fechar).
+
+**Estado: TRÊS CHATS EM ESPERA COORDENADA.** O principal **não tem trabalho de caminho
+crítico próprio agora** (o caminho crítico está na calibração e no predict). Próximo movimento
+real = **calibração fechar** os vetores OU **predict cravar** a janela. Pontos de decisão do
+operador: (a) amostra de reconstrução do predict (audita); (b) gates re-medidos da calibração
+(número público); (c) construção do track record **depois** que a fundação cravar. Nenhum
+exige input por turno — o operador volta quando um agente entregar.
+
+---
+
+## 7. Fechamento do M2 — checklist (saber quando parar de afinar e operar)
+
+O M2 fecha quando estes convergem → produto pronto para **operar** (estreia = track record
++ Deal Desk gatilhado por oferta). Afinar é infinito; este checklist é o freio.
+
+| item | estado |
+|---|---|
+| Motor provado ponta a ponta (canon→engine→CPM→ratio→TIER1→veredito) | ✅ |
+| Falsos-fortes limpos (não-valor consistente, D-050.1) | ✅ |
+| Gate de confiança pronto + limiar de partida 0,75 | ✅ (auto-ajuste espera ledger) |
+| Base de score corrigida (D-050.1) | ✅ |
+| **Vetores de score fechados (calibração revalida distribuição)** | ⏳ calibração |
+| **Janela temporal reconstruída (~24m)** | ⏳ predict |
+| **Track record pronto** | ⏳ principal (spec escrita) |
+| **Auto-publish ligado** (após calibração fechar) | ⏳ depende de calibração |
+| Fechar M2 → operar | ⧗ quando os ⏳ convergirem |
+
+**Pontos de decisão reais próximos (fora deles, os agentes medem — não alimentar turno):**
+(a) amostra de reconstrução do predict (operador audita antes de aplicar); (b) gates
+re-medidos da calibração (número que vira público, passa pelo operador); (c) 4 decisões
+do track record (§6). O check-in de deploy do #104 foi **desativado** (ruído; a inscrição basta).
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes
 de comprar, transferir ou resgatar.*
+
+---
+
+## 8. Calibração — status e gate ativo (chat dedicado, D-066..069)
+
+Chat paralelo, worktree isolado. **Trava D-066** (renumerada de D-051 por colisão no merge
+com este branch — conteúdo idêntico): o corpus calibra parâmetros dos motores determinísticos
+(constantes versionadas), **nunca** substitui os motores por modelo/ML. Conta aberta é o produto.
+
+**Fechado nesta frente:**
+- **A1 (score):** `score_pesos.v1` e `derivacao.v1` **mantidos** — v1 saudável, gargalo era
+  cobertura de CPM/ratio, não o vetor. **P1 (fix `null→0` em `finite()`) e P2 (teto de sanidade
+  200/piso 300) — AMBOS já aplicados pelo principal, independentemente** (D-060/D-061), com
+  medição quase idêntica à do A1 (mediana 60→58, ≥70 ~13%→~9%). Nada pendente de A1.
+- **A2 (golden em escala):** N=379 rotulados, gates re-medidos fora da amostra dos 86 —
+  **precision de rejeição de `nao_campanha` = 0,983 (59/60)** contra 125 negativos reais
+  (era 0/31 no M2). 159 candidatos de divergência (caso azul em escala) sob a convenção R1:
+  147/159 tinham teto do blog em produção; 68/70 corrigidos corretamente na amostra, zero
+  falso-positivo. **Proposta aberta:** nular o `percentual` geral dos 147 em produção
+  (cautela-livre, mas 147 linhas → rota pelo principal, D-067).
+- **A3 (gate+predict):** foto de cobertura do predict entregue, **provisória** — calculada
+  sobre a série como-está, precisa recalcular sobre a janela temporal confiável que o chat de
+  predict está fechando (um só número oficial entre os dois chats).
+
+**Gate ativo — D-069 (recall da verificação pré-publicação vs. histórico conhecido).**
+A verificação que o D-069 esperava **já foi construída** (`v2/lib/verificacao/pre-superficie.mjs`,
+D-060, 11/11 testes) — deixou de ser standing e virou mensurável. Fixture de teste (do benchmark
+milhasbot, D-059): **BNB→Azul** (vigência mal-parseada 2024 vs. real 2026 — padrão `vigencia_bug_ano`)
+e **Flying Blue** (vigência `na`→indeterminada — padrão `valor_sem_data`), ambos ofertas reais que
+o parser antigo enterrou silenciosamente. A verificação já tem medição própria nas 58 vivas: **0
+flags estruturais, 2 bloqueios de destaque** (confiança baixa, não remoção — nunca descarta,
+D-016/D-060). Próximo passo da calibração: medir formalmente os dois padrões-fonte contra os
+checks e ampliar para o histórico mais largo antes de qualquer threshold novo.
+
+**Papel no M3 (novo, ainda standing):** quando a trilha do track record (placar histórico por
+rota) e do Predict entregarem dado, a calibração mede (a) **precisão do placar histórico por
+rota** — nunca afirmar histórico que o dado não sustenta, mesma disciplina do bug BNB/Flying
+Blue; (b) **recall das janelas do Predict** — quantas rotas com histórico real ficam de fora por
+confiança conservadora demais. Objetivo do operador: nunca sumir com sinal real silenciosamente.
+Aguardando dado da trilha (não construído ainda — §7).
+
+**Coordenação:** ledger de desfechos segue como pré-requisito de ligar o auto-ajuste do gate
+de confiança (D-048) — distinto do auto-publish por rating mínimo que D-065 já ligou. PRs
+draft: #106 (A3), #107 (A1), #108 (A2), todas apontando para
+`claude/loyal-v2-corpus-calibration-9z2utl` (agora sincronizada com este branch).

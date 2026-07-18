@@ -1,4 +1,4 @@
-# QA — The Loyalty Special: "O 1:1 morreu / CPM final"
+# QA — The Loyal Special: "O 1:1 morreu / CPM final"
 
 ## Estrutura (8 seções pedidas)
 - [x] 1. Headline forte (hero Ink)

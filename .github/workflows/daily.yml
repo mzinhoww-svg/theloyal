@@ -1,0 +1,68 @@
+name: Daily Runner (draft-only)
+
+# Runner diario do The Loyal Daily (M2.7 / A2): monta -> verifica (pre-superficie)
+# -> gate unico -> render -> RASCUNHO no Beehiiv, idempotente por data. NUNCA
+# envia (status sempre draft); auto-publish e decisao humana.
+#
+# "Nao inicia a contagem dos 5 dias sozinho": o gatilho por horario (schedule)
+# fica COMENTADO de proposito. So o operador o habilita, descomentando o bloco
+# abaixo, quando decidir comecar a cadencia diaria. Ate la, roda so no manual
+# (workflow_dispatch).
+#
+# Alvo de horario quando habilitado: 06:30 America/Sao_Paulo (BRT = UTC-3) =>
+# 09:30 UTC, em dias uteis (o Daily e de 5 dias uteis). Sai antes das 7h.
+#
+# Sem os secrets BEEHIIV_API_KEY / BEEHIIV_PUBLICATION_ID o runner opera em modo
+# mock (nada e enviado). Sem SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY ele usa o
+# snapshot passado em --campaigns (ou acusa a falta no gate).
+
+on:
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: "Caminho da edicao (vazio = content/latest.json)"
+        type: string
+        required: false
+        default: ""
+      now:
+        description: "Data de referencia ISO (vazio = data da edicao)"
+        type: string
+        required: false
+        default: ""
+  # Cadencia diaria LIGADA (decisao do operador, 2026-07-17): 09:30 UTC = 06:30
+  # BRT, seg-sex. Auto-publish com rating minimo — edicao limpa (gate verde +
+  # zero pendencias) envia sozinha; qualquer flag vira rascunho + 1 clique.
+  schedule:
+    - cron: "30 9 * * 1-5"
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serializa disparos no mesmo dia para reforcar a idempotencia do ledger.
+  group: daily-runner
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - name: Rodar o Daily (draft-only, idempotente por data)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BEEHIIV_API_KEY: ${{ secrets.BEEHIIV_API_KEY }}
+          BEEHIIV_PUBLICATION_ID: ${{ secrets.BEEHIIV_PUBLICATION_ID }}
+          # Auto-publish ligado: edicao acima do rating minimo envia sozinha.
+          # Para voltar a so-rascunho (kill-switch), troque para "off".
+          TL_AUTOPUBLISH: "on"
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.edition }}" ]; then ARGS="${{ github.event.inputs.edition }}"; fi
+          if [ -n "${{ github.event.inputs.now }}" ]; then ARGS="$ARGS --now ${{ github.event.inputs.now }}"; fi
+          node scripts/daily.mjs $ARGS

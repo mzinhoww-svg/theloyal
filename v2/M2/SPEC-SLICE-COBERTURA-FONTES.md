@@ -27,7 +27,11 @@
 
 Adicionar adapters segue o padrão `criarAdapter(config)` (`v2/lib/adapters/base.mjs`):
 sitemap oficial + `incluir`/`excluir` + robots + detecção de janela de vigência (D-047).
-**Priorizar por quantas vivas cada programa desbloquearia** (medir na base, não chutar):
+**TRAVA (priorização):** o corte que decide qual adapter construir é **"onde há oferta
+FORTE viva bloqueada por falta de fonte"** — não volume bruto de campanhas históricas.
+A métrica é: `vivas + tl_score_bruto alto ("Vale olhar"/"Vale agir") + sem TIER 1`, por
+programa. Construir o adapter que destrava a oferta forte, não o que tem mais lixo
+histórico. Medir na base, não chutar:
 
 1. **Destinos que rodam campanha própria:** Azul Fidelidade, LATAM Pass, Smiles
    (origem já coberta; como **destino** têm página de campanha própria — ex.: a página
@@ -48,15 +52,26 @@ Hoje o fluxo é **sitemap → matcher → casa com vivas**. Falta o inverso: dad
 **oferta viva já detectada** (de terceiro, com `origem_code`/`destino_code`/%), **ir
 buscar** a página oficial correspondente.
 
+**TRAVA (motor de busca + domínio):** o "motor de busca" do reverse-lookup é o
+**sitemap OFICIAL do programa** (não web search geral). Critério de TIER 1: **só
+domínio oficial do programa com página de campanha datada** vira TIER 1 — blog/agregador
+que apareça em qualquer busca **NÃO** vira TIER 1 por ter sido encontrado (senão
+readmite TIER 2 disfarçado — D-045). Fonte oficial é o domínio do programa, ponto.
+
+**TRAVA (alimenta o gate, não o pula):** achar a página oficial **não confirma** a
+oferta — a página passa pelo **gate de confiança (D-048/D-049)**, que corrobora, ajusta
+ou refuta (como fez com o azul). Reverse-lookup **expande o alcance** do gate, não o
+substitui.
+
 **Fluxo proposto (reusa matcher-url + adapters):**
 1. Para cada viva **sem** fonte oficial, com origem/destino em programa **com adapter**:
-   gera **URL(s) candidata(s)** varrendo o sitemap daquele programa por página de
-   campanha do par (ex.: `livelo→azul` → procura no sitemap Livelo a página que o
-   matcher mapeia para `azul`).
-2. Fetch + detecção de janela (D-047) + gate de confiança (D-049): corrobora/ajuste/
-   refuta. Alimenta o mesmo gate da Parte A.
+   gera **URL(s) candidata(s)** varrendo o **sitemap oficial** daquele programa por
+   página de campanha do par (ex.: `livelo→azul` → procura no sitemap Livelo a página
+   que o matcher mapeia para `azul`). Só domínio oficial.
+2. Fetch + detecção de janela (D-047) + **gate de confiança (D-049)**: corrobora/ajuste/
+   refuta. **Alimenta o mesmo gate da Parte A** — não pula nenhuma trava.
 3. Sem candidata no sitemap coberto → cai na **fila de revisão** (Parte C) com a
-   **URL candidata heurística** (site oficial do programa) para confirmação manual.
+   URL candidata **do domínio oficial** para confirmação manual (nunca um blog).
 
 Isso transforma "15 sem URL oficial" em: **X reencontram a página oficial** (viram
 gate automático) e **Y** viram fila manual com candidato — em vez de simplesmente
@@ -90,11 +105,23 @@ o ganho de B, depois de cada adapter de A. O objetivo não é um número de publ
 
 ---
 
-## 5. Fora de escopo
+## 5. Fora de escopo + DEPENDÊNCIA (edge fn / vigência)
 
 - Não liga auto-publish (D-050: espera calibração). A coleta segue confirma-e-mostra.
 - Não constrói o track record (D-046, superfície M3) — é frente paralela de conteúdo.
 - Não re-scora (Parte B da coleta já cuidou do lado-único).
+
+**DEPENDÊNCIA CRÍTICA — correção da edge fn (vigência confiável) [vem do chat de predict]:**
+o chat de predict descobriu que o **bug de corrupção temporal está VIVO na extração**
+(a edge fn produz datas erradas em notícias novas). A cobertura vai trazer **mais
+campanhas com data**; se a extração ainda corrompe o ano, as novas **nascem com vigência
+errada**. Vigência é um dos **três portões** (D-044): campanha com data corrompida **falha
+o portão de vigência** ou, pior, **passa com data errada**. **A correção da edge fn
+(que o chat de predict está montando) é PRÉ-REQUISITO para que as campanhas capturadas
+pela cobertura tenham vigência confiável.** Não trava a Frente B (reverse-lookup pode
+rodar), MAS: a **vigência das novas campanhas só é confiável depois que a origem for
+corrigida**. Alinhar com o chat de predict via HANDOFF — é o ponto concreto que liga o
+chat principal ao de predict.
 
 ---
 
@@ -108,18 +135,26 @@ o ganho de B, depois de cada adapter de A. O objetivo não é um número de publ
 
 ---
 
-## 7. Decisões que aguardam o operador (paro aqui — spec antes de código)
+## 7. Decisões para ratificar (com os 4 travamentos do operador baqueados)
 
-1. **Ordem B→A→C confirmada?** Reverse-lookup primeiro (retorno sem adapter novo),
-   depois adapters guiados por medição?
-2. **Quais adapters priorizar na Frente A** — deixo a medição decidir (quantas vivas
-   cada programa desbloqueia) e trago o ranking antes de construir, ou você já quer
-   cravar os próximos (ex.: Azul + Itaú + C6)?
-3. **URL candidata heurística** na fila manual (Frente B/C): gero o link candidato
-   do site oficial por heurística de programa, ou só marco "buscar fonte oficial"
-   sem chutar URL (mais conservador)?
-4. **Escopo desta slice:** só Frente B agora (rápido, alto retorno) e A/C numa
-   próxima, ou as três juntas?
+Os **4 travamentos** do operador estão refletidos no corpo: (1) reverse-lookup **alimenta
+o gate**, não o pula (§2); (2) **critério de domínio oficial** — só domínio do programa com
+página datada vira TIER 1, blog não (§2); (3) adapter priorizado por **oferta forte viva
+bloqueada por falta de fonte**, não volume (§1); (4) robustez testa a **URL compartilhada
+campanha/evergreen** pela janela de vigência (§3, D-047). As 4 decisões para bater o martelo:
+
+1. **Ordem B→A→C** — aprovada pelo operador (reverse-lookup primeiro, sem adapter novo).
+2. **Motor de busca da Frente B = sitemap OFICIAL do programa** (não web search geral),
+   com critério de **domínio oficial** (travamento 2). Ratificar este desenho? (a
+   alternativa — web search geral — é o que readmitiria blog; por isso sitemap oficial.)
+3. **Corte de priorização de adapter (Frente A) = "oferta forte viva sem TIER 1"**
+   (travamento 3), não volume bruto. Ratificar? Com o OK, **meço na base e trago o
+   ranking** de programas por oferta-forte-bloqueada **antes** de construir qualquer adapter.
+4. **Escopo desta slice: só Frente B agora** (rápido, alto retorno, sem adapter novo) —
+   A e C numa próxima. Recomendo. Ou quer as três juntas?
+
+**Dependência registrada (§5):** vigência confiável das novas campanhas depende da
+correção da edge fn (chat de predict). Não trava a Frente B.
 
 *Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de
 comprar, transferir ou resgatar.*

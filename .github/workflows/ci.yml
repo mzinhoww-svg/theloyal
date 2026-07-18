@@ -1,6 +1,6 @@
 name: CI
 
-# Gate de qualidade do The Loyalty. Roda em push e pull request.
+# Gate de qualidade do The Loyal. Roda em push e pull request.
 # Cobre: lint, typecheck, validate, render, qa, build e publish (indices locais).
 # Nenhum job envia e-mail nem toca a API do Beehiiv — publicacao real e manual
 # (ver .github/workflows/beehiiv.yml).

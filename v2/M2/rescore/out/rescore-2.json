@@ -1,5 +1,5 @@
 {
-  "gerado_em": "2026-07-17T03:01:47.446Z",
+  "gerado_em": "2026-07-17T15:39:31.323Z",
   "rescore": "RE-SCORE-2",
   "base": "sã (identidade_id IS NOT NULL)",
   "dry_run": true,
@@ -33,13 +33,13 @@
     {
       "caso": "A",
       "esperado_proposta": 77,
-      "vivo_bruto": 79,
+      "vivo_bruto": 78,
       "vivo_veredito": "Não confirmado",
       "vivo_override": "sem_tier1",
       "vivo_cpm": 11.85,
       "vivo_origem_cpm": "observado",
       "id": "livelo-azul-transferencia-2026-07-05",
-      "drift": 2
+      "drift": 1
     },
     {
       "caso": "B",
@@ -60,7 +60,7 @@
       "vivo_override": "sem_tier1",
       "vivo_cpm": null,
       "vivo_origem_cpm": "null_sem_custo_origem",
-      "id": "itau-latampass-transferencia-2024-04-05",
+      "id": "itau-latampass-transferencia-2024-09-07",
       "drift": 0
     },
     {
@@ -71,7 +71,7 @@
       "vivo_override": "sem_tier1",
       "vivo_cpm": null,
       "vivo_origem_cpm": "null_sem_custo_origem",
-      "id": "itau-latampass-transferencia-2024-02-08",
+      "id": "itau-latampass-transferencia-2026-05-29",
       "drift": -1
     },
     {
@@ -118,42 +118,42 @@
   "cpm_origem_dist": {
     "nao_transferencia": 2624,
     "null_sem_custo_origem": 447,
-    "observado": 10,
     "null_sem_ratio": 83,
-    "reconstruido": 154,
-    "null_sem_percentual": 12
+    "observado": 10,
+    "null_sem_percentual": 12,
+    "reconstruido": 154
   },
   "baldes_total": {
-    "b1": 255,
+    "b1": 177,
     "b2": 1334,
-    "b3": 1716,
-    "b4": 101,
+    "b3": 1793,
+    "b4": 88,
     "publicavel_agora": 0
   },
   "b4_assinatura": {
-    "total": 101,
-    "conta_fechada": 28,
-    "so_percentil": 73,
+    "total": 88,
+    "conta_fechada": 22,
+    "so_percentil": 66,
     "por_programa": [
       {
         "programa": "smiles",
         "conta_fechada": 6,
-        "so_percentil": 34
-      },
-      {
-        "programa": "azul_fidelidade",
-        "conta_fechada": 17,
-        "so_percentil": 0
+        "so_percentil": 29
       },
       {
         "programa": "livelo",
         "conta_fechada": 0,
-        "so_percentil": 15
+        "so_percentil": 14
       },
       {
         "programa": "esfera",
         "conta_fechada": 0,
-        "so_percentil": 14
+        "so_percentil": 13
+      },
+      {
+        "programa": "azul_fidelidade",
+        "conta_fechada": 11,
+        "so_percentil": 0
       },
       {
         "programa": "latam_pass",
@@ -161,12 +161,12 @@
         "so_percentil": 2
       },
       {
-        "programa": "accor",
+        "programa": "amazon",
         "conta_fechada": 0,
         "so_percentil": 3
       },
       {
-        "programa": "amazon",
+        "programa": "accor",
         "conta_fechada": 0,
         "so_percentil": 3
       },
@@ -178,111 +178,111 @@
     ]
   },
   "dist_veredito": {
-    "Não confirmado": 3305,
+    "Não confirmado": 3304,
     "Só para casos específicos": 16,
     "Esperaria": 4,
-    "Evitaria": 5
+    "Evitaria": 6
   },
   "dist_veredito_bruto": {
-    "Só para casos específicos": 1397,
+    "Só para casos específicos": 1280,
+    "Esperaria": 754,
+    "Evitaria": 500,
     "Vale agir": 345,
-    "Vale olhar": 529,
-    "Esperaria": 703,
-    "Evitaria": 356
+    "Vale olhar": 451
   },
   "dist_override": {
-    "sem_tier1": 1971,
+    "sem_tier1": 1970,
     "conta_nao_calculavel": 1334,
-    "(nenhum)": 25
+    "(nenhum)": 26
   },
   "baldes_por_programa": [
     {
       "programa": "smiles",
       "n": 404,
-      "b1": 40,
+      "b1": 35,
       "b2": 122,
-      "b3": 234,
-      "b4": 40,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "azul_fidelidade",
-      "n": 429,
-      "b1": 51,
-      "b2": 63,
-      "b3": 313,
-      "b4": 17,
+      "b3": 239,
+      "b4": 35,
       "publicavel_agora": 0
     },
     {
       "programa": "livelo",
       "n": 320,
-      "b1": 15,
+      "b1": 14,
       "b2": 149,
-      "b3": 155,
-      "b4": 15,
+      "b3": 156,
+      "b4": 14,
       "publicavel_agora": 0
     },
     {
       "programa": "esfera",
       "n": 140,
-      "b1": 14,
+      "b1": 13,
       "b2": 52,
-      "b3": 74,
-      "b4": 14,
+      "b3": 75,
+      "b4": 13,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "azul_fidelidade",
+      "n": 429,
+      "b1": 45,
+      "b2": 63,
+      "b3": 318,
+      "b4": 11,
       "publicavel_agora": 0
     },
     {
       "programa": "latam_pass",
       "n": 344,
-      "b1": 30,
+      "b1": 23,
       "b2": 95,
-      "b3": 215,
+      "b3": 222,
       "b4": 7,
       "publicavel_agora": 0
     },
     {
       "programa": "accor",
       "n": 105,
-      "b1": 9,
+      "b1": 6,
       "b2": 26,
-      "b3": 70,
+      "b3": 73,
       "b4": 3,
       "publicavel_agora": 0
     },
     {
       "programa": "amazon",
       "n": 96,
-      "b1": 12,
+      "b1": 7,
       "b2": 36,
-      "b3": 48,
+      "b3": 53,
       "b4": 3,
       "publicavel_agora": 0
     },
     {
       "programa": "outro",
       "n": 234,
-      "b1": 29,
+      "b1": 12,
       "b2": 109,
-      "b3": 96,
+      "b3": 113,
       "b4": 2,
       "publicavel_agora": 0
     },
     {
       "programa": "mercado_livre",
       "n": 131,
-      "b1": 16,
+      "b1": 5,
       "b2": 84,
-      "b3": 31,
+      "b3": 42,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
       "programa": "shell",
       "n": 68,
-      "b1": 9,
+      "b1": 2,
       "b2": 42,
-      "b3": 17,
+      "b3": 24,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -307,9 +307,9 @@
     {
       "programa": "inter",
       "n": 45,
-      "b1": 6,
+      "b1": 5,
       "b2": 12,
-      "b3": 26,
+      "b3": 27,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -334,27 +334,27 @@
     {
       "programa": "mastercard",
       "n": 24,
-      "b1": 2,
+      "b1": 0,
       "b2": 19,
-      "b3": 3,
+      "b3": 5,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
       "programa": "c6",
       "n": 22,
-      "b1": 2,
+      "b1": 0,
       "b2": 16,
-      "b3": 4,
+      "b3": 6,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
       "programa": "shopee",
       "n": 22,
-      "b1": 3,
+      "b1": 0,
       "b2": 15,
-      "b3": 4,
+      "b3": 7,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -422,20 +422,20 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "disney",
-      "n": 15,
-      "b1": 1,
-      "b2": 9,
-      "b3": 5,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
       "programa": "connectmiles",
       "n": 15,
       "b1": 0,
       "b2": 5,
       "b3": 10,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "disney",
+      "n": 15,
+      "b1": 0,
+      "b2": 9,
+      "b3": 6,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -449,11 +449,11 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "qatar",
+      "programa": "visa",
       "n": 14,
       "b1": 0,
-      "b2": 11,
-      "b3": 3,
+      "b2": 12,
+      "b3": 0,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -467,15 +467,6 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "visa",
-      "n": 14,
-      "b1": 0,
-      "b2": 12,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
       "programa": "porto",
       "n": 14,
       "b1": 0,
@@ -485,11 +476,11 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "aliexpress",
-      "n": 13,
+      "programa": "qatar",
+      "n": 14,
       "b1": 0,
-      "b2": 9,
-      "b3": 4,
+      "b2": 11,
+      "b3": 3,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -503,20 +494,20 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "avios",
-      "n": 13,
-      "b1": 0,
-      "b2": 6,
-      "b3": 7,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
       "programa": "nomad",
       "n": 13,
       "b1": 0,
       "b2": 12,
       "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "aliexpress",
+      "n": 13,
+      "b1": 0,
+      "b2": 9,
+      "b3": 4,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -530,6 +521,15 @@
       "publicavel_agora": 0
     },
     {
+      "programa": "xp",
+      "n": 13,
+      "b1": 0,
+      "b2": 7,
+      "b3": 6,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
       "programa": "caixa",
       "n": 13,
       "b1": 0,
@@ -539,11 +539,20 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "xp",
+      "programa": "avios",
       "n": 13,
       "b1": 0,
-      "b2": 7,
-      "b3": 6,
+      "b2": 6,
+      "b3": 7,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "hoteis_com",
+      "n": 12,
+      "b1": 0,
+      "b2": 2,
+      "b3": 10,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -557,29 +566,11 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "hoteis_com",
-      "n": 12,
-      "b1": 1,
-      "b2": 2,
-      "b3": 9,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
       "programa": "nubank",
       "n": 12,
       "b1": 0,
       "b2": 10,
       "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "airbnb",
-      "n": 11,
-      "b1": 0,
-      "b2": 2,
-      "b3": 9,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -593,20 +584,20 @@
       "publicavel_agora": 0
     },
     {
+      "programa": "airbnb",
+      "n": 11,
+      "b1": 0,
+      "b2": 2,
+      "b3": 9,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
       "programa": "nike",
       "n": 11,
       "b1": 1,
       "b2": 0,
       "b3": 10,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "aeroplan",
-      "n": 10,
-      "b1": 0,
-      "b2": 3,
-      "b3": 7,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -625,6 +616,24 @@
       "b1": 0,
       "b2": 2,
       "b3": 8,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "aeroplan",
+      "n": 10,
+      "b1": 0,
+      "b2": 3,
+      "b3": 7,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "mercado_pago",
+      "n": 9,
+      "b1": 0,
+      "b2": 3,
+      "b3": 6,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -658,35 +667,8 @@
     {
       "programa": "premmia",
       "n": 9,
-      "b1": 1,
+      "b1": 0,
       "b2": 5,
-      "b3": 3,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "mercado_pago",
-      "n": 9,
-      "b1": 0,
-      "b2": 3,
-      "b3": 6,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "decolar",
-      "n": 8,
-      "b1": 0,
-      "b2": 3,
-      "b3": 5,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "samsung",
-      "n": 8,
-      "b1": 1,
-      "b2": 3,
       "b3": 4,
       "b4": 0,
       "publicavel_agora": 0
@@ -710,29 +692,29 @@
       "publicavel_agora": 0
     },
     {
+      "programa": "decolar",
+      "n": 8,
+      "b1": 0,
+      "b2": 3,
+      "b3": 5,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "samsung",
+      "n": 8,
+      "b1": 0,
+      "b2": 3,
+      "b3": 5,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
       "programa": "revolut",
       "n": 8,
       "b1": 0,
       "b2": 6,
       "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "lufthansa",
-      "n": 7,
-      "b1": 0,
-      "b2": 5,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "membership_rewards",
-      "n": 7,
-      "b1": 0,
-      "b2": 7,
-      "b3": 0,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -755,6 +737,33 @@
       "publicavel_agora": 0
     },
     {
+      "programa": "carrefour",
+      "n": 7,
+      "b1": 0,
+      "b2": 0,
+      "b3": 7,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "membership_rewards",
+      "n": 7,
+      "b1": 0,
+      "b2": 7,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "lufthansa",
+      "n": 7,
+      "b1": 0,
+      "b2": 5,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
       "programa": "brb",
       "n": 7,
       "b1": 0,
@@ -764,11 +773,20 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "carrefour",
-      "n": 7,
-      "b1": 0,
+      "programa": "renner",
+      "n": 6,
+      "b1": 1,
       "b2": 0,
-      "b3": 7,
+      "b3": 5,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "costa_cruzeiros",
+      "n": 6,
+      "b1": 0,
+      "b2": 4,
+      "b3": 2,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -782,20 +800,20 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "costa_cruzeiros",
-      "n": 6,
-      "b1": 2,
-      "b2": 4,
-      "b3": 0,
+      "programa": "boticario",
+      "n": 5,
+      "b1": 0,
+      "b2": 1,
+      "b3": 4,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
-      "programa": "renner",
-      "n": 6,
+      "programa": "camicado",
+      "n": 5,
       "b1": 1,
       "b2": 0,
-      "b3": 5,
+      "b3": 4,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -818,33 +836,6 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "avianca",
-      "n": 5,
-      "b1": 0,
-      "b2": 3,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "camicado",
-      "n": 5,
-      "b1": 1,
-      "b2": 0,
-      "b3": 4,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "boticario",
-      "n": 5,
-      "b1": 1,
-      "b2": 1,
-      "b3": 3,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
       "programa": "hyatt",
       "n": 5,
       "b1": 0,
@@ -854,16 +845,34 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "qantas",
-      "n": 4,
+      "programa": "avianca",
+      "n": 5,
       "b1": 0,
-      "b2": 4,
-      "b3": 0,
+      "b2": 3,
+      "b3": 2,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
-      "programa": "krisflyer",
+      "programa": "rentcars",
+      "n": 4,
+      "b1": 0,
+      "b2": 1,
+      "b3": 3,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "zarpo",
+      "n": 4,
+      "b1": 0,
+      "b2": 1,
+      "b3": 3,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "cvc",
       "n": 4,
       "b1": 0,
       "b2": 2,
@@ -872,11 +881,11 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "priority_pass",
+      "programa": "rico",
       "n": 4,
       "b1": 0,
-      "b2": 4,
-      "b3": 0,
+      "b2": 2,
+      "b3": 2,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -899,11 +908,11 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "cvc",
+      "programa": "qantas",
       "n": 4,
       "b1": 0,
-      "b2": 2,
-      "b3": 2,
+      "b2": 4,
+      "b3": 0,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -926,6 +935,24 @@
       "publicavel_agora": 0
     },
     {
+      "programa": "krisflyer",
+      "n": 4,
+      "b1": 0,
+      "b2": 2,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "priority_pass",
+      "n": 4,
+      "b1": 0,
+      "b2": 4,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
       "programa": "msc",
       "n": 4,
       "b1": 0,
@@ -935,28 +962,55 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "rentcars",
-      "n": 4,
+      "programa": "sicoob",
+      "n": 3,
       "b1": 0,
-      "b2": 1,
-      "b3": 3,
+      "b2": 2,
+      "b3": 1,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
-      "programa": "rico",
-      "n": 4,
+      "programa": "globoplay",
+      "n": 3,
       "b1": 0,
-      "b2": 2,
+      "b2": 1,
       "b3": 2,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
-      "programa": "zarpo",
-      "n": 4,
+      "programa": "clubmed",
+      "n": 3,
       "b1": 0,
       "b2": 1,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "hbomax",
+      "n": 3,
+      "b1": 0,
+      "b2": 1,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "taag",
+      "n": 3,
+      "b1": 0,
+      "b2": 2,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "puma",
+      "n": 3,
+      "b1": 0,
+      "b2": 0,
       "b3": 3,
       "b4": 0,
       "publicavel_agora": 0
@@ -971,34 +1025,16 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "clubmed",
+      "programa": "ultragaz",
       "n": 3,
       "b1": 0,
-      "b2": 1,
-      "b3": 2,
+      "b2": 2,
+      "b3": 1,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
-      "programa": "elo",
-      "n": 3,
-      "b1": 0,
-      "b2": 3,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "polishop",
-      "n": 3,
-      "b1": 0,
-      "b2": 0,
-      "b3": 3,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "hbomax",
+      "programa": "picpay",
       "n": 3,
       "b1": 0,
       "b2": 1,
@@ -1016,52 +1052,7 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "globoplay",
-      "n": 3,
-      "b1": 0,
-      "b2": 1,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "picpay",
-      "n": 3,
-      "b1": 0,
-      "b2": 1,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "puma",
-      "n": 3,
-      "b1": 0,
-      "b2": 0,
-      "b3": 3,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
       "programa": "recargapay",
-      "n": 3,
-      "b1": 0,
-      "b2": 2,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "safra",
-      "n": 3,
-      "b1": 0,
-      "b2": 2,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "sicoob",
       "n": 3,
       "b1": 0,
       "b2": 2,
@@ -1079,7 +1070,16 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "taag",
+      "programa": "polishop",
+      "n": 3,
+      "b1": 0,
+      "b2": 0,
+      "b3": 3,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "safra",
       "n": 3,
       "b1": 0,
       "b2": 2,
@@ -1088,187 +1088,16 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "ultragaz",
+      "programa": "elo",
       "n": 3,
       "b1": 0,
-      "b2": 2,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "jetsmart",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
+      "b2": 3,
       "b3": 0,
       "b4": 0,
       "publicavel_agora": 0
     },
     {
-      "programa": "aegean",
-      "n": 2,
-      "b1": 0,
-      "b2": 1,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "aerolineas",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "air_europa",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "alaska",
-      "n": 2,
-      "b1": 0,
-      "b2": 0,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "apple",
-      "n": 2,
-      "b1": 0,
-      "b2": 1,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "rappi",
-      "n": 2,
-      "b1": 0,
-      "b2": 0,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "centauro",
-      "n": 2,
-      "b1": 0,
-      "b2": 0,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "crypto_com",
-      "n": 2,
-      "b1": 0,
-      "b2": 1,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "dotz",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "ethiopian",
-      "n": 2,
-      "b1": 0,
-      "b2": 1,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "flybondi",
-      "n": 2,
-      "b1": 0,
-      "b2": 0,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "virgin_atlantic",
-      "n": 2,
-      "b1": 0,
-      "b2": 0,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "frontier",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "hering",
-      "n": 2,
-      "b1": 0,
-      "b2": 1,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "iberostar",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "spotify",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "dragonpass",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "kabum",
-      "n": 2,
-      "b1": 0,
-      "b2": 1,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "lg",
+      "programa": "ryanair",
       "n": 2,
       "b1": 0,
       "b2": 2,
@@ -1286,7 +1115,7 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "petz",
+      "programa": "hering",
       "n": 2,
       "b1": 0,
       "b2": 1,
@@ -1295,11 +1124,74 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "riachuelo",
+      "programa": "centauro",
       "n": 2,
       "b1": 0,
       "b2": 0,
       "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "viator",
+      "n": 2,
+      "b1": 0,
+      "b2": 0,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "kabum",
+      "n": 2,
+      "b1": 0,
+      "b2": 1,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "crypto_com",
+      "n": 2,
+      "b1": 0,
+      "b2": 1,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "spotify",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "lg",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "flybondi",
+      "n": 2,
+      "b1": 0,
+      "b2": 0,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "apple",
+      "n": 2,
+      "b1": 0,
+      "b2": 1,
+      "b3": 1,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -1313,7 +1205,70 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "philippine",
+      "programa": "uniprime",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "alaska",
+      "n": 2,
+      "b1": 0,
+      "b2": 0,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "aerolineas",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "petz",
+      "n": 2,
+      "b1": 0,
+      "b2": 1,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "virgin_atlantic",
+      "n": 2,
+      "b1": 0,
+      "b2": 0,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "aegean",
+      "n": 2,
+      "b1": 0,
+      "b2": 1,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "ethiopian",
+      "n": 2,
+      "b1": 0,
+      "b2": 1,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "jetsmart",
       "n": 2,
       "b1": 0,
       "b2": 2,
@@ -1331,7 +1286,70 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "ryanair",
+      "programa": "riachuelo",
+      "n": 2,
+      "b1": 0,
+      "b2": 0,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "philippine",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "rappi",
+      "n": 2,
+      "b1": 0,
+      "b2": 0,
+      "b3": 2,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "air_europa",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "dragonpass",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "dotz",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "iberostar",
+      "n": 2,
+      "b1": 0,
+      "b2": 2,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "unicred",
       "n": 2,
       "b1": 0,
       "b2": 2,
@@ -1349,154 +1367,10 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "viator",
-      "n": 2,
-      "b1": 0,
-      "b2": 0,
-      "b3": 2,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "unicred",
+      "programa": "frontier",
       "n": 2,
       "b1": 0,
       "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "uniprime",
-      "n": 2,
-      "b1": 0,
-      "b2": 2,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "adidas",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "air_china",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "applemusic",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "arajet",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "asics",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "atacadao",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "americanas",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "banescard",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "banese",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "banestes",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "banrisul",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "best_western",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "bourbon",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "loungekey",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
       "b3": 0,
       "b4": 0,
       "publicavel_agora": 0
@@ -1511,88 +1385,7 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "bv",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "cathay",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "choice",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "crunchyroll",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "easyjet",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "aeromexico",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "hongkong",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "vietnam",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "gha",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "huawei",
+      "programa": "rocketmiles",
       "n": 1,
       "b1": 0,
       "b2": 0,
@@ -1619,6 +1412,195 @@
       "publicavel_agora": 0
     },
     {
+      "programa": "deezer",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "garuda",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "easyjet",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "leroy_merlin",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "asics",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "petlove",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "americanas",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "nintendo",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "cathay",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "melia",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "banestes",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "best_western",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "loungekey",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "huawei",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "extra",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "xbox",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "hongkong",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "neon",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "banescard",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "vietnam",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "rihappy",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
       "programa": "assai",
       "n": 1,
       "b1": 0,
@@ -1637,6 +1619,15 @@
       "publicavel_agora": 0
     },
     {
+      "programa": "havaianas",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
       "programa": "lego",
       "n": 1,
       "b1": 0,
@@ -1646,16 +1637,7 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "lenovo",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "leroy_merlin",
+      "programa": "banese",
       "n": 1,
       "b1": 0,
       "b2": 0,
@@ -1664,25 +1646,7 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "extra",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "petlove",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "melia",
+      "programa": "adidas",
       "n": 1,
       "b1": 0,
       "b2": 0,
@@ -1700,83 +1664,11 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "motorola",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "neon",
+      "programa": "vivara",
       "n": 1,
       "b1": 0,
       "b2": 0,
       "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "oppo",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "pagbank",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "nintendo",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "garuda",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "rocketmiles",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "rihappy",
-      "n": 1,
-      "b1": 0,
-      "b2": 0,
-      "b3": 1,
-      "b4": 0,
-      "publicavel_agora": 0
-    },
-    {
-      "programa": "malaysia",
-      "n": 1,
-      "b1": 0,
-      "b2": 1,
-      "b3": 0,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -1790,11 +1682,29 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "havaianas",
+      "programa": "motorola",
       "n": 1,
       "b1": 0,
       "b2": 1,
       "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "aeromexico",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "oppo",
+      "n": 1,
+      "b1": 0,
+      "b2": 0,
+      "b3": 1,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -1808,7 +1718,7 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "deezer",
+      "programa": "gha",
       "n": 1,
       "b1": 0,
       "b2": 1,
@@ -1817,11 +1727,74 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "vivara",
+      "programa": "choice",
       "n": 1,
       "b1": 0,
-      "b2": 0,
-      "b3": 1,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "lenovo",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "pagbank",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "bv",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "atacadao",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "arajet",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "crunchyroll",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "bourbon",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
       "b4": 0,
       "publicavel_agora": 0
     },
@@ -1835,77 +1808,158 @@
       "publicavel_agora": 0
     },
     {
-      "programa": "xbox",
+      "programa": "banrisul",
       "n": 1,
       "b1": 0,
-      "b2": 0,
-      "b3": 1,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "air_china",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "applemusic",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
+      "b4": 0,
+      "publicavel_agora": 0
+    },
+    {
+      "programa": "malaysia",
+      "n": 1,
+      "b1": 0,
+      "b2": 1,
+      "b3": 0,
       "b4": 0,
       "publicavel_agora": 0
     }
   ],
   "b4_ids_por_programa": [
     {
+      "programa": "esfera",
+      "ids": [
+        "esfera-esfera-compra-2026-03-27",
+        "esfera-esfera-compra-2024-09-16",
+        "esfera-esfera-cartao-2026-05-31",
+        "esfera-esfera-compra-2024-09-06",
+        "esfera-desconhecido-compra-2024-04-25",
+        "esfera-desconhecido-compra-2024-09-18",
+        "esfera-esfera-compra-2024-07-25",
+        "esfera-esfera-compra-2024-07-07",
+        "esfera-esfera-compra-2024-09-03",
+        "esfera-esfera-compra-2024-07-01",
+        "esfera-desconhecido-compra-2024-09-11",
+        "esfera-esfera-compra-2024-04-23",
+        "esfera-esfera-compra-2024-09-05"
+      ]
+    },
+    {
       "programa": "smiles",
       "ids": [
-        "c6-smiles-transferencia-2025-05-28",
+        "smiles-desconhecido-compra-2024-10-31",
         "c6-smiles-transferencia-2025-07-09",
+        "smiles-smiles-compra-2026-02-11",
+        "itau-smiles-transferencia-2026-01-09",
+        "smiles-smiles-compra-2024-06-30",
+        "smiles-smiles-compra-na",
+        "gol-smiles-cartao-2024-05-31",
+        "smiles-desconhecido-compra-2024-08-22",
+        "smiles-desconhecido-compra-2025-01-08",
         "casasbahia-smiles-compra-2025-06-25",
         "esfera-smiles-transferencia-2024-09-18",
-        "esfera-smiles-transferencia-2024-11-27",
-        "extra-smiles-compra-2024-05-17",
-        "gol-smiles-cartao-2024-05-31",
-        "gol-smiles-cartao-2024-06-01",
+        "pontofrio-smiles-compra-2024-03-31",
+        "polishop-smiles-compra-2024-03-31",
+        "smiles-smiles-compra-2024-02-11",
+        "pontofrio-smiles-compra-2025-02-21",
+        "smiles-smiles-compra-2024-04-22",
+        "pontofrio-smiles-compra-2024-10-09",
         "itau-smiles-transferencia-2024-01-29",
+        "smiles-smiles-compra-2024-05-26",
+        "pontofrio-smiles-compra-2024-06-14",
+        "smiles-desconhecido-compra-2024-06-03",
+        "smiles-smiles-compra-2024-05-11",
+        "smiles-smiles-compra-2024-04-13",
         "itau-smiles-transferencia-2025-06-27",
-        "itau-smiles-transferencia-2026-01-09",
+        "smiles-smiles-compra-2024-04-24",
+        "smiles-smiles-compra-2026-05-17",
+        "extra-smiles-compra-2024-05-17",
+        "c6-smiles-transferencia-2025-05-28",
+        "smiles-smiles-compra-2024-03-31",
+        "smiles-smiles-compra-2024-09-17",
+        "esfera-smiles-transferencia-2024-11-27",
         "livelo-smiles-transferencia-2023-02-24",
         "livelo-smiles-transferencia-2024-03-05",
         "livelo-smiles-transferencia-2024-09-18",
-        "livelo-smiles-transferencia-2024-11-27",
-        "polishop-smiles-compra-2024-03-31",
-        "pontofrio-smiles-compra-2024-03-31",
-        "pontofrio-smiles-compra-2024-06-14",
-        "pontofrio-smiles-compra-2024-10-09",
-        "pontofrio-smiles-compra-2025-02-21",
-        "smiles-desconhecido-compra-2024-06-03",
-        "smiles-desconhecido-compra-2024-08-22",
-        "smiles-desconhecido-compra-2024-10-31",
-        "smiles-desconhecido-compra-2025-01-08",
-        "smiles-desconhecido-compra-2025-01-30",
-        "smiles-desconhecido-compra-2025-09-18",
-        "smiles-desconhecido-compra-2026-07-13",
-        "smiles-smiles-clube-2024-06-16",
-        "smiles-smiles-compra-2024-02-11",
-        "smiles-smiles-compra-2024-03-31",
-        "smiles-smiles-compra-2024-04-13",
-        "smiles-smiles-compra-2024-04-22",
-        "smiles-smiles-compra-2024-04-24",
-        "smiles-smiles-compra-2024-05-11",
-        "smiles-smiles-compra-2024-05-26",
-        "smiles-smiles-compra-2024-06-30",
-        "smiles-smiles-compra-2024-09-17",
-        "smiles-smiles-compra-2026-02-11",
-        "smiles-smiles-compra-2026-05-17",
-        "smiles-smiles-compra-na"
+        "livelo-smiles-transferencia-2024-11-27"
+      ]
+    },
+    {
+      "programa": "amazon",
+      "ids": [
+        "livelo-amazon-compra-2024-02-28",
+        "livelo-amazon-compra-2025-01-31",
+        "livelo-amazon-compra-2024-12-20"
+      ]
+    },
+    {
+      "programa": "livelo",
+      "ids": [
+        "livelo-livelo-compra-2025-01-20",
+        "livelo-desconhecido-compra-2025-05-05",
+        "livelo-livelo-compra-2024-12-12",
+        "livelo-livelo-compra-2024-08-27",
+        "livelo-hero-compra-na",
+        "livelo-livelo-compra-2024-03-23",
+        "livelo-livelo-compra-2025-01-22",
+        "livelo-desconhecido-compra-2024-07-07",
+        "livelo-livelo-compra-2024-05-27",
+        "livelo-desconhecido-compra-2024-02-05",
+        "livelo-passageirodeprimeira-compra-na",
+        "livelo-desconhecido-compra-2026-07-10",
+        "livelo-livelo-compra-2024-07-06",
+        "livelo-desconhecido-compra-2025-09-07"
+      ]
+    },
+    {
+      "programa": "latam_pass",
+      "ids": [
+        "smiles-latampass-transferencia-2025-12-31",
+        "livelo-latampass-compra-2025-01-24",
+        "esfera-latampass-transferencia-2026-06-30",
+        "livelo-latampass-transferencia-2024-05-22",
+        "livelo-latampass-transferencia-2024-06-18",
+        "livelo-latampass-transferencia-2024-07-23",
+        "livelo-latampass-transferencia-2025-01-23"
       ]
     },
     {
       "programa": "accor",
       "ids": [
-        "esfera-allaccor-transferencia-2024-07-05",
         "esfera-allaccor-transferencia-2024-09-04",
+        "esfera-allaccor-transferencia-2024-07-05",
         "esfera-allaccor-transferencia-2024-09-05"
+      ]
+    },
+    {
+      "programa": "outro",
+      "ids": [
+        "livelo-underarmour-compra-na",
+        "livelo-avon-compra-2023-03-21"
       ]
     },
     {
       "programa": "azul_fidelidade",
       "ids": [
-        "esfera-azul-transferencia-2024-04-19",
-        "esfera-azul-transferencia-2024-06-14",
-        "esfera-azul-transferencia-2024-06-26",
-        "esfera-azul-transferencia-2024-07-19",
-        "esfera-azul-transferencia-2024-11-16",
         "esfera-azul-transferencia-2024-11-19",
         "livelo-azul-transferencia-2024-03-16",
         "livelo-azul-transferencia-2024-04-17",
@@ -1916,74 +1970,7 @@
         "livelo-azul-transferencia-2024-11-19",
         "livelo-azul-transferencia-2025-11-05",
         "livelo-azul-transferencia-2026-07-05",
-        "livelo-azul-transferencia-2026-07-31",
         "livelo-azulfidelidade-transferencia-2024-06-18"
-      ]
-    },
-    {
-      "programa": "esfera",
-      "ids": [
-        "esfera-desconhecido-compra-2024-04-25",
-        "esfera-desconhecido-compra-2024-09-11",
-        "esfera-desconhecido-compra-2024-09-18",
-        "esfera-desconhecido-compra-2025-08-31",
-        "esfera-esfera-cartao-2026-05-31",
-        "esfera-esfera-compra-2024-04-23",
-        "esfera-esfera-compra-2024-07-01",
-        "esfera-esfera-compra-2024-07-07",
-        "esfera-esfera-compra-2024-07-25",
-        "esfera-esfera-compra-2024-09-03",
-        "esfera-esfera-compra-2024-09-05",
-        "esfera-esfera-compra-2024-09-06",
-        "esfera-esfera-compra-2024-09-16",
-        "esfera-esfera-compra-2026-03-27"
-      ]
-    },
-    {
-      "programa": "latam_pass",
-      "ids": [
-        "esfera-latampass-transferencia-2026-06-30",
-        "livelo-latampass-compra-2025-01-24",
-        "livelo-latampass-transferencia-2024-05-22",
-        "livelo-latampass-transferencia-2024-06-18",
-        "livelo-latampass-transferencia-2024-07-23",
-        "livelo-latampass-transferencia-2025-01-23",
-        "smiles-latampass-transferencia-2025-12-31"
-      ]
-    },
-    {
-      "programa": "amazon",
-      "ids": [
-        "livelo-amazon-compra-2024-02-28",
-        "livelo-amazon-compra-2024-12-20",
-        "livelo-amazon-compra-2025-01-31"
-      ]
-    },
-    {
-      "programa": "outro",
-      "ids": [
-        "livelo-avon-compra-2023-03-21",
-        "livelo-underarmour-compra-na"
-      ]
-    },
-    {
-      "programa": "livelo",
-      "ids": [
-        "livelo-desconhecido-compra-2024-02-05",
-        "livelo-desconhecido-compra-2024-07-07",
-        "livelo-desconhecido-compra-2025-05-05",
-        "livelo-desconhecido-compra-2025-09-07",
-        "livelo-desconhecido-compra-2025-11-16",
-        "livelo-desconhecido-compra-2026-07-10",
-        "livelo-hero-compra-na",
-        "livelo-livelo-compra-2024-03-23",
-        "livelo-livelo-compra-2024-05-27",
-        "livelo-livelo-compra-2024-07-06",
-        "livelo-livelo-compra-2024-08-27",
-        "livelo-livelo-compra-2024-12-12",
-        "livelo-livelo-compra-2025-01-20",
-        "livelo-livelo-compra-2025-01-22",
-        "livelo-passageirodeprimeira-compra-na"
       ]
     }
   ],
@@ -2043,7 +2030,7 @@
       "n": 166,
       "beco": 74,
       "computaveis": 92,
-      "scores_distintos": 31,
+      "scores_distintos": 30,
       "motivos": [
         "destino_nunca_resolvido 141/166 sem_destino"
       ]
@@ -2098,7 +2085,7 @@
       "n": 10,
       "beco": 2,
       "computaveis": 8,
-      "scores_distintos": 6,
+      "scores_distintos": 4,
       "motivos": [
         "destino_nunca_resolvido 8/10 sem_destino"
       ]
@@ -2127,39 +2114,6 @@
     },
     {
       "eixo": "origem",
-      "programa": "british_airways",
-      "n": 6,
-      "beco": 3,
-      "computaveis": 3,
-      "scores_distintos": 3,
-      "motivos": [
-        "destino_nunca_resolvido 5/6 sem_destino"
-      ]
-    },
-    {
-      "eixo": "origem",
-      "programa": "connectmiles",
-      "n": 6,
-      "beco": 5,
-      "computaveis": 1,
-      "scores_distintos": 1,
-      "motivos": [
-        "destino_nunca_resolvido 5/6 sem_destino"
-      ]
-    },
-    {
-      "eixo": "origem",
-      "programa": "costa_cruzeiros",
-      "n": 6,
-      "beco": 4,
-      "computaveis": 2,
-      "scores_distintos": 1,
-      "motivos": [
-        "destino_nunca_resolvido 6/6 sem_destino"
-      ]
-    },
-    {
-      "eixo": "origem",
       "programa": "disney",
       "n": 6,
       "beco": 5,
@@ -2183,6 +2137,39 @@
     },
     {
       "eixo": "origem",
+      "programa": "costa_cruzeiros",
+      "n": 6,
+      "beco": 4,
+      "computaveis": 2,
+      "scores_distintos": 1,
+      "motivos": [
+        "destino_nunca_resolvido 6/6 sem_destino"
+      ]
+    },
+    {
+      "eixo": "origem",
+      "programa": "british_airways",
+      "n": 6,
+      "beco": 3,
+      "computaveis": 3,
+      "scores_distintos": 3,
+      "motivos": [
+        "destino_nunca_resolvido 5/6 sem_destino"
+      ]
+    },
+    {
+      "eixo": "origem",
+      "programa": "connectmiles",
+      "n": 6,
+      "beco": 5,
+      "computaveis": 1,
+      "scores_distintos": 1,
+      "motivos": [
+        "destino_nunca_resolvido 5/6 sem_destino"
+      ]
+    },
+    {
+      "eixo": "origem",
       "programa": "airbnb",
       "n": 5,
       "beco": 3,
@@ -2194,17 +2181,6 @@
     },
     {
       "eixo": "origem",
-      "programa": "etihad",
-      "n": 5,
-      "beco": 5,
-      "computaveis": 0,
-      "scores_distintos": 0,
-      "motivos": [
-        "beco_quase_total 5/5"
-      ]
-    },
-    {
-      "eixo": "origem",
       "programa": "renner",
       "n": 5,
       "beco": 0,
@@ -2212,6 +2188,17 @@
       "scores_distintos": 5,
       "motivos": [
         "destino_nunca_resolvido 5/5 sem_destino"
+      ]
+    },
+    {
+      "eixo": "origem",
+      "programa": "etihad",
+      "n": 5,
+      "beco": 5,
+      "computaveis": 0,
+      "scores_distintos": 0,
+      "motivos": [
+        "beco_quase_total 5/5"
       ]
     },
     {

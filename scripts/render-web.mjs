@@ -60,7 +60,7 @@ function Article({ ed }) {
       h(
         "div",
         { className: "tl-head-row" },
-        h("span", { className: "tl-brand" }, h("span", null, "The "), "Loyalty"),
+        h("span", { className: "tl-brand" }, h("span", null, "The "), "Loyal"),
         h("span", { className: "tl-num mono" }, `Nº ${ed.number}`),
       ),
       h(

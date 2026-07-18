@@ -42,3 +42,6 @@ content/weekly/*.draft.json
 
 # git worktrees efêmeros de subagentes (nunca commitar)
 .claude/worktrees/
+
+# Runner diario: ledger de estado (idempotencia por data) — runtime, nao versionar
+content/daily-status.json

@@ -21,15 +21,22 @@
 // Reusa: adapters/*, matcher-url, vigencia (parser), confianca. Nucleo puro
 // injetavel (fetchImpl/discovered) -> testavel sem rede. CLI faz o fetch real
 // e SEMPRE opera em mock/dry-run (nada e escrito).
+//
+// NOTA (coleta-tier1-producao): node:fs/promises|url|path NAO sao importados
+// no topo do arquivo de proposito — so o CLI (main(), abaixo) precisa deles
+// para ler a fixture local. Import estatico quebraria o load deste modulo em
+// runtimes sem esses builtins (ex.: Supabase Edge Runtime/Deno), que so
+// consomem as funcoes puras (coletarLote/descobrirTodos/fetchOficial) e nunca
+// chamam main(). Import dinamico dentro de main() resolve isso.
 // =====================================================================
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import { adapterPara } from '../adapters/run.mjs';
 import { parseVigencia } from '../vigencia.mjs';
 import { confianca, classificarResultado, CONFIANCA_V1 } from './confianca.mjs';
 
-const UA = process.env.TL_USER_AGENT
+// globalThis.process?.env (nao `process.env` cru): seguro em runtimes sem
+// `process` global (Supabase Edge Runtime/Deno) — nao lanca ReferenceError
+// na carga do modulo, mesmo quando este export nunca e chamado.
+const UA = globalThis.process?.env?.TL_USER_AGENT
   || 'TheLoyalBot/1.0 (+https://theloyal.com.br; contato@theloyal.com.br)';
 
 // Limiar de CONFIANCA conservador de PARTIDA (D-049 §3.5): proposta do agente; o
@@ -253,7 +260,7 @@ function contar(itens) {
 }
 
 // ── fetch real (redirect-manual, UA identificado) ──────────────────────────
-async function fetchOficial(url, { timeoutMs = 25000 } = {}) {
+export async function fetchOficial(url, { timeoutMs = 25000 } = {}) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -264,7 +271,7 @@ async function fetchOficial(url, { timeoutMs = 25000 } = {}) {
 }
 
 // Descobre URLs de campanha por programa (sitemap + adapter). Cross-confirma URLs.
-async function descobrirTodos(get) {
+export async function descobrirTodos(get) {
   const { default: smiles } = await import('../adapters/smiles.mjs');
   const { default: livelo } = await import('../adapters/livelo.mjs');
   const { default: esfera } = await import('../adapters/esfera.mjs');
@@ -290,6 +297,9 @@ async function descobrirTodos(get) {
 
 // ── CLI (dry-run sempre) ───────────────────────────────────────────────────
 async function main() {
+  const { readFile } = await import('node:fs/promises');
+  const { fileURLToPath } = await import('node:url');
+  const { dirname, join } = await import('node:path');
   const here = dirname(fileURLToPath(import.meta.url));
   const fx = JSON.parse(await readFile(join(here, 'fixtures', 'vivas-crawleaveis.json'), 'utf8'));
   const ref = fx.ref;
@@ -306,4 +316,4 @@ async function main() {
   console.log(JSON.stringify(rel, null, 2));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error(e.stack || e.message); process.exit(1); });
+if (globalThis.process?.argv?.[1] && import.meta.url === `file://${globalThis.process.argv[1]}`) main().catch((e) => { console.error(e.stack || e.message); globalThis.process?.exit?.(1); });

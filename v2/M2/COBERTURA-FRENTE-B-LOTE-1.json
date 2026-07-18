@@ -1,0 +1,1950 @@
+{
+  "ref": "2026-07-17",
+  "modo": "reverse-lookup dry-run (confirma-e-mostra, D-050)",
+  "limiar_partida": 0.75,
+  "piso_valor": 70,
+  "contagens": {
+    "total": 21,
+    "resolvido_tier1": 1,
+    "resolvido_limpo": 1,
+    "resolvido_ajuste": 0,
+    "candidata_nao_confirma": 1,
+    "fila_manual": 19,
+    "resolvido_e_forte": 0
+  },
+  "itens": [
+    {
+      "id": "bradesco-livelo-transferencia-2026-08-31",
+      "tipo": "transferencia",
+      "origem": "bradesco",
+      "destino": "livelo",
+      "publico": "geral",
+      "pct_ingerido": null,
+      "tl_score_bruto": 91,
+      "veredito_bruto": "Vale agir",
+      "estado": "detectada",
+      "passa_corte_valor": true,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "esfera-desconhecido-compra-2026-07-30",
+      "tipo": "compra",
+      "origem": "esfera",
+      "destino": "sem_destino",
+      "publico": "geral",
+      "pct_ingerido": "50",
+      "tl_score_bruto": 67,
+      "veredito_bruto": "So para casos especificos",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "esfera",
+          "n_urls": 32
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-hilton-hotelaria-2026-07-31",
+      "tipo": "hotelaria",
+      "origem": "livelo",
+      "destino": "hilton",
+      "publico": "geral",
+      "pct_ingerido": "50",
+      "tl_score_bruto": 65,
+      "veredito_bruto": "So para casos especificos",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [
+        {
+          "url": "https://www.livelo.com.br/livelo-para-parceiros/hilton-honors/HILTransfer",
+          "forca": "par"
+        }
+      ],
+      "desfecho": {
+        "fila": "resolvido_tier1",
+        "rotulo": "resolvido: TIER 1 confirmável (corrobora_limpo)"
+      },
+      "melhor": {
+        "url": "https://www.livelo.com.br/livelo-para-parceiros/hilton-honors/HILTransfer",
+        "forca": "par",
+        "id": "livelo-hilton-hotelaria-2026-07-31",
+        "origem": "livelo",
+        "destino": "hilton",
+        "tipo": "hotelaria",
+        "publico": "geral",
+        "pct_ingerido": "50",
+        "tl_score_bruto": 65,
+        "passa_corte_valor": false,
+        "status_coleta": "campanha",
+        "motivo": "pct 50% bate na faixa do publico geral (faixa unica)",
+        "url_oficial": "https://www.livelo.com.br/livelo-para-parceiros/hilton-honors/HILTransfer",
+        "via": "reverse-lookup:par",
+        "sitemap_confirma": true,
+        "janela": {
+          "tem": true,
+          "texto": "Válido das 10h do dia 01/07 até as 23h59 do dia 31/07/2026",
+          "fim_date": "2026-07-31",
+          "confiavel": true
+        },
+        "escala": [
+          {
+            "pct": 50,
+            "publico": "geral",
+            "trecho": "iption\":\" Válido das 10h do dia 01/07 até as 23h59 do dia 31/07/2026. 50% de bônus para to"
+          }
+        ],
+        "resultado": "corrobora_limpo",
+        "tier_casado": {
+          "pct": 50,
+          "publico": "geral"
+        },
+        "confianca": 1,
+        "breakdown": [
+          {
+            "sinal": "fonte_oficial",
+            "presente": true,
+            "peso": 0.3,
+            "contribuicao": 0.3
+          },
+          {
+            "sinal": "janela_vigencia_clara",
+            "presente": true,
+            "peso": 0.25,
+            "contribuicao": 0.25
+          },
+          {
+            "sinal": "estado_vivo_200",
+            "presente": true,
+            "peso": 0.15,
+            "contribuicao": 0.15
+          },
+          {
+            "sinal": "publico_inequivoco",
+            "presente": true,
+            "peso": 0.15,
+            "contribuicao": 0.15
+          },
+          {
+            "sinal": "termos_legiveis",
+            "presente": true,
+            "peso": 0.15,
+            "contribuicao": 0.15
+          }
+        ],
+        "decisoes": {
+          "0.60": "auto: publica (3 portoes)",
+          "0.70": "auto: publica (3 portoes)",
+          "0.75": "auto: publica (3 portoes)",
+          "0.80": "auto: publica (3 portoes)",
+          "0.90": "auto: publica (3 portoes)"
+        }
+      },
+      "avaliacoes": [
+        {
+          "url": "https://www.livelo.com.br/livelo-para-parceiros/hilton-honors/HILTransfer",
+          "forca": "par",
+          "id": "livelo-hilton-hotelaria-2026-07-31",
+          "origem": "livelo",
+          "destino": "hilton",
+          "tipo": "hotelaria",
+          "publico": "geral",
+          "pct_ingerido": "50",
+          "tl_score_bruto": 65,
+          "passa_corte_valor": false,
+          "status_coleta": "campanha",
+          "motivo": "pct 50% bate na faixa do publico geral (faixa unica)",
+          "url_oficial": "https://www.livelo.com.br/livelo-para-parceiros/hilton-honors/HILTransfer",
+          "via": "reverse-lookup:par",
+          "sitemap_confirma": true,
+          "janela": {
+            "tem": true,
+            "texto": "Válido das 10h do dia 01/07 até as 23h59 do dia 31/07/2026",
+            "fim_date": "2026-07-31",
+            "confiavel": true
+          },
+          "escala": [
+            {
+              "pct": 50,
+              "publico": "geral",
+              "trecho": "iption\":\" Válido das 10h do dia 01/07 até as 23h59 do dia 31/07/2026. 50% de bônus para to"
+            }
+          ],
+          "resultado": "corrobora_limpo",
+          "tier_casado": {
+            "pct": 50,
+            "publico": "geral"
+          },
+          "confianca": 1,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": true,
+              "peso": 0.25,
+              "contribuicao": 0.25
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": true,
+              "peso": 0.15,
+              "contribuicao": 0.15
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": true,
+              "peso": 0.15,
+              "contribuicao": 0.15
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": true,
+              "peso": 0.15,
+              "contribuicao": 0.15
+            }
+          ],
+          "decisoes": {
+            "0.60": "auto: publica (3 portoes)",
+            "0.70": "auto: publica (3 portoes)",
+            "0.75": "auto: publica (3 portoes)",
+            "0.80": "auto: publica (3 portoes)",
+            "0.90": "auto: publica (3 portoes)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "smiles-desconhecido-compra-2026-07-17",
+      "tipo": "compra",
+      "origem": "smiles",
+      "destino": "sem_destino",
+      "publico": "clube",
+      "pct_ingerido": "375",
+      "tl_score_bruto": 64,
+      "veredito_bruto": "So para casos especificos",
+      "estado": "ultimos_dias",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "smiles",
+          "n_urls": 346
+        }
+      ],
+      "candidatos": [
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/super-oferta",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/clube-smiles-day-ofertas",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/oferta-nao-promo-2",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/oferta-exclusiva",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/oferta-especial-old",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/ofertas-nao-promo",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/oferta-desconto",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/vem-ai-oferta-cambio",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/vem-ai-oferta-localiza",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/va-de-milhas-2024/48-ofertas-clube-27-05-24",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/2024",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/25092024",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/24092024",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/23092024",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/promo-24h-ofertas/19092024",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/saldao-de-ofertas/27092024",
+          "forca": "par"
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/27092024",
+          "forca": "par"
+        }
+      ],
+      "desfecho": {
+        "fila": "candidata_nao_confirma",
+        "rotulo": "candidata não verificável"
+      },
+      "melhor": {
+        "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/25092024",
+        "forca": "par",
+        "id": "smiles-desconhecido-compra-2026-07-17",
+        "origem": "smiles",
+        "destino": "sem_destino",
+        "tipo": "compra",
+        "publico": "clube",
+        "pct_ingerido": "375",
+        "tl_score_bruto": 64,
+        "passa_corte_valor": false,
+        "status_coleta": "campanha",
+        "motivo": "sem_pct_ingerido_ou_escala_vazia",
+        "url_oficial": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/25092024",
+        "via": "reverse-lookup:par",
+        "sitemap_confirma": true,
+        "janela": {
+          "tem": true,
+          "texto": "válida das 15h do dia 25/09 até as 15h do dia 26/09/2024",
+          "fim_date": "2024-09-26",
+          "confiavel": true
+        },
+        "escala": [],
+        "resultado": "nao_verificavel",
+        "tier_casado": null,
+        "confianca": 0.7,
+        "breakdown": [
+          {
+            "sinal": "fonte_oficial",
+            "presente": true,
+            "peso": 0.3,
+            "contribuicao": 0.3
+          },
+          {
+            "sinal": "janela_vigencia_clara",
+            "presente": true,
+            "peso": 0.25,
+            "contribuicao": 0.25
+          },
+          {
+            "sinal": "estado_vivo_200",
+            "presente": true,
+            "peso": 0.15,
+            "contribuicao": 0.15
+          },
+          {
+            "sinal": "publico_inequivoco",
+            "presente": false,
+            "peso": 0.15,
+            "contribuicao": 0
+          },
+          {
+            "sinal": "termos_legiveis",
+            "presente": false,
+            "peso": 0.15,
+            "contribuicao": 0
+          }
+        ],
+        "decisoes": {
+          "0.60": "revisao (nada a corroborar)",
+          "0.70": "revisao (nada a corroborar)",
+          "0.75": "revisao (nada a corroborar)",
+          "0.80": "revisao (nada a corroborar)",
+          "0.90": "revisao (nada a corroborar)"
+        }
+      },
+      "avaliacoes": [
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/super-oferta",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/campanha/adesao-16k-20260713 (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles/super-oferta",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/clube-smiles-day-ofertas",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/home (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles/clube-smiles-day-ofertas",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/oferta-nao-promo-2",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles/oferta-nao-promo-2",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/oferta-exclusiva",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/campanha/adesao-16k-20260713 (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles/oferta-exclusiva",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/oferta-especial-old",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles/oferta-especial-old",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/ofertas-nao-promo",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "evergreen",
+          "motivo": "regulamento sem janela de vigencia datada = evergreen (D-047), nao confirma campanha",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles/ofertas-nao-promo",
+          "via": "reverse-lookup:par",
+          "sitemap_confirma": true,
+          "janela": {
+            "tem": false,
+            "texto": null,
+            "fim_date": null,
+            "confiavel": false
+          },
+          "escala": [
+            {
+              "pct": 10,
+              "publico": null,
+              "trecho": "onfira alguns benef&iacute;cios exclusivos Created with sketchtool. % 10% de bônus com o M"
+            },
+            {
+              "pct": 20,
+              "publico": null,
+              "trecho": "onfira alguns benef&iacute;cios exclusivos Created with sketchtool. % 20% de bônus com o M"
+            },
+            {
+              "pct": 30,
+              "publico": null,
+              "trecho": "onfira alguns benef&iacute;cios exclusivos Created with sketchtool. % 30% de bônus com o M"
+            },
+            {
+              "pct": 40,
+              "publico": null,
+              "trecho": "onfira alguns benef&iacute;cios exclusivos Created with sketchtool. % 40% de bônus com o M"
+            },
+            {
+              "pct": 50,
+              "publico": "clube",
+              "trecho": "cial Diamante --> Bilhete cortesia GOL --> Created with sketchtool. % 50% de bônus com o M"
+            }
+          ],
+          "resultado": "nao_verificavel",
+          "confianca": 0.6,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": true,
+              "peso": 0.15,
+              "contribuicao": 0.15
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": true,
+              "peso": 0.15,
+              "contribuicao": 0.15
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles/oferta-desconto",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles/oferta-desconto",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/vem-ai-oferta-cambio",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/vem-ai-oferta-cambio",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/vem-ai-oferta-localiza",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/vem-ai-oferta-localiza",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/va-de-milhas-2024/48-ofertas-clube-27-05-24",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/va-de-milhas-2024/48-ofertas-clube-27-05-24",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/2024",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/2024",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/25092024",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "campanha",
+          "motivo": "sem_pct_ingerido_ou_escala_vazia",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/25092024",
+          "via": "reverse-lookup:par",
+          "sitemap_confirma": true,
+          "janela": {
+            "tem": true,
+            "texto": "válida das 15h do dia 25/09 até as 15h do dia 26/09/2024",
+            "fim_date": "2024-09-26",
+            "confiavel": true
+          },
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "tier_casado": null,
+          "confianca": 0.7,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": true,
+              "peso": 0.25,
+              "contribuicao": 0.25
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": true,
+              "peso": 0.15,
+              "contribuicao": 0.15
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/24092024",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/24092024",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/23092024",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/23092024",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/promo-24h-ofertas/19092024",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/promo-24h-ofertas/19092024",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/saldao-de-ofertas/27092024",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/saldao-de-ofertas/27092024",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        },
+        {
+          "url": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/27092024",
+          "forca": "par",
+          "id": "smiles-desconhecido-compra-2026-07-17",
+          "origem": "smiles",
+          "destino": "sem_destino",
+          "tipo": "compra",
+          "publico": "clube",
+          "pct_ingerido": "375",
+          "tl_score_bruto": 64,
+          "passa_corte_valor": false,
+          "status_coleta": "nao_200",
+          "motivo": "HTTP 302 -> https://www.smiles.com.br/promocao (encerrada/redirect)",
+          "url_oficial": "https://www.smiles.com.br/clube-smiles-day/ofertas-surpresa/27092024",
+          "via": "reverse-lookup:par",
+          "janela": null,
+          "escala": [],
+          "resultado": "nao_verificavel",
+          "confianca": 0.3,
+          "breakdown": [
+            {
+              "sinal": "fonte_oficial",
+              "presente": true,
+              "peso": 0.3,
+              "contribuicao": 0.3
+            },
+            {
+              "sinal": "janela_vigencia_clara",
+              "presente": false,
+              "peso": 0.25,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "estado_vivo_200",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "publico_inequivoco",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            },
+            {
+              "sinal": "termos_legiveis",
+              "presente": false,
+              "peso": 0.15,
+              "contribuicao": 0
+            }
+          ],
+          "decisoes": {
+            "0.60": "revisao (nada a corroborar)",
+            "0.70": "revisao (nada a corroborar)",
+            "0.75": "revisao (nada a corroborar)",
+            "0.80": "revisao (nada a corroborar)",
+            "0.90": "revisao (nada a corroborar)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bb-smiles-cartao-2026-12-31",
+      "tipo": "cartao",
+      "origem": "banco_do_brasil",
+      "destino": "smiles",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 63,
+      "veredito_bruto": "So para casos especificos",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "smiles",
+          "n_urls": 346
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "bradesco-smiles-clube-2027-12-31",
+      "tipo": "clube",
+      "origem": "bradesco",
+      "destino": "smiles",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 63,
+      "veredito_bruto": "So para casos especificos",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "smiles",
+          "n_urls": 346
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-aliexpress-compra-2026-07-23",
+      "tipo": "compra",
+      "origem": "livelo",
+      "destino": "aliexpress",
+      "publico": "geral",
+      "pct_ingerido": "25",
+      "tl_score_bruto": 60,
+      "veredito_bruto": "So para casos especificos",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-aliexpress-compra-2026-07-21",
+      "tipo": "compra",
+      "origem": "livelo",
+      "destino": "aliexpress",
+      "publico": "geral",
+      "pct_ingerido": "25",
+      "tl_score_bruto": 60,
+      "veredito_bruto": "So para casos especificos",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-livelo-compra-2026-07-24",
+      "tipo": "compra",
+      "origem": "livelo",
+      "destino": "livelo",
+      "publico": "geral",
+      "pct_ingerido": "55",
+      "tl_score_bruto": 51,
+      "veredito_bruto": "Esperaria",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "pagol-smiles-compra-2026-07-23",
+      "tipo": "compra",
+      "origem": "smiles",
+      "destino": "smiles",
+      "publico": "geral",
+      "pct_ingerido": "80",
+      "tl_score_bruto": 51,
+      "veredito_bruto": "Esperaria",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "smiles",
+          "n_urls": 346
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "esfera-esfera-compra-2026-07-22",
+      "tipo": "compra",
+      "origem": "esfera",
+      "destino": "esfera",
+      "publico": "geral",
+      "pct_ingerido": "50",
+      "tl_score_bruto": 49,
+      "veredito_bruto": "Esperaria",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "esfera",
+          "n_urls": 32
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "esfera-all accor-transferencia-2026-07-16",
+      "tipo": "transferencia",
+      "origem": "esfera",
+      "destino": "accor",
+      "publico": "geral",
+      "pct_ingerido": "20",
+      "tl_score_bruto": 41,
+      "veredito_bruto": "Esperaria",
+      "estado": "ultimos_dias",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "esfera",
+          "n_urls": 32
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-livelo-compra-2026-12-31",
+      "tipo": "compra",
+      "origem": "livelo",
+      "destino": "livelo",
+      "publico": "geral",
+      "pct_ingerido": "12",
+      "tl_score_bruto": 41,
+      "veredito_bruto": "Esperaria",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "esfera-esfera-compra-2026-07-31",
+      "tipo": "compra",
+      "origem": "esfera",
+      "destino": "esfera",
+      "publico": "clube",
+      "pct_ingerido": "50",
+      "tl_score_bruto": 40,
+      "veredito_bruto": "Esperaria",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "esfera",
+          "n_urls": 32
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "esfera-esfera-clube-2026-07-17",
+      "tipo": "clube",
+      "origem": "esfera",
+      "destino": "esfera",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 27,
+      "veredito_bruto": "Evitaria",
+      "estado": "ultimos_dias",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "esfera",
+          "n_urls": 32
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "smiles-smiles-clube-2026-07-20",
+      "tipo": "clube",
+      "origem": "smiles",
+      "destino": "smiles",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 27,
+      "veredito_bruto": "Evitaria",
+      "estado": "ultimos_dias",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "smiles",
+          "n_urls": 346
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-livelo-clube-2026-12-18",
+      "tipo": "clube",
+      "origem": "livelo",
+      "destino": "livelo",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 18,
+      "veredito_bruto": "Evitaria",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-livelo-clube-2026-08-08",
+      "tipo": "clube",
+      "origem": "livelo",
+      "destino": "livelo",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 18,
+      "veredito_bruto": "Evitaria",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-livelo-clube-2026-07-25",
+      "tipo": "clube",
+      "origem": "livelo",
+      "destino": "livelo",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 18,
+      "veredito_bruto": "Evitaria",
+      "estado": "detectada",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "livelo-livelo-clube-2026-07-20",
+      "tipo": "clube",
+      "origem": "livelo",
+      "destino": "livelo",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": 18,
+      "veredito_bruto": "Evitaria",
+      "estado": "ultimos_dias",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "livelo",
+          "n_urls": 19
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    },
+    {
+      "id": "esfera-desconhecido-clube-2026-07-17",
+      "tipo": "clube",
+      "origem": "esfera",
+      "destino": "sem_destino",
+      "publico": "clube",
+      "pct_ingerido": null,
+      "tl_score_bruto": null,
+      "veredito_bruto": "Nao confirmado",
+      "estado": "ultimos_dias",
+      "passa_corte_valor": false,
+      "sitemaps_varridos": [
+        {
+          "programa": "esfera",
+          "n_urls": 32
+        }
+      ],
+      "candidatos": [],
+      "desfecho": {
+        "fila": "fila_manual",
+        "rotulo": "manual: sitemap oficial não expôs a página do par"
+      },
+      "melhor": {
+        "resultado": "nao_verificavel",
+        "confianca": 0,
+        "status_coleta": "sem_candidata_sitemap"
+      },
+      "avaliacoes": []
+    }
+  ]
+}

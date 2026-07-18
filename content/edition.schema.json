@@ -5,166 +5,875 @@
   "description": "Modelo editorial único que alimenta e-mail, plain text e página web. Ancorado no Operating Manual v1.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["number", "date", "weekday", "publishTime", "readingMinutes", "signal", "deals", "sources", "disclaimer"],
+  "required": [
+    "number",
+    "date",
+    "weekday",
+    "publishTime",
+    "readingMinutes",
+    "signal",
+    "deals",
+    "sources",
+    "disclaimer"
+  ],
   "properties": {
-    "number": { "type": "integer", "minimum": 1, "description": "Número da edição" },
-    "date": { "type": "string", "format": "date", "description": "Data de publicação (ISO)" },
-    "weekday": { "type": "string", "description": "Dia da semana em CAPS, ex: TERÇA-FEIRA" },
-    "publishTime": { "type": "string", "description": "Horário, ex: 8H00" },
-    "readingMinutes": { "type": "integer", "minimum": 1, "maximum": 15 },
-    "illustrative": { "type": "boolean", "description": "Marca a edição como exemplo/ilustrativa" },
-    "subject": { "type": "string", "description": "Assunto do e-mail" },
-    "preheader": { "type": "string", "description": "Preheader do e-mail" },
-    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Slug do post no Beehiiv (web_settings.slug). Ausente ⇒ derivado de productType+número." },
-    "tags": { "type": "array", "items": { "type": "string" }, "description": "content_tags do post no Beehiiv" },
-    "productType": { "type": "string", "enum": ["daily", "pro"], "description": "Tipo de produto. Default: daily." },
-    "scheduledAt": { "type": "string", "format": "date-time", "description": "Agendamento do envio (ISO). Alimenta scheduled_at no Beehiiv." },
-    "signal": { "type": "string", "minLength": 1, "description": "O sinal do dia" },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Versão do contrato. Ausente ⇒ tratado como 1 (edições pré-Digest Engine, D-052/S1-D4)."
+    },
+    "number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Número da edição"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de publicação (ISO)"
+    },
+    "weekday": {
+      "type": "string",
+      "description": "Dia da semana em CAPS, ex: TERÇA-FEIRA"
+    },
+    "publishTime": {
+      "type": "string",
+      "description": "Horário, ex: 8H00"
+    },
+    "readingMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 15
+    },
+    "illustrative": {
+      "type": "boolean",
+      "description": "Marca a edição como exemplo/ilustrativa"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Assunto do e-mail"
+    },
+    "preheader": {
+      "type": "string",
+      "description": "Preheader do e-mail"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Slug do post no Beehiiv (web_settings.slug). Ausente ⇒ derivado de productType+número."
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "content_tags do post no Beehiiv"
+    },
+    "productType": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "pro"
+      ],
+      "description": "Tipo de produto. Default: daily."
+    },
+    "scheduledAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Agendamento do envio (ISO). Alimenta scheduled_at no Beehiiv."
+    },
+    "signal": {
+      "type": "string",
+      "minLength": 1,
+      "description": "O sinal do dia"
+    },
     "deals": {
       "type": "array",
       "description": "Deal Desk — oportunidades com conta feita",
-      "items": { "$ref": "#/$defs/deal" }
+      "items": {
+        "$ref": "#/$defs/deal"
+      }
     },
     "fechaLogo": {
       "type": "array",
-      "description": "Itens que vencem em até 72h",
-      "items": { "$ref": "#/$defs/fecha" }
+      "description": "Seção \"Vence em até 72h\" (rótulo oficial, D-057 — reafirmado pelo operador; o M3 /promocoes consome este dado com esse nome). A chave do campo permanece `fechaLogo` por compatibilidade aditiva; itens que vencem em até 72h (estado ultimos_dias).",
+      "items": {
+        "$ref": "#/$defs/fecha"
+      }
     },
     "shoppingWatch": {
       "type": "array",
       "description": "Radar de VPM observado no não-aéreo (Shopping): custo de fabricação de resgate por player, derivado de preço público de catálogo. Nunca CMI interno.",
-      "items": { "$ref": "#/$defs/shopping" }
+      "items": {
+        "$ref": "#/$defs/shopping"
+      }
     },
     "radar": {
       "type": "object",
       "description": "Radar de janelas — projeção estatística por recorrência do ledger. Não é veredito nem garantia.",
       "additionalProperties": false,
-      "required": ["windows"],
+      "required": [
+        "windows"
+      ],
       "properties": {
-        "note": { "type": "string", "description": "Nota de humildade. Ausente ⇒ usa o padrão." },
+        "note": {
+          "type": "string",
+          "description": "Nota de humildade. Ausente ⇒ usa o padrão."
+        },
         "windows": {
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/$defs/radarWindow" }
+          "items": {
+            "$ref": "#/$defs/radarWindow"
+          }
         }
       }
     },
     "sources": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/source" }
+      "items": {
+        "$ref": "#/$defs/source"
+      }
     },
     "disclaimer": {
       "type": "string",
       "const": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar.",
       "description": "Frase oficial obrigatória, íntegra"
+    },
+    "contaFeita": {
+      "$ref": "#/$defs/conta",
+      "description": "Conta Feita como bloco de destaque próprio (D-052/S1-D1). Ausente ⇒ render eleva automaticamente a `conta` do primeiro item de deals[]."
+    },
+    "oQueEvitar": {
+      "type": "string",
+      "description": "Seção 'O que evitar' (D-052/S1-D2). Mesma forma de `signal` — texto próprio, sem promessa."
+    },
+    "resumoDoDia": {
+      "type": "string",
+      "description": "Síntese editorial curta (2–4 frases) do que aconteceu no mercado hoje — contexto, distinto do veredito de `signal` (D-053 §2.3 item 0)."
+    },
+    "clipping": {
+      "type": "array",
+      "description": "Lista de notícias do dia (TIER 2), piso rígido de 5 itens — nunca preenche com menos (D-053 §2.3 item 1). `summary` é síntese PRÓPRIA, nunca reprodução do texto de terceiro (INV-04) — checagem anti-cópia é lint do gate 5.5, não enforçável pelo schema.",
+      "items": {
+        "$ref": "#/$defs/clippingItem"
+      }
+    },
+    "loyaltyLab": {
+      "$ref": "#/$defs/loyaltyLab",
+      "description": "Bloco editorial/narrativo ancorado em padrão real observado (D-053 §2.3 item 5, §2.4 — score de automação)."
+    },
+    "sinaisRapidos": {
+      "type": "array",
+      "description": "Itens que passam os 3 portões mas não o corte de veredito de Deal Desk — transparência, não teaser. NUNCA carrega chip de veredito (D-053 §2.3 item 4). OBSOLETO como bloco de render próprio na v3 (D-057): absorvido por `ofertasAtivas`. Campo aditivo mantido no schema por compatibilidade; a função `selecionarSinaisRapidos` continua testada, só não é mais chamada pelo renderer.",
+      "items": {
+        "$ref": "#/$defs/sinalRapido"
+      }
+    },
+    "ofertasAtivas": {
+      "type": "array",
+      "description": "Ofertas ativas (M2 · Digest Engine v3, §1.1, D-057): TODO item vivo com conta computável (passaTresPortoes), sem o corte de veredito de Deal Desk por cima. `leitura` reusa o vocabulário canônico de veredito (kebab-case, mesmo $defs/verdict) — nunca um rótulo compacto paralelo.",
+      "items": {
+        "$ref": "#/$defs/ofertaAtiva"
+      }
+    },
+    "cartoesBancos": {
+      "type": "string",
+      "description": "DEPRECADO (v4, D-059): use `cartoesBancosItens` — a prosa única não carrega url/fonte por item. Mantido por compatibilidade com edições legadas. Cartões & bancos (§1.4, D-057): parágrafo editorial evergreen sobre campanhas de cartão e transferência bancária vivas. Aceita TIER 2 (panorama, não recomendação)."
+    },
+    "cartoesBancosItens": {
+      "type": "array",
+      "description": "Cartões e bancos por item (v4, D-059): substitui a prosa única `cartoesBancos`. url+fonte OBRIGATÓRIOS por item (guardrail D-059: número sem fonte que o sustente sai da peça); item sem `nota` carrega status honesto ('sem confirmação'/'fora da régua'/'sem nota' — gate 5.5).",
+      "items": {
+        "$ref": "#/$defs/cartaoBancoItem"
+      }
+    },
+    "radarSemConfirmacao": {
+      "type": "array",
+      "description": "'No radar, ainda sem confirmação oficial' (v4, D-059): itens citados dentro do Sinal do dia cuja regra ainda não foi confirmada em fonte oficial. url+fonte OBRIGATÓRIOS — item não confirmado nunca é citado sem link da fonte + status explícito (guardrail D-059).",
+      "items": {
+        "$ref": "#/$defs/radarSemConfirmacaoItem"
+      }
+    },
+    "predictNarrativa": {
+      "$ref": "#/$defs/predictNarrativa",
+      "description": "Camada narrativa do Predict no corpo editorial (D-059 §3): probabilidade sempre visível, mesmo baixa/em formação. `texto` DEVE ser exatamente o output de `formatarPredictNarrativa` (v2/lib/digest/editorial.mjs) — o gate 5.5 recomputa; nunca cita valor/data de janela futura."
+    },
+    "oQueFechouSemana": {
+      "type": "array",
+      "description": "O que fechou nesta semana (§1.6, D-057): recap de janelas encerradas nos últimos 7 dias, TIER 1 confirmado, sem reabrir cálculo de score (só leitura).",
+      "items": {
+        "$ref": "#/$defs/fechouSemanaItem"
+      }
+    },
+    "predict": {
+      "$ref": "#/$defs/predict",
+      "description": "Predict (§1.7, D-057): teaser que aparece só quando ≥1 janela `confidence='alta'` existe em `digest.radarDaily` (content/forecast.json). Ausente ou `ativos:0` ⇒ seção omitida (regra-mãe). NUNCA revela valor/janela prevista — só a contagem."
     }
   },
   "$defs": {
     "verdict": {
       "type": "string",
-      "enum": ["vale-agir", "vale-olhar", "casos-especificos", "esperaria", "evitaria", "nao-confirmado"]
+      "enum": [
+        "vale-agir",
+        "vale-olhar",
+        "casos-especificos",
+        "esperaria",
+        "evitaria",
+        "nao-confirmado"
+      ]
     },
     "conta": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["rows", "result"],
+      "required": [
+        "rows",
+        "result"
+      ],
       "description": "Conta feita: pares chave/valor + resultado. Números em mono no render.",
       "properties": {
         "rows": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
         },
-        "result": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
+        "result": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "scoreBreakdownComponente": {
+      "type": "object",
+      "description": "Um componente do TL Score real (v2/lib/score.mjs). `valor` já amortecido (percentil por base curta); `valorBruto` é o valor antes do amortecimento. `baseN`/`janela` nulos quando o componente não usa amostra (ex.: abrangência).",
+      "additionalProperties": false,
+      "properties": {
+        "valor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "valorBruto": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "baseN": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "peso": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pesoEfetivo": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "janela": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "scoreBreakdown": {
       "type": "object",
-      "description": "Os 8 critérios do TL Score (0–100 cada). Soma ponderada (25/15/15/10/10/10/10/5) deve fechar com tlScore.",
+      "description": "TL Score real (score_pesos.v1, v2/lib/score.mjs): 4 componentes ponderados percentil/eficiência/raridade/abrangência (.45/.30/.15/.10). Substitui o modelo antigo de 8 critérios (resíduo pré-score.mjs, D-052/D-053). Componente ausente (redistribuído, sem dado) simplesmente não aparece na chave.",
       "additionalProperties": false,
       "properties": {
-        "valor": { "type": "number", "minimum": 0, "maximum": 100 },
-        "regra": { "type": "number", "minimum": 0, "maximum": 100 },
-        "vigencia": { "type": "number", "minimum": 0, "maximum": 100 },
-        "friccao": { "type": "number", "minimum": 0, "maximum": 100 },
-        "aplicabilidade": { "type": "number", "minimum": 0, "maximum": 100 },
-        "liquidez": { "type": "number", "minimum": 0, "maximum": 100 },
-        "estoque": { "type": "number", "minimum": 0, "maximum": 100 },
-        "fontes": { "type": "number", "minimum": 0, "maximum": 100 }
+        "percentil": {
+          "$ref": "#/$defs/scoreBreakdownComponente"
+        },
+        "eficiencia": {
+          "$ref": "#/$defs/scoreBreakdownComponente"
+        },
+        "raridade": {
+          "$ref": "#/$defs/scoreBreakdownComponente"
+        },
+        "abrangencia": {
+          "$ref": "#/$defs/scoreBreakdownComponente"
+        }
       }
     },
     "deal": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["category", "title", "context", "conta", "verdict", "source"],
+      "required": [
+        "category",
+        "title",
+        "context",
+        "conta",
+        "verdict",
+        "source"
+      ],
       "properties": {
-        "category": { "type": "string", "description": "Ex: Transferência bonificada · Livelo → Smiles" },
-        "title": { "type": "string" },
-        "context": { "type": "string" },
-        "conta": { "$ref": "#/$defs/conta" },
-        "verdict": { "$ref": "#/$defs/verdict" },
-        "verdictNote": { "type": "string" },
-        "source": { "type": "string", "description": "Fonte + status de vigência" },
-        "sourceUrl": { "type": "string", "format": "uri" },
-        "vigencia": { "type": "string", "format": "date-time", "description": "Fim da vigência (ISO). Ausente ⇒ verdict deve ser nao-confirmado (overrule 5.4)" },
-        "tlScore": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "scoreBreakdown": { "$ref": "#/$defs/scoreBreakdown" },
-        "entityKey": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Chave canônica do deal em content/entities (identidade do Fio na consolidação Weekly). Ausente ⇒ não rastreável na Weekly (aviso, não erro)." },
-        "routeKey": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*->[a-z0-9]+(?:-[a-z0-9]+)*$", "description": "Rota origem->destino normalizada (entity keys), para deals de transferência. Identidade estável independente de vigencia_fim (ADR-RADAR-009)." },
-        "firstSeen": { "type": "string", "format": "date", "description": "1ª aparição do fato (ISO date). Distingue NOVO de SEGUE na consolidação Weekly sem heurística." }
+        "category": {
+          "type": "string",
+          "description": "Ex: Transferência bonificada · Livelo → Smiles"
+        },
+        "title": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        },
+        "conta": {
+          "$ref": "#/$defs/conta"
+        },
+        "verdict": {
+          "$ref": "#/$defs/verdict"
+        },
+        "verdictNote": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "description": "Fonte + status de vigência"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "vigencia": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Fim da vigência (ISO). Ausente ⇒ verdict deve ser nao-confirmado (overrule 5.4)"
+        },
+        "tlScore": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "scoreBreakdown": {
+          "$ref": "#/$defs/scoreBreakdown"
+        },
+        "entityKey": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "description": "Chave canônica do deal em content/entities (identidade do Fio na consolidação Weekly). Ausente ⇒ não rastreável na Weekly (aviso, não erro)."
+        },
+        "routeKey": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*->[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "description": "Rota origem->destino normalizada (entity keys), para deals de transferência. Identidade estável independente de vigencia_fim (ADR-RADAR-009)."
+        },
+        "firstSeen": {
+          "type": "string",
+          "format": "date",
+          "description": "1ª aparição do fato (ISO date). Distingue NOVO de SEGUE na consolidação Weekly sem heurística."
+        },
+        "contaProsa": {
+          "type": "string",
+          "description": "Paráfrase em prosa dos mesmos números de `conta` (§1.2, D-057) — não recalcula, é redação sobre o dado que já existe. Gate 5.5 verifica que todo número citado aqui tem correspondente literal em `conta.rows`/`conta.result`."
+        },
+        "leitura": {
+          "type": "string",
+          "description": "Parágrafo de interpretação/uso do deal (§1.2, D-057), mais denso que `verdictNote`. Ausência ⇒ render cai para `verdictNote` (fallback, mesmo padrão de `contaFeita`/D-052)."
+        }
       }
     },
     "shopping": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["player", "category", "vpmObservado", "source"],
+      "required": [
+        "player",
+        "category",
+        "vpmObservado",
+        "source"
+      ],
       "description": "Uma leitura de VPM observado (R$/milheiro) por player/categoria. vpmObservado = 'n/c' quando a amostra é insuficiente.",
       "properties": {
-        "player": { "type": "string", "description": "Ex: LATAM Pass, Azul, Smiles" },
-        "category": { "type": "string", "description": "Ex: smartphone, tv, notebook" },
-        "vpmObservado": { "type": "string", "description": "R$/milheiro observado, ou 'n/c'. Em mono no render." },
-        "sampleN": { "type": "integer", "minimum": 0, "description": "Tamanho da amostra após limpar promo/outliers" },
-        "source": { "type": "string", "description": "Fonte pública (catálogo) + status" },
-        "sourceUrl": { "type": "string", "format": "uri", "pattern": "^https?://" },
-        "observedAt": { "type": "string", "format": "date-time" }
+        "player": {
+          "type": "string",
+          "description": "Ex: LATAM Pass, Azul, Smiles"
+        },
+        "category": {
+          "type": "string",
+          "description": "Ex: smartphone, tv, notebook"
+        },
+        "vpmObservado": {
+          "type": "string",
+          "description": "R$/milheiro observado, ou 'n/c'. Em mono no render."
+        },
+        "sampleN": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Tamanho da amostra após limpar promo/outliers"
+        },
+        "source": {
+          "type": "string",
+          "description": "Fonte pública (catálogo) + status"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
     },
     "fecha": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tag", "text"],
+      "required": [
+        "tag",
+        "text"
+      ],
       "properties": {
-        "tag": { "type": "string", "description": "Ex: VENCE EM 48H" },
-        "text": { "type": "string" },
-        "cpm": { "type": "string", "description": "CPM em mono, ex: CPM R$ 24,90" },
-        "note": { "type": "string" },
-        "vigencia": { "type": "string", "format": "date-time" }
+        "tag": {
+          "type": "string",
+          "description": "Ex: VENCE EM 48H"
+        },
+        "text": {
+          "type": "string"
+        },
+        "cpm": {
+          "type": "string",
+          "description": "CPM em mono, ex: CPM R$ 24,90"
+        },
+        "note": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://",
+          "description": "Link da fonte do item (v4, D-059) — renderizado como '(fonte)'."
+        },
+        "vigencia": {
+          "type": "string",
+          "format": "date-time"
+        }
       }
     },
     "radarWindow": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["label", "confidence", "window"],
+      "required": [
+        "label",
+        "confidence",
+        "window"
+      ],
       "description": "Uma janela prevista. label = programa ou rota; window = texto (mono no render).",
       "properties": {
-        "label": { "type": "string", "description": "Ex: Latam Pass · Itaú → Latam Pass" },
-        "confidence": { "type": "string", "enum": ["alta", "media", "baixa"], "description": "Confiança da projeção. em-formacao nunca vira linha de radar." },
-        "window": { "type": "string", "description": "Janela prevista, ex: 17 a 24 jul" },
-        "basis": { "type": "string", "description": "Base da projeção (cadência, nº de janelas)" },
-        "bonus": { "type": "string", "description": "Bônus típico em mono, ex: ~23%" },
-        "source": { "type": "string", "description": "Proveniência (Fase C0). 'forecast' = automático (deve bater com content/forecast.json); ausente = análise editorial." },
-        "seriesKey": { "type": "string", "description": "Chave da série no forecast automático (proveniência)." },
-        "generatedAt": { "type": "string", "description": "Quando o número automático foi gerado (proveniência/frescor)." }
+        "label": {
+          "type": "string",
+          "description": "Ex: Latam Pass · Itaú → Latam Pass"
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "alta",
+            "media",
+            "baixa"
+          ],
+          "description": "Confiança da projeção. em-formacao nunca vira linha de radar."
+        },
+        "window": {
+          "type": "string",
+          "description": "Janela prevista, ex: 17 a 24 jul"
+        },
+        "basis": {
+          "type": "string",
+          "description": "Base da projeção (cadência, nº de janelas)"
+        },
+        "bonus": {
+          "type": "string",
+          "description": "Bônus típico em mono, ex: ~23%"
+        },
+        "source": {
+          "type": "string",
+          "description": "Proveniência (Fase C0). 'forecast' = automático (deve bater com content/forecast.json); ausente = análise editorial."
+        },
+        "seriesKey": {
+          "type": "string",
+          "description": "Chave da série no forecast automático (proveniência)."
+        },
+        "generatedAt": {
+          "type": "string",
+          "description": "Quando o número automático foi gerado (proveniência/frescor)."
+        }
       }
     },
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["label", "url"],
+      "required": [
+        "label",
+        "url"
+      ],
       "properties": {
-        "label": { "type": "string" },
-        "url": { "type": "string", "format": "uri", "pattern": "^https?://" }
+        "label": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        }
+      }
+    },
+    "clippingItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "url",
+        "source",
+        "summary"
+      ],
+      "description": "Um item do Clipping (TIER 2, D-053 §2.3 item 1). `summary` é síntese PRÓPRIA de 1 linha — nunca reprodução do texto/título original (INV-04); anti-cópia é checado pelo gate 5.5, não pelo schema.",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        },
+        "source": {
+          "type": "string",
+          "description": "Nome da fonte (ex: melhorescartoes, pontospravoar, tavily)"
+        },
+        "tier": {
+          "type": "integer",
+          "enum": [
+            1,
+            2
+          ],
+          "description": "Tier da fonte na proveniência (§1.1). Clipping é alimentado por TIER 2."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Resumo próprio de 1 linha, redação nova — nunca cópia do original."
+        }
+      }
+    },
+    "loyaltyLab": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "titulo",
+        "texto"
+      ],
+      "description": "Bloco editorial/narrativo (D-053 §2.3 item 5). `automationScore`/`humanReviewed` alimentam o gate de automação (§2.4, corte 0,85) — sem Ledger, `humanReviewed` deve ser true (score nunca cruza o corte sozinho).",
+      "properties": {
+        "titulo": {
+          "type": "string"
+        },
+        "texto": {
+          "type": "string"
+        },
+        "automationScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Score de automação recomputável (v2/lib/digest/dia-fraco.mjs, scoreAutomacaoLoyaltyLab)."
+        },
+        "humanReviewed": {
+          "type": "boolean",
+          "description": "Revisão humana explícita registrada — obrigatória quando automationScore < 0,85."
+        }
+      }
+    },
+    "sinalRapido": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origem",
+        "destino",
+        "brutoScore",
+        "motivoNaoQualifica"
+      ],
+      "description": "Item que passa os 3 portões mas não o corte de Deal Desk (D-053 §2.3 item 4). NUNCA carrega `verdict`/`veredito` — transparência, não teaser de Deal Desk.",
+      "properties": {
+        "origem": {
+          "type": "string"
+        },
+        "destino": {
+          "type": "string"
+        },
+        "tipo": {
+          "type": "string"
+        },
+        "brutoScore": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "motivoNaoQualifica": {
+          "type": "string",
+          "description": "Por que não cruzou o corte de Deal Desk (ex: veredito bruto abaixo de vale-olhar)."
+        }
+      }
+    },
+    "ofertaAtiva": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origem",
+        "tipo",
+        "leitura"
+      ],
+      "description": "Uma linha da tabela Ofertas ativas (§1.1, D-057) — todo item vivo com conta computável (passaTresPortoes), sem corte de veredito.",
+      "properties": {
+        "origem": {
+          "type": "string",
+          "description": "origem_code"
+        },
+        "destino": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "destino_code, ou null para lado único (ex.: compra de pontos)"
+        },
+        "tipo": {
+          "type": "string",
+          "description": "Taxonomia D-001, ex: transferencia_bonificada, compra_pontos"
+        },
+        "percentual": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Bônus/desconto observado. null quando o tipo não usa percentual (ex.: pontos_mais_dinheiro, D-031)."
+        },
+        "prazo": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "vigencia_fim (ISO). null = vigência indeterminada ('sem data' no render)."
+        },
+        "leitura": {
+          "$ref": "#/$defs/verdict",
+          "description": "Vocabulário canônico de veredito (D-057 decisão 1) — nunca um 2º vocabulário paralelo."
+        },
+        "cpm": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Custo do milheiro formatado (v4, D-059), ex: 'R$ 16,84'. null = tipo sem CPM ('—' no render)."
+        },
+        "publico": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Público da oferta (v4, D-059), ex: 'Clube'. null = geral."
+        },
+        "nota": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Nota TL do item para a sublinha 'TL {nota}' (v4, opcional)."
+        }
+      }
+    },
+    "radarSemConfirmacaoItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "titulo",
+        "detalhe",
+        "url",
+        "fonte"
+      ],
+      "description": "Um item do bloco 'No radar, ainda sem confirmação oficial' (v4, D-059). url+fonte obrigatórios — item não confirmado nunca é citado sem fonte linkada.",
+      "properties": {
+        "titulo": {
+          "type": "string"
+        },
+        "detalhe": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        },
+        "fonte": {
+          "type": "string"
+        },
+        "nota": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Nota TL quando existe ('TL {nota}' no render); null = sem nota — o texto NÃO pode citar número TL (gate 5.5)."
+        },
+        "vence": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Vigência (ISO date) quando conhecida."
+        }
+      }
+    },
+    "cartaoBancoItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nome",
+        "descricao",
+        "url",
+        "fonte"
+      ],
+      "description": "Um item de 'Cartões e bancos' (v4, D-059). url+fonte obrigatórios; sem `nota`, descricao/status devem declarar o motivo honesto ('sem confirmação'/'fora da régua'/'sem nota').",
+      "properties": {
+        "nome": {
+          "type": "string"
+        },
+        "descricao": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://"
+        },
+        "fonte": {
+          "type": "string"
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Status honesto do item, ex: a constante STATUS_SEM_CONFIRMACAO ('Ainda sem confirmação oficial')."
+        },
+        "nota": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "predictNarrativa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rotaOrigem",
+        "rotaDestino",
+        "probabilidade",
+        "texto"
+      ],
+      "description": "Narrativa do Predict (D-059 §3). `texto` é SEMPRE o output de formatarPredictNarrativa(rotaOrigem, rotaDestino, historicoTipicoPercent, probabilidade) — recomputado pelo gate 5.5; nunca cita data/valor de janela futura.",
+      "properties": {
+        "rotaOrigem": {
+          "type": "string",
+          "description": "origem_code da rota acompanhada"
+        },
+        "rotaDestino": {
+          "type": "string",
+          "description": "destino_code da rota acompanhada"
+        },
+        "historicoTipicoPercent": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Bônus típico histórico da rota (%), ou null quando não há base."
+        },
+        "probabilidade": {
+          "type": "string",
+          "enum": [
+            "baixa",
+            "media",
+            "alta",
+            "em-formacao"
+          ]
+        },
+        "texto": {
+          "type": "string"
+        }
+      }
+    },
+    "fechouSemanaItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origem",
+        "tipo",
+        "encerrouEm"
+      ],
+      "description": "Um item de 'O que fechou nesta semana' (§1.6, D-057): recap, sem cálculo novo — só leitura de `estado='encerrada' AND tier=1 AND tl_score_bruto IS NOT NULL` na janela de 7 dias.",
+      "properties": {
+        "origem": {
+          "type": "string",
+          "description": "origem_code"
+        },
+        "destino": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "destino_code, ou null para lado único"
+        },
+        "tipo": {
+          "type": "string"
+        },
+        "percentual": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "encerrouEm": {
+          "type": "string",
+          "format": "date-time",
+          "description": "vigencia_fim (ISO) — quando a janela encerrou."
+        }
+      }
+    },
+    "predict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ativos"
+      ],
+      "description": "Teaser do Predict (§1.7, D-057) — território M4 (Predict Ledger), usa content/forecast.json já existente. NUNCA carrega label/value/window da previsão, só a contagem.",
+      "properties": {
+        "ativos": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Quantidade de janelas com confidence='alta' em digest.radarDaily. 0 ⇒ seção deveria ter sido omitida (regra-mãe)."
+        }
       }
     }
   }

@@ -302,7 +302,481 @@ A máquina está **provada ponta a ponta** (caso `livelo→azul` + `livelo→hil
 5. **Cobertura de fontes é a próxima frente** (15/18 vivas crawleáveis sem URL oficial → nem chegam ao gate). Mais adapters + páginas oficiais detectáveis = maior probabilidade de capturar a próxima oferta forte quando surgir.
 **Princípio de lançamento (registrado):** *o dia fraco reportado como dia fraco* — "esta semana não há oferta que valha a pena, e aqui está por quê, com as contas" — demonstra mais credibilidade que qualquer card de 65. Nos primeiros dias, o dia fraco honesto é a **melhor propaganda** do produto. **Parâmetros aprovados nesta rodada:** Parte B — fallback cross-merchant OFF; `conta_nao_calculavel` → **não-valor** (bruto null), não desinflado; raridade buckets D-037; `min_merchant=3`/`min_tipo=8`; versionado em `derivacao_config`. Parte A — limiar 0,75, gate em confirma-e-mostra.
 
-## D-051 — TRAVA DA FASE DE CALIBRAÇÃO: o corpus calibra os motores, nunca os substitui
+
+## D-050.1 — Não-valor cobre TODOS os `conta_nao_calculavel` (correção de consistência, não regra nova)
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2
+Correção de consistência do D-050 (decisão 4). A regra "cnc → não-valor (bruto null)" tinha sido aplicada só aos **lado-único** (624, Parte B) — recorte acidental. Mas `conta_nao_calculavel` = "não há valor computável", **independe do tipo de rota**: um sorteio sem % e sem CPM não tem valor computável seja lado-único ou rota real. A Frente B expôs o buraco ao perseguir um **falso-forte** (`bradesco→livelo` bruto **91 "Vale agir"** escondendo `override=conta_nao_calculavel`, sorteio sem %). Havia **710** cnc de rota real com bruto inflado, **375 deles ≥70** (falsos-fortes que envenenam ranking/coleta). **Aplicado:** onde `override=conta_nao_calculavel`, `tl_score_bruto=null` + `veredito_bruto='Não confirmado'`, para os 710 (total cnc não-valor agora = 1.334). Dry-run confirmou **0 mudança de veredito público** (todos já Não confirmado por override; nenhum publicável) — trilha em `campanha_versoes` (evento `correcao_nao_valor_d050_1`). **Achado que decorre:** com os falsos-fortes zerados, o ranking da Frente A (oferta-forte-viva-bloqueada) fica **quase vazio** (1 item fraco `costa_cruzeiros` 70) → **nenhum adapter tem alvo forte hoje**; confirma D-050 no nível mais profundo (a base não tem oferta forte viva, e removê-los provou que a própria justificativa "adapter de banco" era fantasma). **Coordenação (calibração):** a extensão zerou 710 brutos → qualquer medição de distribuição de score anterior precisa ser revalidada contra a base corrigida.
+
+## D-051 — Não se constrói infra de captura sem alvo MEDIDO; espera honesta é estado válido
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** transversal (disciplina de engenharia)
+O ranking vazio da Frente A (após D-050.1 zerar os 375 falsos-fortes) provou que **não há alvo forte** para os adapters desbloquearem hoje — o `bradesco→livelo 91` que justificava adapter de banco era fantasma. Princípio consolidado, além deste caso: **não se constrói infra de captura (adapter, coletor, pipeline) sem um alvo MEDIDO para capturar.** Infra especulativa é **dívida disfarçada de progresso**. A Frente A (adapters de banco) vira prioridade **no instante em que o ranking apontar uma oferta forte viva** num programa que a justifique — não antes. **O sistema em espera honesta e produtiva é um ESTADO VÁLIDO**, não um problema a resolver com mais código. Coerente com D-050 (Deal Desk gatilhado por oferta): a próxima oferta forte vem do **calendário**, e o gate provado a captura quando vier. **Frentes que rendem sem alvo novo:** calibração (fecha os vetores → liga o auto-publish, caminho crítico) e track record / M3 (conteúdo de estreia). **Marco:** o projeto saiu da fase de **construir o motor** (provado ponta a ponta) e entra na de **operar e afinar**; vale um **fechamento de M2** quando a calibração fechar.
+
+## D-052 — Contrato do template de e-mail Daily: 4 decisões ratificadas (S1-D1..D4)
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+Ratifica as 4 decisões abertas de `SPEC-SLICE-TEMPLATE-EMAIL-DAILY.md` §3, formalizadas
+aqui porque o handoff nunca chegou a registrá-las como ADR (gap corrigido nesta entrada).
+**(1) Conta Feita:** campo opcional `contaFeita` no schema (reusa `$defs/conta`); ausente
+⇒ fallback automático = `conta` do **primeiro** item de `deals[]`. **(2) O que evitar:**
+campo opcional `oQueEvitar` (string), mesma forma de `signal` — aditivo, não quebra
+edições existentes. **(3) Cap de Deal Desk:** **3**, sem `maxItems` no schema (decisão
+editorial, não de contrato); renderer aplica o corte e **nunca trunca em silêncio** — se
+`deals.length > 3`, registra quantos ficaram de fora. **(4) Contrato canônico:**
+`content/edition.schema.json` vence — é o único dos dois artefatos versionado com `$id`;
+`renderer/email.mjs` (que lia snake_case divergente) é **realinhado** a ele, não o
+contrário. Também aprovado nesta rodada: patch aditivo do `scoreBreakdown` (ver D-053) e
+`<meta name="color-scheme" content="light">` travado no e-mail (light-locked, já
+desenhado na spec do template).
+
+## D-053 — Digest Engine: Clipping + Resumo do dia, Loyalty Lab automatizável por score (Ledger é dívida), TIER 2 alimenta blocos narrativos
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2
+Emenda do operador sobre `SPEC-SLICE-DIGEST-ENGINE.md` (v1, commit `9c39ffc`) antes do
+código. Quatro mudanças: **(1) `scoreBreakdown` do schema corrigido** — o `$defs`
+antigo descrevia 8 critérios do modelo pré-`score.mjs` (resíduo do TL Score vindo pronto
+do LLM); patch aditivo agora reflete o engine real (4 componentes:
+`percentil/eficiencia/raridade/abrangencia`, pesos `.45/.30/.15/.10`, `score_pesos.v1`).
+**(2) Dois blocos novos no dia fraco:** **Resumo do dia** (síntese editorial curta do que
+aconteceu no mercado, prosa, distinta do Sinal do Dia que é veredito) e **Clipping**
+(lista de **≥5** notícias do dia com resumo próprio + link + fonte/tier — piso rígido,
+sem preencher com menos). Ordem revisada: Resumo do dia → Clipping → Radar → Radar VPM →
+Sinais rápidos → Loyalty Lab. Mesma regra-mãe (seção sem dado real = omitida, nunca
+incompleta) aplicada a ambos. **(3) Loyalty Lab deixa de exigir gate humano fixo** —
+passa a ter **score de automação determinístico** (`ancoragem` + `track_record`, corte
+proposto **0,85**, piso gated, mesmo desenho do D-048). Dependência real mapeada: o
+`track_record` vem do **Predict Ledger** (REQ-24/M4.3), que **não existe** (zero tabela,
+zero código) e precisaria de extensão própria para claims narrativas (não só
+probabilidade numérica). **Registrada como dívida, não bloqueio** — `track_record=0`
+sem Ledger é o caso-limite da fórmula, então Loyalty Lab **continua sempre em revisão
+humana até M4.3 entregar o Ledger**, sem branch hardcoded separado. **(4) TIER 2 sobe de
+importância** para os blocos narrativos (Clipping/Resumo do dia/Loyalty Lab podem puxar
+de `news_raw`/`campaigns tier=2`, sem os 3 portões nem o corte de veredito) — Deal Desk
+continua **exclusivo de TIER 1**. INV-01 (fonte+data) vale em todos os blocos; a barra
+que cai é só a de corroboração TIER 1. **2 decisões nomeadas seguem abertas** (posição
+exata do Clipping na ordem; valor final do corte 0,85) — propostas default já registradas
+em `SPEC-SLICE-DIGEST-ENGINE.md` §4, não bloqueiam a construção.
+
+## D-054 — Fecha as decisões nomeadas do Digest Engine e da Coleta TIER 1 em Produção; coleta TIER 1 DEPLOYADA
+**Data:** 2026-07-17 · **Status:** Aprovada e aplicada · **Milestone:** M2
+Ratifica as últimas decisões nomeadas de `SPEC-SLICE-DIGEST-ENGINE.md` §4 e
+`SPEC-SLICE-COLETA-TIER1-PRODUCAO.md` §2, e registra o deploy real. **Digest Engine:**
+Clipping é seção própria, posicionada logo após Resumo do dia (ordem final: Resumo do
+dia → Clipping → Radar → Radar VPM → Sinais rápidos → Loyalty Lab); corte do score de
+automação do Loyalty Lab = **0,85** (fecha D-053). **Coleta TIER 1 em Produção:** limiar
+de confiança **0,75**; cron a cada **6h**; novo override `refutado_tier1` para
+refutação firme (D-049); **TAP fica fora da cobertura desta rodada** (sem adapter de
+sitemap fechado — registrado, não bloqueia, cobertura real = 3 de 4 programas listados).
+**Deployado e provado ao vivo nesta rodada:** edge function `coleta-tier1` (version 1,
+ACTIVE, `verify_jwt=false`), `pg_cron` a cada 6h (`coleta-tier1-6h`, jobid 30). Invoke de
+prova: HTTP 200, `candidatos_no_banco:0` — bate exatamente com a medição prévia (zero das
+17 vivas crawleáveis cruza o piso de valor 70 hoje); run logado em `runs`. **Achado ao
+construir:** o golden já travado de `decisaoNoLimiar` (`coleta-tier1.test.mjs`) mostra que
+`corrobora_com_ajuste` vai **sempre** a revisão humana, mesmo com confiança 1,0 — o plano
+de gravação (`gravacao-tier1.mjs`) respeita esse comportamento já testado em vez de
+reescrevê-lo (D-043, dado/código vence resumo de spec).
+
+## D-055 — Digest Engine construído e integrado; gate 5.5 rodado de verdade nos dois casos (evidência)
+**Data:** 2026-07-17 · **Status:** Aprovada e aplicada · **Milestone:** M2 (fecho)
+Fecha a construção do Digest Engine (D-052/D-053/D-054) e prova o gate 5.5 contra dados
+reais, não só golden sintético. **Construído em `v2/lib/digest/`:** `mapear-contrato.mjs`
+(tradução veredito+scoreBreakdown, sem fallback silencioso), `selecionar.mjs` (3 portões +
+corte de Deal Desk + cap 3 com `cortados` reportado + Fecha Logo), `dia-fraco.mjs`
+(Clipping/Radar/Radar VPM/Sinais rápidos + `scoreAutomacaoLoyaltyLab` corte 0,85),
+`gate-5-5.mjs` (`checkComuns`/`checkComDealDesk`/`checkSemDealDesk`). `renderer/email.mjs`
+realinhado ao schema patchado (camelCase, 6 seções novas, omissão real de Deal Desk via
+marcador HTML `<!--section:deal-desk-->`, não string de prosa). `content/edition.schema.json`
+recebeu o patch aditivo (scoreBreakdown 4 componentes + `contaFeita`/`oQueEvitar`/
+`resumoDoDia`/`clipping`/`loyaltyLab`/`sinaisRapidos`). 178/178 testes verdes
+(`v2/lib/digest/*.test.mjs` + `renderer/email.test.mjs` + `v2/lib/score.test.mjs`/
+`derivacao.test.mjs`, sem regressão).
+
+**Gate 5.5 rodado de verdade (não só fixture) — dois casos:**
+1. **Sem Deal Desk, dados reais do banco vivo hoje (56 campanhas vivas via SQL direto):**
+   `selecionarDealDesk` recomputado ao vivo confirma **0 elegíveis** (único TIER 1 confirmado,
+   `smiles-desconhecido-compra-2026-07-17`, bruto 55 "Só para casos específicos", abaixo do
+   corte). `runGate55` contra o HTML renderizado de `renderer/examples/dia-fraco.json` (que já
+   espelhava esse estado real) → **PASS**, zero erros.
+2. **Com Deal Desk, fixture `illustrative:true` (`dia-forte.json`) + campanhas sintéticas
+   espelhando os 3 deals** (routeKey/tl_score_bruto/veredito_bruto): primeira rodada
+   **achou 3 problemas reais de autoria** na fixture (não do gate) — `oQueEvitar` continha
+   "corre risco" (colide com `URGENCY_RE`, falso-positivo textual do termo banido "corre"),
+   `signal`/`resumoDoDia` sem dígito (checagem estrutural INV-03). Fixture corrigida
+   (reescrita sem o termo, números concretos adicionados) → **PASS**, zero erros. Também
+   corrigido nesta rodada: `contaFeita` da fixture não batia literalmente com `deals[0].conta`
+   (falha do check de rastreabilidade) e o segundo deal não tinha `routeKey` — ambos
+   ajustados para refletir a convenção real de dados (routeKey `origem->destino`, `contaFeita`
+   idêntico ao deal de origem).
+**Achado do processo:** o gate 5.5 pegou 3 gaps de autoria reais numa fixture marcada
+illustrative — evidência de que ele funciona como auditoria independente, não decorativa.
+
+## D-056 — Primeiro rascunho do Daily criado no Beehiiv (draft, sem envio); contagem dos 5 dias NÃO iniciada
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2 (fecho)
+Fecha o passo serializado 3 do dispatch de fechamento do M2: primeiro post do The Loyal
+Daily criado no Beehiiv **como rascunho**, para validação visual da marca antes de
+qualquer disparo real (salvaguarda S2-D1). **Conteúdo é dado real, não fixture:**
+edição nº 1, 2026-07-17, montada a partir do estado vivo do banco no momento (56
+candidatos vivos via SQL direto, 1 TIER 1 confirmado — `smiles-desconhecido-compra-
+2026-07-17`, bruto 55, "Só para casos específicos" — recomputado com
+`selecionarDealDesk`/`selecionarFechaLogo` reais). Clipping (6 itens) vem de linhas reais de
+`news_raw` (fontes `passageirodeprimeira`/`pontospravoar`, tier 2 confirmado em
+`news_sources`), com resumo próprio (nunca copiado) e tom neutro (revisado para não colidir
+com `URGENCY_RE`). **Resumo do dia e Loyalty Lab foram OMITIDOS de propósito** — não havia
+dado real o bastante para uma narrativa sem fabricar tendência (regra-mãe "seção sem dado
+real = omitida"); ficam como próxima rodada de curadoria, não bloqueio. Gate 5.5 rodado
+contra o HTML renderizado desta edição real → **PASS**, zero erros (`v2/lib/digest/gate-
+5-5.mjs`). Artefato salvo em `content/editions/0001.json`.
+**Beehiiv:** `save_post` criado — `post_f7b2c959-8dcf-46e0-864d-f26b162a68f7`, status
+`draft`, `scheduled_at: null`, audiência default (free, ambos os canais), zero destinatário
+notificado. Dialeto Tiptap (`v2/lib/digest/render-beehiiv.mjs`) — sem `<table>`, sem
+inline `style` fora de `span`, sem emoji, amarelo só em borda/fill (nunca texto), verde de
+texto sempre `#00A878`. **Link do editor:** `https://app.beehiiv.com/posts/f7b2c959-8dcf-
+46e0-864d-f26b162a68f7/edit`. **Draft público:** `https://theloyal.beehiiv.com/p/hoje-
+nenhuma-oferta-passou-do-corte-e-aqui-esta-a-conta?draft=true`.
+**Travas respeitadas:** auto-publish continua DESLIGADO; a contagem dos 5 dias úteis de
+aprovação (D-050 decisão 3) **NÃO foi iniciada** — fica para o operador decidir quando o
+rascunho estiver aprovado, por instrução explícita do dispatch. Nenhum e-mail foi enviado,
+nenhum assinante foi notificado.
+
+## D-057 — Digest Engine v3: revisão estrutural ratificada (Ofertas ativas, Vence 72h, Cartões & bancos, O que fechou, Predict; Radar VPM e Loyalty Lab como blocos próprios)
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** M2 (revisão de contrato)
+Ratifica as 8 decisões nomeadas do §5 de `SPEC-SLICE-DIGEST-ENGINE.md` v3 (commit
+`500389f`). **Decisões 1–6, propostas default aprovadas como estavam:** (1) rótulo da
+coluna "Leitura" em Ofertas ativas = vocabulário canônico de veredito (`Vale agir`/`Vale
+olhar`/`Só para casos específicos`/`Esperaria`/`Evitaria`), não um segundo vocabulário
+paralelo; (2) Cartões & bancos aceita TIER 2 (evergreen, sem corte de veredito); (3) lista
+curada de bancos por `origem_code` (itau/inter/c6/bradesco/banco_do_brasil/nubank/caixa/
+brb/santander/btg/xp/picpay); (4) cadência do Predict = `confidence='alta'` em
+`digest.radarDaily`, orientada a dado, não calendário fixo; (5) Resumo do dia funde com
+Sinal do dia (2 parágrafos, uma seção); (6) Radar (janelas) migra para dentro do teaser
+Predict. **Decisões 7–8, sem proposta default, resolvidas agora pelo operador:** (7)
+**Radar VPM vira seção própria** (não funde em Cartões & bancos, não corta — mesma fonte
+`shopping_metrics`, `selecionarRadarVpm` já existente, sem mudança de lógica); (8)
+**Loyalty Lab continua bloco narrativo separado**, corte de automação **0,85** inalterado
+(D-053, `scoreAutomacaoLoyaltyLab`/`precisaRevisaoHumana` já existentes, sem mudança).
+**Estrutura final da edição (ordem):** Sinal do dia (com Resumo fundido) → Ofertas ativas
+(tabela) → Deals do dia (numerado, `contaProsa`/`leitura` aditivos) → Vence em até 72h
+(renomeação de Fecha Logo) → Cartões & bancos → Clipping → O que fechou nesta semana →
+Radar VPM → Loyalty Lab → Predict. **Ordem de Radar VPM/Loyalty Lab/Predict na cauda é
+call editorial dentro do escopo já aprovado** (não redecidida pelo operador nesta
+rodada) — mantém a lógica de "observacional/analítico antes do teaser final" do
+sequenciamento anterior (D-053/D-054). **Modo: build aprovado — spec fecha aqui, próxima
+entrada em DECISIONS.md é o resultado do código.**
+
+## D-058 — Digest Engine v3 construído e integrado; gate 5.5 PASS nos dois casos; rascunho no Beehiiv reconstruído
+**Data:** 2026-07-17 · **Status:** Aprovada e aplicada · **Milestone:** M2 (fecho)
+Fecha a construção de D-057 em código. **Construído em `v2/lib/digest/`:**
+`ofertas-ativas.mjs` (`selecionarOfertasAtivas` reusa `passaTresPortoes` sem corte de
+veredito; `selecionarCartoesBancos` + `BANCOS_ORIGEM`), `dia-fraco.mjs` ganha
+`selecionarFechouSemana` (encerrada+TIER1+conta computável, janela 7d, sem cálculo) e
+`selecionarPredict`/`formatarTeaserPredict` (nunca revela valor/janela, só contagem),
+`gate-5-5.mjs` ganha `checkOfertasAtivas`/`checkCartoesBancos`/`checkFechouSemana`/
+`checkPredict`/`checkContaProsa` — todos rodando sempre, independente de Deals do dia.
+`content/edition.schema.json` recebeu o patch aditivo (`ofertasAtivas`, `cartoesBancos`,
+`oQueFechouSemana`, `predict`, `deal.contaProsa`/`deal.leitura`). Renderers (`email.mjs` +
+`render-beehiiv.mjs`) restruturados pra ordem D-057; Radar (janelas) e Sinais rápidos
+saem do render (absorvidos por Predict/Ofertas ativas — as funções que os geravam
+continuam testadas, só não são mais chamadas pelo renderer). 513/515 testes verdes (2
+fails pré-existentes, não relacionados).
+
+**Edição nº 1 remontada com dado 100% real** (SQL direto no momento da montagem, não
+fixture): Ofertas ativas com o único TIER1 confirmado hoje (`smiles`, bruto 55); Cartões
+& bancos com os 7 itens reais vivos (5 cartão + 2 transferência-banco); O que fechou
+nesta semana com 6 dos 7 itens reais encerrados nos últimos 7 dias (1 duplicata exata
+descartada por curadoria editorial — mesmo par origem/destino/% duas vezes seria ruído,
+não erro de dado). Predict, Loyalty Lab e Radar VPM **omitidos** — sem dado real
+suficiente hoje para uma narrativa sem fabricar tendência (regra-mãe). Salva em
+`content/editions/0001.json`.
+
+**Gate 5.5 rodado de verdade nos dois casos com a estrutura v3:**
+1. **Sem Deals do dia, dado real** (63 campanhas — 56 vivas + 7 encerradas via SQL
+   direto) → **PASS**, zero erros.
+2. **Com Deals do dia, fixture `illustrative:true` + campanhas sintéticas** cobrindo
+   todos os blocos novos (ofertasAtivas, deals via routeKey, cartoesBancos,
+   oQueFechouSemana) → **PASS**, zero erros, depois de 2 rodadas de correção (uma
+   campanha sintética sem `tipo`, um `encerrouEm`/`vigencia_fim` com componente de hora
+   que não batia string-a-string).
+
+**Beehiiv:** rascunho existente (`post_f7b2c959-8dcf-46e0-864d-f26b162a68f7`)
+**atualizado no lugar** via `edit_post_content` (doc replace) + `edit_post` (subtítulo/
+preheader sincronizados com o rename "Deals do dia") — não criado um segundo post.
+Continua `status: draft`, `scheduled_at: null`, zero destinatário notificado.
+**Editor:** `https://app.beehiiv.com/posts/f7b2c959-8dcf-46e0-864d-f26b162a68f7/edit`.
+**Preview:** `https://theloyal.beehiiv.com/p/hoje-nenhuma-oferta-passou-do-corte-e-aqui-esta-a-conta?draft=true`.
+Auto-publish continua desligado; contagem dos 5 dias úteis **não iniciada**.
+
+## D-059 — Benchmark milhasbot: análise por promoção vai para M3; diagnóstico de cobertura (3 promoções vivas, 2 enterradas por bug de vigência); Predict com probabilidade sempre visível
+**Data:** 2026-07-17 · **Status:** Registrada (correções de dado aguardam aprovação) · **Milestone:** M2 (editorial) / M3 (roadmap)
+Rodada de refinamento editorial do rascunho nº 1 guiada por benchmark externo
+(milhasbot.com.br) colado pelo operador. Três desdobramentos:
+
+**(1) Roadmap M3 — "Ver análise" por promoção + histórico por programa.** O benchmark
+oferece página de análise individual por promoção (com a conta, contexto do regulamento,
+limitações — ex.: teto de 300k pontos, crédito em 15 dias úteis) e um placar histórico
+por programa (`/promocoes/`). O operador mandou colocar essa construção em M3/M4:
+**registrado como slice de M3**, encaixando no que já existe — D-046 (track record como
+arquivo público) e as páginas públicas do M3. Cada campanha ganha página própria com a
+conta feita, o TL Score explicado e o histórico da rota; o Daily linka "Ver análise" por
+item. Não construir agora.
+
+**(2) Diagnóstico de cobertura — o benchmark mostrou 3 ofertas vivas; TODAS já estavam
+no nosso banco, mas 2 invisíveis por bug de dado:**
+- `bancodobrasilnenhum,banco do nordeste-azul-transferencia-2024-07-17` (BNB→Azul até
+  110%): vigência parseada como **2024**-07-17 quando a matéria é de 2026 (classe de bug
+  do D-021 — inferência de ano em registro de extração LLM antigo) → FSM derivou
+  `historica` e o item sumiu do radar vivo. Identidade também malformada (origem_bruto
+  duplo). A oferta REAL vence 17/07/**2026**.
+- `flyingblue-*-compra-na` (Flying Blue 45% OFF): vigência não extraída (`na`) → estado
+  `indeterminada`, fora do filtro vivo. Matéria indica validade até 28/07/2026.
+- `livelo-hilton-hotelaria-2026-07-31` (50%, TL 65): viva e visível — a falha aqui foi
+  **editorial** (não citada na primeira versão do rascunho).
+**Correções de dado propostas (NÃO aplicadas — regravação em produção espera aprovação
+do operador):** (a) 2× livelo-aliexpress: tipo `compra`→acúmulo em parceiro + revisão de
+nota (o "25%" é na verdade "25 pontos/dólar"); (b) bradesco-livelo: é sorteio, não
+transferência; (c) caixa-cartao: "100%" é cashback de IOF (benefício de tarifa, candidata
+a `nao_campanha` via D-018); (d) bb-smiles-cartao: fonte linkada não sustenta o "5,5
+milhas/dólar" — item removido do rascunho e campanha para revisão; (e) bnb-azul 2026:
+corrigir vigência 2024→2026 + identidade + rescorar; (f) flyingblue compra: vigência
+28/07/2026 + dedup dos 2 registros. **Aprendizado de guardrail (aplicado no editorial
+imediatamente):** item de confiança baixa/não confirmado nunca é citado com número como
+"melhor do dia" sem link da fonte + status explícito — e número que a fonte linkada não
+sustenta sai da peça (caso BB Ourocard).
+
+**(1b) Benchmark-alvo detalhado (screencapture completo de /promocoes, colado pelo
+operador):** a página combina (i) barra de status viva ("AGORA · N bônus ativos · 1
+vence amanhã · Verificado em [data]"); (ii) tabela de ativos com Rota | Bônus (faixa,
+não só teto) | Milheiro | Vence | link "Ver análise"; (iii) **Placar histórico por
+rota** — por programa-destino, tabela DE | teto histórico (com mês/ano) | mediana |
+nº de registros; (iv) **Banco de dados por programa** — chips de média/mediana/teto/
+melhor-do-ano/nº de registros + parágrafo-síntese + histórico completo datado com
+veredito por linha. **Nosso equivalente:** mesma estrutura alimentada por `campaigns`
+(histórico já canonicalizado) + `content/forecast.json` (janelas previstas com
+probabilidade baixa/média/alta — nosso diferencial vs. o benchmark, que só olha para
+trás). **Adaptações de marca obrigatórias:** zero emoji (o benchmark usa 👍/🏆 — nós
+usamos o vocabulário TL com cor semântica), números em JetBrains Mono, veredito pela
+régua TL, não "Boa/Fraca" ad-hoc. Página atualizável (dado vivo, não lista manual) —
+alvo de M3 junto com o "Ver análise" por promoção.
+
+**(3) Predict — probabilidade sempre visível (venda orgânica).** Refinamento do operador
+sobre a proposta anterior: além da linha de cenário quando houver janela prevista, o
+editorial cita o Predict **mesmo quando a probabilidade é baixa/indefinida** — ex.: "o
+radar acompanha Esfera→Smiles (histórico típico ~70% de bônus), mas ainda não há base
+para prever a próxima janela; sem promoção à vista, a compra vale pelo que é hoje (TL
+63)". Mostra o poder da ferramenta nos dois sentidos e explica a nota. Rótulos:
+probabilidade **baixa/média/alta** por rota. A seção Predict formal (contagem de janelas
+alta-confiança) continua como em D-057; esta é a camada narrativa no corpo editorial.
+Aplicado no rascunho de hoje com dado real do forecast (`esfera→smiles`, typicalPercent
+70, confidence `em-formacao`). TL Score determinístico permanece intocado — a
+probabilidade explica a nota, nunca a altera.
+
+## D-060 — 6 correções de dado APLICADAS em produção + verificação pré-publicação construída
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2 (fecho)
+Gate do operador executado: as 6 correções de D-059 gravadas em produção, com trilha
+completa em `campanha_versoes` (9 eventos `correcao_d060_*`, payload antes/depois em cada
+um). Antes→depois:
+1. **AliExpress ×2** (`livelo-aliexpress-compra-2026-07-{21,23}`): tipo `compra`→
+   `shopping`, percentual 25→null (era "25 pontos/dólar", não 25%), bruto 60→null,
+   veredito → "Não confirmado" via `conta_nao_calculavel` (D-050.1). Rescore em revisão.
+2. **Caixa** (`caixa-desconhecido-cartao-2027-12-31`): percentual 100→null (cashback de
+   IOF = tarifa, não bônus de pontos), bruto 50→null, cnc; candidata a `nao_campanha`
+   via D-018 — decisão humana pendente.
+3. **Bradesco→Livelo**: tipo `transferencia`→`sorteio`.
+4. **BB Ourocard** (`bb-smiles-cartao-2026-12-31`): fonte linkada não sustenta o "5,5
+   milhas/dólar" → fila de revisão (identidade_id=NULL, convenção D-041; uuid anterior
+   preservado em notes/trilha).
+5. **BNB→Azul**: vigência **2024-07-17→2026-07-17** (bug de inferência de ano), estado
+   `historica`→`ultimos_dias` (vence hoje), codes normalizados `bnb`→`azul_fidelidade`,
+   `discard_reason` obsoleto ("vigencia encerrada em 2024") removido. Identidade e
+   rescore pendentes de revisão. **A oferta mais quente do dia voltou ao radar.**
+6. **Flying Blue**: canônica (`flyingblue-flyingblue-compra-na`) ganhou vigência
+   extraída da matéria (28/07/2026), `indeterminada`→`detectada`; duplicata
+   (`flyingblue-desconhecido-compra-na`) consolidada (`discard_reason=
+   duplicado_consolidado_d060`, identidade→revisão).
+
+**Verificação pré-publicação** (`v2/lib/verificacao/pre-superficie.mjs`, 11/11 testes):
+roda antes de QUALQUER superfície editorial (Digest + radar de ativos + M3). Checks —
+todos **flag para revisão, nunca descarte** (instrução explícita do operador: melhor
+mandar item bom pra revisão que sumir com promoção real): (a) `vigencia_bug_ano`
+(vigência >180d antes do first_seen — padrão BNB) e `valor_sem_data` (conta fechada sem
+vigência — padrão Flying Blue); (b) tipo suspeito: `acumulo_em_parceiro` (paridade
+"por dólar/real" com tipo compra/transferência — AliExpress), `sorteio` (Bradesco),
+`beneficio_tarifa` (IOF/anuidade com percentual — Caixa); (c)
+`confianca_baixa_para_destaque` (nota ≥60 com `[confianca:baixa]` — bloqueia
+headline/"melhor do dia", não remove da listagem). **Caso BB (número ausente da fonte)
+documentado como NÃO automatizável por heurística local — dono é a corroboração de
+termos TIER 1 (D-045).**
+
+**Medição histórica (volume de revisão):** nas **58 vivas** hoje, pós-correções: **0**
+flags estruturais e **2** bloqueios de destaque (`flyingblue-flyingblue` 65 e
+`costa_cruzeiros` 60 — ambos confiança baixa; 35/58 vivas são confiança baixa no total,
+mas só essas 2 cruzam o limiar de destaque). No backlog histórico completo (3.632, quase
+todo ingerido retroativamente nesta semana): ~1,6–1,9k bateriam o check de bug-de-ano
+(ingestão retroativa de campanhas já vencidas — sem ação, o FSM já as trata como
+históricas), 554 valor-sem-data, 40 tipo-suspeito, 119 confiança-baixa≥70. **Volume
+operacional projetado: ~0 a poucas unidades/dia** — administrável. Integração da
+passada no pipeline vivo (ingest + montagem) entra junto com o backport v4 em curso.
+
+## D-061 — P2 aplicado (teto de sanidade de percentual por tipo) + Caixa reclassificada para só-Clipping
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2
+**(1) P2 — teto de sanidade "ghosts" (espelha D-041 R5, teto por tipo):** flag de revisão
+em `percentual` acima do teto — **200 para os tipos gerais** (transferência/cartão/
+hotelaria..., onde bônus real raramente passa de 130) e **piso 300 para compra/clube**
+(onde 300–375% são reais — a própria Smiles 375 TIER1). Aplicado em produção:
+**193 campanhas flagadas** (164 compra/clube >300, 29 demais >200; ghosts típicos:
+cartões com "120.000%" = pontos de boas-vindas lidos como percentual), trilha 1:1 em
+`campanha_versoes` (`flag_p2_teto_sanidade`; um lote de trilha duplicado por engano meu
+foi removido — 193 eventos finais). **Nada reclassificado automaticamente**: flag manda
+para revisão e tira da ECDF no próximo rescore; item real flagado (ex. Smiles 375)
+continua publicável. Check permanente `checkSanidadePercentual` em
+`v2/lib/verificacao/pre-superficie.mjs` (12/12 testes). Interpretação registrada do
+"percentual>200 (piso 300)": teto por tipo — se o operador quis outra leitura, corrigir
+aqui.
+**(2) Caixa (D-060) — só Clipping:** `used_in=["clipping_only"]` + nota na campanha
+(trilha `d061_caixa_so_clipping`). Efeito no rascunho: a Caixa ESTAVA visível na seção
+"Cartões e bancos" — removida de lá e movida para o Clipping com link da fonte e o
+enquadramento "benefício de tarifa do cartão (cashback do IOF), não acúmulo de pontos —
+fora da régua TL". `content/editions/0001.json` atualizado (JSON canônico → rascunho
+regenerado por bloco). Clipping foi de 6 para 7 itens; validate e 191/191 verdes.
+
+## D-062 — Rascunho nº 1 (layout v4.1) aprovado visualmente pelo operador
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2
+Após a rodada v4.1 (Ofertas ativas em cards empilhados — nunca `columns`, que
+quebrava no parse do Beehiiv e vazava o milheiro da margem; itens sem confirmação
+na MESMA seção com selo "AGUARDANDO CONFIRMAÇÃO OFICIAL" + fonte linkada; bloco
+"No radar" removido do Sinal do dia), o operador respondeu **"aprovado"** — lido
+como a **aprovação visual final do rascunho da edição nº 1**
+(`post_f7b2c959`, status draft). O que NÃO muda com esta aprovação:
+**auto-publish continua desligado** e a **contagem dos 5 dias úteis é decisão
+do operador** — não inicia sozinha (regra de sessão reafirmada).
+**P2 (D-061):** a evidência da premissa incorreta foi apresentada (a Smiles 375
+FOI flagada — 375 > 300; ~164 flags compra/clube incluem compras reais 350–375).
+O teto permanece no estado vigente `{compra: 300, clube: 300, padrao: 200}`
+(opção A — manter). Se o operador quis a opção B (teto 400 para compra/clube,
+banda real passa limpa e ghosts 400+ continuam flagados), corrigir aqui.
+
+## D-063 — M2.5: painel de custo LLM (llm_jobs + model_registry), emissores instrumentados
+
+Slice `SPEC-SLICE-PAINEL-CUSTO-LLM.md` executada. **Schema aditivo** (migration
+`015_llm_jobs.sql`, aplicada): `llm_jobs` (ledger de telemetria — tokens/latência/
+status por chamada; `custo_usd` fica NULL no insert) e `model_registry` (modelo +
+preço por 1k tokens por estágio). **SEM seed de preço** (INV-03): `model_registry`
+nasce vazia; preço real é INSERT a aprovar depois com fonte+data (mesmo padrão de
+`custo_base_moeda`/011). Índice de dia ancorado em UTC (`(criado_em at time zone
+'UTC')::date`) porque `timestamptz::date` não é IMMUTABLE.
+
+**Custo é derivado no painel, não no emissor** (INV-12): `custoUsd(tokens, preço)`
+em `v2/lib/painel-custo-llm.mjs`. Preço ausente OU tokens ausentes ⇒ custo **null**,
+nunca 0 coagido (0 mentiria "de graça"). Golden `painel-custo-llm.test.mjs` (12
+casos) cobre a regra. Painel = `agregarPorDiaEstagio` (espelho da consulta §4) +
+relatório de terminal `scripts/painel-custo-llm.mjs` (`npm run painel:custo`); UI
+React fica como próximo passo (spec §7).
+
+**Emissores reais instrumentados** (antes: radar tinha ZERO telemetria de custo):
+- `scripts/collect/llm.mjs` — `sameProduct`/`classifyPromo`/`extractListing` gravam
+  `radar_vpm_match`/`_promo`/`_extracao` via `llm-ledger.mjs` (mock-safe; modo mock
+  não gera job — sem token real, INV-03).
+- Edge fn `campaigns` (extração) — **deployada v16** (era v15): grava
+  `extracao_campanhas` por notícia, aditivo e não-bloqueante (falha no ledger não
+  derruba extração). Cron `extract-2h` passa a popular `llm_jobs` a cada rodada.
+
+**Meta de custo por edição = PENDENTE, não fabricada** (spec §5, INV-03): nenhum
+dos estágios roda *por causa* de uma edição — extração e Radar VPM são coleta
+contínua, e o Digest Engine (única peça que gastaria LLM por edição) não existe.
+Custo marginal de uma edição hoje ≈ R$0 (nada gasta por causa dela). Além disso, o
+custo em USD dos estágios existentes é hoje **não confirmado** — `model_registry`
+sem preço aprovado. Revisitar quando o Digest Engine especificar suas chamadas.
+
+## D-064 — Track A (M2.7 pipeline) + naming: A1–A4 construídos, Track B bloqueado
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2 (fechamento)
+
+**A1 — pré-superfície no pipeline vivo.** `v2/lib/verificacao/integrar.mjs`
+(`anotarRevisao`) liga a verificação D-060/D-061 ao ingest: cada candidato passa
+pelos checks ANTES de qualquer estado publicável; flag nunca descarta nem
+reclassifica — grava trilha `campanha_versoes` (`evento='flag_pre_superficie'`,
+`payload_antes=null`) e alimenta a fila. Wired em `rodar-producao.mjs` (idempotente
+por dia). Prova sobre os 58 vivos reais: **55 limpos, 3 revisão** (Smiles 375 P2 +
+flyingblue 65 e costa_cruzeiros 60 confiança-baixa); trilha gravada e idempotente;
+os 3 seguem vivos. Golden `integrar.test.mjs` (BNB reintroduzido: marcado, não
+enterrado, devolvido byte-a-byte).
+
+**A2 — runner diário `npm run daily`.** `scripts/daily.mjs` ponta a ponta:
+resolve edição → verifica (fila de revisão) → render → **gate único** → rascunho
+**draft-only idempotente por data** (ledger `content/daily-status.json`), NUNCA
+envia. Sem creds Beehiiv/Supabase → mock/`--campaigns` snapshot. Agendamento
+`.github/workflows/daily.yml` (`workflow_dispatch` + `schedule` COMENTADO a 09:30
+UTC/06:30 BRT seg-sex — só o operador liga, honrando "não inicia a contagem
+sozinho"). Execução autônoma provada (edição nº1, snapshot real, gate VERDE,
+2ª execução = noop). Achado do próprio runner: `ofertasAtivas` guardava o display
+`smiles→smiles`; alinhado ao código canônico `smiles→sem_destino` (rotaDisplay
+segue mostrando "Smiles → Smiles").
+
+**A3 — gate único bloqueante (M2.4).** `v2/lib/gate-unico.mjs` `gate(edition,ctx)`
+encadeia schema (`scripts/validate`) → dado (`pre-superficie`, NÃO bloqueia — flag
+é revisão, D-060) → editorial (`gate-5-5`), DELEGANDO (goldens dos módulos seguem
+autoridade). Golden `gate-unico.test.mjs` (7 casos). Suíte não-react **verde**
+(428) + painel 12; as 3 falhas remanescentes (`react` ausente no container) são
+ambientais, não regressão.
+
+**A4 — aprovação de 1 clique + fila de revisão.** Runner emite
+`out/daily/NNNN-revisao.md` (itens flagados, motivo, dados) que o operador vê
+ANTES de aprovar. Desenho para ratificação em `v2/M2/DESENHO-APROVACAO-1-CLIQUE.md`:
+recomenda o workflow `Beehiiv Publish` (`confirm: PUBLICAR`) como o "1 clique"
+oficial — separa rascunho automático (draft-only) do envio humano; auto-publish
+impossível por acidente.
+
+**Track B (6 segmentos Beehiiv) — BLOQUEADO, correto (INV-03 / regra 9).** Os 6
+nomes existem (`iniciante | emissao planejada | heavy user | alta renda |
+completar saldo | cashback first`, D-008), mas o CRITÉRIO (`where` DSL) não existe
+e não é construível: sem `custom_field` `perfil` e sem mecanismo de captura. Já
+registrado como blocker aberto na spec (SPEC-SLICE-VERIFICACAO-BEEHIIV-MCP §3/§5).
+**Sub-decisão de produto do operador**: (a) criar o custom_field `perfil` +
+(b) definir a captura (quiz de onboarding). Nada criado (não se chuta segmento).
+
+**Naming (Track D).** "The Loyal" é o nome próprio (CLAUDE.md). Corrigidos os leaks
+de "The Loyalty" no wordmark do site (`components/Logo.tsx`), masthead do web
+archive (`scripts/render-web.mjs`), media kit (`assets/logo/*`) e artefatos `out/*`;
+golden `tests/brand.test.mjs` robusto a tag-split. "loyalty" substantivo comum e
+nomes de arquivo de sistema preservados. Título/subject do rascunho Beehiiv
+corrigidos via MCP para "The Loyal Daily".
+
+**Estado do M2.** Slices de código do M2.7 (A1–A4) + M2.5 (D-063) fechadas e
+verdes; naming alinhado. **Falta para o M2 fechar de fato:** (1) ratificar o
+desenho de aprovação (A4); (2) resolver a sub-decisão de produto do Track B
+(segmentos); (3) o operador **iniciar a contagem dos 5 dias úteis** (descomentar o
+`schedule`) — decisão dele, não automática; (4) `DROP` do backup frio
+`campaigns_bkp_prev2_20260716` — decisão consciente do operador no fecho, nunca
+antes. Auto-publish permanece OFF.
+
+## D-065 — 4 decisões do operador no fecho do M2 (auto-publish, segmentos, cadência, backup)
+**Data:** 2026-07-17 · **Status:** Aplicada · **Milestone:** M2
+
+**(1) Auto-publish com rating mínimo.** O operador liberou o envio automático,
+condicionado a um mínimo — abaixo dele, 1 clique. Rating implementado como
+**confiança de dado** (não a nota da oferta): edição é auto-elegível quando
+**gate VERDE + fila de revisão VAZIA** (zero flags de pré-superfície, D-060).
+Qualquer pendência → abaixo do mínimo → rascunho + 1 clique. `avaliarRating` em
+`scripts/daily.mjs` (+ golden `daily.test.mjs`, 4 casos). Envio real só quando
+`rating.auto && env TL_AUTOPUBLISH=on`, com **trava dura de reenvio** (uma vez
+enviado no dia, nunca reenvia). Verificado: a edição nº1 (3 flags) fica em
+rascunho mesmo com auto-publish ligado — o mínimo segura o que precisa de olho
+humano. Kill-switch: `TL_AUTOPUBLISH=off`.
+
+**(2) 6 segmentos Beehiiv — executado.** Criado o `custom_field` **perfil**
+(list, id `3f809670-5eba-4a8b-8722-51d442e43ac4`) e os 6 segmentos dinâmicos
+(iniciante / emissao planejada / heavy user / alta renda / completar saldo /
+cashback first), cada um `custom_field(perfil)=valor AND status=active`. Existem
+e nomeados (M2.7/D-008 satisfeito). Ficam com 0 membros até a **captura** popular
+o campo — o mecanismo (quiz de onboarding) segue como peça de produto pendente,
+fora deste passo.
+
+**(3) Cadência iniciada, sem travar nada.** `schedule` do `daily.yml` LIGADO
+(09:30 UTC / 06:30 BRT, seg-sex) + `TL_AUTOPUBLISH=on`. Edição limpa envia
+sozinha; qualquer flag vira rascunho + 1 clique. "Vamos acompanhando" — nada é
+bloqueado com base nisso; monitorar e ajustar o rating se necessário.
+
+**(4) Backup frio — RETIDO (melhor decisão).** `campaigns_bkp_prev2_20260716`
+**não** é dropado agora: ligar a cadência com auto-publish é justamente quando o
+rollback importa. Mantido até a cadência automatizada provar estabilidade; o
+`DROP` volta como decisão consciente depois, não neste momento.
+
+## D-066 — TRAVA DA FASE DE CALIBRAÇÃO: o corpus calibra os motores, nunca os substitui
 **Data:** 2026-07-17 · **Status:** Aprovada (trava inviolável) · **Milestone:** Calibração (accuracy loop, brief §13) · **Origem:** abertura do chat de calibração por corpus
 
 Trava inegociável de toda a fase de calibração, registrada **antes** de qualquer agente. O corpus real (40k+ notícias processadas, ~18 meses, base sã pós-recanonicalização) **calibra os parâmetros dos motores determinísticos** — constantes de funções puras versionadas (`score_pesos`, `derivacao_config`, `custo_base_*`, limiar do gate D-048). **Nunca** substitui os motores por um modelo aprendido/ML.
@@ -321,8 +795,8 @@ Trava inegociável de toda a fase de calibração, registrada **antes** de qualq
 
 Generaliza e sela o espírito de D-022/D-032/D-037/D-038 (parâmetro = versão, não hardcode) como **regra permanente da fase**.
 
-## D-052 — Operação da calibração: guarda de base de worktree · ledger antes de auto-publish · um número de cobertura entre chats
-**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Calibração · **Origem:** aceite de A3 + higienes do operador · filho de D-051
+## D-067 — Operação da calibração: guarda de base de worktree · ledger antes de auto-publish · um número de cobertura entre chats
+**Data:** 2026-07-17 · **Status:** Aprovada · **Milestone:** Calibração · **Origem:** aceite de A3 + higienes do operador · filho de D-066
 
 Três decisões operacionais da fase, aprovadas ao aceitar a metade honesta do Agente 3.
 
@@ -332,24 +806,24 @@ Três decisões operacionais da fase, aprovadas ao aceitar a metade honesta do A
 
 **3. Cobertura de predict = UM número oficial entre chats, conservador, sobre a janela confiável.** A foto do A3 tem dois números com definição explícita: **119** (série medida só por `first_seen`, conservador) e **163** (`first_seen→last_seen`, teto otimista). Inclinação de produto credibility-first: **o conservador (119) é o número público**, 163 como teto. **Porém a foto do A3 foi calculada sobre a série como-está**, que inclui a **corrupção temporal sistemática** que o chat de predict acabou de diagnosticar (`v2/predict/DIAGNOSTICO-CAUSA-RAIZ-TEMPORAL.md`, branch `predict-engine-backtesting-six5pq`: **75,6% dos transfer datados com ano atrasado 1–6 anos**; janela confiável **~24m, não 36**). Logo: **os 163/119 são PROVISÓRIOS** e devem ser **recalculados sobre a janela temporal confiável definida pelo chat de predict** antes de virarem número público. **Não cravar a fronteira aqui isolado; alinhar com o chat de predict** — os dois chats não podem afirmar cobertura divergente. Os 163 podem encolher quando filtrados por data confiável.
 
-## D-053 — Resolução dos gates de calibração (A1/A2/A3)
+## D-068 — Resolução dos gates de calibração (A1/A2/A3)
 **Data:** 2026-07-17 · **Status:** Aprovada (com 2 pendências nomeadas) · **Milestone:** Calibração · **Origem:** ruling do operador sobre os três PRs
 
 **A1 — score (#107): MANTER v1; `shrink_k` pendente de aval explícito.**
 - **`score_pesos.v1` (pesos): MANTIDO.** A medição confirmou que nenhum movimento de peso ganha discriminação honesta — só realoca o ponto fixo da banda 65 (D-042). O gargalo é **cobertura de CPM/ratio** (frente de fontes + janela confiável do predict), não o vetor.
 - **`derivacao.v1`: MANTIDO.** Buckets batem com o corpus.
-- **`shrink_k` 5→3: NÃO versionar sem aval explícito — o movimento AFROUXA.** Formula `score.mjs:46`: `pct_efetivo = (pct_bruto·base_n + 0,5·shrink_k)/(base_n+shrink_k)`. Baixar `shrink_k` **reduz** o puxão à neutra 0,5 → rota de base curta com percentil bruto alto sobe (banda neutra 44,6→40,4%). Isso **aumenta risco de publicação** em rota mal-suportada → gated (D-051). Recomendação registrada: **manter `shrink_k=5`** (ganho modesto, v1 saudável, credibility-first). Só versiona se o operador aprovar explicitamente o afrouxamento.
+- **`shrink_k` 5→3: NÃO versionar sem aval explícito — o movimento AFROUXA.** Formula `score.mjs:46`: `pct_efetivo = (pct_bruto·base_n + 0,5·shrink_k)/(base_n+shrink_k)`. Baixar `shrink_k` **reduz** o puxão à neutra 0,5 → rota de base curta com percentil bruto alto sobe (banda neutra 44,6→40,4%). Isso **aumenta risco de publicação** em rota mal-suportada → gated (D-066). Recomendação registrada: **manter `shrink_k=5`** (ganho modesto, v1 saudável, credibility-first). Só versiona se o operador aprovar explicitamente o afrouxamento.
 - **Registro:** a calibração de A1 é um **resultado negativo bom** — mediu e não precisou mexer no vetor.
 
 **A2 — golden em escala (#108): critério N=400 APROVADO; R1/R2 decididos; R5 pendente de critério.**
 - **Critério APROVADO:** N=400 (280 pos / 120 neg), estratos por **tipo canônico** (não pelo tipo bruto do extrator — R3), lado-único, tempo (18m), programa, divergência; método determinístico `md5(estrato‖id)`; proveniência por item.
-- **R1 APROVADO — "até X%" = teto de escala oculta; percentual do público geral = `null`.** Generalização corpus-wide do D-051/caso azul: o teto do blog ("até 120%") **não** é a taxa do público geral; tratá-lo como taxa geral foi a raiz do 115% fantasma. `geral` fica `null` até a fonte oficial dar a escala. Aumenta cautela (livre), mas é convenção de rótulo → aprovada explicitamente. Afeta ~159 candidatos; **maior impacto da calibração.**
+- **R1 APROVADO — "até X%" = teto de escala oculta; percentual do público geral = `null`.** Generalização corpus-wide do D-066/caso azul: o teto do blog ("até 120%") **não** é a taxa do público geral; tratá-lo como taxa geral foi a raiz do 115% fantasma. `geral` fica `null` até a fonte oficial dar a escala. Aumenta cautela (livre), mas é convenção de rótulo → aprovada explicitamente. Afeta ~159 candidatos; **maior impacto da calibração.**
 - **R2 DECIDIDO — cashback de cartão fechado = `nao_campanha/perk` (D-018), COM teste de fronteira.** Regra-mãe: vantagem de cartão que não é ponto/milha/**cashback transferível** fica fora. **Teste (aplica o teste, não a palavra "cashback"):** o cashback é **transferível/sacável** (vira ponto transferível ou saldo resgatável → **entra**, é valor) ou fica **preso como desconto no próprio cartão** (→ **fora**, é perk)? Sem o teste o rotulador barraria cashback legítimo junto com perk.
-- **R5 PENDENTE — fronteira shopping vs bonus_acumulo.** Precisa congelar antes da massa; critério proposto trazido ao operador (ver relato do turno), aguarda ratificação. Sem R5 ratificado, a rotulação das 400 **não dispara** (GATE D-051).
+- **R5 PENDENTE — fronteira shopping vs bonus_acumulo.** Precisa congelar antes da massa; critério proposto trazido ao operador (ver relato do turno), aguarda ratificação. Sem R5 ratificado, a rotulação das 400 **não dispara** (GATE D-066).
 - **PMD real:** o primeiro `pontos_mais_dinheiro` real do corpus entra no escopo da massa para **aposentar os 4 sintéticos e o asterisco D-030** — mas o asterisco só sai quando o tipo tiver **base real suficiente**; até lá, sintéticos ficam marcados.
 
 **A3 — gate + predict (#106): metade aceita; cobertura PROVISÓRIA até a janela confiável.**
-- Foto de cobertura (163/119 aptos) **provisória, marcada "sobre série não-corrigida"**. O chat de predict fechou o diagnóstico temporal (janela confiável **~24 meses**, bug vivo na extração, Fase 1a aprovada para estancar). A cobertura **recalcula sobre a janela confiável** definida pelo predict antes de virar número público — **um só número oficial entre os dois chats** (D-052.3). Os 163 podem encolher filtrados por data confiável.
+- Foto de cobertura (163/119 aptos) **provisória, marcada "sobre série não-corrigida"**. O chat de predict fechou o diagnóstico temporal (janela confiável **~24 meses**, bug vivo na extração, Fase 1a aprovada para estancar). A cobertura **recalcula sobre a janela confiável** definida pelo predict antes de virar número público — **um só número oficial entre os dois chats** (D-067.3). Os 163 podem encolher filtrados por data confiável.
 
 **Gate de execução:** versiona só o aprovado; a massa do golden só roda após (1) direção do `shrink_k` confirmada [trazida: afrouxa → gated] e (2) critério de R5 ratificado. Nada versiona sem aval por parâmetro.
 
@@ -359,7 +833,7 @@ Três decisões operacionais da fase, aprovadas ao aceitar a metade honesta do A
 - **R1 ESTENDIDO A SHOPPING.** "Até X pontos por real no Shopping" é **teto de catálogo** (poucas lojas dão X, a maioria 1–2), **não** a taxa geral do portal. Mesma convenção do R1: taxa de shopping cotada "até X" = teto → taxa geral **indeterminada**; a acionável é a da loja específica. O rotulador não crava "10 pts/real" como taxa do portal inteiro.
 - **Massa liberada:** rotulação N=400 com critério + R1(+shopping) + R2 + R5; inclui o PMD real; depois re-mede os gates (rejeição, vigência, matcher) contra o golden grande (tira o asterisco in-sample dos 86). **Números da massa/gates só ficam PÚBLICOS após revisão do operador** (número público passa pelo operador). Retorno exigido: gates re-medidos + **amostra dos 159 candidatos de divergência sob R1 (antes→depois)** — o teste real da convenção-guia em escala.
 
-## D-060 — Gate ativo: recall da verificação pré-publicação vs. histórico conhecido (BNB→Azul, Flying Blue); P1 de A1 já aplicado upstream
+## D-069 — Gate ativo: recall da verificação pré-publicação vs. histórico conhecido (BNB→Azul, Flying Blue); P1 de A1 já aplicado upstream
 **Data:** 2026-07-17 · **Status:** Registrada (gate em espera; achado de reconciliação aplicado) · **Milestone:** Calibração · **Origem:** instrução do operador + achado ao sincronizar com `loyal-v2-architecture-nfvoh1`
 
 **(1) Gate ativo (standing task, não bloqueia nada agora).** Quando o PRINCIPAL entregar o desenho da verificação pré-publicação (checks de vigência/tipo/confiança), a CALIBRAÇÃO mede recall dela contra o histórico conhecido antes de qualquer threshold ser aprovado. Objetivo do operador, explícito: **assertividade sem sumir com oferta real** — prefere guardrail com mais revisão manual a um com itens desaparecendo silenciosamente. Se recall ruim (esconde mais do que pega), reporta ANTES da aprovação.
@@ -376,6 +850,9 @@ Quando o desenho da verificação chegar: medir se ela teria flagado/escondido e
 **Achado colateral registrado pelo principal, não corrigido ainda (fora do escopo daquele commit):** `rescore-2.mjs` nunca chamou `marcarNaoValorLadoUnico` no próprio pipeline de output — rodar o runner sobre a base inteira (em vez do escopo restrito) ressuscitaria os 1.334 brutos que D-050.1 zerou (619 deles ≥70). Relevante para a calibração: os vetores só ficam genuinamente fechados quando esse gap for reconciliado — fica registrado, não é decisão da calibração resolver.
 
 **(3) Estado de sincronização — flag honesto, sem ação unilateral.** `loyal-v2-architecture-nfvoh1` está **23 commits à frente** do base da calibração (inclui v15 deployada, coleta TIER1 em produção, Digest Engine v3, primeiro rascunho do Daily). Não fiz rebase — três PRs abertos (#106/#107/#108) apontam para o base atual e um rebase agora exige coordenação (branches dos agentes, PRs). Sincronizar é decisão do operador/principal, registrada aqui para visibilidade, não ação silenciosa.
+
+**(4) Atualização pós-sync (mesmo turno) — o gate deixa de ser "standing" e vira mensurável agora.** Ao concluir a sincronização (rebase/merge sobre `loyalty-landing-page-v1-7vbjq7`, ver reconciliação de branch), confirma-se: **a verificação pré-publicação FOI construída** (`v2/lib/verificacao/pre-superficie.mjs`, real D-060 upstream, 11/11 testes) e já mede exatamente os padrões do fixture acima (`vigencia_bug_ano` = padrão BNB; `valor_sem_data` = padrão Flying Blue), com **medição própria nas 58 vivas: 0 flags estruturais, 2 bloqueios de destaque** (confiança baixa, não remoção). **P2 também está resolvido** (D-061, teto 200/piso 300 por tipo — quase idêntico à proposta de A1), no MESMO arquivo (`checkSanidadePercentual`). **Ação da calibração agora:** medir formalmente o fixture BNB/Flying Blue contra `pre-superficie.mjs` (confirmar que os checks `vigencia_bug_ano`/`valor_sem_data` capturam os dois padrões-fonte, não só padrões sintéticos) e ampliar a medição de recall para o histórico mais amplo — sucessor natural desta entrada, a registrar quando a medição rodar.
+
 
 ## Regra de execução
 Aplicar GSD2 (Milestone > Slice > Task) e structured-dev-workflow. Cada slice fecha com resumo `gsd-output-formatter`. **M1 fechado e aprovado (D-013).** **D-014 ENCERRADO como bloqueio (2026-07-17):** re-score-1 (base sã) e re-score-2 (CPM vivo) gravaram e fecharam **verificados** (checksum byte-a-byte, agregados, self-loops=0, golden verde, anomalias idênticas). O backup cumpriu a função — a trava lógica sai. `campaigns_bkp_prev2_20260716` **retido como ARQUIVO FRIO** (rollback da cadeia M2 inteira, 3.610 linhas, schema legado) **até o fecho do M2**; `DROP` é irreversível → decisão consciente do operador ao fechar M2, nunca no meio. Não descartar agora.

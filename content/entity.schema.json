@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://theloyalty/entity.schema.json",
-  "title": "The Loyalty — Registro canônico de Entities",
+  "title": "The Loyal — Registro canônico de Entities",
   "description": "Camada de memória do EKS (RFC-001 §4.3 / M-4): coisas duráveis do domínio (programas, bancos, varejo, canais) com identidade canônica estável. Reconcilia menções livres ('Livelo', 'livelo') a um único objeto, base de lineage e acúmulo entre edições.",
   "type": "object",
   "additionalProperties": false,

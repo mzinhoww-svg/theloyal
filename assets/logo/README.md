@@ -1,4 +1,4 @@
-# The Loyalty — Sistema de logo v1
+# The Loyal — Sistema de logo v1
 
 Marca **100% tipográfica** (wordmark Fraunces) + **monograma TL construído** (geometria fixa,
 font-independente). Zero gradiente, zero sombra, zero ícone anexado. Segue

@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 3,
+  "number": 1,
+  "date": "2026-07-17",
+  "weekday": "SEXTA-FEIRA",
+  "publishTime": "8H00",
+  "readingMinutes": 4,
+  "subject": "The Loyal Daily — sexta 17/07: Smiles com até 375% na compra fecha hoje; transferência bonificada sem bônus forte",
+  "preheader": "Só uma promoção confirmada hoje — e ela só vale em casos específicos. O resto do dia ficou nos cartões e bancos.",
+  "signal": "Hoje não tem oferta boa confirmada. A única — 375% de bônus na compra de pontos Smiles — só vale em casos bem específicos, e fecha hoje.",
+  "resumoDoDia": "A promoção é da própria Smiles: assinantes do Clube compram pontos com até 375% de bônus, o que deixa o milheiro em R$ 16,84. Parece muito, mas a nota ficou em TL Score 55 — “Só para casos específicos”: faz sentido para quem já tem um resgate planejado e precisa completar saldo. Para todo o resto, é caro. Vence hoje (17/07).",
+  "ofertasAtivas": [
+    {
+      "origem": "smiles",
+      "destino": "sem_destino",
+      "tipo": "compra",
+      "percentual": 375,
+      "prazo": "2026-07-17",
+      "leitura": "casos-especificos",
+      "cpm": "R$ 16,84",
+      "publico": "Clube"
+    }
+  ],
+  "deals": [],
+  "radarSemConfirmacao": [
+    {
+      "titulo": "Banco do Nordeste → Azul Fidelidade: até 110% de bônus",
+      "detalhe": "80% de bônus de base para assinantes do Clube e 50% para os demais",
+      "url": "https://pontospravoar.com/transfira-pontos-banco-nordeste-azul-fidelidade-ate-110-porcento-bonus/",
+      "fonte": "pontospravoar",
+      "nota": null,
+      "vence": "2026-07-17"
+    },
+    {
+      "titulo": "Livelo → Hilton Honors: 50% de bônus até 31/07",
+      "detalhe": "a melhor nota do dia — nicho hotelaria",
+      "url": "https://pontospravoar.com/livelo-oferece-50-porcento-bonus-transferencia-hilton-honors/",
+      "fonte": "pontospravoar",
+      "nota": 65,
+      "vence": "2026-07-31"
+    },
+    {
+      "titulo": "Esfera: compra de pontos com 50% de desconto",
+      "detalhe": "campanha de aniversário do parceiro — vale mais para quem já tem uso claro para os pontos",
+      "url": "https://passageirodeprimeira.com/pp-15-anos-compre-pontos-esfera-com-50-de-desconto",
+      "fonte": "passageirodeprimeira",
+      "nota": 63,
+      "vence": null
+    },
+    {
+      "titulo": "Flying Blue: até 45% OFF na compra de milhas até 28/07",
+      "detalhe": "desconto varia por lote; regra ainda não confirmada no site oficial do programa",
+      "url": "https://passageirodeprimeira.com/flying-blue-oferece-ate-45-de-desconto-na-compra-de-milhas-3/",
+      "fonte": "passageirodeprimeira",
+      "nota": null,
+      "vence": "2026-07-28"
+    }
+  ],
+  "predictNarrativa": {
+    "rotaOrigem": "esfera",
+    "rotaDestino": "smiles",
+    "historicoTipicoPercent": 70,
+    "probabilidade": "em-formacao",
+    "texto": "O Predict acompanha a rota Esfera → Smiles (histórico típico de bônus na faixa de 70%). Por ora, a base histórica da rota ainda está em formação — sem promoção de transferência à vista. O recorte completo do Predict, com as janelas acompanhadas, sai no Digest Pro."
+  },
+  "fechaLogo": [
+    {
+      "tag": "VENCE HOJE",
+      "text": "Compra de pontos Smiles com até 375% de bônus para assinantes do Clube termina hoje (17/07). Milheiro a R$ 16,84 — nota TL 55, só para quem precisa completar saldo de um resgate já planejado.",
+      "cpm": "R$ 16,84 por milheiro",
+      "url": "https://www.smiles.com.br",
+      "vigencia": "2026-07-17"
+    },
+    {
+      "tag": "VENCE HOJE",
+      "text": "Transferência Banco do Nordeste → Azul Fidelidade com até 110% de bônus termina hoje (17/07) — 80% de base para assinantes do Clube, 50% para os demais. Ainda sem confirmação oficial no site do programa.",
+      "url": "https://pontospravoar.com/transfira-pontos-banco-nordeste-azul-fidelidade-ate-110-porcento-bonus/",
+      "vigencia": "2026-07-17"
+    },
+    {
+      "tag": "VENCE HOJE",
+      "text": "C6 → LATAM Pass paga 25% de bônus na transferência só até o fim do dia (17/07). A conta não fecha: nota TL 36, Evitaria — bônus baixo demais para justificar a transferência.",
+      "url": "https://passageirodeprimeira.com/so-hoje-latam-pass-oferece-25-de-bonus-nas-transferencias-de-pontos-do-c6-bank/",
+      "vigencia": "2026-07-17"
+    }
+  ],
+  "cartoesBancosItens": [
+    {
+      "nome": "Itaú · cartões Azul",
+      "descricao": "até 5,25 pontos por dólar em compras nos cartões da parceria, campanha prorrogada até 30/09",
+      "url": "https://brasilturis.com.br/2026/06/29/azul-prorroga-campanha-de-ate-525-pontos-por-dolar-em-cartoes-itau/",
+      "fonte": "Brasilturis",
+      "status": "Ainda sem confirmação oficial",
+      "nota": null
+    },
+    {
+      "nome": "Itaú · cartão LATAM Pass",
+      "descricao": "até 5,25 milhas por dólar em compras no cartão, válido até 31/07",
+      "url": "https://www.melhorescartoes.com.br/cartao-latam-pass-turbinado-prorrogacao-jun26.html",
+      "fonte": "Melhores Cartões",
+      "status": "Ainda sem confirmação oficial",
+      "nota": null
+    },
+    {
+      "nome": "C6 → LATAM Pass",
+      "descricao": "25% de bônus na transferência de pontos, válido só até o fim do dia (17/07)",
+      "url": "https://passageirodeprimeira.com/so-hoje-latam-pass-oferece-25-de-bonus-nas-transferencias-de-pontos-do-c6-bank/",
+      "fonte": "Passageiro de Primeira",
+      "status": "Confirmada, mas fraca: TL 36, Evitaria",
+      "nota": 36
+    },
+    {
+      "nome": "Bradesco / Amex",
+      "descricao": "sorteio de 5 milhões de pontos Livelo entre clientes que cumprirem as condições da campanha",
+      "url": "https://passageirodeprimeira.com/bradesco-e-amex-sorteiam-5-milhoes-de-pontos-livelo/",
+      "fonte": "Passageiro de Primeira",
+      "status": "Sorteio não tem conta a fazer — sem nota",
+      "nota": null
+    }
+  ],
+  "clipping": [
+    {
+      "title": "Inter oferece 54% de desconto na compra de pontos Loop",
+      "url": "https://passageirodeprimeira.com/inter-oferece-54-de-desconto-na-compra-de-pontos-loop/",
+      "source": "passageirodeprimeira",
+      "tier": 2,
+      "summary": "Desconto anunciado pelo Super App em lotes de 1.000 a 20.000 pontos Loop, conversíveis em milhas, fatura ou cashback."
+    },
+    {
+      "title": "Esfera oferece até 5 pontos por real gasto na Nike, Lacoste e C&A",
+      "url": "https://passageirodeprimeira.com/esfera-oferece-ate-5-pontos-por-real-gasto-na-natura-casas-bahia-e-mais-2/",
+      "source": "passageirodeprimeira",
+      "tier": 2,
+      "summary": "Bônus por loja, com prazos de validade distintos entre elas; a da Nike vale até 17/07/2026."
+    },
+    {
+      "title": "Livelo oferece 25 pontos por dólar em compras no AliExpress",
+      "url": "https://passageirodeprimeira.com/livelo-oferece-ate-25-pontos-por-dolar-gasto-no-aliexpress-2/",
+      "source": "passageirodeprimeira",
+      "tier": 2,
+      "summary": "acúmulo turbinado em compras no parceiro; regra e teto ainda sem confirmação oficial"
+    },
+    {
+      "title": "Compra de dólares sem taxas no ARQ por R$ 5,14",
+      "url": "https://passageirodeprimeira.com/a-oferta-esta-chegando-ao-fim-compre-dolares-sem-taxas-no-arq-por-apenas-r-514/",
+      "source": "passageirodeprimeira",
+      "tier": 2,
+      "summary": "Conversão de reais para dólar digital sem IOF nem spread, limitada a R$ 10.000 por conta durante o período da Copa."
+    },
+    {
+      "title": "Embarque com reconhecimento facial chega à Qatar Airways",
+      "url": "https://pontospravoar.com/embarque-com-reconhecimento-facial-chega-a-qatar-airways/",
+      "source": "pontospravoar",
+      "tier": 2,
+      "summary": "Parceria com o Aeroporto Internacional de Hamad e a Sita elimina a apresentação de documentos em check-in, bagagem e embarque."
+    },
+    {
+      "title": "Hotéis em Belo Horizonte com diárias a partir de R$ 138",
+      "url": "https://pontospravoar.com/reserve-hoteis-belo-horizonte-diarias-partir-138-reais/",
+      "source": "pontospravoar",
+      "tier": 2,
+      "summary": "Seleção de hotéis Accor na cidade com faixa de preço para diferentes perfis de viagem."
+    },
+    {
+      "title": "Caixa dá 100% de cashback no IOF em compras internacionais até 2027",
+      "url": "https://passageirodeprimeira.com/aniversario-caixa-100-de-cashback-no-iof-em-compras-internacionais-ate-2027/",
+      "source": "passageirodeprimeira",
+      "tier": 2,
+      "summary": "benefício de tarifa do cartão (cashback do IOF), não acúmulo de pontos — por isso fica fora da régua TL"
+    }
+  ],
+  "oQueFechouSemana": [
+    {
+      "origem": "membership_rewards",
+      "destino": "hilton",
+      "tipo": "hotelaria",
+      "percentual": 20,
+      "encerrouEm": "2026-07-14"
+    },
+    {
+      "origem": "itau",
+      "destino": "azul_fidelidade",
+      "tipo": "transferencia",
+      "percentual": 115,
+      "encerrouEm": "2026-07-15"
+    },
+    {
+      "origem": "multiplos_cartoes",
+      "destino": "smiles",
+      "tipo": "transferencia",
+      "percentual": 70,
+      "encerrouEm": "2026-07-10"
+    },
+    {
+      "origem": "azul_fidelidade",
+      "destino": "inter",
+      "tipo": "transferencia",
+      "percentual": 115,
+      "encerrouEm": "2026-07-10"
+    },
+    {
+      "origem": "inter",
+      "destino": "azul_fidelidade",
+      "tipo": "transferencia",
+      "percentual": 115,
+      "encerrouEm": "2026-07-10"
+    },
+    {
+      "origem": "membership_rewards",
+      "destino": "lifemiles",
+      "tipo": "transferencia",
+      "percentual": 15,
+      "encerrouEm": "2026-07-15"
+    }
+  ],
+  "sources": [
+    {
+      "label": "Página oficial de compra Smiles",
+      "url": "https://www.smiles.com.br"
+    }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."
+}
