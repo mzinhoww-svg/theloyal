@@ -25,7 +25,8 @@ import { renderBeehiivHtml } from '../v2/lib/digest/render-beehiiv.mjs';
 import { renderEmail } from '../renderer/email.mjs';
 import { gate } from '../v2/lib/gate-unico.mjs';
 import { anotarRevisao } from '../v2/lib/verificacao/integrar.mjs';
-import { montarEdicaoDoDia, resolverNumeroEdicao, reconstruirConjuntoVivo, revalidarVigencia } from '../v2/lib/digest/montar-edicao.mjs';
+import { montarEdicaoDoDia, resolverNumeroEdicao, reconstruirConjuntoVivo, revalidarVigencia, filtrarVivos } from '../v2/lib/digest/montar-edicao.mjs';
+import { hojeSaoPaulo } from './lib.mjs';
 
 const LEDGER = 'content/daily-status.json';
 const OUT = 'out/daily';
@@ -210,7 +211,9 @@ async function upsertRascunho({ ed, html, hoje, publicar = false }) {
 
 async function main() {
   const opts = parse(process.argv.slice(2));
-  const hoje = opts.now || new Date().toISOString().slice(0, 10);
+  // 'hoje' no fuso de São Paulo (não UTC): uma rodada noturna BRT não pode
+  // escorregar para o dia seguinte na montagem/ledger/gate (M9).
+  const hoje = opts.now || hojeSaoPaulo();
 
   // 1+2. Fonte viva do dia + MONTAGEM da edição fresca (ou carga estática
   // quando um caminho de edição é passado explicitamente — back-compat).
@@ -239,8 +242,10 @@ async function main() {
     log('[1/5]', `edição MONTADA nº ${number} (${hoje}) → ${edPath} ${reused ? '(reusou arquivo do dia — idempotente)' : '(número novo)'}. Fonte: ${fonte}. deals=${ed.deals.length}, ofertasAtivas=${ed.ofertasAtivas?.length || 0}, fechaLogo=${ed.fechaLogo?.length || 0}, cartoesBancos=${ed.cartoesBancosItens?.length || 0}, fechouSemana=${ed.oQueFechouSemana?.length || 0}, clipping=${ed.clipping?.length || 0}.`);
   }
 
-  // 2. Verificação — pré-superfície sobre os candidatos vivos.
-  const vivos = campaignsFromDb.filter((c) => ['ativa', 'detectada', 'ultimos_dias'].includes(c.estado));
+  // 2. Verificação — pré-superfície sobre os candidatos vivos (mesma fonte única
+  // que o gate usa na camada de dado, para a fila do artefato e a do rating não
+  // divergirem — M8).
+  const vivos = filtrarVivos(campaignsFromDb);
   const { paraRevisao, resumo } = anotarRevisao(vivos, { hoje });
   log('[2/5]', `campanhas: ${fonte} — ${campaignsFromDb.length} linhas (${vivos.length} vivas). Pré-superfície: ${resumo.aprovados} limpas, ${resumo.para_revisao} para revisão.`);
   for (const { item, flags } of paraRevisao) log('[2/5]', `  · REVISÃO ${item.id}: ${flags.map((f) => f.flag).join(', ')}`);

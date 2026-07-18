@@ -124,6 +124,17 @@ export function pad(n) {
   return String(n).padStart(4, "0");
 }
 
+// Data de HOJE no fuso America/Sao_Paulo (YYYY-MM-DD). O runner roda em UTC no
+// CI; sem isto, uma rodada 21h–23h59 BRT cairia no DIA SEGUINTE (UTC) — montaria
+// a edição, o ledger e o gate para a data errada, quebrando a idempotência por
+// data. `en-CA` formata como YYYY-MM-DD. Aceita um Date injetável (teste).
+export function hojeSaoPaulo(d = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(d);
+}
+
 // Coleta recursiva de todas as strings de um objeto (para varrer emoji/urgência).
 export function collectStrings(node, out = []) {
   if (typeof node === "string") out.push(node);

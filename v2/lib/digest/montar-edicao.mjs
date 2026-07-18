@@ -25,6 +25,15 @@ import { mapVeredito } from './mapear-contrato.mjs';
 const DIA_MS = 24 * 60 * 60 * 1000;
 const WEEKDAYS = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
 
+// Fonte ÚNICA do que é "campanha viva" (surfaceável como oferta). Uma encerrada
+// nunca é oferta viva — mesmo TIER 1, ela entra só no recap "O que fechou". A
+// fila de pré-superfície do gate e a do runner DEVEM partir deste mesmo conjunto,
+// senão um flag numa MORTA (o fetch traz encerrada∧tier1) trava um dia limpo (M8).
+export const ESTADOS_VIVOS = Object.freeze(['ativa', 'detectada', 'ultimos_dias']);
+export function filtrarVivos(rows = []) {
+  return (rows || []).filter((c) => ESTADOS_VIVOS.includes(c?.estado));
+}
+
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const parseDate = (s) => (s ? Date.parse(String(s).slice(0, 10)) : NaN);
 

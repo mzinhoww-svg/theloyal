@@ -61,6 +61,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # Testes das funcoes puras do v2 (engine/gate/montagem/sintese + boundaries
+      # M8/M9). Estavam fora do CI (so tests/ rodava); agora guardam as invariantes
+      # do runner diario tambem.
+      - run: npm run test:v2
 
   editorial:
     # validate -> render -> qa -> publish compartilham o diretorio out/ e por isso

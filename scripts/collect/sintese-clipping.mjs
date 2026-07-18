@@ -21,6 +21,7 @@
 import { select, patch, supabaseEnabled } from "./supabase.mjs";
 import { sintetizarNoticia, llmBackend } from "./llm.mjs";
 import { validarSintese, LIMIAR_ANTICOPIA } from "../../v2/lib/digest/sintese-clipping.mjs";
+import { hojeSaoPaulo } from "../lib.mjs";
 
 /**
  * Núcleo TESTÁVEL do lote: independe de rede. Recebe as linhas e as funções de
@@ -84,7 +85,7 @@ async function carregarCandidatas({ hoje, limit }) {
 
 async function main() {
   const opts = parse(process.argv.slice(2));
-  const hoje = opts.now || new Date().toISOString().slice(0, 10);
+  const hoje = opts.now || hojeSaoPaulo(); // dia BRT — casa com o boundary do Daily (M9)
   const backend = llmBackend();
 
   if (backend === "mock") {
