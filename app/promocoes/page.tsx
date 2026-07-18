@@ -122,7 +122,7 @@ export default async function PromocoesPage() {
                   <li key={o.id} className="flex items-baseline justify-between gap-4 py-3">
                     <span className="text-base text-ink">{rota(o)}</span>
                     <span className="shrink-0 font-mono text-sm text-ink">{pct(o.percentual)}</span>
-                    <span className="hidden shrink-0 font-mono text-xs text-gray-400 sm:inline">
+                    <span className="hidden shrink-0 font-mono text-xs text-gray-500 sm:inline">
                       vence {diaMes(o.vigencia_fim_date)}
                     </span>
                   </li>
@@ -144,7 +144,7 @@ export default async function PromocoesPage() {
               <div className="mt-6 overflow-x-auto">
                 <table className="w-full min-w-[36rem] border-t border-line text-left">
                   <thead>
-                    <tr className="text-xs uppercase tracking-[0.08em] text-gray-400">
+                    <tr className="text-xs uppercase tracking-[0.08em] text-gray-500">
                       <th className="py-2 font-semibold">Rota</th>
                       <th className="py-2 text-right font-semibold">Janelas</th>
                       <th className="py-2 text-right font-semibold">Mediana</th>
@@ -164,7 +164,7 @@ export default async function PromocoesPage() {
                         <td className="py-3 text-right font-mono text-sm text-ink">
                           {pct(r.teto_historico)}
                           {r.teto_datado_ate && (
-                            <span className="ml-1 text-xs text-gray-400">({diaMes(r.teto_datado_ate)})</span>
+                            <span className="ml-1 text-xs text-gray-500">({diaMes(r.teto_datado_ate)})</span>
                           )}
                         </td>
                       </tr>
@@ -189,7 +189,7 @@ export default async function PromocoesPage() {
                   <li key={b.programa} className="rounded-lg border border-line bg-surface px-4 py-3">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-base font-semibold text-ink">{nomePrograma(b.programa)}</span>
-                      <span className="font-mono text-xs text-gray-400">
+                      <span className="font-mono text-xs text-gray-500">
                         <span className="text-green-600">{b.n_vivas}</span> viva(s) · {b.n_campanhas} no total
                       </span>
                     </div>
@@ -214,7 +214,7 @@ export default async function PromocoesPage() {
             </p>
           </section>
 
-          <p className="mt-16 border-t border-line pt-6 text-sm leading-relaxed text-gray-400">
+          <p className="mt-16 border-t border-line pt-6 text-sm leading-relaxed text-gray-500">
             {DISCLAIMER}
           </p>
         </div>

@@ -143,6 +143,8 @@ export function Footer() {
             {[
               ["Sobre", "/sobre"],
               ["Metodologia", "/#como-analisamos"],
+              ["Promoções", "/promocoes"],
+              ["Edições", "/edicao"],
               ["Anuncie", "/anuncie"],
               ["Privacidade", "/privacidade"],
             ].map(([label, href]) => (
