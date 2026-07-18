@@ -19,51 +19,88 @@
 //   - campanhas: REST vivo se SUPABASE_URL/KEY presentes; senão --campaigns
 //     <snapshot.json> (export real do banco) ou vazio (gate acusa a falta).
 //   - Beehiiv: REST se BEEHIIV_API_KEY presente; senão mock (nunca chama a API).
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { renderBeehiivHtml } from '../v2/lib/digest/render-beehiiv.mjs';
 import { renderEmail } from '../renderer/email.mjs';
 import { gate } from '../v2/lib/gate-unico.mjs';
 import { anotarRevisao } from '../v2/lib/verificacao/integrar.mjs';
+import { montarEdicaoDoDia, resolverNumeroEdicao, reconstruirConjuntoVivo } from '../v2/lib/digest/montar-edicao.mjs';
 
 const LEDGER = 'content/daily-status.json';
 const OUT = 'out/daily';
+const EDICOES_DIR = 'content/editions';
 
 function log(step, msg) { console.log(`[daily]${step ? ` ${step}` : ''} ${msg}`); }
 
 function parse(argv) {
-  const o = { edition: null, campaigns: null, now: null };
+  const o = { edition: null, campaigns: null, news: null, forecast: null, now: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--campaigns') o.campaigns = argv[++i];
+    else if (a === '--news') o.news = argv[++i];
+    else if (a === '--forecast') o.forecast = argv[++i];
     else if (a === '--now') o.now = argv[++i];
     else if (!a.startsWith('--')) o.edition = a;
   }
   return o;
 }
 
-function resolveEditionPath(explicit) {
-  if (explicit) return explicit;
-  if (existsSync('content/latest.json')) return 'content/latest.json';
-  throw new Error('sem edição: passe content/editions/NNNN.json ou gere content/latest.json');
+// Lê um JSON opcional; ausente/ilegível → default (nunca lança).
+function lerJsonOpcional(path, def = null) {
+  try { return path && existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : def; }
+  catch { return def; }
 }
 
-// Campanhas vivas + fechadas recentes (para o gate casar ofertasAtivas e
-// oQueFechouSemana). REST vivo quando há credencial; senão o snapshot.
-async function carregarCampanhas({ campaignsPath }) {
+// Aceita snapshot como array de linhas OU objeto { campaigns, newsRaw, forecast }.
+function normalizarSnapshot(raw) {
+  if (Array.isArray(raw)) return { rows: raw, newsRaw: [], forecast: null };
+  if (raw && typeof raw === 'object') {
+    return { rows: raw.campaigns || raw.rows || [], newsRaw: raw.newsRaw || raw.news_raw || [], forecast: raw.forecast || null };
+  }
+  return { rows: [], newsRaw: [], forecast: null };
+}
+
+// Campanhas + news_raw do dia + forecast. REST vivo quando há credencial; senão
+// o snapshot (--campaigns). `hoje` reconstrói o estado quando o snapshot é cru
+// (sem `estado` — replay/export histórico); linhas do banco vivo já vêm com
+// `estado` e passam intactas.
+async function carregarCampanhas({ campaignsPath, newsPath, forecastPath, hoje }) {
   const url = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  const forecastFromFile = lerJsonOpcional(forecastPath || 'content/forecast.json', null);
   if (url && key) {
-    const select = 'id,origem_code,destino_code,tipo,tier,estado,tl_score_bruto,veredito_bruto,override_aplicado,percentual,paridade,vigencia_fim,vigencia_fim_date,first_seen,notes';
+    const select = 'id,origem_code,destino_code,tipo,tier,estado,tl_score_bruto,veredito_bruto,override_aplicado,percentual,paridade,cpm,publico,source_name,source_url,vigencia_fim,vigencia_fim_date,first_seen,notes';
     const path = `campaigns?select=${select}&or=(estado.in.(ativa,detectada,ultimos_dias),and(estado.eq.encerrada,tier.eq.1))`;
     const r = await fetch(`${url}/rest/v1/${path}`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
     if (!r.ok) throw new Error(`REST campaigns ${r.status}`);
-    return { rows: await r.json(), fonte: 'banco vivo (REST)' };
+    const rows = await r.json();
+    // news_raw processadas do dia (Clipping só usa as que tiverem síntese própria).
+    let newsRaw = [];
+    try {
+      const nr = await fetch(`${url}/rest/v1/news_raw?select=id,source,title,url,summary,processed,published_at&processed=eq.true&published_at=eq.${hoje}`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
+      if (nr.ok) newsRaw = await nr.json();
+    } catch { /* news é opcional; Clipping degrada omitindo (regra-mãe) */ }
+    return { rows, newsRaw, forecast: forecastFromFile, fonte: 'banco vivo (REST)' };
   }
   if (campaignsPath && existsSync(campaignsPath)) {
-    return { rows: JSON.parse(readFileSync(campaignsPath, 'utf8')), fonte: `snapshot ${campaignsPath}` };
+    const snap = normalizarSnapshot(lerJsonOpcional(campaignsPath, []));
+    const cru = snap.rows.length > 0 && snap.rows.every((x) => x.estado === undefined);
+    const rows = cru ? reconstruirConjuntoVivo(snap.rows, hoje) : snap.rows;
+    const newsRaw = lerJsonOpcional(newsPath, null) || snap.newsRaw;
+    return { rows, newsRaw, forecast: snap.forecast || forecastFromFile, fonte: `snapshot ${campaignsPath}${cru ? ' (estado reconstruído p/ ' + hoje + ')' : ''}` };
   }
-  return { rows: [], fonte: 'nenhuma (sem credencial nem snapshot — gate acusará a falta)' };
+  return { rows: [], newsRaw: [], forecast: forecastFromFile, fonte: 'nenhuma (sem credencial nem snapshot — gate acusará a falta)' };
+}
+
+// Numeração idempotente por DATA: uma edição por dia, reusa o arquivo do dia se
+// já existe, nunca reusa a 0001. Lê o índice local de edições.
+function listarEdicoesExistentes() {
+  if (!existsSync(EDICOES_DIR)) return [];
+  return readdirSync(EDICOES_DIR).filter((f) => /^\d+\.json$/.test(f)).map((f) => {
+    const j = lerJsonOpcional(`${EDICOES_DIR}/${f}`, {});
+    return { number: j.number, date: j.date, illustrative: j.illustrative, file: f };
+  });
 }
 
 function contentHash(html) { return createHash('sha256').update(html).digest('hex').slice(0, 16); }
@@ -173,13 +210,32 @@ async function upsertRascunho({ ed, html, hoje, publicar = false }) {
 
 async function main() {
   const opts = parse(process.argv.slice(2));
-  const edPath = resolveEditionPath(opts.edition);
-  const ed = JSON.parse(readFileSync(edPath, 'utf8'));
-  const hoje = opts.now || ed.date;
-  log('[1/5]', `edição nº ${ed.number} (${ed.date}) de ${edPath}`);
+  const hoje = opts.now || new Date().toISOString().slice(0, 10);
 
-  // 2. Montagem/verificação — pré-superfície sobre os candidatos vivos.
-  const { rows: campaignsFromDb, fonte } = await carregarCampanhas({ campaignsPath: opts.campaigns });
+  // 1+2. Fonte viva do dia + MONTAGEM da edição fresca (ou carga estática
+  // quando um caminho de edição é passado explicitamente — back-compat).
+  const { rows: campaignsFromDb, newsRaw, forecast, fonte } = await carregarCampanhas({
+    campaignsPath: opts.campaigns, newsPath: opts.news, forecastPath: opts.forecast, hoje,
+  });
+
+  let ed;
+  let edPath;
+  if (opts.edition) {
+    ed = JSON.parse(readFileSync(opts.edition, 'utf8'));
+    edPath = opts.edition;
+    log('[1/5]', `edição ESTÁTICA nº ${ed.number} (${ed.date}) de ${edPath}`);
+  } else {
+    // Montagem DB→edição do dia, idempotente por data (M2.7). O número reusa o
+    // arquivo do dia se já existe; senão max+1 (nunca 0001).
+    const { number, reused } = resolverNumeroEdicao(hoje, listarEdicoesExistentes());
+    ed = montarEdicaoDoDia({ asOf: hoje, campaigns: campaignsFromDb, newsRaw, forecast, number });
+    edPath = `${EDICOES_DIR}/${String(number).padStart(4, '0')}.json`;
+    mkdirSync(EDICOES_DIR, { recursive: true });
+    writeFileSync(edPath, JSON.stringify(ed, null, 2) + '\n');
+    log('[1/5]', `edição MONTADA nº ${number} (${hoje}) → ${edPath} ${reused ? '(reusou arquivo do dia — idempotente)' : '(número novo)'}. Fonte: ${fonte}. deals=${ed.deals.length}, ofertasAtivas=${ed.ofertasAtivas?.length || 0}, fechaLogo=${ed.fechaLogo?.length || 0}, cartoesBancos=${ed.cartoesBancosItens?.length || 0}, fechouSemana=${ed.oQueFechouSemana?.length || 0}, clipping=${ed.clipping?.length || 0}.`);
+  }
+
+  // 2. Verificação — pré-superfície sobre os candidatos vivos.
   const vivos = campaignsFromDb.filter((c) => ['ativa', 'detectada', 'ultimos_dias'].includes(c.estado));
   const { paraRevisao, resumo } = anotarRevisao(vivos, { hoje });
   log('[2/5]', `campanhas: ${fonte} — ${campaignsFromDb.length} linhas (${vivos.length} vivas). Pré-superfície: ${resumo.aprovados} limpas, ${resumo.para_revisao} para revisão.`);
