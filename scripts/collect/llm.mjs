@@ -12,6 +12,7 @@
 // chama API, logo não gera job (não há token a registrar — INV-03).
 
 import { recordLlmJob, tokensFromUsage } from "./llm-ledger.mjs";
+import { montarPromptSintese } from "../../v2/lib/digest/sintese-clipping.mjs";
 
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -76,10 +77,12 @@ async function chatJson(system, user) {
   return { json: null, usage: null }; // mock
 }
 
-// Chamada instrumentada: mede latência, grava o job (ok/erro) e devolve o JSON.
-// Só chega aqui quando o backend é real (openrouter/ollama). Em erro, registra
+// Chamada instrumentada COM metadados: mede latência, grava o job (ok/erro) e
+// devolve { json, meta }. `meta` traz o modelo e os tokens REAIS observados
+// (nunca coagidos a 0 — INV-03), para quem precisa da proveniência além do
+// ledger. Só chega aqui com backend real (openrouter/ollama). Em erro, registra
 // status='erro' e RE-LANÇA — quem chama decide o fallback (heurística).
-async function callLlm(estagio, system, user, jobRef = null) {
+async function callLlmMeta(estagio, system, user, jobRef = null) {
   const backend = llmBackend();
   const modelo = modelFor(backend);
   const started = Date.now();
@@ -90,7 +93,7 @@ async function callLlm(estagio, system, user, jobRef = null) {
       estagio, provider: backend, modelo, tokens_in, tokens_out,
       latencia_ms: Date.now() - started, status: "ok", job_ref: jobRef,
     });
-    return json;
+    return { json, meta: { provider: backend, modelo, tokens_in, tokens_out } };
   } catch (e) {
     await recordLlmJob({
       estagio, provider: backend, modelo,
@@ -98,6 +101,13 @@ async function callLlm(estagio, system, user, jobRef = null) {
     });
     throw e;
   }
+}
+
+// Açúcar retrocompatível: os emissores existentes (match/promo/extração) só
+// querem o JSON. Delega ao caminho instrumentado acima.
+async function callLlm(estagio, system, user, jobRef = null) {
+  const { json } = await callLlmMeta(estagio, system, user, jobRef);
+  return json;
 }
 
 // (a) MATCH canônico: dois títulos são o mesmo produto físico?
@@ -155,6 +165,30 @@ export async function extractListing(textSnippet, jobRef = null) {
       points: Number.isFinite(r.points) ? r.points : null,
     };
   } catch {
+    return null;
+  }
+}
+
+// (d) SÍNTESE do Clipping (M2.7): 1-2 frases PRÓPRIAS de "o que mudou" numa
+// notícia. O LLM só NARRA — não seleciona o que entra no Clipping (isso é
+// determinístico em selecionarClipping), não calcula número, não decide oferta.
+// Estágio `sintese_clipping` no ledger (migration 016 estende o CHECK). Mock: sem
+// backend real não há síntese nem token — devolve null (INV-03), e o Clipping
+// simplesmente omite (regra-mãe). A validação anti-cópia/editorial roda a jusante
+// (no passo de ingest), NÃO aqui: este emissor só produz o texto candidato.
+// Devolve { summary, model, tokens_in, tokens_out } para a proveniência de
+// news_raw, ou null quando não há síntese utilizável.
+export async function sintetizarNoticia(noticia, jobRef = null) {
+  const backend = llmBackend();
+  if (backend === "mock") return null; // sem LLM não inventa síntese (INV-03)
+  const { system, user } = montarPromptSintese(noticia);
+  try {
+    const { json, meta } = await callLlmMeta("sintese_clipping", system, user, jobRef ?? noticia?.id ?? null);
+    const summary = typeof json?.summary === "string" ? json.summary.trim() : "";
+    if (!summary) return null; // resposta sem síntese → omite, nunca chuta
+    return { summary, model: meta.modelo, tokens_in: meta.tokens_in, tokens_out: meta.tokens_out };
+  } catch {
+    // Erro já registrado no ledger (status='erro'). Sem síntese → Clipping omite.
     return null;
   }
 }
