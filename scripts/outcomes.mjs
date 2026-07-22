@@ -41,7 +41,10 @@ export async function carregarFontesConfirmacao({ url, key, ids, fetchImpl = fet
 // a ação humana e o desfecho já gravados (nunca os zera).
 export async function gravarLinhasOutcome({ url, key, rows, fetchImpl = fetch }) {
   if (!url || !key || !rows?.length) return { gravadas: 0 };
-  const r = await fetchImpl(`${url}/rest/v1/daily_outcomes`, {
+  // on_conflict EXPLÍCITO: a tabela tem PK `id` (identity) E a unique
+  // (edition_date,section,item_key). Sem o alvo, o PostgREST resolve o upsert
+  // pela PK e um recapture colide na unique (409). O alvo aponta a unique certa.
+  const r = await fetchImpl(`${url}/rest/v1/daily_outcomes?on_conflict=edition_date,section,item_key`, {
     method: 'POST',
     headers: { ...restHeaders(key), prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(rows),
