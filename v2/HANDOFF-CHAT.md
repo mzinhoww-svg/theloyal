@@ -39,7 +39,7 @@ must-haves verificáveis). Trabalho isolado em `v2/`. Branch de trabalho:
 integração: `claude/loyalty-landing-page-v1-7vbjq7`.
 
 **Banco:** Supabase, projeto `qjqnqcsdnpvvmyzkavoq` ("the-loyalty"), Postgres 17.
-3.621 campanhas na `campaigns`.
+~3,7 mil campanhas na `campaigns` (cresce a cada rodada de coleta; conte no banco para o número exato).
 
 ### M1 — canonicalização de identidade → **FECHADO** (portão aprovado)
 - Identidade canônica = (tipo, origem, destino, publico). Event sourcing em
