@@ -14,7 +14,7 @@
 import { DISCLAIMER, URGENCY_RE, assertEditorialRules, collectStrings, isExpired } from '../../../scripts/lib.mjs';
 import { passaTresPortoes, elegivelDealDesk, selecionarDealDesk, TRES_PORTOES } from './selecionar.mjs';
 import { mapVeredito } from './mapear-contrato.mjs';
-import { BANCOS_ORIGEM } from './ofertas-ativas.mjs';
+import { BANCOS_ORIGEM, elegivelOfertaAtiva, leituraOfertaAtiva } from './ofertas-ativas.mjs';
 import { selecionarPredict, formatarTeaserPredict } from './dia-fraco.mjs';
 import { lintJargao, formatarPredictNarrativa, rotaDisplay, PALAVRA_PROBABILIDADE } from './editorial.mjs';
 
@@ -26,6 +26,13 @@ function has(v) {
 
 function temDigito(texto) {
   return typeof texto === 'string' && /\d/.test(texto);
+}
+
+// Normaliza para casar NOME de programa (acentuado, com espaço) contra CODE
+// (deaccent, com underscore): "Itaú → Azul Fidelidade" ~ codes itau/azul_fidelidade.
+// Sem isso, o Sinal legítimo de um dia fraco falhava por acento/underscore.
+function normProg(s) {
+  return String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 }
 
 // Extrai tokens numéricos (com % e separador decimal/milhar) de um texto —
@@ -206,20 +213,38 @@ export function checkSemDealDesk(edition = {}, campaignsFromDb = [], renderedHtm
     detail: marcadorAusente ? `marcador "${dealDeskMarker}" não encontrado no HTML` : `marcador "${dealDeskMarker}" encontrado — renderer publicou seção vazia`,
   });
 
+  // Dia fraco é CASO DE 1ª CLASSE (regra 5): uma edição SEM Deal Desk é VÁLIDA
+  // desde que traga dado real em pelo menos uma seção de transparência (Ofertas
+  // ativas OU Clipping OU O que fechou OU Cartões&bancos). Vazio genuíno em TODAS
+  // = casca inválida → RED (regra-mãe: nunca publica seção/edição vazia).
+  const temConteudoReal = (Array.isArray(edition.ofertasAtivas) && edition.ofertasAtivas.length > 0)
+    || (Array.isArray(edition.clipping) && edition.clipping.length >= 5)
+    || (Array.isArray(edition.oQueFechouSemana) && edition.oQueFechouSemana.length > 0)
+    || (Array.isArray(edition.cartoesBancosItens) && edition.cartoesBancosItens.length > 0);
+  results.push({
+    ok: temConteudoReal,
+    check: 'dia fraco VÁLIDO: ao menos uma seção com dado real (Ofertas ativas / Clipping / O que fechou / Cartões&bancos)',
+    detail: temConteudoReal
+      ? `ofertasAtivas=${edition.ofertasAtivas?.length || 0}, clipping=${edition.clipping?.length || 0}, fechou=${edition.oQueFechouSemana?.length || 0}, cartoesBancos=${edition.cartoesBancosItens?.length || 0}`
+      : 'edição VAZIA inválida — nada real em nenhuma seção; não publica casca (regra-mãe)',
+  });
+
+  // Sinal do dia: sempre cita um número (INV-03). O "candidato nomeado" só é
+  // exigido quando o sinal está afirmando uma oferta específica — num dia fraco
+  // sem oferta destaque, o sinal honesto ("dia sem oferta viva...") tem número
+  // (nº de registros) mas não cita programa, e isso é legítimo desde que haja
+  // conteúdo real nas outras seções. Normalização deaccent+strip casa nome↔code.
   const codigos = new Set();
   for (const c of campaignsFromDb) {
-    if (c.origem_code) codigos.add(String(c.origem_code).toLowerCase());
-    if (c.destino_code) codigos.add(String(c.destino_code).toLowerCase());
+    if (c.origem_code) codigos.add(normProg(c.origem_code));
+    if (c.destino_code) codigos.add(normProg(c.destino_code));
   }
-  const signalLower = String(edition.signal ?? '').toLowerCase();
-  const citaCandidato = [...codigos].some((cod) => cod && signalLower.includes(cod));
-  const generico = !(temDigito(edition.signal) && citaCandidato);
+  const signalNorm = normProg(edition.signal);
+  const citaCandidato = [...codigos].some((cod) => cod && signalNorm.includes(cod));
   results.push({
-    ok: !generico,
-    check: 'signal não é genérico (contém dígito + candidato nomeado conhecido)',
-    detail: generico
-      ? `signal precisa citar um número e um origem_code/destino_code conhecido — atual: "${edition.signal ?? ''}"`
-      : 'contém número e candidato nomeado',
+    ok: temDigito(edition.signal),
+    check: 'signal cita ao menos um número (INV-03)',
+    detail: temDigito(edition.signal) ? `contém dígito${citaCandidato ? ' + candidato nomeado' : ' (dia fraco sem oferta destaque — sinal honesto)'}` : `signal sem número: "${edition.signal ?? ''}"`,
   });
 
   const { selecionados } = selecionarDealDesk(campaignsFromDb);
@@ -288,24 +313,23 @@ export function checkOfertasAtivas(edition = {}, campaignsFromDb = []) {
       return;
     }
 
-    const passa3 = passaTresPortoes(candidato);
+    // EPSILON/D-086: Ofertas ativas é transparência, gateada por TRIAGEM (não por
+    // lastro-tier1 — esse gateia só o Deal Desk). Recomputa o mesmo predicado.
+    const elegivel = elegivelOfertaAtiva(candidato);
     results.push({
-      ok: passa3,
-      check: `${tag}: passa os 3 portões recomputado direto no banco`,
-      detail: passa3 ? 'ok' : `falhou: estado=${candidato.estado}, tier=${candidato.tier}, tl_score_bruto=${candidato.tl_score_bruto}`,
+      ok: elegivel,
+      check: `${tag}: elegível a Ofertas ativas recomputado no banco (vivo + conta + triada)`,
+      detail: elegivel ? 'ok' : `falhou: estado=${candidato.estado}, triagem=${candidato.triagem_categoria}, tl_score_bruto=${candidato.tl_score_bruto}`,
     });
 
-    let leituraEsperada = null;
-    try {
-      leituraEsperada = mapVeredito(candidato.veredito_bruto);
-    } catch {
-      leituraEsperada = null;
-    }
-    const bate = leituraEsperada !== null && leituraEsperada === item.leitura;
+    // A leitura tem de bater com o selo recomputado: 'nao-confirmado' quando sem
+    // lastro de tier1; o veredito real quando confirmado (INV-03).
+    const leituraEsperada = leituraOfertaAtiva(candidato);
+    const bate = leituraEsperada === item.leitura;
     results.push({
       ok: bate,
-      check: `${tag}: leitura bate com veredito_bruto real do banco`,
-      detail: bate ? 'ok' : `leitura da edição="${item.leitura}", veredito_bruto do banco="${candidato.veredito_bruto}" (mapeado="${leituraEsperada}")`,
+      check: `${tag}: leitura bate com o selo recomputado (nao-confirmado sem lastro; veredito real com lastro)`,
+      detail: bate ? 'ok' : `leitura da edição="${item.leitura}", esperado="${leituraEsperada}" (tem_tier1=${candidato.tem_tier1}, veredito_bruto="${candidato.veredito_bruto}")`,
     });
   });
 

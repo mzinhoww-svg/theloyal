@@ -408,9 +408,16 @@ function montarCartaoItem(c) {
 
 // Clipping só é montável com síntese própria pré-existente (INV-04). Aceita o
 // campo `summary` de news_raw quando presente; aplica o piso de 5 via seletor.
+// Boilerplate/masthead de portal — auto-descrição, não fato/oferta. Ex.: "O maior
+// portal de milhas do Brasil...". Uma síntese que é só masthead não informa "o que
+// mudou" e não pode ocupar vaga no Clipping (EPSILON: dado real, nunca casca).
+const MASTHEAD_RE = /\b(o\s+)?maior\s+(portal|site|comunidade|blog)\s+de\s+(milhas|pontos|viagens)|seu\s+(portal|site|guia)\s+de\s+(milhas|pontos)|seja\s+bem[- ]vindo|seja\s+um\s+assinante|seu\s+destino\s+para\s+milhas/i;
+
 function montarClipping(newsRaw) {
   const comSummary = (newsRaw || []).filter(
-    (n) => n && n.processed === true && n.title && n.url && n.source && typeof n.summary === 'string' && n.summary.trim(),
+    (n) => n && n.processed === true && n.title && n.url && n.source
+      && typeof n.summary === 'string' && n.summary.trim()
+      && !MASTHEAD_RE.test(n.summary), // corta resumos genéricos de masthead (EPSILON)
   );
   const { itens, omitido } = selecionarClipping(comSummary, { minimo: 5 });
   if (omitido) return [];

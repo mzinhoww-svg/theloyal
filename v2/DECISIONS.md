@@ -1103,6 +1103,34 @@ que a fonte diz "25 pontos por dólar". Tão grave quanto cópia.
   `campaigns` (v19-inv25) — código e espelho prontos, deploy é mecânico; (2) volume
   histórico via `npm run medir:orfao` (read-only sobre `news_raw.summary`, roda com creds).
 
+## D-086 — Dia fraco é caso de 1ª classe: edição enxuta VÁLIDA passa o gate (EPSILON)
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** smoke-run do Dia 1 deu RED tratando dia fraco (8 ofertas triadas + 5 sínteses vivas) como edição vazia. Regra 5 (dia fraco 1ª classe). C1 (D-082) INTACTO.
+
+O runner reportava 0/0 num dia com 8 ofertas vivas triadas e 5 sínteses reais. Três causas:
+
+- **Ofertas ativas herdou o portão de lastro-tier1 do C1.** `selecionarOfertasAtivas`
+  rodava `passaTresPortoes` (portão 2 = `tem_tier1`); pós-C1, 0 vivas têm lastro → tabela
+  vazia. **Correção:** Ofertas ativas é **TABELA DE TRANSPARÊNCIA**, gateada por
+  **TRIAGEM** (`limpo`/`historico_confirmado`, nunca `revisao`/não-triado — mesmo critério
+  da view pública 017/C3) + vivo + conta, **DESACOPLADO do lastro-tier1**. Item sem lastro
+  entra com selo **`nao-confirmado`** (INV-03: mostra o dado, marca a incerteza). Predicado
+  único `elegivelOfertaAtiva` + `leituraOfertaAtiva` reusado por selector, gate e ledger
+  (GAMMA) — sem drift. **O lastro-tier1 gateia SÓ o Deal Desk (recomendação), NUNCA a
+  transparência.** C1 intacto: `passaTresPortoes`/`elegivelDealDesk` seguem exigindo lastro.
+- **Clipping `published_at=hoje` estrito demais → 0.** **Correção:** janela **~7 dias**,
+  síntese própria aprovada (`summary` presente E `summary_review_reason` null — reprovadas
+  pelo crivo A5/INV-25 nunca entram), não usada em edição anterior (dedup por url), filtro
+  de masthead genérico ("O maior portal de milhas…"), piso rígido 5 mantido.
+- **Gate não distinguia dia fraco VÁLIDO de edição VAZIA.** **Correção:**
+  `checkSemDealDesk` exige `temConteudoReal` = ao menos uma seção de transparência com dado
+  real (Ofertas ativas / Clipping / O que fechou / Cartões&bancos). Válido → VERDE, rascunho
+  enxuto sem Deal Desk (regra-mãe: nenhuma seção vazia). Vazio genuíno → RED. Corrigido
+  também o bug de normalização do "signal cita candidato" (nome acentuado "Itaú → Azul
+  Fidelidade" ~ code `itau`/`azul_fidelidade`): deaccent+strip nos dois lados.
+- **Testes:** dia com 0 deals mas Ofertas ativas>0 → verde; nada real em nenhuma seção →
+  red; oferta triada sem lastro aparece em Ofertas ativas com selo `nao-confirmado`, **nunca
+  no Deal Desk**; oferta `revisao`/não-triada fica fora. 476/476 verdes.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════

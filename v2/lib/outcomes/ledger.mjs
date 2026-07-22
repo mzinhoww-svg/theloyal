@@ -11,8 +11,8 @@
 // então reproduz exatamente QUAIS campanhas foram surfaceadas — com o `id` da
 // linha, que o item editorial (deal) não carrega. Não é recomputar desfecho; é
 // identificar o que já foi mostrado.
-import { selecionarDealDesk, passaTresPortoes, selecionarFechaLogo, TRES_PORTOES } from '../digest/selecionar.mjs';
-import { ehClippingOnly, BANCOS_ORIGEM } from '../digest/ofertas-ativas.mjs';
+import { selecionarDealDesk, selecionarFechaLogo, TRES_PORTOES } from '../digest/selecionar.mjs';
+import { ehClippingOnly, BANCOS_ORIGEM, elegivelOfertaAtiva, leituraOfertaAtiva } from '../digest/ofertas-ativas.mjs';
 import { mapVeredito } from '../digest/mapear-contrato.mjs';
 
 export const SECOES = Object.freeze(['deals', 'ofertas_ativas', 'fecha_logo', 'cartoes_bancos', 'clipping', 'sinal']);
@@ -85,7 +85,9 @@ function linhaBase({ ed, section, item_key, campaign_id = null, route_key = null
 }
 
 function linhaDeCampanha({ ed, section, c, fontesById }) {
-  const veredito = veredictoMostrado(c.veredito_bruto);
+  // Veredito MOSTRADO por seção: em Ofertas ativas o selo é 'nao-confirmado' sem
+  // lastro de tier1 (EPSILON); nas demais, o veredito real do item.
+  const veredito = section === 'ofertas_ativas' ? leituraOfertaAtiva(c) : veredictoMostrado(c.veredito_bruto);
   const tl = c.tl_score_bruto == null ? null : Number(c.tl_score_bruto);
   return linhaBase({
     ed, section,
@@ -116,8 +118,8 @@ export function montarLinhasOutcome({ ed, campaigns = [], fontesById = {} } = {}
   for (const c of selecionarDealDesk(campaigns).selecionados) {
     rows.push(linhaDeCampanha({ ed, section: 'deals', c, fontesById }));
   }
-  // ofertas_ativas — mesmo predicado do seletor (3 portões, sem clipping-only).
-  for (const c of (campaigns || []).filter((c) => passaTresPortoes(c) && !ehClippingOnly(c))) {
+  // ofertas_ativas — MESMO predicado do seletor (triagem, não lastro-tier1; EPSILON).
+  for (const c of (campaigns || []).filter(elegivelOfertaAtiva)) {
     rows.push(linhaDeCampanha({ ed, section: 'ofertas_ativas', c, fontesById }));
   }
   // fecha_logo — urgência (ultimos_dias).

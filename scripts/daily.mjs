@@ -85,10 +85,26 @@ async function carregarCampanhas({ campaignsPath, newsPath, forecastPath, hoje }
       const ids = cf.ok ? new Set((await cf.json()).map((f) => f.campaign_id)) : new Set();
       for (const row of rows) row.tem_tier1 = ids.has(row.id);
     } catch { for (const row of rows) row.tem_tier1 = false; }
-    // news_raw processadas do dia (Clipping só usa as que tiverem síntese própria).
+    // EPSILON/D-086: triagem da Trilha B (limpo/historico_confirmado/revisao) gateia
+    // Ofertas ativas (transparência) — DESACOPLADA do lastro-tier1. Lê a última
+    // triagem por campanha (campanha_versoes evento=triagem_backlog_m3). Sem linha
+    // → triagem_categoria=null (não-triado fica fora da transparência, INV-03).
+    try {
+      const tv = await fetch(`${url}/rest/v1/campanha_versoes?select=campaign_id,categoria:payload_depois->>categoria,em&evento=eq.triagem_backlog_m3&order=em.desc`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
+      const cat = new Map();
+      if (tv.ok) for (const v of await tv.json()) if (v.campaign_id && !cat.has(v.campaign_id)) cat.set(v.campaign_id, v.categoria ?? null);
+      for (const row of rows) row.triagem_categoria = cat.get(row.id) ?? null;
+    } catch { for (const row of rows) row.triagem_categoria = null; }
+    // Clipping: notícia RECENTE (janela ~7 dias, não só hoje) com síntese PRÓPRIA
+    // aprovada (summary presente E summary_review_reason null — reprovadas pelo crivo
+    // A5/INV-25 nunca entram). Piso rígido 5 é aplicado a jusante (montarClipping).
     let newsRaw = [];
     try {
-      const nr = await fetch(`${url}/rest/v1/news_raw?select=id,source,title,url,summary,processed,published_at&processed=eq.true&published_at=eq.${hoje}`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
+      const desde = new Date(Date.parse(`${hoje}T00:00:00Z`) - 7 * 864e5).toISOString().slice(0, 10);
+      const nq = `news_raw?select=id,source,title,url,summary,processed,published_at`
+        + `&processed=eq.true&summary=not.is.null&summary_review_reason=is.null`
+        + `&published_at=gte.${desde}&published_at=lte.${hoje}&order=published_at.desc`;
+      const nr = await fetch(`${url}/rest/v1/${nq}`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
       if (nr.ok) newsRaw = await nr.json();
     } catch { /* news é opcional; Clipping degrada omitindo (regra-mãe) */ }
     return { rows, newsRaw, forecast: forecastFromFile, fonte: 'banco vivo (REST)' };
@@ -101,6 +117,20 @@ async function carregarCampanhas({ campaignsPath, newsPath, forecastPath, hoje }
     return { rows, newsRaw, forecast: snap.forecast || forecastFromFile, fonte: `snapshot ${campaignsPath}${cru ? ' (estado reconstruído p/ ' + hoje + ')' : ''}` };
   }
   return { rows: [], newsRaw: [], forecast: forecastFromFile, fonte: 'nenhuma (sem credencial nem snapshot — gate acusará a falta)' };
+}
+
+// URLs de Clipping já usadas em edições anteriores (do MESMO dia não conta — a
+// edição do dia reusa seu próprio arquivo, idempotente). EPSILON: uma notícia não
+// reaparece no Clipping de dias diferentes.
+function urlsClippingUsadas(hoje) {
+  const usadas = new Set();
+  if (!existsSync(EDICOES_DIR)) return usadas;
+  for (const f of readdirSync(EDICOES_DIR).filter((x) => /^\d+\.json$/.test(x))) {
+    const j = lerJsonOpcional(`${EDICOES_DIR}/${f}`, {});
+    if (j.date === hoje) continue; // a própria edição do dia não bloqueia
+    for (const c of Array.isArray(j.clipping) ? j.clipping : []) if (c?.url) usadas.add(c.url);
+  }
+  return usadas;
 }
 
 // Numeração idempotente por DATA: uma edição por dia, reusa o arquivo do dia se
@@ -371,9 +401,12 @@ async function main() {
 
   // 1+2. Fonte viva do dia + MONTAGEM da edição fresca (ou carga estática
   // quando um caminho de edição é passado explicitamente — back-compat).
-  const { rows: rowsBrutas, newsRaw, forecast, fonte } = await carregarCampanhas({
+  const { rows: rowsBrutas, newsRaw: newsBrutas, forecast, fonte } = await carregarCampanhas({
     campaignsPath: opts.campaigns, newsPath: opts.news, forecastPath: opts.forecast, hoje,
   });
+  // EPSILON: Clipping não repete notícia já usada em edição anterior (dedup por url).
+  const usadas = urlsClippingUsadas(hoje);
+  const newsRaw = (newsBrutas || []).filter((n) => !(n?.url && usadas.has(n.url)));
   // Revalidação de vigência no BOUNDARY: montagem, pré-superfície e gate veem a
   // MESMA verdade de vigência (vencida antes de `hoje` = 'encerrada'), mesmo que
   // o FSM do banco esteja stale. Sem isso, o gate diverge da edição montada.

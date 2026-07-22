@@ -10,7 +10,7 @@ function campanhaDealDesk(over = {}) {
   return {
     id: 'livelo-latam_pass-transferencia-2026-07-30',
     origem_code: 'livelo', destino_code: 'latam_pass', tipo: 'transferencia',
-    estado: 'ativa', tem_tier1: true, tl_score_bruto: 82, veredito_bruto: 'Vale agir',
+    estado: 'ativa', tem_tier1: true, triagem_categoria: 'limpo', tl_score_bruto: 82, veredito_bruto: 'Vale agir',
     percentual: 30, vigencia_fim: '2026-07-30', vigencia_fim_date: '2026-07-30',
     ...over,
   };
@@ -103,11 +103,20 @@ test('clipping vira linha por url, sem campanha nem sinais', () => {
   assert.equal(clip.confianca_confirmacao, null);
 });
 
-test('dia fraco: zero campanhas surfaceáveis → zero linhas de campanha (não inventa)', () => {
+test('EPSILON: viva triada SEM lastro → 0 deals (C1 intacto), mas 1 ofertas_ativas com selo nao-confirmado', () => {
   const ed = { date: '2026-07-22', number: 29, clipping: [] };
-  // vivas mas sem tem_tier1 (0 lastro) → nada passa os 3 portões
-  const vivaSemLastro = campanhaDealDesk({ tem_tier1: false });
+  const vivaSemLastro = campanhaDealDesk({ tem_tier1: false }); // triada (limpo), sem lastro
   const rows = montarLinhasOutcome({ ed, campaigns: [vivaSemLastro], fontesById: {} });
+  assert.equal(rows.filter((r) => r.section === 'deals').length, 0, 'Deal Desk exige lastro (C1)');
+  const oa = rows.filter((r) => r.section === 'ofertas_ativas');
+  assert.equal(oa.length, 1, 'transparência mostra a oferta viva triada');
+  assert.equal(oa[0].veredito, 'nao-confirmado', 'sem lastro → selo nao-confirmado (INV-03)');
+});
+
+test('dia fraco genuíno: viva NÃO-triada → zero linhas de campanha (não inventa)', () => {
+  const ed = { date: '2026-07-22', number: 29, clipping: [] };
+  const vivaNaoTriada = campanhaDealDesk({ tem_tier1: false, triagem_categoria: null });
+  const rows = montarLinhasOutcome({ ed, campaigns: [vivaNaoTriada], fontesById: {} });
   assert.equal(rows.filter((r) => r.section === 'deals').length, 0);
   assert.equal(rows.filter((r) => r.section === 'ofertas_ativas').length, 0);
 });
