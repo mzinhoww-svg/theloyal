@@ -1131,6 +1131,37 @@ O runner reportava 0/0 num dia com 8 ofertas vivas triadas e 5 sínteses reais. 
   red; oferta triada sem lastro aparece em Ofertas ativas com selo `nao-confirmado`, **nunca
   no Deal Desk**; oferta `revisao`/não-triada fica fora. 476/476 verdes.
 
+## D-087 — RLS nas tabelas internas expostas à anon key (F3 · segurança)
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** advisor Supabase (ERROR `rls_disabled_in_public`, 13 tabelas)
+
+O advisor de segurança do Supabase apontou **13 tabelas em `public` com RLS
+DESLIGADO** — expostas via PostgREST à **anon key**. Incluía `daily_sends` (a
+trava de envio C2 podia ser **forjada de fora**), `llm_jobs` (telemetria/custo),
+`custo_base_moeda`/`custo_base_ratio` e `model_registry` (preços),
+`derivacao_config`, `daily_outcomes`, backups e filas.
+
+- **migration 021 APLICADA:** `enable row level security` + policy explícita
+  `svc_role_full FOR ALL TO service_role` nas 13 tabelas
+  (campaigns_bkp_prev2, tl_ruido/generico/tipo_map, rejeicoes, motivos_rejeicao,
+  derivacao_config, custo_base_moeda/ratio, llm_jobs, model_registry, daily_sends,
+  daily_outcomes).
+- **Por que não quebra o runner:** o runner (`daily.mjs`) e as edge functions usam a
+  **service_role key** (BYPASSRLS) → leem/gravam tudo independentemente de policy.
+  A policy explícita documenta a intenção e limpa o lint; **anon/authenticated caem
+  no default-deny** (sem policy que os autorize).
+- **Nenhuma é superfície pública:** a página lê `campaigns` (já com RLS + policy) e
+  `vw_ofertas_vivas`. As 13 são internas → anon sem acesso (INV-03 de segurança).
+- **Provado:** advisor não lista mais nenhum `rls_disabled_in_public` dessas 13;
+  `anon` → `daily_sends`/`llm_jobs` retorna `[]` (bloqueado) enquanto `anon` →
+  `campaigns` retorna dado (a anon-key é válida — é o RLS que barra); o runner leu o
+  banco vivo normalmente no smoke-run (service_role intacto).
+- **Fora do escopo (registrado como proposta, NÃO aplicado):** 4 views
+  `SECURITY DEFINER` (vw_placar_rota, vw_banco_programa, vw_ofertas_vivas,
+  vw_calibracao_limiar) e 6 funções `SECURITY DEFINER` executáveis por anon
+  (jq_*, confirmar_tier1, registrar_coleta_execucao) seguem como ERROR/WARN do
+  advisor — trocar para `security_invoker`/revogar EXECUTE do anon muda comportamento
+  de superfície pública (vw_ofertas_vivas) e precisa de aval por peça.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════
