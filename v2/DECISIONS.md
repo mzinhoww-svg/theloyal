@@ -944,6 +944,39 @@ secrets. **Auto-publish permanece OFF em todo este plano** — a estreia é RECU
   2026-07-14` (sem `--edition`) montou **edição nº29 nova** (≠ 0001/0028), GATE VERDE,
   única pendência = uma oferta VIVA legítima (revolut 400%), autopublish off → rascunho.
 
+## D-081 — A5: anti-cópia em produção + Clipping ligado com síntese própria
+**Data:** 2026-07-18 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** auditoria A5 (cópia em resumos LLM)
+
+A regra inviolável 2 (nunca copiar texto/título da fonte) estava sem crivo em
+produção: 20,5% (747/3.643) dos `resumos` de extração em `campaigns.notes` eram
+**cópia verbatim** da fonte, e o crivo de 4-gramas (0,35) tinha falso-negativo por
+DILUIÇÃO (15 palavras copiadas num resumo de 62 → overlap 0,24 → publicava).
+
+- **Migration 016 APLICADA:** `news_raw.summary` + proveniência (`summary_model`,
+  `summary_tokens_in/out`, `summary_job_ref`, `summary_review_reason`) + estágio
+  `sintese_clipping` no CHECK do ledger. Aditiva, zero regressão (40.865 linhas intactas).
+- **Anti-cópia reforçado (2 sinais):** além do overlap de 4-gramas (0,35, PROPORÇÃO),
+  agora **maior trecho contíguo** (`maiorRunContiguo` ≥ **8 palavras** idênticas ⇒
+  reprova — pega a diluição) + teto de **45 palavras**. Fonte única do crivo espelhada
+  em Deno (`supabase/functions/_shared/anticopia.ts`) com **teste de drift** que reprova
+  o CI se os limiares divergirem do Node.
+- **ONDE a síntese roda (decisão):** a chave do OpenRouter vive **só no ambiente das
+  edge functions** (Vault SQL vazio, confirmado) — não em secret do GitHub. Logo a
+  síntese REAL roda numa **edge function** (`sintese-clipping`), lendo a key do
+  Deno.env, nunca esperando key no Actions. **Provado por lote real:** tokens em
+  `llm_jobs` (estágio `sintese_clipping`, 11 jobs, 4.479 in / 452 out), não mock.
+- **Clipping ligado:** `sintese-clipping` gera `news_raw.summary` PRÓPRio (passa o
+  crivo) só para news de **relevância loyalty** (filtro no candidato — evita gastar LLM
+  e surfacializar ruído); reprova → `summary_review_reason`, nunca publica (INV-2). Piso
+  rígido 5 mantido; sem key → mock, 0 job (INV-03). `montarClipping` já puxa o summary.
+- **Crivo no resumo da EXTRAÇÃO:** a edge fn `campaigns` passou a rodar o anti-cópia
+  (só os sinais de cópia, não o tamanho) no `resumo` antes de escrever `notes`: cópia
+  vira marcador neutro + `summary_review_reason`. Fail-safe (erro no crivo → comportamento
+  antigo, nunca derruba a extração).
+- **Backfill:** 747 resumos verbatim FLAGADOS em `campanha_versoes`
+  (`evento=flag_anticopia_resumo_backfill`, idempotente) — flag, não descarte (D-060).
+  Volume grande reportado ao operador; a reescrita das notes históricas fica como decisão dele.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════

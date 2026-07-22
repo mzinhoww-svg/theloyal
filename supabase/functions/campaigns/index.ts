@@ -38,6 +38,33 @@
 //   O custo em USD é derivado no painel (tokens × preço do model_registry),
 //   nunca aqui (INV-12). Falha ao gravar o ledger NUNCA bloqueia a extração.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { overlapNgram, maiorRunContiguo, LIMIAR_ANTICOPIA, MAX_RUN_COPIA } from "../_shared/anticopia.ts";
+
+// Crivo ANTI-CÓPIA no RESUMO da extração (A5, inviolável 2). O `resumo` do LLM
+// caía em `campaigns.notes` SEM crivo — a auditoria achou cópias literais do
+// título/fonte. Aqui aplico SÓ os sinais de cópia (proporção de 4-gramas + maior
+// trecho contíguo), NÃO os limites de tamanho da síntese do Clipping: um resumo de
+// campanha é legitimamente curto e não pode ser marcado por isso. Resumo que copia
+// a fonte NÃO vira notes (marcador neutro) e a notícia é marcada p/ revisão.
+// FAIL-SAFE: qualquer erro no crivo devolve o resumo original (nunca derruba a
+// extração — mesma disciplina do ledger).
+function crivoResumo(resumo: string, fonte: string): { notes: string; motivo: string | null } {
+  try {
+    const s = String(resumo || "").trim();
+    if (!s) return { notes: "", motivo: null };
+    const ov = overlapNgram(s, fonte);
+    const run = maiorRunContiguo(s, fonte);
+    if (ov >= LIMIAR_ANTICOPIA || run >= MAX_RUN_COPIA) {
+      return {
+        notes: "[resumo em revisao: possivel copia da fonte]",
+        motivo: `anti-copia resumo: overlap ${ov.toFixed(2)} (limiar ${LIMIAR_ANTICOPIA}), run contiguo ${run} (limiar ${MAX_RUN_COPIA})`,
+      };
+    }
+    return { notes: s, motivo: null };
+  } catch {
+    return { notes: String(resumo || ""), motivo: null };
+  }
+}
 
 const supa = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -238,8 +265,12 @@ async function processItem(it: any, runId: string, today: string, in3days: strin
     llmLogged = true;
     const campaigns = Array.isArray(json?.campaigns) ? json.campaigns.filter(Boolean) : [];
 
+    const revisaoResumo: string[] = [];
     const rows = campaigns.map((c: any) => {
       const fim = c.vigencia_fim ?? "na";
+      // crivo anti-cópia no resumo (A5): copia da fonte → marcador + revisão.
+      const crivo = crivoResumo(c.resumo, text);
+      if (crivo.motivo) revisaoResumo.push(crivo.motivo);
       let status = "continua";
       if (fim !== "na") {
         if (fim < today) status = "vencida";
@@ -274,7 +305,7 @@ async function processItem(it: any, runId: string, today: string, in3days: strin
         observed_at: today,
         // v14: origem real da rodada (backfill|daily) em vez de "auto" fixo.
         origin: EXTRACT_ORIGIN,
-        notes: `${c.resumo || ""} [confianca:${c.confianca || "baixa"}]`,
+        notes: `${crivo.notes} [confianca:${c.confianca || "baixa"}]`,
         // v14 shadow (migração 0009): proveniência + validação + dedup.
         published_at: it.published_at ?? null,
         date_suspect: dateSuspect,
@@ -312,6 +343,9 @@ async function processItem(it: any, runId: string, today: string, in3days: strin
       campaigns_extracted: rows.length,
       extraction_json: json,
       error: null,
+      // A5: se algum resumo copiou a fonte, marca a notícia p/ revisão (INV-2).
+      // Só SETA quando há motivo — nunca limpa um review_reason já existente.
+      ...(revisaoResumo.length ? { summary_review_reason: revisaoResumo.join("; ").slice(0, 500) } : {}),
     }).eq("id", it.id);
     if (updErr) console.error("Erro update news_raw:", updErr);
 
