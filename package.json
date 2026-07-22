@@ -31,7 +31,9 @@
     "daily": "node scripts/daily.mjs",
     "daily:validate": "node scripts/validate-daily.mjs",
     "daily:render": "node scripts/render-daily.mjs",
-    "daily:qa": "node scripts/qa-daily.mjs"
+    "daily:qa": "node scripts/qa-daily.mjs",
+    "outcomes": "node scripts/outcomes.mjs",
+    "medir:orfao": "node scripts/medir-numero-orfao.mjs"
   },
   "dependencies": {
     "next": "14.2.15",

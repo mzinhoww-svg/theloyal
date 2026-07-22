@@ -182,7 +182,7 @@ Deno.serve(async (req: Request) => {
   }
 
   return new Response(
-    JSON.stringify({ modelo: MODEL, versao: "v1", limiar: 0.35, run_max: 8, ...tally }),
+    JSON.stringify({ modelo: MODEL, versao: "v2-inv25", limiar: 0.35, run_max: 8, ...tally }),
     { headers: { "Content-Type": "application/json" } },
   );
 });

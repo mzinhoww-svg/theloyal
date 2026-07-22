@@ -27,6 +27,7 @@ import { gate } from '../v2/lib/gate-unico.mjs';
 import { anotarRevisao } from '../v2/lib/verificacao/integrar.mjs';
 import { montarEdicaoDoDia, resolverNumeroEdicao, reconstruirConjuntoVivo, revalidarVigencia, filtrarVivos } from '../v2/lib/digest/montar-edicao.mjs';
 import { hojeSaoPaulo } from './lib.mjs';
+import { capturarEdicao } from './outcomes.mjs';
 
 const LEDGER = 'content/daily-status.json';
 const OUT = 'out/daily';
@@ -393,6 +394,17 @@ async function main() {
     mkdirSync(EDICOES_DIR, { recursive: true });
     writeFileSync(edPath, JSON.stringify(ed, null, 2) + '\n');
     log('[1/5]', `edição MONTADA nº ${number} (${hoje}) → ${edPath} ${reused ? '(reusou arquivo do dia — idempotente)' : '(número novo)'}. Fonte: ${fonte}. deals=${ed.deals.length}, ofertasAtivas=${ed.ofertasAtivas?.length || 0}, fechaLogo=${ed.fechaLogo?.length || 0}, cartoesBancos=${ed.cartoesBancosItens?.length || 0}, fechouSemana=${ed.oQueFechouSemana?.length || 0}, clipping=${ed.clipping?.length || 0}.`);
+  }
+
+  // Outcomes-ledger (GAMMA · D-048/D-202): CAPTURA as linhas da edição no momento
+  // da montagem — o que foi mostrado + os 5 sinais de D-048 (lidos de
+  // campanha_fontes), ação humana e desfecho ficam null (preenchidos depois, nunca
+  // chutados). Pré-requisito de ligar autopublish. NUNCA bloqueia o runner.
+  try {
+    const cap = await capturarEdicao({ ed, campaigns: campaignsFromDb });
+    log('[1/5]', `outcomes-ledger: ${cap.gravadas} linha(s) capturadas ${JSON.stringify(cap.secoes || {})}${cap.motivo ? ` (${cap.motivo})` : ''}.`);
+  } catch (e) {
+    log('[1/5]', `outcomes-ledger: captura falhou (não bloqueia) — ${e.message ?? e}.`);
   }
 
   // 2. Verificação — pré-superfície sobre os candidatos vivos (mesma fonte única

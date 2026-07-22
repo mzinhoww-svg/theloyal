@@ -131,11 +131,108 @@ export function passaAntiCopia(sintese, textoFonte, { limiar = LIMIAR_ANTICOPIA,
   return overlapNgram(sintese, textoFonte, { n }) < limiar;
 }
 
+// ─── Fidelidade numérica (INV-25 · DELTA) ───────────────────────────────────
+// O anti-cópia garante NÃO-CÓPIA (inviolável 2). NÃO garante que os NÚMEROS da
+// síntese existam na fonte: o LLM pode trocar/inventar número (ex.: Hyatt "20% e
+// 110k pontos" quando a fonte só traz 20%; ou classificar "25%" o que a fonte diz
+// "25 pontos por dólar"). Número na síntese sem lastro na fonte = INV-25 violado
+// (número sem lastro), tão grave quanto cópia. Checagem ESTRUTURAL, determinística
+// (regra 8) — não julgamento de LLM: extrai números por REGEX, normaliza formato,
+// e casa cada número da síntese contra os da fonte por KIND + valor com tolerância.
+
+// Normaliza um literal numérico para Number canônico. Tolera formatação:
+// "R$ 16,84" = "16.84" = 16,84; separador de milhar "1.234,56" = 1234.56;
+// inteiro com milhar por ponto "110.000" = 110000. ',' sempre decimal; '.' é
+// milhar quando em grupos de 3 sem vírgula, senão decimal.
+export function normalizarNumero(raw) {
+  let s = String(raw ?? '').replace(/[R$\s%]/gi, '').trim();
+  if (!s) return NaN;
+  if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');       // 110.000 → 110000
+  else if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); // 1.234,56 → 1234.56
+  return parseFloat(s);
+}
+
+const MULT = { k: 1e3, mil: 1e3, 'milhão': 1e6, 'milhao': 1e6, 'milhões': 1e6, 'milhoes': 1e6 };
+function multiplicador(palavra) {
+  if (!palavra) return 1;
+  return MULT[String(palavra).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[̃]/g, '')] || MULT[String(palavra).toLowerCase()] || 1;
+}
+
+// Padrões ordenados do MAIS específico ao mais geral. Cada número casado é
+// consumido (marca o span) para um bare-number não recontar dígitos já lidos.
+const PADROES_NUMERO = [
+  { kind: 'date', re: /\b(\d{4})-(\d{2})-(\d{2})\b/g, norm: (m) => `${m[3]}-${m[2]}` },
+  { kind: 'date', re: /\b(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?\b/g, norm: (m) => `${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}` },
+  { kind: 'ratio', re: /(\d+(?:[.,]\d+)?)\s*(?:pontos?|milhas?)\s*por\s*(?:real|reais|d[óo]lar(?:es)?|us\$|usd)/gi, norm: (m) => normalizarNumero(m[1]) },
+  { kind: 'qtd', re: /(\d+(?:[.,]\d+)?)\s*(k|mil|milh[õo]es|milh[ãa]o)?\s*(?:pontos?|milhas?|milheiros?)/gi, norm: (m) => normalizarNumero(m[1]) * multiplicador(m[2]) },
+  { kind: 'qtd', re: /(\d+(?:[.,]\d+)?)\s*(k)\b/gi, norm: (m) => normalizarNumero(m[1]) * multiplicador(m[2]) },
+  { kind: 'brl', re: /R\$\s*(\d[\d.,]*)/gi, norm: (m) => normalizarNumero(m[1]) },
+  { kind: 'pct', re: /(\d+(?:[.,]\d+)?)\s*%/g, norm: (m) => normalizarNumero(m[1]) },
+];
+
+/**
+ * Extrai números com KIND de um texto. Não conta o mesmo dígito duas vezes
+ * (padrão específico consome o span). Números sem unidade reconhecível são
+ * IGNORADOS de propósito (bare number é ambíguo → não vira lastro nem órfão).
+ * @param {string} texto
+ * @returns {Array<{kind:string, value:(number|string)}>}
+ */
+export function extrairNumeros(texto) {
+  const s = String(texto ?? '');
+  const consumido = new Array(s.length).fill(false);
+  const out = [];
+  for (const { kind, re, norm } of PADROES_NUMERO) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(s)) !== null) {
+      const ini = m.index;
+      const fim = ini + m[0].length;
+      let overlap = false;
+      for (let i = ini; i < fim; i++) if (consumido[i]) { overlap = true; break; }
+      if (overlap) continue;
+      const value = norm(m);
+      if (kind !== 'date' && !Number.isFinite(value)) continue;
+      for (let i = ini; i < fim; i++) consumido[i] = true;
+      out.push({ kind, value });
+    }
+  }
+  return out;
+}
+
+function casa(a, b) {
+  if (a.kind !== b.kind) return false;                 // KIND-aware: 25% ≠ 25 pontos/dólar
+  if (a.kind === 'date') return a.value === b.value;
+  if (a.kind === 'brl') return Math.round(a.value * 100) === Math.round(b.value * 100);
+  return Math.abs(a.value - b.value) < 1e-9;
+}
+
+/**
+ * Números da SÍNTESE sem correspondente de KIND compatível na FONTE. Cada órfão =
+ * número sem lastro (INV-25). Não descarta nada aqui — devolve a lista; o chamador
+ * marca `summary_review_reason` e manda para revisão (D-060).
+ * @param {string} sintese
+ * @param {string} textoFonte  título + conteúdo da fonte
+ * @returns {Array<{kind:string, value:(number|string)}>}
+ */
+export function numerosSemLastro(sintese, textoFonte) {
+  const naFonte = extrairNumeros(textoFonte);
+  return extrairNumeros(sintese).filter((s) => !naFonte.some((f) => casa(s, f)));
+}
+
+function rotularOrfao(o) {
+  if (o.kind === 'pct') return `${o.value}%`;
+  if (o.kind === 'brl') return `R$ ${o.value}`;
+  if (o.kind === 'ratio') return `${o.value} por real/dólar`;
+  if (o.kind === 'date') return o.value;
+  return String(o.value);
+}
+
 /**
  * Validação completa da síntese antes de gravar. Reúne: anti-cópia (inviolável 2)
- * + guardrails editoriais reusando `assertEditorialRules` (emoji/urgência/interno,
- * regras 1/4/5) + corpo mínimo. Falha ⇒ `ok:false` com os motivos; o chamador NÃO
- * grava o summary e manda a notícia para revisão (nunca publica).
+ * + fidelidade numérica (INV-25) + guardrails editoriais reusando
+ * `assertEditorialRules` (emoji/urgência/interno, regras 1/4/5) + corpo mínimo.
+ * Falha ⇒ `ok:false` com os motivos; o chamador NÃO grava o summary e manda a
+ * notícia para revisão (nunca publica).
  *
  * @param {string} sintese
  * @param {{title?:string, content?:string}} noticia  fonte (título + conteúdo)
@@ -165,6 +262,14 @@ export function validarSintese(sintese, noticia = {}, { limiar = LIMIAR_ANTICOPI
   const run = maiorRunContiguo(s, textoFonte);
   if (run >= MAX_RUN_COPIA) {
     motivos.push(`anti-cópia (trecho contíguo): ${run} palavras seguidas idênticas à fonte (≥ ${MAX_RUN_COPIA}) — cláusula levantada, mesmo diluída num texto próprio (inviolável 2)`);
+  }
+
+  // Fidelidade numérica (INV-25): número na síntese sem lastro na fonte é tão grave
+  // quanto cópia (número sem lastro). Prefixo `numero_sem_lastro` para o chamador
+  // gravar em summary_review_reason. Não descarta — vai para revisão (D-060).
+  const orfaos = numerosSemLastro(s, textoFonte);
+  if (orfaos.length) {
+    motivos.push(`numero_sem_lastro: ${orfaos.map(rotularOrfao).join(', ')} — número(s) na síntese ausente(s) da fonte (INV-25, número sem lastro)`);
   }
 
   // Guardrails de string reusados da fonte única (não reforquear regex). Sem

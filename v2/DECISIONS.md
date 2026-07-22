@@ -1045,6 +1045,64 @@ A trava era inerte: um "Re-run job" (runner novo, ledger vazio) via `prev=undefi
   integração provando **exatamente 1** chamada real ao Beehiiv em 2 rodadas do mesmo dia.
   Monotonicidade de `enviado` provada ao vivo. 456/456 verdes.
 
+## D-084 — Outcomes-ledger (daily_outcomes): captura de desfecho, pré-requisito da calibração do limiar (GAMMA)
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** D-048/D-067.2/D-202 (ordem travada do HANDOFF §1). NÃO liga autopublish.
+
+A ordem inviolável (HANDOFF §1 / D-202): **ledger existe e captura → produto opera
+→ ledger acumula → auto-ajuste do gate D-048 liga.** Construir o ledger depois perde
+o histórico dos primeiros dias de 1-clique, justo quando o limiar 0,75 mais precisa
+aprender. Sem ledger capturando, autopublish autônomo (Nível 2) **não liga**.
+
+- **migration 020 `daily_outcomes`:** uma linha por (edição, item surfaceado):
+  identidade (`campaign_id`/`route_key`), o que foi **mostrado** (veredito/score/banda),
+  os **5 sinais objetivos de D-048** (booleans), a **ação humana** (aprovado_1clique/
+  corrigido/rejeitado + motivo) e o **desfecho** (confirmou_real/venceu/mudou). CHECKs
+  no domínio fechado de section/ação/desfecho.
+- **Determinismo (regra 8 + INV-03):** o ledger **CAPTURA**, nunca calcula/prediz. Os
+  5 sinais são **LIDOS** de `campanha_fontes.payload.breakdown` (a confirmação já
+  gravada), não recomputados. Campos de desfecho são **nullable** — preenchidos depois,
+  **nunca chutados** (null ≠ 0; teste prova que confiança 0 real ≠ ausência).
+- **Captura sem depender do shape editorial:** `montarLinhasOutcome` (puro) re-roda os
+  MESMOS seletores determinísticos sobre o MESMO `campaigns` que montou a edição —
+  reproduz quais campanhas foram surfaceadas, com o `id` que o item editorial não
+  carrega. Não é recomputar desfecho; é identificar o mostrado.
+- **Boundaries de captura:** montagem (`daily.mjs` → `capturarEdicao`, no momento da
+  montagem, não bloqueia o runner) + 1-clique (`beehiiv-publish.mjs --publish` registra
+  `aprovado_1clique`, só linhas sem ação prévia). Upsert idempotente (recapture não zera
+  ação/desfecho).
+- **Leitura da calibração:** `vw_calibracao_limiar` projeta só itens com confiança
+  capturada E desfecho conhecido; expõe `publicaria_no_limiar` (≥0,75) × `humano_reverteu`
+  × `desfecho` + `acerto_automatico` default. **Mede-e-propõe; não grava.** 0,75 é
+  constante na view (start conservador D-050) — a calibração o move medindo a view.
+- 8 testes verdes (captura, nullable-não-coage, ação humana, dia-fraco-não-inventa).
+
+## D-085 — Guardrail de fidelidade numérica na síntese (INV-25): número sem lastro = tão grave quanto cópia (DELTA)
+**Data:** 2026-07-22 · **Status:** Aplicada (Node no ar; deploy edge pendente do operador) · **Milestone:** M2.7 · **Origem:** limitação registrada em D-081 (crivo garante NÃO-CÓPIA, não fidelidade numérica)
+
+O anti-cópia (D-081) garante a inviolável 2 (não copiar), **não** que os números da
+síntese existam na fonte. Número inventado/trocado = INV-25 violado (número sem lastro):
+Hyatt "20% e **110k** pontos" quando a fonte só traz 20%; ou classificar "**25%**" o
+que a fonte diz "25 pontos por dólar". Tão grave quanto cópia.
+
+- **Checagem ESTRUTURAL, determinística (regra 8), não julgamento de LLM:**
+  `extrairNumeros` (regex por KIND: %, R$, milheiro, milhas, "X por real/dólar", datas)
+  + `normalizarNumero` (tolerância de formato: R$ 16,84 = 16.84; milhar; %). Cada número
+  da síntese casa contra os da FONTE (título+corpo) por **KIND + valor** com tolerância.
+- **KIND-aware** pega a classe AliExpress: "25%" (pct) não casa "25 pontos por dólar"
+  (ratio) → flag, mesmo com o valor 25 presente na fonte.
+- **Flag não descarta (D-060):** `summary_review_reason` com prefixo `numero_sem_lastro`
+  + o número órfão; vai para revisão, nunca publica (INV-25).
+- **Mesmo boundary do anti-cópia:** `validarSintese` (Node `sintese-clipping.mjs` + Deno
+  `_shared/anticopia.ts`, **espelho exato** com teste de drift Node↔Deno) e o crivo da
+  extração (`campaigns` edge fn `crivoResumo`). Fail-safe (erro no crivo → comportamento
+  antigo, nunca derruba).
+- **Testes (8):** número ausente reprova (Hyatt 110k); classe AliExpress (25% vs 25/dólar)
+  reprova; tolerância 16,84 vs 16.84 sem falso-positivo; todos presentes passa; órfão não
+  descarta. Drift Node↔Deno verde.
+- **Pendências do operador:** (1) redeploy das edge fns `sintese-clipping` (v2-inv25) e
+  `campaigns` (v19-inv25) — código e espelho prontos, deploy é mecânico; (2) volume
+  histórico via `npm run medir:orfao` (read-only sobre `news_raw.summary`, roda com creds).
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════

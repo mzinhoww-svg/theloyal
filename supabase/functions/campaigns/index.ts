@@ -38,7 +38,7 @@
 //   O custo em USD é derivado no painel (tokens × preço do model_registry),
 //   nunca aqui (INV-12). Falha ao gravar o ledger NUNCA bloqueia a extração.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { overlapNgram, maiorRunContiguo, LIMIAR_ANTICOPIA, MAX_RUN_COPIA } from "../_shared/anticopia.ts";
+import { overlapNgram, maiorRunContiguo, numerosSemLastro, LIMIAR_ANTICOPIA, MAX_RUN_COPIA } from "../_shared/anticopia.ts";
 
 // Crivo ANTI-CÓPIA no RESUMO da extração (A5, inviolável 2). O `resumo` do LLM
 // caía em `campaigns.notes` SEM crivo — a auditoria achou cópias literais do
@@ -58,6 +58,15 @@ function crivoResumo(resumo: string, fonte: string): { notes: string; motivo: st
       return {
         notes: "[resumo em revisao: possivel copia da fonte]",
         motivo: `anti-copia resumo: overlap ${ov.toFixed(2)} (limiar ${LIMIAR_ANTICOPIA}), run contiguo ${run} (limiar ${MAX_RUN_COPIA})`,
+      };
+    }
+    // Fidelidade numerica (INV-25): numero no resumo ausente da fonte = numero sem
+    // lastro (tao grave quanto copia). So os sinais estruturais, mesmo boundary.
+    const orfaos = numerosSemLastro(s, fonte);
+    if (orfaos.length) {
+      return {
+        notes: "[resumo em revisao: numero sem lastro na fonte]",
+        motivo: `numero_sem_lastro resumo: ${orfaos.map((o) => (o.kind === "pct" ? `${o.value}%` : String(o.value))).join(", ")} (INV-25)`,
       };
     }
     return { notes: s, motivo: null };
@@ -408,14 +417,14 @@ Deno.serve(async (req: Request) => {
       kind: "scheduled",
       status: "ok",
       campaigns_found: extracted,
-      human_note: `extract v18-c1 ${runId}: ${processed} noticias, ${extracted} campanhas, ${restantes} pendentes${stoppedByTime ? " (parou por tempo)" : ""}`,
+      human_note: `extract v19-inv25 ${runId}: ${processed} noticias, ${extracted} campanhas, ${restantes} pendentes${stoppedByTime ? " (parou por tempo)" : ""}`,
     });
   } catch (e) {
     console.error("Erro ao logar run:", e);
   }
 
   return new Response(
-    JSON.stringify({ processadas: processed, campanhas: extracted, pendentes: restantes, parou_por_tempo: stoppedByTime, runId, modelo: MODEL, versao: "v18-c1" }),
+    JSON.stringify({ processadas: processed, campanhas: extracted, pendentes: restantes, parou_por_tempo: stoppedByTime, runId, modelo: MODEL, versao: "v19-inv25" }),
     { headers: { "Content-Type": "application/json" } },
   );
 });
