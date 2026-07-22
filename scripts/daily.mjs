@@ -117,6 +117,96 @@ function contentHash(html) { return createHash('sha256').update(html).digest('he
 function loadLedger() { return existsSync(LEDGER) ? JSON.parse(readFileSync(LEDGER, 'utf8')) : {}; }
 function saveLedger(l) { writeFileSync(LEDGER, JSON.stringify(l, null, 2) + '\n'); }
 
+// ─── C2: trava de envio à prova de runner efêmero ────────────────────────────
+// O ledger de arquivo (content/daily-status.json) NÃO sobrevive ao runner do
+// Actions — a trava de reenvio morava ali e era inerte (um "Re-run" via ledger
+// vazio e disparava um 2º envio). A verdade durável mora no banco (daily_sends,
+// migration 019) e/ou no próprio Beehiiv. Estas peças leem/gravam essa verdade.
+
+// Decisão PURA de envio. Combina três travas, todas REDUTORAS (nunca aumentam a
+// permissão que o rating já concedeu em `publicar`):
+//   (a) FRESHNESS: a edição tem de ser de HOJE (BRT). Edição com data ≠ hoje
+//       NUNCA auto-envia (o gate antigo validava vigência contra ed.date, não
+//       contra o dia real — um "Re-run" de ontem reenviaria a peça velha).
+//   (b) TRAVA DURÁVEL: se o dia já consta enviado (banco, sobrevive ao runner),
+//       reenvio é bloqueado — mesmo com ledger de arquivo zerado.
+//   (c) FONTE DE VERDADE BEEHIIV: post do dia já enviado bloqueia (idempotência
+//       server-side; a verdade final é o provedor, não nosso registro).
+// Não faz I/O: recebe o estado já lido. Testável em isolamento.
+export function decidirEnvio({ ed, hoje, publicar, lockRemoto = null, postBeehiivEnviado = null }) {
+  if (!publicar) return { enviar: false, acao: 'draft', motivo: 'não elegível a envio — rascunho + 1 clique' };
+  if (!ed || ed.date !== hoje) {
+    return { enviar: false, acao: 'bloqueado-stale', postId: null,
+      motivo: `freshness: edição ${ed?.date ?? '(sem data)'} não é de hoje (${hoje}) — edição velha nunca auto-envia` };
+  }
+  if (lockRemoto?.enviado) {
+    return { enviar: false, acao: 'ja-enviado', postId: lockRemoto.post_id ?? null,
+      motivo: `trava durável: dia ${ed.date} já enviado (${lockRemoto.post_id ?? 'sem post_id'}) — reenvio bloqueado` };
+  }
+  if (postBeehiivEnviado) {
+    return { enviar: false, acao: 'ja-enviado-beehiiv', postId: postBeehiivEnviado.id ?? null,
+      motivo: `fonte de verdade Beehiiv: post do dia ${ed.date} já enviado (${postBeehiivEnviado.id}) — não cria segundo` };
+  }
+  return { enviar: true, acao: 'enviar', postId: lockRemoto?.post_id ?? null,
+    motivo: `edição fresca (${ed.date}=${hoje}), sem envio prévio — apto a enviar` };
+}
+
+const restHeaders = (key) => ({ apikey: key, authorization: `Bearer ${key}`, 'content-type': 'application/json' });
+
+// Lê a trava durável do dia (null se ausente/sem creds/erro — degrada para draft).
+async function lerLockEnvio({ url, key, date, fetchImpl = fetch }) {
+  try {
+    const r = await fetchImpl(`${url}/rest/v1/daily_sends?edition_date=eq.${date}&select=*`, { headers: restHeaders(key) });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    return Array.isArray(rows) && rows.length ? rows[0] : null;
+  } catch { return null; }
+}
+
+// Claim ATÔMICO do envio (RPC reservar_envio_diario). reservado=true só para quem
+// faz a transição enviado false→true; concorrente/posterior recebe ja_enviado.
+// Erro/sem creds → { reservado:false, ja_enviado:false } (o chamador não envia).
+async function reservarEnvio({ url, key, date, number, fetchImpl = fetch }) {
+  try {
+    const r = await fetchImpl(`${url}/rest/v1/rpc/reservar_envio_diario`, {
+      method: 'POST', headers: restHeaders(key),
+      body: JSON.stringify({ p_edition_date: date, p_edition_number: number ?? null }),
+    });
+    if (!r.ok) return { reservado: false, ja_enviado: false, post_id: null };
+    const j = await r.json();
+    return Array.isArray(j) ? j[0] : j;
+  } catch { return { reservado: false, ja_enviado: false, post_id: null }; }
+}
+
+// Grava/atualiza a trava do dia. `enviado` é OMITIDO no caminho draft (upsert
+// merge só toca as colunas enviadas → monotonicidade de `enviado` preservada).
+async function gravarLockEnvio({ url, key, date, number, postId, hash, enviado, sentAt, fetchImpl = fetch }) {
+  try {
+    const row = { edition_date: date, edition_number: number ?? null, post_id: postId ?? null, content_hash: hash ?? null };
+    if (enviado === true) { row.enviado = true; row.sent_at = sentAt ?? new Date().toISOString(); }
+    await fetchImpl(`${url}/rest/v1/daily_sends`, {
+      method: 'POST', headers: { ...restHeaders(key), prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify(row),
+    });
+  } catch { /* trava é aditiva; falha ao gravar não derruba o runner */ }
+}
+
+// Idempotência SERVER-SIDE: procura no Beehiiv um post do dia já ENVIADO
+// (confirmed/published) antes de criar outro. Casa pelo título canônico do dia.
+async function buscarPostDoDiaBeehiiv({ apiKey, pubId, ed, fetchImpl = fetch }) {
+  try {
+    const titulo = ed.beehiivTitle || `The Loyal Daily — ${ed.date}`;
+    const r = await fetchImpl(`https://api.beehiiv.com/v2/publications/${pubId}/posts?limit=50&order_by=created&direction=desc`, {
+      headers: { authorization: `Bearer ${apiKey}` },
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const posts = Array.isArray(j?.data) ? j.data : [];
+    const enviados = new Set(['confirmed', 'published', 'archived']);
+    return posts.find((p) => p?.title === titulo && enviados.has(p?.status)) || null;
+  } catch { return null; }
+}
+
 // Fila de revisão como ARTEFATO legível (A4): o operador a vê ANTES de aprovar
 // o envio. Um item por flag, com motivo e o link da fonte quando houver. Nada
 // aqui bloqueia — é a lista que o olho humano confere.
@@ -169,49 +259,104 @@ export function avaliarRating(veredito) {
 // Upsert do rascunho, idempotente por DATA. `publicar=true` só quando a edição é
 // auto-elegível E o operador ligou o auto-publish (env TL_AUTOPUBLISH=on): aí o
 // status vai a "confirmed" (ENVIA). Caso contrário fica "draft" (1 clique).
-// Envio é idempotente: uma vez enviado num dia, nunca reenvia. Sem BEEHIIV_API_KEY
-// → mock (nunca chama a API).
-async function upsertRascunho({ ed, html, hoje, publicar = false }) {
-  const ledger = loadLedger();
+//
+// C2 — a idempotência de ENVIO agora é DURÁVEL (banco daily_sends, migration 019)
+// + fonte de verdade Beehiiv, não mais o arquivo efêmero. O caminho:
+//   1. lê a trava durável do dia (sobrevive ao runner do Actions);
+//   2. `decidirEnvio` aplica freshness (ed.date===hoje) + trava + Beehiiv;
+//   3. envio real só após CLAIM ATÔMICO (RPC) — 2 runners no mesmo minuto ⇒ 1 só
+//      envia; o outro vira no-op.
+// O `post_id` do dia mora na trava durável (não no arquivo), então o reuso
+// PATCH-vs-POST do rascunho funciona mesmo num runner novo. Sem BEEHIIV_API_KEY →
+// mock; sem creds Supabase → cai no ledger de arquivo (dev local).
+export async function upsertRascunho({ ed, html, hoje, publicar = false, io = {} }) {
+  const {
+    lerLock = lerLockEnvio, reservar = reservarEnvio, gravarLock = gravarLockEnvio,
+    buscarPostBeehiiv = buscarPostDoDiaBeehiiv, fetchImpl = fetch, env = process.env,
+  } = io;
   const chave = ed.date; // idempotência por data da edição
   const hash = contentHash(html);
-  const prev = ledger[chave];
 
-  // Trava dura de reenvio: se já foi enviado hoje, nunca reenvia (mesmo com hash novo).
-  if (prev?.enviado) {
-    log('[5/5]', `edição do dia ${chave} JÁ ENVIADA (${prev.postId}) — reenvio bloqueado (idempotente).`);
-    return { postId: prev.postId, status: 'ja-enviado', url: prev.url, enviado: true };
-  }
-  if (prev && prev.contentHash === hash && !publicar) {
-    log('[5/5]', `rascunho do dia ${chave} já está no mesmo conteúdo (${prev.postId || 'mock'}) — idempotente, nada a fazer.`);
-    return { postId: prev.postId, status: 'noop-idempotente', url: prev.url };
+  const url = env.SUPABASE_URL;
+  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY;
+  const apiKey = env.BEEHIIV_API_KEY;
+  const pubId = env.BEEHIIV_PUBLICATION_ID;
+  const durable = Boolean(url && key);
+
+  // Estado prévio: em modo DURÁVEL (creds Supabase), o BANCO é a única verdade —
+  // o arquivo (efêmero, poluível) é ignorado. Sem creds → arquivo é o fallback
+  // local de dev. Nunca misturar as duas fontes (senão um arquivo velho
+  // curto-circuita a decisão que o banco deveria mandar).
+  const ledger = loadLedger();
+  const fileLock = durable ? null : ledger[chave];
+  const lockRemoto = durable ? await lerLock({ url, key, date: chave, fetchImpl }) : null;
+  const lockEfetivo = durable
+    ? lockRemoto
+    : (fileLock?.enviado ? { enviado: true, post_id: fileLock.postId } : (fileLock ? { enviado: false, post_id: fileLock.postId } : null));
+  let prevPostId = (durable ? lockRemoto?.post_id : fileLock?.postId) ?? null;
+
+  // Fonte de verdade Beehiiv (server-side) só quando de fato iríamos enviar.
+  let postBeehiivEnviado = null;
+  if (publicar && ed.date === hoje && apiKey && pubId) {
+    postBeehiivEnviado = await buscarPostBeehiiv({ apiKey, pubId, ed, fetchImpl });
   }
 
-  const apiKey = process.env.BEEHIIV_API_KEY;
-  const pubId = process.env.BEEHIIV_PUBLICATION_ID;
-  const statusAlvo = publicar ? 'confirmed' : 'draft';
+  const decisao = decidirEnvio({ ed, hoje, publicar, lockRemoto: lockEfetivo, postBeehiivEnviado });
+
+  // Já enviado (durável ou Beehiiv) → no-op absoluto. Reconcilia banco↔Beehiiv.
+  if (decisao.acao === 'ja-enviado' || decisao.acao === 'ja-enviado-beehiiv') {
+    log('[5/5]', `dia ${chave}: ${decisao.motivo} — reenvio bloqueado (idempotente).`);
+    if (durable && postBeehiivEnviado && !lockRemoto?.enviado) {
+      await gravarLock({ url, key, date: chave, number: ed.number, postId: postBeehiivEnviado.id, hash, enviado: true, fetchImpl });
+    }
+    return { postId: decisao.postId ?? prevPostId, status: 'ja-enviado', url: fileLock?.url ?? null, enviado: true };
+  }
+  if (decisao.acao === 'bloqueado-stale') {
+    log('[5/5]', `dia ${chave}: ${decisao.motivo} — rebaixa para rascunho (sem envio).`);
+  }
+
+  // Vai ENVIAR de verdade? Só há envio real com credencial Beehiiv — em mock NÃO
+  // reservamos (senão uma rodada de dev travaria o dia no banco sem ter enviado).
+  const enviarAgora = decisao.enviar;
+  const vaiEnviarReal = enviarAgora && Boolean(apiKey && pubId);
+  if (vaiEnviarReal && durable) {
+    // CLAIM ATÔMICO antes de qualquer chamada real ao Beehiiv (2 runners ⇒ 1 envio).
+    const res = await reservar({ url, key, date: chave, number: ed.number, fetchImpl });
+    if (!res?.reservado) {
+      log('[5/5]', `dia ${chave}: envio já reservado/feito por outra rodada (claim atômico) — no-op.`);
+      return { postId: res?.post_id ?? prevPostId, status: 'ja-enviado', url: null, enviado: true };
+    }
+    prevPostId = res.post_id ?? prevPostId; // dono do envio; reusa o post do dia se já havia rascunho
+  }
+
+  const statusAlvo = enviarAgora ? 'confirmed' : 'draft';
   let record;
   if (apiKey && pubId) {
-    // Reusa o post do dia se já existe (PATCH); senão cria (POST).
     const body = { title: ed.beehiivTitle || `The Loyal Daily — ${ed.date}`, status: statusAlvo, body_content: html };
-    const isUpdate = Boolean(prev?.postId);
+    const isUpdate = Boolean(prevPostId);
     const endpoint = isUpdate
-      ? `https://api.beehiiv.com/v2/publications/${pubId}/posts/${prev.postId}`
+      ? `https://api.beehiiv.com/v2/publications/${pubId}/posts/${prevPostId}`
       : `https://api.beehiiv.com/v2/publications/${pubId}/posts`;
-    const r = await fetch(endpoint, {
+    const r = await fetchImpl(endpoint, {
       method: isUpdate ? 'PATCH' : 'POST',
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (!r.ok) throw new Error(`Beehiiv ${isUpdate ? 'PATCH' : 'POST'} ${r.status}: ${(await r.text()).slice(0, 200)}`);
     const j = await r.json();
-    record = { postId: j?.data?.id || prev?.postId, status: publicar ? 'ENVIADO (auto-publish)' : (isUpdate ? 'atualizado' : 'criado'), url: j?.data?.web_url || prev?.url, enviado: publicar };
-    log('[5/5]', `Beehiiv: ${record.status} (${record.postId})${publicar ? ' — status confirmed, ENVIO REAL' : ' — status draft, sem envio'}.`);
+    record = { postId: j?.data?.id || prevPostId, status: enviarAgora ? 'ENVIADO (auto-publish)' : (isUpdate ? 'atualizado' : 'criado'), url: j?.data?.web_url || fileLock?.url, enviado: enviarAgora };
+    log('[5/5]', `Beehiiv: ${record.status} (${record.postId})${enviarAgora ? ' — status confirmed, ENVIO REAL' : ' — status draft, sem envio'}.`);
   } else {
-    record = { postId: prev?.postId || null, status: `mock (sem BEEHIIV_API_KEY)${publicar ? ' — ENVIO seria disparado' : ''}`, url: prev?.url || null, enviado: false };
-    log('[5/5]', `MOCK: sem credencial Beehiiv — ${publicar ? 'ENVIO seria disparado (auto-elegível)' : 'rascunho não enviado'}. Alvo do dia ${chave}: ${record.postId || '(a criar na 1ª publicação real)'}.`);
+    record = { postId: prevPostId || null, status: `mock (sem BEEHIIV_API_KEY)${enviarAgora ? ' — ENVIO seria disparado' : ''}`, url: fileLock?.url || null, enviado: false };
+    log('[5/5]', `MOCK: sem credencial Beehiiv — ${enviarAgora ? 'ENVIO seria disparado (auto-elegível)' : 'rascunho não enviado'}. Alvo do dia ${chave}: ${record.postId || '(a criar na 1ª publicação real)'}.`);
   }
 
+  // Persiste a trava durável (post_id sempre; enviado só quando de fato enviou —
+  // o RPC já marcou enviado=true, aqui só gravamos post_id/hash). Arquivo continua
+  // como cache local para dev sem Supabase.
+  if (durable) {
+    await gravarLock({ url, key, date: chave, number: ed.number, postId: record.postId, hash, enviado: record.enviado === true ? true : undefined, fetchImpl });
+  }
   ledger[chave] = { ...record, contentHash: hash, lastRun: hoje, editionNumber: ed.number };
   saveLedger(ledger);
   return record;

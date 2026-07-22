@@ -1015,6 +1015,36 @@ o dado de teste refletia o furo.
   - No banco, a única Caixa viva+cartão (`caixa-desconhecido-cartao-2027-12-31`) está
     marcada `clipping_only`; a outra viva (`...-compra-...`) não é cartão, não vazaria.
 
+## D-083 — Trava de envio durável + freshness: reenvio à prova de runner efêmero (C2)
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** auditoria de envio (C2). NÃO liga auto-publish (D-050 segue: TL_AUTOPUBLISH off).
+
+A idempotência de envio do Daily vivia em `content/daily-status.json` — arquivo NÃO
+versionado, no working dir de um runner do GitHub Actions **descartado a cada rodada**.
+A trava era inerte: um "Re-run job" (runner novo, ledger vazio) via `prev=undefined` e
+**disparava um segundo envio real** do mesmo dia. E o gate validava vigência contra
+`ed.date`, não contra o **dia real** — então uma edição velha reprocessada podia enviar.
+
+- **Trava DURÁVEL no banco (migration 019, `daily_sends`):** uma linha por data de
+  edição; `enviado` monotônico (true nunca volta a false); `post_id` do dia mora aqui
+  (não no arquivo), então o reuso PATCH-vs-POST do rascunho funciona **entre runners**.
+- **Claim ATÔMICO (`reservar_envio_diario`):** transição `enviado` false→true numa só
+  instrução condicional. Quem faz a transição GANHA o envio; concorrente/posterior
+  recebe `ja_enviado=true` e **não envia**. Provado ao vivo: `run1 reservado=true`,
+  `run2 ja_enviado=true`. Cobre a corrida real (dois runners no mesmo minuto).
+- **Freshness (`decidirEnvio`):** precondição `ed.date === hoje` (BRT, `hojeSaoPaulo`).
+  Edição com data ≠ hoje **nunca auto-envia**, independentemente de rating/lock.
+- **Idempotência server-side (Beehiiv):** antes de criar, procura no Beehiiv um post do
+  dia já enviado (título canônico + status confirmed/published); se existe, **não cria
+  segundo** e reconcilia a trava. A verdade final é o provedor.
+- **Só trava em envio REAL:** em mock (sem credencial Beehiiv) NÃO reserva — uma rodada
+  de dev não pode travar o dia no banco sem ter enviado. Em modo durável (creds
+  Supabase) o arquivo é **ignorado na leitura** (o banco é a única verdade; nunca mistura
+  as duas fontes).
+- **Testes:** `decidirEnvio` puro cobre os 4 cenários (2 rodadas→1 envio; edição de
+  ontem bloqueada; re-run após envio→no-op; post já enviado no Beehiiv→no-op) + teste de
+  integração provando **exatamente 1** chamada real ao Beehiiv em 2 rodadas do mesmo dia.
+  Monotonicidade de `enviado` provada ao vivo. 456/456 verdes.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════
