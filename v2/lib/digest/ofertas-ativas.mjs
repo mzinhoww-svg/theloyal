@@ -14,6 +14,26 @@ export const BANCOS_ORIGEM = [
 ];
 
 /**
+ * A8 (D-061.2): decisão editorial do operador de que um item só pode aparecer no
+ * CLIPPING (ex.: cashback de IOF da Caixa — tarifa, não bônus). O campo `used_in`
+ * marca isso, mas ninguém o lia → a montagem automática reverteria a decisão. Aqui
+ * está o único leitor determinístico. NORMALIZA a forma (o campo aparece como
+ * array `['clipping_only']` OU objeto `{pro,daily,weekly,clipping_only}`):
+ *   - array  → inclui a string 'clipping_only';
+ *   - objeto → chave `clipping_only` truthy.
+ * Qualquer outra forma/ausência → false (default: não é clipping-only).
+ * @param {object} campaign  linha de `campaigns` (com `used_in`)
+ * @returns {boolean}
+ */
+export function ehClippingOnly(campaign) {
+  const u = campaign?.used_in;
+  if (!u) return false;
+  if (Array.isArray(u)) return u.includes('clipping_only');
+  if (typeof u === 'object') return Boolean(u.clipping_only);
+  return false;
+}
+
+/**
  * Ofertas ativas (§1.1): TODO item vivo com conta computável, sem o corte de
  * veredito de Deal Desk por cima — é literalmente `passaTresPortoes` (D-044)
  * aplicado a `campaigns`, sem `elegivelDealDesk`. `leitura` reusa o vocabulário
@@ -27,7 +47,7 @@ export const BANCOS_ORIGEM = [
  */
 export function selecionarOfertasAtivas(campaigns = []) {
   const itens = (campaigns || [])
-    .filter((c) => passaTresPortoes(c))
+    .filter((c) => passaTresPortoes(c) && !ehClippingOnly(c)) // A8: respeita clipping-only (D-061.2)
     .map((c) => ({
       origem: c.origem_code ?? null,
       destino: c.destino_code ?? null,
@@ -56,6 +76,7 @@ export function selecionarCartoesBancos(campaigns = [], { bancosOrigem = BANCOS_
   const itens = (campaigns || [])
     .filter((c) => {
       if (!c) return false;
+      if (ehClippingOnly(c)) return false; // A8: decisão do operador — só Clipping (D-061.2)
       const vivo = TRES_PORTOES.estadosVivo.includes(c.estado);
       if (!vivo) return false;
       if (c.tipo === 'cartao') return true;

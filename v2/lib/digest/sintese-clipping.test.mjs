@@ -10,8 +10,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
-  overlapNgram, passaAntiCopia, validarSintese, montarPromptSintese,
-  LIMIAR_ANTICOPIA, MIN_CHARS_SINTESE,
+  overlapNgram, passaAntiCopia, validarSintese, montarPromptSintese, maiorRunContiguo,
+  LIMIAR_ANTICOPIA, MIN_CHARS_SINTESE, MAX_RUN_COPIA, MAX_PALAVRAS_SINTESE,
 } from './sintese-clipping.mjs';
 import { montarEdicaoDoDia, reconstruirConjuntoVivo, resolverNumeroEdicao } from './montar-edicao.mjs';
 import { renderBeehiivHtml } from './render-beehiiv.mjs';
@@ -94,6 +94,54 @@ test('validarSintese: síntese vazia ou curta demais FALHA', () => {
   assert.equal(curta.ok, false);
   assert.ok(curta.motivos.some((m) => /curta demais/.test(m)));
   assert.ok('Smiles bonificou.'.length < MIN_CHARS_SINTESE);
+});
+
+// ── maiorRunContiguo + backstop de diluição (A5, reforço do anti-cópia) ──
+const FONTE = `${NOTICIA.title}\n${NOTICIA.content}`;
+
+test('maiorRunContiguo: mede o maior trecho literal comum, em palavras', () => {
+  // 8, 12 e 15 palavras contíguas levantadas da fonte.
+  const c8 = 'um bônus de 100% na transferência de pontos'; // 8
+  const c12 = 'um bônus de 100% na transferência de pontos para o programa a'; // 12
+  const c15 = 'um bônus de 100% na transferência de pontos para o programa a partir de bancos'; // 15
+  assert.equal(maiorRunContiguo(c8, FONTE), 8);
+  assert.equal(maiorRunContiguo(c12, FONTE), 12);
+  assert.equal(maiorRunContiguo(c15, FONTE), 15);
+  // Redação própria: nenhum trecho longo em comum.
+  assert.ok(maiorRunContiguo(SINTESE_PROPRIA, FONTE) < MAX_RUN_COPIA);
+});
+
+test('FALSO-NEGATIVO POR DILUIÇÃO: cláusula de 15 palavras diluída — overlap < 0,35 mas REPROVA pelo run', () => {
+  // ~40 palavras de texto próprio embrulhando uma cláusula de 15 palavras LITERAL
+  // da fonte. É o caso do enunciado A5: a fração de 4-gramas dilui abaixo de 0,35
+  // (o crivo antigo publicaria), mas 15 palavras seguidas idênticas é cópia.
+  const diluida =
+    'Analistas de milhas destacaram a nova ação nesta semana, quando surgiu ' +
+    'um bônus de 100% na transferência de pontos para o programa a partir de bancos, ' +
+    'algo que altera o cálculo de quem acumula saldo por meio de instituições financeiras parceiras.';
+  const ov = overlapNgram(diluida, FONTE);
+  const run = maiorRunContiguo(diluida, FONTE);
+  assert.ok(ov < LIMIAR_ANTICOPIA, `diluição: overlap devia ficar ABAIXO de 0,35 (o buraco antigo), veio ${ov.toFixed(3)}`);
+  assert.ok(run >= MAX_RUN_COPIA, `o run devia pegar a cláusula, veio ${run}`);
+  const r = validarSintese(diluida, NOTICIA);
+  assert.equal(r.ok, false, 'a diluída tem de REPROVAR agora');
+  assert.ok(r.motivos.some((m) => /contíguo|contiguo/.test(m)), `motivo do run esperado: ${r.motivos.join(' | ')}`);
+});
+
+test('run ≥ 8 reprova; 7 palavras contíguas (sem overlap alto) não dispara o run', () => {
+  const embrulho = (clausula) =>
+    `Editores observaram a mudança recente do programa e comentaram que houve ${clausula} numa nota curta divulgada pela imprensa especializada em viagens.`;
+  const c8 = 'um bônus de 100% na transferência de pontos'; // 8
+  const c7 = 'bônus de 100% na transferência de pontos'; // 7
+  assert.ok(maiorRunContiguo(embrulho(c8), FONTE) >= MAX_RUN_COPIA);
+  assert.ok(maiorRunContiguo(embrulho(c7), FONTE) < MAX_RUN_COPIA);
+});
+
+test('validarSintese: teto de palavras — síntese longa demais REPROVA', () => {
+  const longa = Array.from({ length: MAX_PALAVRAS_SINTESE + 6 }, (_, i) => `palavra${i}`).join(' ');
+  const r = validarSintese(longa, NOTICIA);
+  assert.equal(r.ok, false);
+  assert.ok(r.motivos.some((m) => /longa demais|palavras/.test(m)), `motivos: ${r.motivos.join(' | ')}`);
 });
 
 // ── montarPromptSintese ──

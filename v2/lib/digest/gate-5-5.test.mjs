@@ -17,7 +17,7 @@ const CAMPANHAS_HOJE = [
   {
     id: 'smiles-desconhecido-compra-2026-07-17',
     tipo: 'compra', origem_code: 'brl', destino_code: 'smiles', publico: 'geral',
-    estado: 'ultimos_dias', tier: 1, tl_score_bruto: 55, veredito_bruto: 'Só para casos específicos',
+    estado: 'ultimos_dias', tier: 1, tem_tier1: true, tl_score_bruto: 55, veredito_bruto: 'Só para casos específicos',
     override_aplicado: null, vigencia_fim: '2026-07-17T23:59:00-03:00', first_seen: '2026-07-10',
   },
 ];
@@ -118,7 +118,7 @@ test('COM Deal Desk: deal que não bate rota conhecida no banco → gate reprova
 
 test('COM Deal Desk: deal recomputa limpo contra o banco → todos os checks passam', () => {
   const campanha = {
-    id: 'c1', origem_code: 'livelo', destino_code: 'smiles', estado: 'ativa', tier: 1,
+    id: 'c1', origem_code: 'livelo', destino_code: 'smiles', estado: 'ativa', tier: 1, tem_tier1: true,
     tl_score_bruto: 90, veredito_bruto: 'Vale agir', vigencia_fim: '2026-08-01T00:00:00-03:00',
   };
   const ed = {
@@ -136,7 +136,7 @@ test('COM Deal Desk: deal recomputa limpo contra o banco → todos os checks pas
 
 test('COM Deal Desk: veredito do deal não bate com {vale-agir,vale-olhar} → reprova', () => {
   const campanha = {
-    id: 'c1', origem_code: 'livelo', destino_code: 'smiles', estado: 'ativa', tier: 1,
+    id: 'c1', origem_code: 'livelo', destino_code: 'smiles', estado: 'ativa', tier: 1, tem_tier1: true,
     tl_score_bruto: 60, veredito_bruto: 'Só para casos específicos', vigencia_fim: '2026-08-01T00:00:00-03:00',
   };
   const ed = {
@@ -155,7 +155,7 @@ const CAMPANHA_CARTAO = { id: 'cartao1', tipo: 'cartao', origem_code: 'itau', de
 const CAMPANHA_BANCO = { id: 'banco1', tipo: 'transferencia', origem_code: 'nubank', destino_code: 'livelo', estado: 'detectada', tier: 2, tl_score_bruto: null, veredito_bruto: null, percentual: 15, vigencia_fim: null };
 const CAMPANHA_ENCERRADA_SEMANA = {
   id: 'encerrada1', tipo: 'transferencia', origem_code: 'livelo', destino_code: 'azul', estado: 'encerrada',
-  tier: 1, tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: 120, vigencia_fim: '2026-07-12T23:59:00-03:00',
+  tier: 1, tem_tier1: true, tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: 120, vigencia_fim: '2026-07-12T23:59:00-03:00',
 };
 const CAMPANHAS_V3 = [...CAMPANHAS_HOJE, CAMPANHA_CARTAO, CAMPANHA_BANCO, CAMPANHA_ENCERRADA_SEMANA];
 

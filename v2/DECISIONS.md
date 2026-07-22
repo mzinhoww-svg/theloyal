@@ -944,6 +944,107 @@ secrets. **Auto-publish permanece OFF em todo este plano** — a estreia é RECU
   2026-07-14` (sem `--edition`) montou **edição nº29 nova** (≠ 0001/0028), GATE VERDE,
   única pendência = uma oferta VIVA legítima (revolut 400%), autopublish off → rascunho.
 
+## D-081 — A5: anti-cópia em produção + Clipping ligado com síntese própria
+**Data:** 2026-07-18 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** auditoria A5 (cópia em resumos LLM)
+
+A regra inviolável 2 (nunca copiar texto/título da fonte) estava sem crivo em
+produção: 20,5% (747/3.643) dos `resumos` de extração em `campaigns.notes` eram
+**cópia verbatim** da fonte, e o crivo de 4-gramas (0,35) tinha falso-negativo por
+DILUIÇÃO (15 palavras copiadas num resumo de 62 → overlap 0,24 → publicava).
+
+- **Migration 016 APLICADA:** `news_raw.summary` + proveniência (`summary_model`,
+  `summary_tokens_in/out`, `summary_job_ref`, `summary_review_reason`) + estágio
+  `sintese_clipping` no CHECK do ledger. Aditiva, zero regressão (40.865 linhas intactas).
+- **Anti-cópia reforçado (2 sinais):** além do overlap de 4-gramas (0,35, PROPORÇÃO),
+  agora **maior trecho contíguo** (`maiorRunContiguo` ≥ **8 palavras** idênticas ⇒
+  reprova — pega a diluição) + teto de **45 palavras**. Fonte única do crivo espelhada
+  em Deno (`supabase/functions/_shared/anticopia.ts`) com **teste de drift** que reprova
+  o CI se os limiares divergirem do Node.
+- **ONDE a síntese roda (decisão):** a chave do OpenRouter vive **só no ambiente das
+  edge functions** (Vault SQL vazio, confirmado) — não em secret do GitHub. Logo a
+  síntese REAL roda numa **edge function** (`sintese-clipping`), lendo a key do
+  Deno.env, nunca esperando key no Actions. **Provado por lote real:** tokens em
+  `llm_jobs` (estágio `sintese_clipping`, 11 jobs, 4.479 in / 452 out), não mock.
+- **Clipping ligado:** `sintese-clipping` gera `news_raw.summary` PRÓPRio (passa o
+  crivo) só para news de **relevância loyalty** (filtro no candidato — evita gastar LLM
+  e surfacializar ruído); reprova → `summary_review_reason`, nunca publica (INV-2). Piso
+  rígido 5 mantido; sem key → mock, 0 job (INV-03). `montarClipping` já puxa o summary.
+- **Crivo no resumo da EXTRAÇÃO:** a edge fn `campaigns` passou a rodar o anti-cópia
+  (só os sinais de cópia, não o tamanho) no `resumo` antes de escrever `notes`: cópia
+  vira marcador neutro + `summary_review_reason`. Fail-safe (erro no crivo → comportamento
+  antigo, nunca derruba a extração).
+- **Backfill:** 747 resumos verbatim FLAGADOS em `campanha_versoes`
+  (`evento=flag_anticopia_resumo_backfill`, idempotente) — flag, não descarte (D-060).
+  Volume grande reportado ao operador; a reescrita das notes históricas fica como decisão dele.
+
+## D-082 — Integridade do dado que alimenta o Deal Desk: TIER 1 por lastro, views sem furo, clipping-only respeitado
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** auditoria de integridade (C1/A3/A8)
+
+Três furos que deixavam o gate do Deal Desk (D-044) oco ou revertiam decisão do
+operador na montagem automática. Os três eram silenciosos — passavam no CI porque
+o dado de teste refletia o furo.
+
+- **C1 — TIER 1 vinha do LLM, não de confirmação (D-048/INV-02).** A edge fn
+  `campaigns` gravava `tier: c.tier || 2` — o `tier` do extrator é claim do LLM, sem
+  lastro em `campanha_fontes`. Auditoria: **49 de 50** `tier=1` **sem nenhuma fonte
+  oficial**, então o portão 2 do Deal Desk (`tier===1`) era decorativo.
+  - **Ingest nunca mais aceita tier do LLM:** edge fn `campaigns` v18 grava **sempre
+    `tier: 2`**; `tier=1` só por `coleta-tier1`/`gravacao-tier1`, que escrevem
+    `campanha_fontes` (a confirmação real).
+  - **`tem_tier1` é derivado de `campanha_fontes`, não do campo `tier`:** o portão 2
+    (`selecionar.mjs` `temTier1Confirmado`) lê `campaign.tem_tier1`, que o runner
+    (`daily.mjs`) preenche cruzando `campaigns.id` contra `campanha_fontes`. Sem linha
+    de confirmação → não passa, independentemente do que o LLM disse.
+  - **Rebaixa dos 49 sem lastro APLICADA:** `tier=2` com trilha em `campanha_versoes`
+    (`evento=rebaixa_tier_sem_lastro`). Invariante `tier=1 ⇒ ∃ campanha_fontes` agora
+    vale: antes 50 tier=1 (1 com lastro); depois **1 tier=1, 1 com lastro, 0 sem lastro**.
+- **A3 — views históricas com INNER JOIN escondiam campanha nova para sempre.**
+  `vw_placar_rota`/`vw_banco_programa` faziam INNER JOIN em `triagem_backlog_m3` (evento
+  de triagem única) — campanha ainda não triada **nunca aparecia no placar**.
+  - **Migration 018 APLICADA:** LEFT JOIN LATERAL + regra explícita
+    `coalesce(t.categoria,'sem_triagem') <> 'revisao'` — não-triada **conta**, só
+    `revisao` fica de fora. **Provado:** campanha sintética sem triagem (`categoria=null`)
+    aparece em `vw_placar_rota` sob LEFT JOIN e era invisível sob o INNER JOIN antigo.
+- **A8 — `used_in=['clipping_only']` (D-061.2) não era lido por ninguém.** Decisão
+  editorial do operador de que um item só entra no Clipping (ex.: cashback de IOF da
+  Caixa — tarifa, não bônus) era ignorada na montagem automática, que ressuscitava o item.
+  - **Único leitor determinístico:** `ehClippingOnly` (`ofertas-ativas.mjs`) normaliza a
+    forma do campo (array `['clipping_only']` OU objeto `{...,clipping_only}`) e é aplicado
+    em `selecionarOfertasAtivas` e `selecionarCartoesBancos`. **Golden:** item Caixa
+    vivo+cartão marcado `clipping_only` é cortado de Cartões&bancos; sem a marca, entraria.
+  - No banco, a única Caixa viva+cartão (`caixa-desconhecido-cartao-2027-12-31`) está
+    marcada `clipping_only`; a outra viva (`...-compra-...`) não é cartão, não vazaria.
+
+## D-083 — Trava de envio durável + freshness: reenvio à prova de runner efêmero (C2)
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** auditoria de envio (C2). NÃO liga auto-publish (D-050 segue: TL_AUTOPUBLISH off).
+
+A idempotência de envio do Daily vivia em `content/daily-status.json` — arquivo NÃO
+versionado, no working dir de um runner do GitHub Actions **descartado a cada rodada**.
+A trava era inerte: um "Re-run job" (runner novo, ledger vazio) via `prev=undefined` e
+**disparava um segundo envio real** do mesmo dia. E o gate validava vigência contra
+`ed.date`, não contra o **dia real** — então uma edição velha reprocessada podia enviar.
+
+- **Trava DURÁVEL no banco (migration 019, `daily_sends`):** uma linha por data de
+  edição; `enviado` monotônico (true nunca volta a false); `post_id` do dia mora aqui
+  (não no arquivo), então o reuso PATCH-vs-POST do rascunho funciona **entre runners**.
+- **Claim ATÔMICO (`reservar_envio_diario`):** transição `enviado` false→true numa só
+  instrução condicional. Quem faz a transição GANHA o envio; concorrente/posterior
+  recebe `ja_enviado=true` e **não envia**. Provado ao vivo: `run1 reservado=true`,
+  `run2 ja_enviado=true`. Cobre a corrida real (dois runners no mesmo minuto).
+- **Freshness (`decidirEnvio`):** precondição `ed.date === hoje` (BRT, `hojeSaoPaulo`).
+  Edição com data ≠ hoje **nunca auto-envia**, independentemente de rating/lock.
+- **Idempotência server-side (Beehiiv):** antes de criar, procura no Beehiiv um post do
+  dia já enviado (título canônico + status confirmed/published); se existe, **não cria
+  segundo** e reconcilia a trava. A verdade final é o provedor.
+- **Só trava em envio REAL:** em mock (sem credencial Beehiiv) NÃO reserva — uma rodada
+  de dev não pode travar o dia no banco sem ter enviado. Em modo durável (creds
+  Supabase) o arquivo é **ignorado na leitura** (o banco é a única verdade; nunca mistura
+  as duas fontes).
+- **Testes:** `decidirEnvio` puro cobre os 4 cenários (2 rodadas→1 envio; edição de
+  ontem bloqueada; re-run após envio→no-op; post já enviado no Beehiiv→no-op) + teste de
+  integração provando **exatamente 1** chamada real ao Beehiiv em 2 rodadas do mesmo dia.
+  Monotonicidade de `enviado` provada ao vivo. 456/456 verdes.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════

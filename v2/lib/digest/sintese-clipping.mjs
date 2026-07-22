@@ -64,23 +64,60 @@ export function overlapNgram(sintese, textoFonte, { n = 4 } = {}) {
   return hit / sShingles.length;
 }
 
-// Limiar do anti-cópia. Abaixo dele = redação própria (publica); igual ou acima =
-// trecho copiado (rejeita → revisão). Por quê 0,35 com 4-gramas:
-//   - Uma paráfrase legítima do MESMO fato compartilha 4-gramas apenas em nomes
-//     próprios e termos técnicos inevitáveis (nome do programa, "compra de
-//     pontos"), o que a mantém bem abaixo de 0,35 na prática.
-//   - Qualquer cláusula contígua levantada da fonte (≈8+ palavras) já empurra a
-//     fração para perto de 1,0 — muito acima de 0,35.
-//   - 0,35 dá margem: tolera a terminologia partilhada sem punir paráfrase, mas
-//     não deixa passar um trecho copiado. O golden prova os dois lados (paráfrase
-//     < 0,35; cópia ≥ 0,35, perto de 1,0).
-// Conservador por design (regra inviolável 2): na dúvida, vai para revisão humana,
-// nunca publica.
+// Limiar do anti-cópia (fração de 4-gramas). Abaixo dele = redação própria; igual
+// ou acima = trecho copiado. 0,35 com 4-gramas: paráfrase legítima só compartilha
+// 4-gramas em nomes próprios/termos técnicos inevitáveis (fica bem abaixo de 0,35);
+// um resumo majoritariamente levantado dispara para perto de 1,0.
+//
+// FRAQUEZA CONHECIDA (falso-negativo por DILUIÇÃO) — por isso o run contíguo abaixo:
+// a FRAÇÃO cai quando a cópia é cercada de texto próprio. 15 palavras copiadas num
+// resumo de 62 → só ~12 4-gramas coincidem de ~59 → fração 0,20 < 0,35 → passaria.
+// Mas 15 palavras contíguas idênticas à fonte É cópia (inviolável 2). A fração mede
+// PROPORÇÃO; o run mede o MAIOR TRECHO literal. Os dois juntos: proporção alta (copiou
+// muito) OU um trecho longo (levantou uma cláusula) já reprova. Conservador por design.
 export const LIMIAR_ANTICOPIA = 0.35;
+
+// Maior sequência de palavras CONTÍGUAS idênticas entre síntese e fonte que ainda
+// conta como cópia. ≥ 8 palavras seguidas iguais = cláusula levantada literalmente —
+// reprova mesmo que a fração de 4-gramas fique baixa (o caso da diluição). 8 é o
+// piso: paráfrase honesta raramente repete 8 palavras seguidas da fonte sem reescrever.
+export const MAX_RUN_COPIA = 8;
+
+// Teto de tamanho: síntese é 1-2 frases ("o que mudou"). Acima de ~45 palavras deixou
+// de ser síntese e virou paráfrase longa (onde a diluição esconde cópia) — vira revisão.
+export const MAX_PALAVRAS_SINTESE = 45;
 
 // Corpo mínimo útil: uma síntese real de "o que mudou" tem pelo menos uma frase.
 // Abaixo disso não informa nada — vira revisão (nunca preenche o Clipping com casca).
 export const MIN_CHARS_SINTESE = 40;
+
+/**
+ * Maior nº de palavras CONTÍGUAS idênticas compartilhadas entre a síntese e o
+ * texto-fonte (substring comum máxima em nível de palavra, normalizada). Pega a
+ * cláusula levantada que a fração de 4-gramas dilui. O(|síntese|·|fonte|) — barato
+ * porque a síntese é curta (≤ ~45 palavras).
+ * @param {string} sintese
+ * @param {string} textoFonte
+ * @returns {number} tamanho do maior trecho literal comum, em palavras
+ */
+export function maiorRunContiguo(sintese, textoFonte) {
+  const a = normalizar(sintese).split(' ').filter(Boolean);
+  const b = normalizar(textoFonte).split(' ').filter(Boolean);
+  if (a.length === 0 || b.length === 0) return 0;
+  let best = 0;
+  let prev = new Array(b.length + 1).fill(0);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = new Array(b.length + 1).fill(0);
+    for (let j = 1; j <= b.length; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        cur[j] = prev[j - 1] + 1;
+        if (cur[j] > best) best = cur[j];
+      }
+    }
+    prev = cur;
+  }
+  return best;
+}
 
 /**
  * true ⇒ a síntese é redação própria (overlap ABAIXO do limiar). Overlap alto =
@@ -113,10 +150,21 @@ export function validarSintese(sintese, noticia = {}, { limiar = LIMIAR_ANTICOPI
     motivos.push(`síntese curta demais (${s.length} < ${MIN_CHARS_SINTESE} caracteres) — não informa "o que mudou"`);
   }
 
+  const nPalavras = s.split(/\s+/).filter(Boolean).length;
+  if (nPalavras > MAX_PALAVRAS_SINTESE) {
+    motivos.push(`síntese longa demais (${nPalavras} > ${MAX_PALAVRAS_SINTESE} palavras) — 1-2 frases; acima disso deixa de ser síntese e a diluição esconde cópia`);
+  }
+
   const textoFonte = `${noticia?.title ?? ''}\n${noticia?.content ?? ''}`;
   const overlap = overlapNgram(s, textoFonte, { n });
   if (overlap >= limiar) {
-    motivos.push(`anti-cópia: overlap de ${overlap.toFixed(2)} ≥ ${limiar} (trecho copiado da fonte — viola a regra inviolável 2, redação sempre própria)`);
+    motivos.push(`anti-cópia (proporção): overlap de ${overlap.toFixed(2)} ≥ ${limiar} (trecho copiado da fonte — viola a regra inviolável 2, redação sempre própria)`);
+  }
+  // Backstop contra o falso-negativo por diluição: um trecho longo levantado
+  // literalmente é cópia mesmo com fração baixa.
+  const run = maiorRunContiguo(s, textoFonte);
+  if (run >= MAX_RUN_COPIA) {
+    motivos.push(`anti-cópia (trecho contíguo): ${run} palavras seguidas idênticas à fonte (≥ ${MAX_RUN_COPIA}) — cláusula levantada, mesmo diluída num texto próprio (inviolável 2)`);
   }
 
   // Guardrails de string reusados da fonte única (não reforquear regex). Sem

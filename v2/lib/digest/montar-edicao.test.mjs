@@ -89,7 +89,7 @@ test('caminho Deal Desk: campanha SINTÉTICA elegível vira deal que passa o gat
   // kebab (livelo->smiles) p/ o routeKey bater cru no gate 5.5 e no schema.
   const sintetica = {
     id: 'synthetic-livelo-smiles', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia',
-    tier: 1, tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: '100', paridade: '1:1', cpm: null,
+    tier: 1, tem_tier1: true, tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: '100', paridade: '1:1', cpm: null,
     publico: 'geral', first_seen: '2026-07-10', vigencia_fim_date: '2026-07-24',
     source_name: 'Fonte oficial (sintética)', source_url: 'https://example.com/regra-oficial',
   };
