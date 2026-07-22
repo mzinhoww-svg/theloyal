@@ -71,11 +71,19 @@ async function carregarCampanhas({ campaignsPath, newsPath, forecastPath, hoje }
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
   const forecastFromFile = lerJsonOpcional(forecastPath || 'content/forecast.json', null);
   if (url && key) {
-    const select = 'id,origem_code,destino_code,tipo,tier,estado,tl_score_bruto,veredito_bruto,override_aplicado,percentual,paridade,cpm,publico,source_name,source_url,vigencia_fim,vigencia_fim_date,first_seen,notes';
+    const select = 'id,origem_code,destino_code,tipo,tier,estado,tl_score_bruto,veredito_bruto,override_aplicado,percentual,paridade,cpm,publico,source_name,source_url,vigencia_fim,vigencia_fim_date,first_seen,notes,used_in';
     const path = `campaigns?select=${select}&or=(estado.in.(ativa,detectada,ultimos_dias),and(estado.eq.encerrada,tier.eq.1))`;
     const r = await fetch(`${url}/rest/v1/${path}`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
     if (!r.ok) throw new Error(`REST campaigns ${r.status}`);
     const rows = await r.json();
+    // C1/INV-02: `tem_tier1` deriva de campanha_fontes (CONFIRMAÇÃO), nunca do campo
+    // `tier` (claim do LLM sem lastro). O portão 2 do Deal Desk (passaTresPortoes)
+    // lê essa marca. Sem a tabela/linha → tem_tier1=false (conservador: não publica).
+    try {
+      const cf = await fetch(`${url}/rest/v1/campanha_fontes?select=campaign_id`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
+      const ids = cf.ok ? new Set((await cf.json()).map((f) => f.campaign_id)) : new Set();
+      for (const row of rows) row.tem_tier1 = ids.has(row.id);
+    } catch { for (const row of rows) row.tem_tier1 = false; }
     // news_raw processadas do dia (Clipping só usa as que tiverem síntese própria).
     let newsRaw = [];
     try {

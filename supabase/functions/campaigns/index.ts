@@ -296,7 +296,10 @@ async function processItem(it: any, runId: string, today: string, in3days: strin
         vigencia_fim: fim,
         status,
         discard_reason: fim !== "na" && fim < today ? `vigencia encerrada em ${fim}` : null,
-        tier: c.tier || 2,
+        // C1 (D-048): tier=1 e CONFIRMACAO, nunca claim do LLM. O extrator SEMPRE
+        // grava tier=2; tier=1 so e concedido por coleta-tier1/gravacao-tier1 (que
+        // escreve campanha_fontes). Antes: `c.tier||2` deixava o LLM inflar 49/50.
+        tier: 2,
         source_name: it.source,
         source_url: it.url,
         regulamento_url: c.regulamento_url,
@@ -405,14 +408,14 @@ Deno.serve(async (req: Request) => {
       kind: "scheduled",
       status: "ok",
       campaigns_found: extracted,
-      human_note: `extract v17-a5 ${runId}: ${processed} noticias, ${extracted} campanhas, ${restantes} pendentes${stoppedByTime ? " (parou por tempo)" : ""}`,
+      human_note: `extract v18-c1 ${runId}: ${processed} noticias, ${extracted} campanhas, ${restantes} pendentes${stoppedByTime ? " (parou por tempo)" : ""}`,
     });
   } catch (e) {
     console.error("Erro ao logar run:", e);
   }
 
   return new Response(
-    JSON.stringify({ processadas: processed, campanhas: extracted, pendentes: restantes, parou_por_tempo: stoppedByTime, runId, modelo: MODEL, versao: "v17-a5" }),
+    JSON.stringify({ processadas: processed, campanhas: extracted, pendentes: restantes, parou_por_tempo: stoppedByTime, runId, modelo: MODEL, versao: "v18-c1" }),
     { headers: { "Content-Type": "application/json" } },
   );
 });

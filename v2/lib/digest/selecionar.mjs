@@ -16,15 +16,30 @@ export const TRES_PORTOES = {
 const VEREDITOS_DEAL_DESK = new Set(['Vale agir', 'Vale olhar']);
 
 /**
- * Os três portões do D-044: estado vivo + TIER 1 confirmado + conta computável.
- * Passar aqui torna o item elegível à listagem geral — NÃO ao Deal Desk (§1.2).
+ * Portão 2 (D-048/INV-02): TIER 1 é CONFIRMAÇÃO por fonte oficial em
+ * `campanha_fontes`, NÃO o campo `tier` do extrator — que vinha do LLM e não tem
+ * lastro (auditoria C1: 49/50 tier=1 sem nenhuma fonte). O runner marca
+ * `tem_tier1=true` nas campanhas que TÊM linha em `campanha_fontes` (papel de
+ * confirmação). Aqui só lemos a marca derivada: sem confirmação → não passa. Nunca
+ * confia no `campaign.tier` bruto (esse é claim do LLM, não lastro).
+ * @param {object} campaign  linha de `campaigns` (com `tem_tier1` derivado pelo runner)
+ * @returns {boolean}
+ */
+export function temTier1Confirmado(campaign) {
+  return campaign?.tem_tier1 === true;
+}
+
+/**
+ * Os três portões do D-044: estado vivo + TIER 1 CONFIRMADO (campanha_fontes) +
+ * conta computável. Passar aqui torna o item elegível à listagem geral — NÃO ao
+ * Deal Desk (§1.2).
  * @param {object} campaign  linha de `campaigns`
  * @returns {boolean}
  */
 export function passaTresPortoes(campaign) {
   if (!campaign) return false;
   const estadoVivo = TRES_PORTOES.estadosVivo.includes(campaign.estado);
-  const tier1 = Number(campaign.tier) === 1;
+  const tier1 = temTier1Confirmado(campaign);
   const contaComputavel = campaign.tl_score_bruto !== null && campaign.tl_score_bruto !== undefined;
   return estadoVivo && tier1 && contaComputavel;
 }

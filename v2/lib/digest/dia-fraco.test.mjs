@@ -91,7 +91,7 @@ test('Radar VPM: tudo n/c → omitido', () => {
 // ── Sinais rápidos: nunca carrega chip de veredito ──
 test('Sinais rápidos: inclui o item real de hoje (bruto 55), sem chip de veredito', () => {
   const campanhas = [
-    { id: 'smiles-desconhecido-compra-2026-07-17', estado: 'ultimos_dias', tier: 1, tl_score_bruto: 55, veredito_bruto: 'Só para casos específicos', origem_code: 'brl', destino_code: 'smiles', tipo: 'compra' },
+    { id: 'smiles-desconhecido-compra-2026-07-17', estado: 'ultimos_dias', tier: 1, tem_tier1: true, tl_score_bruto: 55, veredito_bruto: 'Só para casos específicos', origem_code: 'brl', destino_code: 'smiles', tipo: 'compra' },
   ];
   const r = selecionarSinaisRapidos(campanhas);
   assert.equal(r.omitido, false);
@@ -105,7 +105,7 @@ test('Sinais rápidos: inclui o item real de hoje (bruto 55), sem chip de veredi
 
 test('Sinais rápidos: exclui itens elegíveis a Deal Desk (esses vão para deals, não aqui)', () => {
   const campanhas = [
-    { id: 'forte', estado: 'ativa', tier: 1, tl_score_bruto: 90, veredito_bruto: 'Vale agir' },
+    { id: 'forte', estado: 'ativa', tier: 1, tem_tier1: true, tl_score_bruto: 90, veredito_bruto: 'Vale agir' },
   ];
   const r = selecionarSinaisRapidos(campanhas);
   assert.equal(r.omitido, true);
@@ -114,7 +114,7 @@ test('Sinais rápidos: exclui itens elegíveis a Deal Desk (esses vão para deal
 
 test('Sinais rápidos: exclui itens que não passam os 3 portões', () => {
   const campanhas = [
-    { id: 'morto', estado: 'encerrada', tier: 1, tl_score_bruto: 90, veredito_bruto: 'Só para casos específicos' },
+    { id: 'morto', estado: 'encerrada', tier: 1, tem_tier1: true, tl_score_bruto: 90, veredito_bruto: 'Só para casos específicos' },
     { id: 'tier2', estado: 'ativa', tier: 2, tl_score_bruto: 90, veredito_bruto: 'Esperaria' },
   ];
   const r = selecionarSinaisRapidos(campanhas);
@@ -167,7 +167,7 @@ test('selecionarFechouSemana: `hoje` inválido lança', () => {
 
 test('selecionarFechouSemana: item encerrado, tier 1, com score, dentro da janela → incluído', () => {
   const campanhas = [
-    { id: 'c1', origem_code: 'livelo', destino_code: 'azul', tipo: 'transferencia', percentual: 120, estado: 'encerrada', tier: 1, tl_score_bruto: 88, vigencia_fim: '2026-07-12T23:59:00-03:00' },
+    { id: 'c1', origem_code: 'livelo', destino_code: 'azul', tipo: 'transferencia', percentual: 120, estado: 'encerrada', tier: 1, tem_tier1: true, tl_score_bruto: 88, vigencia_fim: '2026-07-12T23:59:00-03:00' },
   ];
   const r = selecionarFechouSemana(campanhas, { hoje: '2026-07-17' });
   assert.equal(r.omitido, false);
@@ -177,7 +177,7 @@ test('selecionarFechouSemana: item encerrado, tier 1, com score, dentro da janel
 
 test('selecionarFechouSemana: fora da janela de 7 dias → excluído', () => {
   const campanhas = [
-    { id: 'velho', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia', estado: 'encerrada', tier: 1, tl_score_bruto: 70, vigencia_fim: '2026-07-01T00:00:00-03:00' },
+    { id: 'velho', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia', estado: 'encerrada', tier: 1, tem_tier1: true, tl_score_bruto: 70, vigencia_fim: '2026-07-01T00:00:00-03:00' },
   ];
   const r = selecionarFechouSemana(campanhas, { hoje: '2026-07-17' });
   assert.equal(r.omitido, true);
@@ -185,7 +185,7 @@ test('selecionarFechouSemana: fora da janela de 7 dias → excluído', () => {
 
 test('selecionarFechouSemana: ainda vivo (não encerrada) → excluído mesmo com vigencia_fim na janela', () => {
   const campanhas = [
-    { id: 'vivo', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia', estado: 'ativa', tier: 1, tl_score_bruto: 70, vigencia_fim: '2026-07-16T00:00:00-03:00' },
+    { id: 'vivo', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia', estado: 'ativa', tier: 1, tem_tier1: true, tl_score_bruto: 70, vigencia_fim: '2026-07-16T00:00:00-03:00' },
   ];
   const r = selecionarFechouSemana(campanhas, { hoje: '2026-07-17' });
   assert.equal(r.omitido, true);
@@ -201,7 +201,7 @@ test('selecionarFechouSemana: TIER 2 excluído (mesmo risco de §1.1, D-045)', (
 
 test('selecionarFechouSemana: tl_score_bruto null (conta_nao_calculavel) excluído', () => {
   const campanhas = [
-    { id: 'sem-conta', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia', estado: 'encerrada', tier: 1, tl_score_bruto: null, vigencia_fim: '2026-07-15T00:00:00-03:00' },
+    { id: 'sem-conta', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia', estado: 'encerrada', tier: 1, tem_tier1: true, tl_score_bruto: null, vigencia_fim: '2026-07-15T00:00:00-03:00' },
   ];
   const r = selecionarFechouSemana(campanhas, { hoje: '2026-07-17' });
   assert.equal(r.omitido, true);
@@ -210,7 +210,7 @@ test('selecionarFechouSemana: tl_score_bruto null (conta_nao_calculavel) excluí
 test('selecionarFechouSemana: janelaDias customizável', () => {
   // diff exata de 9 dias entre hoje e vigencia_fim (mesmo offset -03:00 nos dois).
   const campanhas = [
-    { id: 'c1', origem_code: 'x', destino_code: 'y', tipo: 'transferencia', estado: 'encerrada', tier: 1, tl_score_bruto: 70, vigencia_fim: '2026-07-08T00:00:00-03:00' },
+    { id: 'c1', origem_code: 'x', destino_code: 'y', tipo: 'transferencia', estado: 'encerrada', tier: 1, tem_tier1: true, tl_score_bruto: 70, vigencia_fim: '2026-07-08T00:00:00-03:00' },
   ];
   assert.equal(selecionarFechouSemana(campanhas, { hoje: '2026-07-17T00:00:00-03:00', janelaDias: 7 }).omitido, true);
   assert.equal(selecionarFechouSemana(campanhas, { hoje: '2026-07-17T00:00:00-03:00', janelaDias: 10 }).omitido, false);

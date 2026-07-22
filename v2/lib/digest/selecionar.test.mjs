@@ -17,7 +17,7 @@ const ITEM_REAL_HOJE = {
   destino_code: 'smiles',
   publico: 'geral',
   estado: 'ultimos_dias',
-  tier: 1,
+  tier: 1, tem_tier1: true,
   tl_score_bruto: 55,
   veredito_bruto: 'Só para casos específicos',
   override_aplicado: null,
@@ -26,14 +26,14 @@ const ITEM_REAL_HOJE = {
 };
 
 // Sintéticos para exercitar cap-3, tie-break e os portões negativos.
-const morto_nao_vivo = { id: 'morto', estado: 'encerrada', tier: 1, tl_score_bruto: 90, veredito_bruto: 'Vale agir', vigencia_fim: '2026-06-01T00:00:00-03:00' };
+const morto_nao_vivo = { id: 'morto', estado: 'encerrada', tier: 1, tem_tier1: true, tl_score_bruto: 90, veredito_bruto: 'Vale agir', vigencia_fim: '2026-06-01T00:00:00-03:00' };
 const tier2_alto = { id: 'tier2-alto', estado: 'ativa', tier: 2, tl_score_bruto: 92, veredito_bruto: 'Vale agir', vigencia_fim: '2026-08-01T00:00:00-03:00' };
-const sem_conta = { id: 'sem-conta', estado: 'ativa', tier: 1, tl_score_bruto: null, veredito_bruto: 'Não confirmado', vigencia_fim: '2026-08-01T00:00:00-03:00' };
-const forte_a = { id: 'forte-a', estado: 'ativa', tier: 1, tl_score_bruto: 88, veredito_bruto: 'Vale agir', vigencia_fim: '2026-08-10T00:00:00-03:00' };
-const forte_b = { id: 'forte-b', estado: 'detectada', tier: 1, tl_score_bruto: 88, veredito_bruto: 'Vale agir', vigencia_fim: '2026-08-01T00:00:00-03:00' }; // empata com forte_a, vence antes → sobe
-const forte_c = { id: 'forte-c', estado: 'ativa', tier: 1, tl_score_bruto: 80, veredito_bruto: 'Vale olhar', vigencia_fim: '2026-08-15T00:00:00-03:00' };
-const forte_d = { id: 'forte-d', estado: 'ativa', tier: 1, tl_score_bruto: 75, veredito_bruto: 'Vale olhar', vigencia_fim: '2026-09-01T00:00:00-03:00' };
-const fraco_vivo = { id: 'fraco-vivo', estado: 'ativa', tier: 1, tl_score_bruto: 60, veredito_bruto: 'Só para casos específicos', vigencia_fim: '2026-08-01T00:00:00-03:00' };
+const sem_conta = { id: 'sem-conta', estado: 'ativa', tier: 1, tem_tier1: true, tl_score_bruto: null, veredito_bruto: 'Não confirmado', vigencia_fim: '2026-08-01T00:00:00-03:00' };
+const forte_a = { id: 'forte-a', estado: 'ativa', tier: 1, tem_tier1: true, tl_score_bruto: 88, veredito_bruto: 'Vale agir', vigencia_fim: '2026-08-10T00:00:00-03:00' };
+const forte_b = { id: 'forte-b', estado: 'detectada', tier: 1, tem_tier1: true, tl_score_bruto: 88, veredito_bruto: 'Vale agir', vigencia_fim: '2026-08-01T00:00:00-03:00' }; // empata com forte_a, vence antes → sobe
+const forte_c = { id: 'forte-c', estado: 'ativa', tier: 1, tem_tier1: true, tl_score_bruto: 80, veredito_bruto: 'Vale olhar', vigencia_fim: '2026-08-15T00:00:00-03:00' };
+const forte_d = { id: 'forte-d', estado: 'ativa', tier: 1, tem_tier1: true, tl_score_bruto: 75, veredito_bruto: 'Vale olhar', vigencia_fim: '2026-09-01T00:00:00-03:00' };
+const fraco_vivo = { id: 'fraco-vivo', estado: 'ativa', tier: 1, tem_tier1: true, tl_score_bruto: 60, veredito_bruto: 'Só para casos específicos', vigencia_fim: '2026-08-01T00:00:00-03:00' };
 
 const CAMPANHAS_HOJE = [ITEM_REAL_HOJE];
 
@@ -108,7 +108,7 @@ test('cap não excedido: 0 elegíveis → 0 cortados (não confunde "vazio" com 
 });
 
 test('Fecha Logo: eixo independente — inclui itens fracos e fortes que vencem em ultimos_dias', () => {
-  const vence_forte = { id: 'vence-forte', estado: 'ultimos_dias', tier: 1, tl_score_bruto: 90, veredito_bruto: 'Vale agir', vigencia_fim: '2026-07-18T00:00:00-03:00' };
+  const vence_forte = { id: 'vence-forte', estado: 'ultimos_dias', tier: 1, tem_tier1: true, tl_score_bruto: 90, veredito_bruto: 'Vale agir', vigencia_fim: '2026-07-18T00:00:00-03:00' };
   const fecha = selecionarFechaLogo([ITEM_REAL_HOJE, vence_forte, forte_a]);
   assert.deepEqual(fecha.map((f) => f.id).sort(), ['smiles-desconhecido-compra-2026-07-17', 'vence-forte']);
 });
@@ -117,4 +117,12 @@ test('array vazio/ausente não lança', () => {
   assert.deepEqual(selecionarDealDesk([]), { selecionados: [], cortados: 0 });
   assert.deepEqual(selecionarDealDesk(undefined), { selecionados: [], cortados: 0 });
   assert.deepEqual(selecionarFechaLogo([]), []);
+});
+
+// ── C1 (D-048/INV-02): portão 2 = tem_tier1 (confirmação), nunca o campo tier ──
+test('passaTresPortoes: tier=1 do LLM SEM confirmação NÃO passa (portão oco fechado)', () => {
+  const base = { estado: 'ativa', tl_score_bruto: 80, veredito_bruto: 'Vale agir' };
+  assert.equal(passaTresPortoes({ ...base, tier: 1 }), false);
+  assert.equal(passaTresPortoes({ ...base, tier: 2, tem_tier1: true }), true);
+  assert.equal(passaTresPortoes({ estado: 'ativa', tem_tier1: true, tl_score_bruto: null }), false);
 });
