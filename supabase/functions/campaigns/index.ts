@@ -405,14 +405,14 @@ Deno.serve(async (req: Request) => {
       kind: "scheduled",
       status: "ok",
       campaigns_found: extracted,
-      human_note: `extract v16 ${runId}: ${processed} noticias, ${extracted} campanhas, ${restantes} pendentes${stoppedByTime ? " (parou por tempo)" : ""}`,
+      human_note: `extract v17-a5 ${runId}: ${processed} noticias, ${extracted} campanhas, ${restantes} pendentes${stoppedByTime ? " (parou por tempo)" : ""}`,
     });
   } catch (e) {
     console.error("Erro ao logar run:", e);
   }
 
   return new Response(
-    JSON.stringify({ processadas: processed, campanhas: extracted, pendentes: restantes, parou_por_tempo: stoppedByTime, runId, modelo: MODEL, versao: "v16-ledger" }),
+    JSON.stringify({ processadas: processed, campanhas: extracted, pendentes: restantes, parou_por_tempo: stoppedByTime, runId, modelo: MODEL, versao: "v17-a5" }),
     { headers: { "Content-Type": "application/json" } },
   );
 });
