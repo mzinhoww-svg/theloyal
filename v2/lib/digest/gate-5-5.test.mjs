@@ -18,7 +18,7 @@ const CAMPANHAS_HOJE = [
     id: 'smiles-desconhecido-compra-2026-07-17',
     tipo: 'compra', origem_code: 'brl', destino_code: 'smiles', publico: 'geral',
     estado: 'ultimos_dias', tier: 1, tem_tier1: true, triagem_categoria: 'limpo', tl_score_bruto: 55, veredito_bruto: 'Só para casos específicos',
-    override_aplicado: null, vigencia_fim: '2026-07-17T23:59:00-03:00', first_seen: '2026-07-10',
+    percentual: 40, override_aplicado: null, vigencia_fim: '2026-07-17T23:59:00-03:00', first_seen: '2026-07-10',
   },
 ];
 

@@ -300,36 +300,42 @@ export function checkOfertasAtivas(edition = {}, campaignsFromDb = []) {
   itens.forEach((item, i) => {
     const rota = item.destino ? `${item.origem}->${item.destino}` : `${item.origem}`;
     const tag = `ofertasAtivas[${i}] (${rota})`;
-    const candidato = campaignsFromDb.find(
-      (c) => c && c.origem_code === item.origem && (c.destino_code ?? null) === (item.destino ?? null) && c.tipo === item.tipo,
+    // A rota (origem/destino/tipo) pode ter VÁRIAS campanhas (janelas diferentes,
+    // ex.: latam_pass compra lado-único com uma viva e uma encerrada). Casa por
+    // origem/destino/tipo E percentual (o item deduplica por esse conjunto) e
+    // verifica se ALGUMA das candidatas é a que sustenta o item — não a primeira
+    // que o find topar. Sem isso, uma janela encerrada com a mesma rota derruba
+    // um item legítimo sustentado por outra janela viva (colisão de rota).
+    const candidatos = campaignsFromDb.filter(
+      (c) => c && c.origem_code === item.origem && (c.destino_code ?? null) === (item.destino ?? null) && c.tipo === item.tipo
+        && (item.percentual == null || String(c.percentual ?? '') === String(item.percentual)),
     );
 
-    if (!candidato) {
+    if (candidatos.length === 0) {
       results.push({
         ok: false,
         check: `${tag}: campanha correspondente localizável no banco`,
-        detail: 'não encontrada em campaignsFromDb por origem/destino/tipo',
+        detail: 'não encontrada em campaignsFromDb por origem/destino/tipo/percentual',
       });
       return;
     }
 
     // EPSILON/D-086: Ofertas ativas é transparência, gateada por TRIAGEM (não por
-    // lastro-tier1 — esse gateia só o Deal Desk). Recomputa o mesmo predicado.
-    const elegivel = elegivelOfertaAtiva(candidato);
+    // lastro-tier1 — esse gateia só o Deal Desk). Basta UMA candidata elegível.
+    const elegiveis = candidatos.filter(elegivelOfertaAtiva);
     results.push({
-      ok: elegivel,
+      ok: elegiveis.length > 0,
       check: `${tag}: elegível a Ofertas ativas recomputado no banco (vivo + conta + triada)`,
-      detail: elegivel ? 'ok' : `falhou: estado=${candidato.estado}, triagem=${candidato.triagem_categoria}, tl_score_bruto=${candidato.tl_score_bruto}`,
+      detail: elegiveis.length > 0 ? 'ok' : `nenhuma das ${candidatos.length} candidatas elegível (ex.: estado=${candidatos[0].estado}, triagem=${candidatos[0].triagem_categoria}, score=${candidatos[0].tl_score_bruto})`,
     });
 
-    // A leitura tem de bater com o selo recomputado: 'nao-confirmado' quando sem
-    // lastro de tier1; o veredito real quando confirmado (INV-03).
-    const leituraEsperada = leituraOfertaAtiva(candidato);
-    const bate = leituraEsperada === item.leitura;
+    // A leitura tem de bater com o selo recomputado de ALGUMA candidata elegível:
+    // 'nao-confirmado' sem lastro; o veredito real com lastro (INV-03).
+    const bate = elegiveis.some((c) => leituraOfertaAtiva(c) === item.leitura);
     results.push({
       ok: bate,
       check: `${tag}: leitura bate com o selo recomputado (nao-confirmado sem lastro; veredito real com lastro)`,
-      detail: bate ? 'ok' : `leitura da edição="${item.leitura}", esperado="${leituraEsperada}" (tem_tier1=${candidato.tem_tier1}, veredito_bruto="${candidato.veredito_bruto}")`,
+      detail: bate ? 'ok' : `leitura da edição="${item.leitura}" não bate com nenhuma candidata elegível (esperado ${elegiveis.map(leituraOfertaAtiva).join('/') || '—'})`,
     });
   });
 
