@@ -13,7 +13,7 @@
       "url": "https://www.idinheiro.com.br/cartao-de-credito/milhas/cartao-que-acumula-milhas-e-anuidade-gratis/"
     },
     {
-      "label": "melhoresdestinos",
+      "label": "Melhores Destinos",
       "url": "https://www.melhoresdestinos.com.br/promocao/muito-bom-plano-all-accor-explorer-bonus-jun"
     },
     {
@@ -21,15 +21,15 @@
       "url": "https://brasilturis.com.br/2026/06/29/azul-prorroga-campanha-de-ate-525-pontos-por-dolar-em-cartoes-itau/"
     },
     {
-      "label": "Melhores Cartoes",
+      "label": "Melhores Cartões",
       "url": "https://www.melhorescartoes.com.br/cartao-latam-pass-turbinado-prorrogacao-jun26.html"
     },
     {
-      "label": "tavily",
+      "label": "Passageiro de Primeira",
       "url": "https://passageirodeprimeira.com/pp-15-anos-compre-pontos-esfera-com-50-de-desconto"
     },
     {
-      "label": "melhorescartoes",
+      "label": "Melhores Destinos",
       "url": "https://www.melhoresdestinos.com.br/milhas/passagens-punta-cana-latam-jul26"
     }
   ],
@@ -73,7 +73,7 @@
   "cartoesBancosItens": [
     {
       "nome": "Banco do Brasil → Smiles",
-      "descricao": "Cartão com acúmulo diferenciado, campanha vigente.",
+      "descricao": "Clube, vigente até 31/12.",
       "url": "https://www.idinheiro.com.br/cartao-de-credito/milhas/cartao-que-acumula-milhas-e-anuidade-gratis/",
       "fonte": "iDinheiro",
       "status": "Ainda sem confirmação oficial",
@@ -81,15 +81,15 @@
     },
     {
       "nome": "ALL Accor",
-      "descricao": "Cartão com acúmulo diferenciado, campanha vigente.",
+      "descricao": "Cartão, vigente até 31/12.",
       "url": "https://www.melhoresdestinos.com.br/promocao/muito-bom-plano-all-accor-explorer-bonus-jun",
-      "fonte": "melhoresdestinos",
+      "fonte": "Melhores Destinos",
       "status": "Ainda sem confirmação oficial",
       "nota": null
     },
     {
       "nome": "Itaú → Azul Fidelidade",
-      "descricao": "Cartão com acúmulo diferenciado, campanha vigente.",
+      "descricao": "Cartão, vigente até 30/09.",
       "url": "https://brasilturis.com.br/2026/06/29/azul-prorroga-campanha-de-ate-525-pontos-por-dolar-em-cartoes-itau/",
       "fonte": "Brasilturis",
       "status": "Ainda sem confirmação oficial",
@@ -97,11 +97,27 @@
     },
     {
       "nome": "Itaú → LATAM Pass",
-      "descricao": "Cartão com acúmulo diferenciado, campanha vigente.",
+      "descricao": "Clube, vigente até 31/07.",
       "url": "https://www.melhorescartoes.com.br/cartao-latam-pass-turbinado-prorrogacao-jun26.html",
-      "fonte": "Melhores Cartoes",
+      "fonte": "Melhores Cartões",
       "status": "Ainda sem confirmação oficial",
       "nota": null
+    }
+  ],
+  "oQueFechouSemana": [
+    {
+      "origem": "latam_pass",
+      "destino": "sem_destino",
+      "tipo": "compra",
+      "percentual": null,
+      "encerrouEm": "2026-07-20"
+    },
+    {
+      "origem": "azul_fidelidade",
+      "destino": "azul_fidelidade",
+      "tipo": "clube",
+      "percentual": 40,
+      "encerrouEm": "2026-07-19"
     }
   ],
   "predictNarrativa": {
