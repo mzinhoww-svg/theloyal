@@ -30,6 +30,7 @@
 <!-- CADENCIA:START -->
 | Data (BRT) | Nº | Gate | Render (revisão) | Revisão do operador |
 |------------|----|------|------------------|---------------------|
+| 2026-07-22 (QUARTA-FEIRA) | 29 | 🟢 VERDE | [/revisao/29](/revisao/29) | pendente |
 <!-- CADENCIA:END -->
 
 **Progresso:** 0/5 dias úteis consecutivos revisados. A série inicia no primeiro

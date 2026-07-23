@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 4,
+  "number": 29,
+  "date": "2026-07-22",
+  "weekday": "QUARTA-FEIRA",
+  "publishTime": "8H00",
+  "readingMinutes": 5,
+  "signal": "O destaque vivo de hoje é Esfera → Esfera, com 50% — compra de pontos. No radar hoje: Esfera, LATAM Pass, Smiles.",
+  "deals": [],
+  "sources": [
+    {
+      "label": "iDinheiro",
+      "url": "https://www.idinheiro.com.br/cartao-de-credito/milhas/cartao-que-acumula-milhas-e-anuidade-gratis/"
+    },
+    {
+      "label": "melhoresdestinos",
+      "url": "https://www.melhoresdestinos.com.br/promocao/muito-bom-plano-all-accor-explorer-bonus-jun"
+    },
+    {
+      "label": "Brasilturis",
+      "url": "https://brasilturis.com.br/2026/06/29/azul-prorroga-campanha-de-ate-525-pontos-por-dolar-em-cartoes-itau/"
+    },
+    {
+      "label": "Melhores Cartoes",
+      "url": "https://www.melhorescartoes.com.br/cartao-latam-pass-turbinado-prorrogacao-jun26.html"
+    },
+    {
+      "label": "tavily",
+      "url": "https://passageirodeprimeira.com/pp-15-anos-compre-pontos-esfera-com-50-de-desconto"
+    },
+    {
+      "label": "melhorescartoes",
+      "url": "https://www.melhoresdestinos.com.br/milhas/passagens-punta-cana-latam-jul26"
+    }
+  ],
+  "disclaimer": "Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar.",
+  "resumoDoDia": "Hoje há 3 ofertas vivas com conta fechável. A de maior nota é Esfera → Esfera, com 50%. 1 oferta vence nas próximas 72 horas.",
+  "ofertasAtivas": [
+    {
+      "origem": "esfera",
+      "destino": "sem_destino",
+      "tipo": "compra",
+      "percentual": 50,
+      "prazo": "2026-07-30",
+      "leitura": "nao-confirmado",
+      "cpm": null,
+      "publico": null,
+      "nota": 63
+    },
+    {
+      "origem": "latam_pass",
+      "destino": "sem_destino",
+      "tipo": "compra",
+      "percentual": 10,
+      "prazo": "2026-07-31",
+      "leitura": "nao-confirmado",
+      "cpm": null,
+      "publico": null,
+      "nota": 47
+    },
+    {
+      "origem": "smiles",
+      "destino": "smiles",
+      "tipo": "compra",
+      "percentual": 80,
+      "prazo": "2026-07-23",
+      "leitura": "nao-confirmado",
+      "cpm": null,
+      "publico": null,
+      "nota": 43
+    }
+  ],
+  "cartoesBancosItens": [
+    {
+      "nome": "Banco do Brasil → Smiles",
+      "descricao": "Cartão com acúmulo diferenciado, campanha vigente.",
+      "url": "https://www.idinheiro.com.br/cartao-de-credito/milhas/cartao-que-acumula-milhas-e-anuidade-gratis/",
+      "fonte": "iDinheiro",
+      "status": "Ainda sem confirmação oficial",
+      "nota": null
+    },
+    {
+      "nome": "ALL Accor",
+      "descricao": "Cartão com acúmulo diferenciado, campanha vigente.",
+      "url": "https://www.melhoresdestinos.com.br/promocao/muito-bom-plano-all-accor-explorer-bonus-jun",
+      "fonte": "melhoresdestinos",
+      "status": "Ainda sem confirmação oficial",
+      "nota": null
+    },
+    {
+      "nome": "Itaú → Azul Fidelidade",
+      "descricao": "Cartão com acúmulo diferenciado, campanha vigente.",
+      "url": "https://brasilturis.com.br/2026/06/29/azul-prorroga-campanha-de-ate-525-pontos-por-dolar-em-cartoes-itau/",
+      "fonte": "Brasilturis",
+      "status": "Ainda sem confirmação oficial",
+      "nota": null
+    },
+    {
+      "nome": "Itaú → LATAM Pass",
+      "descricao": "Cartão com acúmulo diferenciado, campanha vigente.",
+      "url": "https://www.melhorescartoes.com.br/cartao-latam-pass-turbinado-prorrogacao-jun26.html",
+      "fonte": "Melhores Cartoes",
+      "status": "Ainda sem confirmação oficial",
+      "nota": null
+    }
+  ],
+  "predictNarrativa": {
+    "rotaOrigem": "esfera",
+    "rotaDestino": "esfera",
+    "historicoTipicoPercent": null,
+    "probabilidade": "em-formacao",
+    "texto": "O Predict acompanha a rota Esfera → Esfera. Por ora, a base histórica da rota ainda está em formação — sem promoção de transferência à vista. O recorte completo do Predict, com as janelas acompanhadas, sai no Digest Pro."
+  }
+}
