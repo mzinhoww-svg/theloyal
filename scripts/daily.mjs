@@ -376,10 +376,21 @@ export async function upsertRascunho({ ed, html, hoje, publicar = false, io = {}
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!r.ok) throw new Error(`Beehiiv ${isUpdate ? 'PATCH' : 'POST'} ${r.status}: ${(await r.text()).slice(0, 200)}`);
-    const j = await r.json();
-    record = { postId: j?.data?.id || prevPostId, status: enviarAgora ? 'ENVIADO (auto-publish)' : (isUpdate ? 'atualizado' : 'criado'), url: j?.data?.web_url || fileLock?.url, enviado: enviarAgora };
-    log('[5/5]', `Beehiiv: ${record.status} (${record.postId})${enviarAgora ? ' — status confirmed, ENVIO REAL' : ' — status draft, sem envio'}.`);
+    if (!r.ok) {
+      const detalhe = `Beehiiv ${isUpdate ? 'PATCH' : 'POST'} ${r.status}: ${(await r.text()).slice(0, 200)}`;
+      // ENVIO REAL que falha é RUIDOSO: não pode deixar a trava do dia (já reservada
+      // atomicamente) num limbo silencioso reservado-mas-não-enviado.
+      if (enviarAgora) throw new Error(detalhe);
+      // RASCUNHO que falha NÃO derruba o run. No tier sem API (Launch) o POST volta
+      // 400 — mas a edição, o render, o gate e o outcomes-ledger já são o produto do
+      // dia. Degrada para "sem envio" e segue; a publicação acontece manualmente na UI.
+      log('[5/5]', `Beehiiv indisponível — rascunho não criado via API (${detalhe}). Edição pronta em disco; publicação manual na UI do Beehiiv.`);
+      record = { postId: prevPostId || null, status: `rascunho não publicado via API (${r.status}) — publicar na UI`, url: fileLock?.url || null, enviado: false };
+    } else {
+      const j = await r.json();
+      record = { postId: j?.data?.id || prevPostId, status: enviarAgora ? 'ENVIADO (auto-publish)' : (isUpdate ? 'atualizado' : 'criado'), url: j?.data?.web_url || fileLock?.url, enviado: enviarAgora };
+      log('[5/5]', `Beehiiv: ${record.status} (${record.postId})${enviarAgora ? ' — status confirmed, ENVIO REAL' : ' — status draft, sem envio'}.`);
+    }
   } else {
     record = { postId: prevPostId || null, status: `mock (sem BEEHIIV_API_KEY)${enviarAgora ? ' — ENVIO seria disparado' : ''}`, url: fileLock?.url || null, enviado: false };
     log('[5/5]', `MOCK: sem credencial Beehiiv — ${enviarAgora ? 'ENVIO seria disparado (auto-elegível)' : 'rascunho não enviado'}. Alvo do dia ${chave}: ${record.postId || '(a criar na 1ª publicação real)'}.`);

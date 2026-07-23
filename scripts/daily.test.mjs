@@ -103,3 +103,22 @@ test('C2 integração: claim atômico → só a 1ª rodada dispara envio real', 
   assert.equal(r2.status, 'ja-enviado');
   assert.equal(enviosReais.length, 1, 'exatamente UMA chamada real ao Beehiiv');
 });
+
+// Tier sem API (Launch): o POST de RASCUNHO volta 400. O runner NÃO pode morrer —
+// a edição, o render, o gate e o ledger já são o produto do dia; a publicação vira
+// manual na UI. Envio real (publicar:true) segue ruidoso e é coberto à parte.
+test('rascunho: POST 400 (tier sem API) degrada sem lançar — publicação manual', async () => {
+  const env = { SUPABASE_URL: 'http://fake', SUPABASE_SERVICE_ROLE_KEY: 'fake', BEEHIIV_API_KEY: 'fake', BEEHIIV_PUBLICATION_ID: 'pub' };
+  const ed = { date: '2099-12-31', number: 778, beehiivTitle: 'T' };
+  const io = {
+    env,
+    lerLock: async () => null,
+    reservar: async () => ({ reservado: true, ja_enviado: false, post_id: null }),
+    gravarLock: async () => {},
+    buscarPostBeehiiv: async () => null,
+    fetchImpl: async () => ({ ok: false, status: 400, text: async () => 'publicationid pattern não bate' }),
+  };
+  const r = await upsertRascunho({ ed, html: '<p>x</p>', hoje: '2099-12-31', publicar: false, io });
+  assert.equal(r.enviado, false, 'sem envio no degrade');
+  assert.match(r.status, /publicar na UI/i);
+});

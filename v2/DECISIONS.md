@@ -1162,6 +1162,32 @@ trava de envio C2 podia ser **forjada de fora**), `llm_jobs` (telemetria/custo),
   advisor — trocar para `security_invoker`/revogar EXECUTE do anon muda comportamento
   de superfície pública (vw_ofertas_vivas) e precisa de aval por peça.
 
+## D-088 — Passo Beehiiv não-fatal: no tier sem API o runner entrega o rascunho em disco e segue
+**Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** operador (conta Beehiiv em tier **Launch**, sem acesso à API)
+
+O `POST /v2/publications/{id}/posts` só existe em tiers pagos do Beehiiv (Scale+).
+Na conta atual (**Launch**) não há API: o POST volta **400** (`publicationid pattern
+não bate com "***"`) — não é secret com espaço em branco (o `.trim()` já foi
+descartado como causa em D-anterior), é a **plataforma sem endpoint**. O runner
+lançava nesse 400 e **matava o `main()`**, jogando fora a edição, o render, o gate
+e o outcomes-ledger que já estavam prontos.
+
+- **`upsertRascunho` degrada em vez de lançar** quando o **rascunho** (`status: draft`)
+  falha: loga `Beehiiv indisponível — publicação manual na UI`, devolve
+  `enviado: false` e o `main()` segue. A edição em disco + render + gate + ledger
+  **são o produto do dia** sem depender do Beehiiv.
+- **Envio REAL (`publicar: true`) segue RUIDOSO — ainda lança.** Um envio que já
+  reservou o claim atômico (C2/D-083) não pode virar limbo silencioso
+  reservado-mas-não-enviado. Só o caminho de rascunho degrada.
+- **Reforça D-050 (autopublish OFF):** no tier atual o envio automático é
+  *impossível por design da plataforma* — o fluxo já é intrinsecamente
+  manual-com-aprovação (operador revisa e dá Send na UI do Beehiiv).
+- **Zero acoplamento novo:** nenhum wrapper paralelo; reusa `upsertRascunho` +
+  `beehiiv-core`. Quando a conta subir de tier (secret `pub_...` válido + API),
+  o mesmo caminho volta a criar o draft via API sem mudança de código.
+- **Provado:** `node --test scripts/daily.test.mjs` — novo teste "POST 400 (tier sem
+  API) degrada sem lançar" verde; test:v2 476/476 intacto.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════
