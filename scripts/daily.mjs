@@ -310,8 +310,11 @@ export async function upsertRascunho({ ed, html, hoje, publicar = false, io = {}
 
   const url = env.SUPABASE_URL;
   const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY;
-  const apiKey = env.BEEHIIV_API_KEY;
-  const pubId = env.BEEHIIV_PUBLICATION_ID;
+  // .trim() alinhado ao beehiiv-core.mjs: um secret com \n/espaço no fim faria o
+  // pubId não casar o padrão ^pub_...$ do Beehiiv (400) só no runner (o publisher
+  // trima e funcionava). Mesma disciplina nos dois caminhos.
+  const apiKey = env.BEEHIIV_API_KEY?.trim();
+  const pubId = env.BEEHIIV_PUBLICATION_ID?.trim();
   const durable = Boolean(url && key);
 
   // Estado prévio: em modo DURÁVEL (creds Supabase), o BANCO é a única verdade —
