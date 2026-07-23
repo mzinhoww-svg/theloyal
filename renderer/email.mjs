@@ -26,6 +26,7 @@ import {
 import {
   IMG_HEADER, IMG_SECAO_SINAL, IMG_SECAO_FECHA, IMG_DIVISOR_LINHA,
 } from "../v2/lib/digest/render-beehiiv.mjs";
+import { ehFonteOficial, rotuloFonte } from "../v2/lib/digest/fontes.mjs";
 
 function esc(s) {
   const t = String(s == null ? "" : s)
@@ -54,6 +55,15 @@ const templateImg = (src, alt = "") =>
 // emendada — verde de link é green-700; green-600 segue no resto).
 const aLink = (url, innerHtml, color = "#007A57") =>
   `<a href="${esc(url)}" style="color:${color}; text-decoration:underline;">${innerHtml}</a>`;
+// Atribuição do Sinal do dia: "fonte oficial" SÓ quando a URL é a página do
+// PROGRAMA. Sobre outlet/agregador, cita a fonte pelo nome SEM "oficial"
+// ("segundo iDinheiro"). Nunca chama agregador de oficial.
+function atribuicaoFonte(source) {
+  if (!source || !source.url) return "";
+  return ehFonteOficial(source.url)
+    ? ` (${aLink(source.url, "fonte oficial")})`
+    : ` (segundo ${aLink(source.url, esc(rotuloFonte(source.url)))})`;
+}
 
 function chip(vk) {
   const v = verdict(vk);
@@ -222,10 +232,7 @@ ${ed.illustrative ? `<div style="font-family:Arial,sans-serif; font-size:12px; c
     `<p style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:21px; line-height:1.35; color:${INK}; font-weight:bold;">${esc(ed.signal || "")}</p>`,
   ];
   if (ed.resumoDoDia) {
-    const fonteOficial = Array.isArray(ed.sources) && ed.sources[0]
-      ? ` (${aLink(ed.sources[0].url, "fonte oficial")})`
-      : "";
-    sinalPartes.push(`${sp(10)}${paraRaw(`${boldNumbers(ed.resumoDoDia)}${fonteOficial}`, 15, SOFT)}`);
+    sinalPartes.push(`${sp(10)}${paraRaw(`${boldNumbers(ed.resumoDoDia)}${atribuicaoFonte(ed.sources?.[0])}`, 15, SOFT)}`);
   }
   if (ed.predictNarrativa && ed.predictNarrativa.texto) {
     sinalPartes.push(`${sp(6)}${para(ed.predictNarrativa.texto, 14, SOFT)}`);

@@ -162,7 +162,11 @@ export function selecionarFechouSemana(campaigns = [], { hoje, janelaDias = 7 } 
     .filter((c) => {
       if (!c) return false;
       if (c.estado !== 'encerrada') return false;
-      if (Number(c.tier) !== 1) return false; // mesma coerção de passaTresPortoes
+      // RETROSPECTIVA, não recomendação: "o que fechou" reporta um fato de ciclo de
+      // vida (encerrada) com conta. NÃO exige TIER 1 — pós-C1/D-082 nenhuma viva/
+      // encerrada carrega tier=1 por claim (confirmação vem de campanha_fontes), e
+      // exigir tier1 aqui zerava a seção todo dia. A régua é encerrada + conta +
+      // janela 7d (mesma disciplina TIER2 de Clipping/Cartões, panorama editorial).
       if (c.tl_score_bruto === null || c.tl_score_bruto === undefined) return false;
       if (!c.vigencia_fim) return false;
       const vFimMs = Date.parse(c.vigencia_fim);

@@ -46,7 +46,7 @@ Não podem ser quebradas nem por pedido direto no meio da tarefa.
 5. Nunca usar emoji no corpo editorial ou em UI.
 6. Nunca usar avião, cartão 3D genérico, stock photo ou gradiente decorativo.
 7. **Amarelo `#F2C94C` nunca como texto** — somente fill com texto Ink por cima.
-8. **`#00C48C` (green-500) nunca como texto sobre Paper** — green-500 só em fill/SVG e sobre Ink (dark). Texto verde é `#00A878` (green-600) em rótulos de veredito/accent e em fill+text-pair (chip). **Exceção — texto de LINK: `#007A57` (green-700)**, porque green-600 reprova contraste AA sobre Paper/Surface (~2.6–3.1:1) e green-700 clara ≥4.55:1 na mesma matiz (D-090).
+8. **`#00C48C` (green-500) nunca como texto sobre Paper** — green-500 só em fill/SVG e sobre Ink (dark). Texto verde é `#00A878` (green-600). **Exceção a11y PROVISÓRIA (proposta, aguarda ratificação do operador — D-090):** o texto de LINK usa `#007A57` (green-700) *no código* (email/beehiiv), porque green-600 reprova contraste AA sobre Paper/Surface (~2.6–3.1:1). A **formalização** desta emenda e sua **extensão a texto de veredito** (ex.: "Vale agir") NÃO estão decididas — não propagar a novas superfícies nem ao mapa TL Score até o operador confirmar.
 9. Faltou dado para cálculo ou veredito → classificar **"Não confirmado"**. Nunca chutar.
 10. Todo conteúdo com recomendação carrega o disclaimer: *"Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."*
 

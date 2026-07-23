@@ -27,6 +27,7 @@ import {
   rotaDisplay, tipoLabel, nomePrograma, ordenarClippingPorRelevancia,
   EXPLICA_SEM_NOTA, formatarDataBr, formatarDiaMes,
 } from './editorial.mjs';
+import { ehFonteOficial, rotuloFonte } from './fontes.mjs';
 
 const INK = '#111111', PAPER = '#FAF7F0', PAPER_DARK = '#F1ECE1', SURFACE = '#FFFFFF';
 const LINE = '#E5E0D5', GRAY700 = '#3D3A34', GRAY500 = '#555555', GRAY400 = '#8A8578';
@@ -212,10 +213,15 @@ export function renderBeehiivHtml(ed) {
   parts.push(img(IMG_SECAO_SINAL, 'Sinal do dia'));
   const sinalInner = [heading(ed.signal || '', 3)];
   if (ed.resumoDoDia) {
-    const fonteOficial = Array.isArray(ed.sources) && ed.sources[0]
-      ? ` (${link(ed.sources[0].url, 'fonte oficial')})`
+    // "fonte oficial" só sobre a página do PROGRAMA; sobre outlet cita pelo nome
+    // ("segundo iDinheiro") sem "oficial" (rótulo do host, nunca do source_name).
+    const s0 = Array.isArray(ed.sources) ? ed.sources[0] : null;
+    const atribuicao = s0
+      ? ehFonteOficial(s0.url)
+        ? ` (${link(s0.url, 'fonte oficial')})`
+        : ` (segundo ${link(s0.url, esc(rotuloFonte(s0.url)))})`
       : '';
-    sinalInner.push(pRaw(`<span style="color: ${GRAY700}">${boldNumbers(ed.resumoDoDia)}</span>${fonteOficial}`));
+    sinalInner.push(pRaw(`<span style="color: ${GRAY700}">${boldNumbers(ed.resumoDoDia)}</span>${atribuicao}`));
   }
   if (ed.predictNarrativa?.texto) sinalInner.push(p(ed.predictNarrativa.texto, { color: GRAY700 }));
   parts.push(section(sinalInner.join(''),

@@ -1220,7 +1220,13 @@ prova-se por 5 dias úteis de edição válida **revisada**, com o envio adiado.
   483/483; smoke local do runner grava a linha do ledger no red-path.
 
 ## D-090 — Texto de link em green-700 #007A57: green-600 reprova contraste AA (emenda à regra 8)
-**Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** design-review (Rams bot) + verificação própria + decisão do operador
+**Data:** 2026-07-23 · **Status:** Fix de código (a11y nos links) APLICADO · emenda de brand-rule **PROPOSTA — aguarda ratificação do operador** · **Milestone:** M2.7 · **Origem:** design-review (Rams bot) + verificação própria
+
+> **Governança (decisão do operador, 2026-07-23):** o *fix de código* (links →
+> green-700, correção de contraste) fica aplicado — reverter restauraria uma falha
+> WCAG. Mas a **emenda da regra 8** (formalizar "verde-texto = green-700") e qualquer
+> **extensão a texto de veredito** ficam **pendentes de ratificação**. NÃO propaguei
+> para o mapa TL Score nem para novas superfícies. Ver "Proposta pendente" abaixo.
 
 O review de design apontou que os links do corpo em **green-600 `#00A878`** reprovam
 contraste. **Verifiquei por conta própria** (não confiei no bot): green-600 sobre
@@ -1244,11 +1250,66 @@ errada** (corrigida).
   (Bônus/Milheiro) com `text-align:right` e a tabela de Ofertas ativas virou tabela
   de DADOS real (`th scope="col"`, sem `role="presentation"`) — semântica de
   cabeçalho para leitor de tela + dígitos empilhados para comparação vertical.
-- **Regra 8 emendada** na CLAUDE.md (link = green-700; resto = green-600) e a linha
-  de contraste corrigida com valores medidos.
-- **Provado:** `#00A878` no corpo do render nº29 = **0** (13 links → green-700);
-  `th scope=col` ×4; `text-align:right` ×8; test:v2 483/483; `renderer/email.test.mjs`
-  verde.
+- **Regra 8:** a CLAUDE.md marca a exceção de link como **PROVISÓRIA (aguarda
+  ratificação)**, não como lei nova; a linha de contraste foi corrigida com valores
+  medidos (fato, não decisão de marca).
+- **Provado:** `#00A878` no corpo do render nº29 = **0** (links → green-700);
+  `th scope=col` ×4; `text-align:right` ×8; `renderer/email.test.mjs` verde.
+
+### Proposta pendente (para o operador RATIFICAR — não aplicada além do fix a11y)
+
+O piso AA (4.5:1 texto normal) sobre Paper elimina green-600 `#00A878` (2.9:1) de
+**qualquer** uso como TEXTO. Hoje isso atinge só link (corrigido). A pergunta de marca
+é se o mapa semântico deve migrar o verde-texto inteiro para green-700. Opções:
+
+1. **Só link** (estado atual): link = green-700; veredito "Vale agir" segue green-600
+   em par bg/text no chip (fill claro), onde o contraste é do par, não sobre Paper.
+   *Custo:* nenhum; *risco:* "Vale agir" como TEXTO puro sobre Paper (se algum dia
+   usado assim) reprovaria.
+2. **Verde-texto = green-700 em tudo** (link + veredito "Vale agir" como texto):
+   green-700 vira o verde de texto; **green-600 `#00A878` desce para hover** (troca o
+   par atual green-600→green-700 do mapa TL Score, que passaria a green-700→green-800
+   — exige definir um green-800, ex.: ~`#005A3B`, que mede ~7:1). *Custo:* redefinir 1
+   token + tocar TLBadge/ui.tsx + tailwind.config; *ganho:* AA em todo verde-texto.
+3. **Verde-texto = green-700 em tudo, mantendo green-700 no hover** (sem novo token):
+   texto e hover no mesmo green-700 (sem diferenciação de hover no verde). *Custo:*
+   mínimo; *perda:* hover não muda de cor.
+
+**Recomendo a opção 1 por ora** (menor superfície; o veredito não está reprovando hoje
+porque vive em chip com par bg/text). Se você quiser AA garantido em qualquer uso
+futuro de "Vale agir" como texto, opção 2 (com green-800 novo). Aguardo sua escolha
+antes de tocar veredito/TL Score/tailwind.
+
+## D-091 — Integridade editorial do render: atribuição de fonte, filler zero, "o que fechou" ligado
+**Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** operador (auditoria do HTML real da nº29)
+
+Quatro furos de integridade no render, corrigidos na **fonte** (renderer/seletor),
+nunca no artefato gerado:
+
+- **1. "fonte oficial" só sobre PROGRAMA.** O Sinal do dia linkava "fonte oficial"
+  para o `sources[0]` — que era iDinheiro (agregador). Novo `v2/lib/digest/fontes.mjs`:
+  `ehFonteOficial(url)` (true só para domínio de programa/emissor; desconhecido/outlet
+  = false, nunca superestima). Sobre outlet o render agora escreve "**segundo
+  <Nome>**" SEM "oficial". Aplicado em email.mjs e render-beehiiv.mjs (todo lugar que
+  imprimia "fonte oficial").
+- **2. Cartões e bancos sem filler.** Os 4 itens tinham a MESMA frase-template
+  ("Cartão com acúmulo diferenciado, campanha vigente"). `montarCartaoItem` agora
+  deriva a descrição de **dado real** (bônus %, milheiro, público, vigência); sem
+  NENHUM bit concreto o item é **OMITIDO** (regra-mãe). Se sobra 0, a seção some.
+- **3. Rótulo de fonte casa o host.** `source_name` armazenado vinha errado ('tavily'
+  — ferramenta de busca — em passageirodeprimeira; 'melhorescartoes' em URL de
+  melhoresdestinos). `montarSources` e `montarCartaoItem` derivam o rótulo de
+  `rotuloFonte(url)` (do HOST), ignorando o `source_name`. Teste `rotuloBateHost`
+  **reprova rótulo≠host**.
+- **4. "O que fechou nesta semana" ligado.** O render já tinha a seção; o seletor
+  `selecionarFechouSemana` exigia `tier===1` — mas pós-C1/D-082 nada é tier=1 por
+  claim, então zerava todo dia. É **retrospectiva** (fato de ciclo de vida encerrada +
+  conta), não recomendação → removido o gate tier1; régua = encerrada + conta + janela
+  7d. Vazio num dia → omite (regra-mãe).
+- **Provado (unit):** `fontes.test.mjs` (rótulo≠host reprova; oficial só programa);
+  `montar-edicao.test.mjs` (cartão sem conteúdo real → null, não filler; fonte pelo
+  host ignora source_name errado); `dia-fraco.test.mjs` (TIER 2 encerrada com conta
+  entra). Prova ao vivo: re-run do runner para 2026-07-22, gate verde, nº29 persistida.
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
