@@ -1301,11 +1301,14 @@ nunca no artefato gerado:
   melhoresdestinos). `montarSources` e `montarCartaoItem` derivam o rótulo de
   `rotuloFonte(url)` (do HOST), ignorando o `source_name`. Teste `rotuloBateHost`
   **reprova rótulo≠host**.
-- **4. "O que fechou nesta semana" ligado.** O render já tinha a seção; o seletor
-  `selecionarFechouSemana` exigia `tier===1` — mas pós-C1/D-082 nada é tier=1 por
-  claim, então zerava todo dia. É **retrospectiva** (fato de ciclo de vida encerrada +
-  conta), não recomendação → removido o gate tier1; régua = encerrada + conta + janela
-  7d. Vazio num dia → omite (regra-mãe).
+- **4. "O que fechou nesta semana" ligado.** O render já tinha a seção; **duas**
+  camadas exigiam `tier===1` e precisavam concordar: o seletor
+  `selecionarFechouSemana` E a recomputação do gate (`checkFechouSemana`, que
+  reconfere no banco). Pós-C1/D-082 nada é tier=1 por claim → zerava/reprovava todo
+  dia (o gate deu RED nos 2 itens legítimos: tier=2, conta 47/25, na janela). É
+  **retrospectiva** (fato de ciclo de vida encerrada + conta), não recomendação →
+  removido o tier1 nas DUAS camadas; régua = encerrada + conta + janela 7d. Vazio num
+  dia → omite (regra-mãe).
 - **Provado (unit):** `fontes.test.mjs` (rótulo≠host reprova; oficial só programa);
   `montar-edicao.test.mjs` (cartão sem conteúdo real → null, não filler; fonte pelo
   host ignora source_name errado); `dia-fraco.test.mjs` (TIER 2 encerrada com conta

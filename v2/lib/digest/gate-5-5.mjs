@@ -379,8 +379,9 @@ export function checkCartoesBancos(edition = {}, campaignsFromDb = [], { bancosO
 
 /**
  * O que fechou nesta semana: cada item recomputa `estado='encerrada' AND
- * tier=1 AND tl_score_bruto IS NOT NULL AND vigencia_fim` na janela dos 7
- * dias direto no banco — sem cálculo novo, só leitura conferida.
+ * tl_score_bruto IS NOT NULL AND vigencia_fim` na janela dos 7 dias direto no
+ * banco — sem cálculo novo, só leitura conferida. RETROSPECTIVA, não exige tier=1
+ * (D-091, alinhado ao seletor).
  * @param {object} edition
  * @param {object[]} campaignsFromDb
  * @param {{hoje?:string, janelaDias?:number}} opts  `hoje` ausente ⇒ usa `edition.date`
@@ -413,10 +414,14 @@ export function checkFechouSemana(edition = {}, campaignsFromDb = [], { hoje, ja
 
     const vFimMs = Date.parse(candidato.vigencia_fim);
     const dentroJanela = !Number.isNaN(refMs) && !Number.isNaN(vFimMs) && vFimMs >= inicioMs && vFimMs <= refMs;
-    const ok = candidato.estado === 'encerrada' && Number(candidato.tier) === 1 && candidato.tl_score_bruto !== null && candidato.tl_score_bruto !== undefined && dentroJanela;
+    // RETROSPECTIVA (não recomendação): NÃO exige tier=1 — alinhado ao seletor
+    // (D-091). Pós-C1/D-082 nada é tier=1 por claim; exigir aqui divergia do
+    // seletor e reprovava o gate num dia com "o que fechou" legítimo. Régua =
+    // encerrada + conta (tl_score_bruto) + janela.
+    const ok = candidato.estado === 'encerrada' && candidato.tl_score_bruto !== null && candidato.tl_score_bruto !== undefined && dentroJanela;
     results.push({
       ok,
-      check: `${tag}: estado=encerrada AND tier=1 AND tl_score_bruto not null AND vigencia_fim na janela de ${janelaDias}d recomputado`,
+      check: `${tag}: estado=encerrada AND tl_score_bruto not null AND vigencia_fim na janela de ${janelaDias}d recomputado`,
       detail: ok ? 'ok' : `estado=${candidato.estado}, tier=${candidato.tier}, tl_score_bruto=${candidato.tl_score_bruto}, vigencia_fim=${candidato.vigencia_fim}, dentroJanela=${dentroJanela}`,
     });
   });

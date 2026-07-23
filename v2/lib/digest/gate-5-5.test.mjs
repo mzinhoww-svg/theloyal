@@ -235,7 +235,7 @@ test('checkCartoesBancos: quebrado — zero itens reais no banco para embasar a 
 });
 
 // ── checkFechouSemana ──
-test('checkFechouSemana: golden — item recomputa estado=encerrada/tier=1/tl_score_bruto/janela', () => {
+test('checkFechouSemana: golden — item recomputa estado=encerrada/tl_score_bruto/janela (sem tier1, D-091)', () => {
   const ed = edicaoV3Valida();
   const results = checkFechouSemana(ed, CAMPANHAS_V3, { hoje: '2026-07-17' });
   const falhas = results.filter((r) => !r.ok);
@@ -253,10 +253,19 @@ test('checkFechouSemana: quebrado — item fora da janela de 7 dias no banco →
   assert.ok(results.some((r) => !r.ok && r.check.includes('janela de 7d')));
 });
 
-test('checkFechouSemana: quebrado — banco mostra tier 2 (não TIER 1) → reprova', () => {
+test('checkFechouSemana: tier 2 encerrada com conta na janela → PASSA (retrospectiva, D-091)', () => {
+  // Pós-C1/D-082 o "o que fechou" NÃO exige tier1 (é histórico, não recomendação):
+  // encerrada + conta + janela basta. Alinhado ao seletor selecionarFechouSemana.
   const campanhasTier2 = CAMPANHAS_V3.map((c) => (c.id === 'encerrada1' ? { ...c, tier: 2 } : c));
   const ed = edicaoV3Valida();
   const results = checkFechouSemana(ed, campanhasTier2, { hoje: '2026-07-17' });
+  assert.deepEqual(results.filter((r) => !r.ok), [], 'tier 2 encerrada com conta na janela passa');
+});
+
+test('checkFechouSemana: quebrado — encerrada SEM conta (tl_score_bruto null) → reprova', () => {
+  const semConta = CAMPANHAS_V3.map((c) => (c.id === 'encerrada1' ? { ...c, tl_score_bruto: null } : c));
+  const ed = edicaoV3Valida();
+  const results = checkFechouSemana(ed, semConta, { hoje: '2026-07-17' });
   assert.ok(results.some((r) => !r.ok && r.check.includes('janela de 7d')));
 });
 
