@@ -36,7 +36,9 @@ on:
     - cron: "30 9 * * 1-5"
 
 permissions:
-  contents: read
+  # write: o runner PERSISTE a edição do dia (JSON + render + ledger) de volta no
+  # branch, para o operador revisar sem rodar nada (modo C · disco + revisão).
+  contents: write
 
 concurrency:
   # Serializa disparos no mesmo dia para reforcar a idempotencia do ledger.
@@ -73,3 +75,24 @@ jobs:
           if [ -n "${{ github.event.inputs.edition }}" ]; then ARGS="${{ github.event.inputs.edition }}"; fi
           if [ -n "${{ github.event.inputs.now }}" ]; then ARGS="$ARGS --now ${{ github.event.inputs.now }}"; fi
           node scripts/daily.mjs $ARGS
+
+      # Modo C (disco + revisão): persiste a edição do dia de volta no branch para o
+      # operador revisar sem rodar nada. Roda mesmo com gate RED (always) para gravar
+      # a linha honesta no ledger. Não commita nada quando não há mudança.
+      - name: Persistir edição do dia (JSON + render + ledger)
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content/editions content/renders content/m2-cadencia-ledger.md
+          if git diff --cached --quiet; then
+            echo "Persistência: sem mudanças a commitar."
+          else
+            git commit -m "chore(daily): persistir edição do dia para revisão (modo C)"
+            for i in 1 2 3 4; do
+              git push origin HEAD:${{ github.ref_name }} && break
+              echo "push falhou (tentativa $i) — refazendo sobre o topo remoto"
+              git pull --rebase origin ${{ github.ref_name }} || true
+              sleep $((2 ** i))
+            done
+          fi

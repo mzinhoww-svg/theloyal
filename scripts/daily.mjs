@@ -28,6 +28,7 @@ import { anotarRevisao } from '../v2/lib/verificacao/integrar.mjs';
 import { montarEdicaoDoDia, resolverNumeroEdicao, reconstruirConjuntoVivo, revalidarVigencia, filtrarVivos } from '../v2/lib/digest/montar-edicao.mjs';
 import { hojeSaoPaulo } from './lib.mjs';
 import { capturarEdicao } from './outcomes.mjs';
+import { persistirRenderRevisao, registrarCadencia } from './cadencia.mjs';
 
 const LEDGER = 'content/daily-status.json';
 const OUT = 'out/daily';
@@ -477,10 +478,20 @@ async function main() {
     log('[4/5]', `GATE VERMELHO na camada "${veredito.camada}" — ${veredito.violacoes.length} violação(ões). Rascunho NÃO gerado:`);
     for (const v of veredito.violacoes.slice(0, 12)) log('', `  ✗ ${v}`);
     log('', `Fila de revisão (não bloqueia, informativa): ${veredito.revisao.length} item(ns) → ${filaPath}.`);
+    // Modo C: registra o dia RED no ledger (honesto, não conta, sem render).
+    registrarCadencia({ ed, veredito, renderLink: null, hoje });
     process.exitCode = 1;
     return;
   }
   log('[4/5]', `GATE VERDE. Fila de revisão (${veredito.revisao.length} item(ns)) → ${filaPath}.`);
+
+  // Persistência do artefato diário (MODO C · disco + revisão). Grava o render
+  // FIEL (schema v4 inteiro, o mesmo e-mail) num caminho VERSIONADO e registra o
+  // dia no ledger de cadência. A rota /revisao/N serve estes bytes — o operador VÊ
+  // sem rodar nada. Independe do Beehiiv (que segue adiado/degradado).
+  const arquivoRender = persistirRenderRevisao({ ed, html: emailHtml });
+  registrarCadencia({ ed, veredito, renderLink: `/revisao/${ed.number}`, hoje });
+  log('', `Revisão: render fiel → ${arquivoRender} (rota /revisao/${ed.number}). Ledger de cadência atualizado.`);
 
   // 5. Rating + rascunho. Auto-publish só quando: rating acima do mínimo E o
   // operador ligou TL_AUTOPUBLISH=on. Do contrário, rascunho + 1 clique.

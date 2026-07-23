@@ -1188,6 +1188,37 @@ e o outcomes-ledger que já estavam prontos.
 - **Provado:** `node --test scripts/daily.test.mjs` — novo teste "POST 400 (tier sem
   API) degrada sem lançar" verde; test:v2 476/476 intacto.
 
+## D-089 — Cadência em modo C (disco + revisão): persistir o artefato diário para o operador VER sem rodar nada
+**Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** operador (envio adiado; ESP a definir)
+
+Com o Beehiiv adiado (D-088, tier Launch sem API) a edição do dia **morria no runner
+efêmero** — o operador não tinha como VER o render sem rodar o pipeline. O modo C
+troca "aprovar por 1-clique (envio)" por "**revisar o render em disco**": o motor
+prova-se por 5 dias úteis de edição válida **revisada**, com o envio adiado.
+
+- **Persistência (caminho a — commit versionado):** o runner grava o render FIEL em
+  `content/renders/NNNN.html` (o `renderEmail`, schema v4 inteiro — não o re-render
+  incompleto de `/edicao/[n]`, que só conhece deals/fechaLogo/radar) e o workflow
+  `daily.yml` (`permissions: contents: write`) commita `content/editions` +
+  `content/renders` + o ledger de volta no branch. Durável, diffável, auditável no
+  GitHub (repo privado).
+- **Visualização (caminho c — rota de preview):** `GET /revisao/[numero]` serve os
+  **bytes exatos** do render (força `force-static`, pré-render no build). **404 em
+  produção** (`VERCEL_ENV==='production'` → `generateStaticParams` vazio +
+  `dynamicParams:false`) e `X-Robots-Tag: noindex` → **não é superfície pública**;
+  o operador vê no deploy de **preview** do branch. Por que não `/edicao/[n]`: aquele
+  renderer é subset do schema e mostraria uma edição incompleta.
+- **Ledger auto-atualizável (`content/m2-cadencia-ledger.md`):** tabela entre
+  marcadores `CADENCIA` upsertada pelo runner por data (Data/Nº/Gate/Render);
+  **preserva a coluna "Revisão do operador"** (a marca `✅ ok` humana nunca é
+  sobrescrita em re-run). Verde persiste render + linha; RED registra a linha
+  honesta sem render (não conta — regra 3).
+- **Não liga autopublish, não envia** (D-050 intacto); o passo Beehiiv segue
+  degradado (D-088).
+- **Provado:** `scripts/cadencia.test.mjs` 6/6 (insert, RED, preserva revisão, ordena,
+  idempotência, marcadores ausentes→erro); `tsc --noEmit` limpo na rota; test:v2
+  483/483; smoke local do runner grava a linha do ledger no red-path.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════

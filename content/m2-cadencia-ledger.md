@@ -1,69 +1,56 @@
-# M2 — Contagem dos 5 dias úteis do Daily (modo 1-clique)
+# M2 — Cadência diária em modo disco + revisão (envio adiado)
 
-> **Gate ativo.** Autopublish **OFF** em todo o período (D-050; `TL_AUTOPUBLISH=off`).
-> Cada dia útil: cron 06:30 BRT (ou dispatch manual) gera **rascunho** → operador
-> aprova por **1-clique** (envio real) → marca o dia. **5 dias úteis consecutivos
-> aprovados = M2 FECHADO.**
+> **Modo C (decisão do operador, 2026-07-23).** O envio ao ESP fica **adiado**
+> (Beehiiv em tier Launch, sem API; ESP a definir). O motor roda todo dia útil,
+> monta a edição, passa o gate único e **persiste o render em disco**
+> (`content/renders/NNNN.html`, servido em `/revisao/N`). O operador **revisa o
+> render** e marca "ok" na tabela — **sem envio**. Autopublish **OFF** o tempo todo
+> (D-050; `TL_AUTOPUBLISH=off`). O passo Beehiiv degrada sem quebrar (D-088).
 >
-> **Regras da contagem:**
-> - Dia **sem aprovação** do operador **não conta** — e **não pula**: a série trava
->   ali até haver aprovação. Número honesto menor é melhor que um número inflado.
-> - Dia que **falha o gate** → reporta, **não envia**, **não conta**; o diagnóstico
->   vira prioridade antes de seguir.
-> - "Consecutivos" = dias úteis seguidos, todos aprovados. Um furo reinicia a série.
+> **"Aprovado" no modo C:** o operador abriu o render, conferiu e marcou ✅ na
+> coluna "Revisão do operador". **5 dias úteis consecutivos de edição VÁLIDA
+> revisada = motor provado (M2.7 funcional).** O envio real fica para quando o ESP
+> estiver ligado — não é pré-requisito de fechar o motor.
+>
+> **Regras da contagem (inalteradas):**
+> - Dia **sem revisão** do operador **não conta** — e **não pula**: a série trava
+>   ali até haver revisão. Número honesto menor é melhor que um número inflado.
+> - Dia que **falha o gate** → reporta, **não persiste render**, **não conta**; o
+>   diagnóstico vira prioridade antes de seguir (regra 3).
+> - "Consecutivos" = dias úteis seguidos, todos revisados. Um furo reinicia a série.
 
-## Janela dos 5 dias úteis
+## Janela dos dias úteis
 
-| # | Data (BRT) | Nº edição | Rascunho (Beehiiv) | Gate | 1-clique (envio) | Conta? |
-|---|------------|-----------|--------------------|------|------------------|--------|
-| 1 | 2026-07-22 (qua) | 29 | **não gerado** (gate RED) | 🔴 RED (dia fraco) | ☐ — sem rascunho p/ aprovar | ❌ não conta |
-| 2 | 2026-07-23 (qui) | — | _(cron 06:30)_ | — | ☐ | — |
-| 3 | 2026-07-24 (sex) | — | _(cron 06:30)_ | — | ☐ | — |
-| 4 | 2026-07-27 (seg) | — | _(cron 06:30)_ | — | ☐ | — |
-| 5 | 2026-07-28 (ter) | — | _(cron 06:30)_ | — | ☐ | — |
+> A tabela abaixo é **atualizada pelo runner** a cada rodada (marcadores
+> `CADENCIA`). O runner escreve Data / Nº / Gate / Render e deixa a **Revisão do
+> operador** como `pendente`; **só o operador** troca para `✅ ok` (a marca humana é
+> preservada em re-runs). Não editar dentro dos marcadores à mão salvo a coluna de
+> revisão.
 
-**Progresso:** 0/5 dias úteis consecutivos aprovados. **Série não iniciou** — Dia 1
-falhou o gate (dia fraco). Diagnóstico é prioridade (regra 3).
+<!-- CADENCIA:START -->
+| Data (BRT) | Nº | Gate | Render (revisão) | Revisão do operador |
+|------------|----|------|------------------|---------------------|
+<!-- CADENCIA:END -->
+
+**Progresso:** 0/5 dias úteis consecutivos revisados. A série inicia no primeiro
+dia com edição VÁLIDA (gate verde) revisada pelo operador.
+
+## Como revisar um dia (operador)
+
+1. Abrir `/revisao/N` no deploy de **preview** do Vercel (a rota é **noindex** e
+   retorna **404 em produção** — não é superfície pública). Alternativa durável:
+   abrir `content/renders/NNNN.html` no GitHub (repo privado).
+2. Conferir: edição fresca do dia, triada, gate verde, seções com conteúdo real
+   (Deal Desk só com lastro; Ofertas ativas com selo quando não confirmado).
+3. Trocar `pendente` → `✅ ok (AAAA-MM-DD)` na linha do dia. **Sem envio.**
+4. 5 linhas `✅ ok` em dias úteis consecutivos = **M2.7 funcional provado**.
 
 ## Log de eventos
 
-- **2026-07-22** — Smoke-run do Dia 1 disparado via `workflow_dispatch` (daily.yml,
-  ref `claude/loyalty-landing-page-v1-7vbjq7`), modo real (environment Production,
-  `TL_AUTOPUBLISH=off`). Run `#29960099135`.
-- **2026-07-22** — **Dia 1: GATE RED — dia fraco, rascunho NÃO gerado, NÃO conta.**
-  Diagnóstico definitivo do banco vivo (mesma fonte do runner):
-  - **55 campanhas vivas hoje, 0 com lastro `campanha_fontes`** → Deal Desk = 0,
-    Ofertas ativas = 0. É a consequência HONESTA de C1/D-082: antes ~44 ofertas
-    vivas mostravam `tier=1` por claim do LLM (sem confirmação) e enchiam o Deal
-    Desk de bônus não confirmado; depois de C1, nenhuma oferta viva está confirmada,
-    então o Deal Desk corretamente aparece vazio. Número honesto menor.
-  - **Clipping hoje = 0** — nenhuma `news_raw` com `published_at = hoje` e síntese
-    própria (as 8 sínteses do A5 não são de hoje; o runner filtra Clipping por dia).
-  - Edição nº 29 montada, mas `deals=0, ofertasAtivas=0, clipping=0` → o gate único
-    (camada editorial) reprovou o "signal" de dia fraco (exit 1, sem rascunho).
-  - Os 3 crons anteriores (20, 21, 22/07, código pré-merge) falharam pelo MESMO
-    motivo — o gate RED em dia fraco não é regressão do merge; é o estado real.
-
-## Diagnóstico — por que a série não inicia (prioridade)
-
-**Causa-raiz (dado):** o pipeline de confirmação (`coleta-tier1` → `campanha_fontes`)
-ainda não confirmou NENHUMA oferta viva. Sem oferta confirmada, o Deal Desk e as
-Ofertas ativas ficam legitimamente vazios (INV-03). A cadência do Daily só produz
-rascunho aprovável quando existir conteúdo confirmado do dia OU o Clipping do dia
-tiver síntese própria. **Isto é correto, não é bug** — publicar bônus não confirmado
-é o que C1 acabou de proibir.
-
-**Ponto a decidir com o operador (não toquei sem ordem):** o gate único hoje dá
-**RED com exit 1** num dia fraco — ou seja, um dia legitimamente quieto **não gera
-nem rascunho leve** (Clipping/Radar/Resumo). Se a intenção do modo dia-fraco (M2.4
-task 12 / gate 5.5) é permitir uma edição mais enxuta em dia sem Deal Desk, o gate
-precisa distinguir "dia fraco válido" de "edição vazia inválida". **Não alterei o
-gate** para não forçar verde artificial (inflaria a contagem — contra a regra 3).
-
-## Como marcar um dia (operador)
-
-1. Abrir o rascunho do dia no Beehiiv (link na tabela).
-2. Conferir: edição fresca do dia, triada, Clipping com síntese própria, gate verde.
-3. Aprovar por 1-clique (envio real). A trava durável (`daily_sends`, C2/D-083)
-   garante que um único envio acontece por dia, mesmo em re-run.
-4. Marcar ☑ na coluna "1-clique" e preencher "Conta? ✅" no dia correspondente.
+- **2026-07-23** — Migração para o **modo C** (disco + revisão). Persistência do
+  artefato diário ligada: o runner grava `content/renders/NNNN.html` (render fiel,
+  schema v4) e atualiza a tabela acima; rota `/revisao/N` (preview, noindex,
+  404 em produção) serve o render. Envio adiado (ESP a definir). D-089.
+- **2026-07-22** — Antes do modo C, a nº29 dava gate RED (dia fraco, pré-EPSILON).
+  Depois de EPSILON (D-086) o dia fraco válido passa o gate; a contagem recomeça
+  aqui, agora medindo **revisão** (não envio).
