@@ -31,6 +31,7 @@
 | Data (BRT) | Nº | Gate | Render (revisão) | Revisão do operador |
 |------------|----|------|------------------|---------------------|
 | 2026-07-22 (QUARTA-FEIRA) | 29 | 🟢 VERDE | [/revisao/29](/revisao/29) | ✅ ok (2026-07-23) |
+| 2026-07-23 (QUINTA-FEIRA) | 30 | 🟢 VERDE | [/revisao/30](/revisao/30) | pendente |
 <!-- CADENCIA:END -->
 
 **Progresso:** **1/5** dias úteis consecutivos revisados. Dia 1 (nº29, 2026-07-22)
