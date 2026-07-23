@@ -27,6 +27,8 @@ import { gate } from '../v2/lib/gate-unico.mjs';
 import { anotarRevisao } from '../v2/lib/verificacao/integrar.mjs';
 import { montarEdicaoDoDia, resolverNumeroEdicao, reconstruirConjuntoVivo, revalidarVigencia, filtrarVivos } from '../v2/lib/digest/montar-edicao.mjs';
 import { hojeSaoPaulo } from './lib.mjs';
+import { capturarEdicao } from './outcomes.mjs';
+import { persistirRenderRevisao, registrarCadencia } from './cadencia.mjs';
 
 const LEDGER = 'content/daily-status.json';
 const OUT = 'out/daily';
@@ -84,10 +86,26 @@ async function carregarCampanhas({ campaignsPath, newsPath, forecastPath, hoje }
       const ids = cf.ok ? new Set((await cf.json()).map((f) => f.campaign_id)) : new Set();
       for (const row of rows) row.tem_tier1 = ids.has(row.id);
     } catch { for (const row of rows) row.tem_tier1 = false; }
-    // news_raw processadas do dia (Clipping só usa as que tiverem síntese própria).
+    // EPSILON/D-086: triagem da Trilha B (limpo/historico_confirmado/revisao) gateia
+    // Ofertas ativas (transparência) — DESACOPLADA do lastro-tier1. Lê a última
+    // triagem por campanha (campanha_versoes evento=triagem_backlog_m3). Sem linha
+    // → triagem_categoria=null (não-triado fica fora da transparência, INV-03).
+    try {
+      const tv = await fetch(`${url}/rest/v1/campanha_versoes?select=campaign_id,categoria:payload_depois->>categoria,em&evento=eq.triagem_backlog_m3&order=em.desc`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
+      const cat = new Map();
+      if (tv.ok) for (const v of await tv.json()) if (v.campaign_id && !cat.has(v.campaign_id)) cat.set(v.campaign_id, v.categoria ?? null);
+      for (const row of rows) row.triagem_categoria = cat.get(row.id) ?? null;
+    } catch { for (const row of rows) row.triagem_categoria = null; }
+    // Clipping: notícia RECENTE (janela ~7 dias, não só hoje) com síntese PRÓPRIA
+    // aprovada (summary presente E summary_review_reason null — reprovadas pelo crivo
+    // A5/INV-25 nunca entram). Piso rígido 5 é aplicado a jusante (montarClipping).
     let newsRaw = [];
     try {
-      const nr = await fetch(`${url}/rest/v1/news_raw?select=id,source,title,url,summary,processed,published_at&processed=eq.true&published_at=eq.${hoje}`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
+      const desde = new Date(Date.parse(`${hoje}T00:00:00Z`) - 7 * 864e5).toISOString().slice(0, 10);
+      const nq = `news_raw?select=id,source,title,url,summary,processed,published_at`
+        + `&processed=eq.true&summary=not.is.null&summary_review_reason=is.null`
+        + `&published_at=gte.${desde}&published_at=lte.${hoje}&order=published_at.desc`;
+      const nr = await fetch(`${url}/rest/v1/${nq}`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
       if (nr.ok) newsRaw = await nr.json();
     } catch { /* news é opcional; Clipping degrada omitindo (regra-mãe) */ }
     return { rows, newsRaw, forecast: forecastFromFile, fonte: 'banco vivo (REST)' };
@@ -100,6 +118,20 @@ async function carregarCampanhas({ campaignsPath, newsPath, forecastPath, hoje }
     return { rows, newsRaw, forecast: snap.forecast || forecastFromFile, fonte: `snapshot ${campaignsPath}${cru ? ' (estado reconstruído p/ ' + hoje + ')' : ''}` };
   }
   return { rows: [], newsRaw: [], forecast: forecastFromFile, fonte: 'nenhuma (sem credencial nem snapshot — gate acusará a falta)' };
+}
+
+// URLs de Clipping já usadas em edições anteriores (do MESMO dia não conta — a
+// edição do dia reusa seu próprio arquivo, idempotente). EPSILON: uma notícia não
+// reaparece no Clipping de dias diferentes.
+function urlsClippingUsadas(hoje) {
+  const usadas = new Set();
+  if (!existsSync(EDICOES_DIR)) return usadas;
+  for (const f of readdirSync(EDICOES_DIR).filter((x) => /^\d+\.json$/.test(x))) {
+    const j = lerJsonOpcional(`${EDICOES_DIR}/${f}`, {});
+    if (j.date === hoje) continue; // a própria edição do dia não bloqueia
+    for (const c of Array.isArray(j.clipping) ? j.clipping : []) if (c?.url) usadas.add(c.url);
+  }
+  return usadas;
 }
 
 // Numeração idempotente por DATA: uma edição por dia, reusa o arquivo do dia se
@@ -279,8 +311,11 @@ export async function upsertRascunho({ ed, html, hoje, publicar = false, io = {}
 
   const url = env.SUPABASE_URL;
   const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY;
-  const apiKey = env.BEEHIIV_API_KEY;
-  const pubId = env.BEEHIIV_PUBLICATION_ID;
+  // .trim() alinhado ao beehiiv-core.mjs: um secret com \n/espaço no fim faria o
+  // pubId não casar o padrão ^pub_...$ do Beehiiv (400) só no runner (o publisher
+  // trima e funcionava). Mesma disciplina nos dois caminhos.
+  const apiKey = env.BEEHIIV_API_KEY?.trim();
+  const pubId = env.BEEHIIV_PUBLICATION_ID?.trim();
   const durable = Boolean(url && key);
 
   // Estado prévio: em modo DURÁVEL (creds Supabase), o BANCO é a única verdade —
@@ -342,10 +377,21 @@ export async function upsertRascunho({ ed, html, hoje, publicar = false, io = {}
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!r.ok) throw new Error(`Beehiiv ${isUpdate ? 'PATCH' : 'POST'} ${r.status}: ${(await r.text()).slice(0, 200)}`);
-    const j = await r.json();
-    record = { postId: j?.data?.id || prevPostId, status: enviarAgora ? 'ENVIADO (auto-publish)' : (isUpdate ? 'atualizado' : 'criado'), url: j?.data?.web_url || fileLock?.url, enviado: enviarAgora };
-    log('[5/5]', `Beehiiv: ${record.status} (${record.postId})${enviarAgora ? ' — status confirmed, ENVIO REAL' : ' — status draft, sem envio'}.`);
+    if (!r.ok) {
+      const detalhe = `Beehiiv ${isUpdate ? 'PATCH' : 'POST'} ${r.status}: ${(await r.text()).slice(0, 200)}`;
+      // ENVIO REAL que falha é RUIDOSO: não pode deixar a trava do dia (já reservada
+      // atomicamente) num limbo silencioso reservado-mas-não-enviado.
+      if (enviarAgora) throw new Error(detalhe);
+      // RASCUNHO que falha NÃO derruba o run. No tier sem API (Launch) o POST volta
+      // 400 — mas a edição, o render, o gate e o outcomes-ledger já são o produto do
+      // dia. Degrada para "sem envio" e segue; a publicação acontece manualmente na UI.
+      log('[5/5]', `Beehiiv indisponível — rascunho não criado via API (${detalhe}). Edição pronta em disco; publicação manual na UI do Beehiiv.`);
+      record = { postId: prevPostId || null, status: `rascunho não publicado via API (${r.status}) — publicar na UI`, url: fileLock?.url || null, enviado: false };
+    } else {
+      const j = await r.json();
+      record = { postId: j?.data?.id || prevPostId, status: enviarAgora ? 'ENVIADO (auto-publish)' : (isUpdate ? 'atualizado' : 'criado'), url: j?.data?.web_url || fileLock?.url, enviado: enviarAgora };
+      log('[5/5]', `Beehiiv: ${record.status} (${record.postId})${enviarAgora ? ' — status confirmed, ENVIO REAL' : ' — status draft, sem envio'}.`);
+    }
   } else {
     record = { postId: prevPostId || null, status: `mock (sem BEEHIIV_API_KEY)${enviarAgora ? ' — ENVIO seria disparado' : ''}`, url: fileLock?.url || null, enviado: false };
     log('[5/5]', `MOCK: sem credencial Beehiiv — ${enviarAgora ? 'ENVIO seria disparado (auto-elegível)' : 'rascunho não enviado'}. Alvo do dia ${chave}: ${record.postId || '(a criar na 1ª publicação real)'}.`);
@@ -370,9 +416,12 @@ async function main() {
 
   // 1+2. Fonte viva do dia + MONTAGEM da edição fresca (ou carga estática
   // quando um caminho de edição é passado explicitamente — back-compat).
-  const { rows: rowsBrutas, newsRaw, forecast, fonte } = await carregarCampanhas({
+  const { rows: rowsBrutas, newsRaw: newsBrutas, forecast, fonte } = await carregarCampanhas({
     campaignsPath: opts.campaigns, newsPath: opts.news, forecastPath: opts.forecast, hoje,
   });
+  // EPSILON: Clipping não repete notícia já usada em edição anterior (dedup por url).
+  const usadas = urlsClippingUsadas(hoje);
+  const newsRaw = (newsBrutas || []).filter((n) => !(n?.url && usadas.has(n.url)));
   // Revalidação de vigência no BOUNDARY: montagem, pré-superfície e gate veem a
   // MESMA verdade de vigência (vencida antes de `hoje` = 'encerrada'), mesmo que
   // o FSM do banco esteja stale. Sem isso, o gate diverge da edição montada.
@@ -393,6 +442,17 @@ async function main() {
     mkdirSync(EDICOES_DIR, { recursive: true });
     writeFileSync(edPath, JSON.stringify(ed, null, 2) + '\n');
     log('[1/5]', `edição MONTADA nº ${number} (${hoje}) → ${edPath} ${reused ? '(reusou arquivo do dia — idempotente)' : '(número novo)'}. Fonte: ${fonte}. deals=${ed.deals.length}, ofertasAtivas=${ed.ofertasAtivas?.length || 0}, fechaLogo=${ed.fechaLogo?.length || 0}, cartoesBancos=${ed.cartoesBancosItens?.length || 0}, fechouSemana=${ed.oQueFechouSemana?.length || 0}, clipping=${ed.clipping?.length || 0}.`);
+  }
+
+  // Outcomes-ledger (GAMMA · D-048/D-202): CAPTURA as linhas da edição no momento
+  // da montagem — o que foi mostrado + os 5 sinais de D-048 (lidos de
+  // campanha_fontes), ação humana e desfecho ficam null (preenchidos depois, nunca
+  // chutados). Pré-requisito de ligar autopublish. NUNCA bloqueia o runner.
+  try {
+    const cap = await capturarEdicao({ ed, campaigns: campaignsFromDb });
+    log('[1/5]', `outcomes-ledger: ${cap.gravadas} linha(s) capturadas ${JSON.stringify(cap.secoes || {})}${cap.motivo ? ` (${cap.motivo})` : ''}.`);
+  } catch (e) {
+    log('[1/5]', `outcomes-ledger: captura falhou (não bloqueia) — ${e.message ?? e}.`);
   }
 
   // 2. Verificação — pré-superfície sobre os candidatos vivos (mesma fonte única
@@ -418,10 +478,20 @@ async function main() {
     log('[4/5]', `GATE VERMELHO na camada "${veredito.camada}" — ${veredito.violacoes.length} violação(ões). Rascunho NÃO gerado:`);
     for (const v of veredito.violacoes.slice(0, 12)) log('', `  ✗ ${v}`);
     log('', `Fila de revisão (não bloqueia, informativa): ${veredito.revisao.length} item(ns) → ${filaPath}.`);
+    // Modo C: registra o dia RED no ledger (honesto, não conta, sem render).
+    registrarCadencia({ ed, veredito, renderLink: null, hoje });
     process.exitCode = 1;
     return;
   }
   log('[4/5]', `GATE VERDE. Fila de revisão (${veredito.revisao.length} item(ns)) → ${filaPath}.`);
+
+  // Persistência do artefato diário (MODO C · disco + revisão). Grava o render
+  // FIEL (schema v4 inteiro, o mesmo e-mail) num caminho VERSIONADO e registra o
+  // dia no ledger de cadência. A rota /revisao/N serve estes bytes — o operador VÊ
+  // sem rodar nada. Independe do Beehiiv (que segue adiado/degradado).
+  const arquivoRender = persistirRenderRevisao({ ed, html: emailHtml });
+  registrarCadencia({ ed, veredito, renderLink: `/revisao/${ed.number}`, hoje });
+  log('', `Revisão: render fiel → ${arquivoRender} (rota /revisao/${ed.number}). Ledger de cadência atualizado.`);
 
   // 5. Rating + rascunho. Auto-publish só quando: rating acima do mínimo E o
   // operador ligou TL_AUTOPUBLISH=on. Do contrário, rascunho + 1 clique.

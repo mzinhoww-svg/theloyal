@@ -193,7 +193,7 @@ export default async function PromocoesPage() {
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-base font-semibold text-ink">{nomePrograma(b.programa)}</span>
                       <span className="font-mono text-xs text-gray-500">
-                        <span className="text-green-600">{b.n_vivas}</span> viva(s) · {b.n_campanhas} no total
+                        <span className="text-green-700">{b.n_vivas}</span> viva(s) · {b.n_campanhas} no total
                       </span>
                     </div>
                     <div className="mt-1 font-mono text-xs text-gray-500">

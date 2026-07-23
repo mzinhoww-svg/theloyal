@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
-  montarEdicaoDoDia, reconstruirConjuntoVivo, reconstruirEstado, resolverNumeroEdicao,
+  montarEdicaoDoDia, montarCartaoItem, reconstruirConjuntoVivo, reconstruirEstado, resolverNumeroEdicao,
 } from './montar-edicao.mjs';
 import { renderBeehiivHtml } from './render-beehiiv.mjs';
 import { gate } from '../gate-unico.mjs';
@@ -89,7 +89,7 @@ test('caminho Deal Desk: campanha SINTÉTICA elegível vira deal que passa o gat
   // kebab (livelo->smiles) p/ o routeKey bater cru no gate 5.5 e no schema.
   const sintetica = {
     id: 'synthetic-livelo-smiles', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia',
-    tier: 1, tem_tier1: true, tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: '100', paridade: '1:1', cpm: null,
+    tier: 1, tem_tier1: true, triagem_categoria: 'limpo', tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: '100', paridade: '1:1', cpm: null,
     publico: 'geral', first_seen: '2026-07-10', vigencia_fim_date: '2026-07-24',
     source_name: 'Fonte oficial (sintética)', source_url: 'https://example.com/regra-oficial',
   };
@@ -117,4 +117,33 @@ test('numeração idempotente por data (mesmo dia = mesmo número; nunca reusa 0
   const naData0001 = resolverNumeroEdicao('2026-07-17', EXISTENTES);
   assert.equal(naData0001.reused, false);
   assert.notEqual(naData0001.number, 1);
+});
+
+// ── Cartões e bancos: conteúdo REAL derivado do dado ou OMITIDO (nada de filler) ──
+test('montarCartaoItem: item COM dado real vira descrição específica (fonte pelo host)', () => {
+  const c = {
+    origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia',
+    percentual: 100, cpm: null, vigencia_fim_date: '2026-07-31',
+    source_url: 'https://www.idinheiro.com.br/cartao/x', source_name: 'tavily', // source_name ERRADO
+  };
+  const item = montarCartaoItem(c);
+  assert.ok(item, 'com dado real, não omite');
+  assert.match(item.descricao, /100%/);
+  assert.doesNotMatch(item.descricao, /acúmulo diferenciado, campanha vigente/); // sem filler
+  assert.equal(item.fonte, 'iDinheiro'); // rótulo do HOST, ignora o source_name 'tavily'
+});
+
+test('montarCartaoItem: item SEM conteúdo real (só nome+fonte) é OMITIDO (regra-mãe), não filler', () => {
+  const c = {
+    origem_code: 'bb', destino_code: 'smiles', tipo: 'cartao',
+    percentual: null, cpm: null, vigencia_fim_date: null, publico: null,
+    source_url: 'https://www.idinheiro.com.br/cartao/x', source_name: 'iDinheiro',
+  };
+  assert.equal(montarCartaoItem(c), null);
+});
+
+test('montarCartaoItem: dois itens com dados distintos NÃO compartilham a mesma frase', () => {
+  const a = montarCartaoItem({ origem_code: 'livelo', destino_code: 'azul', tipo: 'transferencia', percentual: 120, source_url: 'https://smiles.com.br/x' });
+  const b = montarCartaoItem({ origem_code: 'itau', destino_code: 'latam-pass', tipo: 'transferencia', percentual: 80, source_url: 'https://www.melhorescartoes.com.br/x' });
+  assert.notEqual(a.descricao, b.descricao);
 });

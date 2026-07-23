@@ -11,7 +11,11 @@ const config: Config = {
         surface: "#FFFFFF",
         line: "#E5E0D5",
         gray: { 700: "#3D3A34", 500: "#555555", 400: "#8A8578" },
-        green: { 100: "#D9F4E9", 500: "#00C48C", 600: "#00A878", 700: "#007A57" },
+        // Papéis (D-090 opção 2, ratificado): 700 = verde de TEXTO e SEMÂNTICO em
+        // fundo claro (links, veredito "Vale agir"); 800 = hover desse verde-texto;
+        // 600 = FILL/SVG (fundo de badge/gráfico) e verde-texto sobre Ink (dark);
+        // 500 = fill claro/SVG e resultado da conta sobre Ink; 100 = fill claro.
+        green: { 100: "#D9F4E9", 500: "#00C48C", 600: "#00A878", 700: "#007A57", 800: "#005A3B" },
         blue: { 100: "#E4EAFF", 600: "#315CFF", 700: "#2547CC" },
         yellow: { 100: "#FCF0CE", 500: "#F2C94C" },
         red: { 100: "#F9E2E2", 600: "#D64545", 700: "#B53A3A" },

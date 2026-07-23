@@ -17,8 +17,8 @@ const CAMPANHAS_HOJE = [
   {
     id: 'smiles-desconhecido-compra-2026-07-17',
     tipo: 'compra', origem_code: 'brl', destino_code: 'smiles', publico: 'geral',
-    estado: 'ultimos_dias', tier: 1, tem_tier1: true, tl_score_bruto: 55, veredito_bruto: 'Só para casos específicos',
-    override_aplicado: null, vigencia_fim: '2026-07-17T23:59:00-03:00', first_seen: '2026-07-10',
+    estado: 'ultimos_dias', tier: 1, tem_tier1: true, triagem_categoria: 'limpo', tl_score_bruto: 55, veredito_bruto: 'Só para casos específicos',
+    percentual: 40, override_aplicado: null, vigencia_fim: '2026-07-17T23:59:00-03:00', first_seen: '2026-07-10',
   },
 ];
 
@@ -30,6 +30,10 @@ function edicaoDiaFracoValida() {
     // "fonte oficial" é a tradução sancionada, e o gate exige dígito + candidato nomeado.
     signal: 'Hoje só 1 oferta passou com fonte oficial confirmada: smiles, compra de pontos, nota bruta 55 — banda "Só para casos específicos", abaixo do corte de Deals do dia (vale-agir/vale-olhar).',
     deals: [],
+    // EPSILON: dia fraco VÁLIDO tem ao menos uma seção de transparência com dado real.
+    ofertasAtivas: [
+      { origem: 'brl', destino: 'smiles', tipo: 'compra', percentual: 40, prazo: '2026-07-17T23:59:00-03:00', leitura: 'casos-especificos' },
+    ],
     sources: [{ label: 'Regulamento oficial Smiles', url: 'https://www.smiles.com.br' }],
     disclaimer: DISCLAIMER,
     sinaisRapidos,
@@ -75,7 +79,7 @@ test('quebrado: signal genérico (sem número/candidato) → gate reprova', () =
   const ed = { ...edicaoDiaFracoValida(), signal: 'Hoje não há oferta boa, confira amanhã.' };
   const r = runGate55(ed, { campaignsFromDb: CAMPANHAS_HOJE, renderedHtml: RENDERED_HTML_SEM_DEAL_DESK });
   assert.equal(r.pass, false);
-  assert.ok(r.errors.some((e) => e.includes('signal não é genérico')), `deveria reprovar signal genérico: ${JSON.stringify(r.errors)}`);
+  assert.ok(r.errors.some((e) => e.includes('signal cita ao menos um número')), `deveria reprovar signal sem número: ${JSON.stringify(r.errors)}`);
 });
 
 test('quebrado: sinal rápido com chip de veredito vazado → gate reprova', () => {
@@ -118,7 +122,7 @@ test('COM Deal Desk: deal que não bate rota conhecida no banco → gate reprova
 
 test('COM Deal Desk: deal recomputa limpo contra o banco → todos os checks passam', () => {
   const campanha = {
-    id: 'c1', origem_code: 'livelo', destino_code: 'smiles', estado: 'ativa', tier: 1, tem_tier1: true,
+    id: 'c1', origem_code: 'livelo', destino_code: 'smiles', estado: 'ativa', tier: 1, tem_tier1: true, triagem_categoria: 'limpo',
     tl_score_bruto: 90, veredito_bruto: 'Vale agir', vigencia_fim: '2026-08-01T00:00:00-03:00',
   };
   const ed = {
@@ -136,7 +140,7 @@ test('COM Deal Desk: deal recomputa limpo contra o banco → todos os checks pas
 
 test('COM Deal Desk: veredito do deal não bate com {vale-agir,vale-olhar} → reprova', () => {
   const campanha = {
-    id: 'c1', origem_code: 'livelo', destino_code: 'smiles', estado: 'ativa', tier: 1, tem_tier1: true,
+    id: 'c1', origem_code: 'livelo', destino_code: 'smiles', estado: 'ativa', tier: 1, tem_tier1: true, triagem_categoria: 'limpo',
     tl_score_bruto: 60, veredito_bruto: 'Só para casos específicos', vigencia_fim: '2026-08-01T00:00:00-03:00',
   };
   const ed = {
@@ -155,7 +159,7 @@ const CAMPANHA_CARTAO = { id: 'cartao1', tipo: 'cartao', origem_code: 'itau', de
 const CAMPANHA_BANCO = { id: 'banco1', tipo: 'transferencia', origem_code: 'nubank', destino_code: 'livelo', estado: 'detectada', tier: 2, tl_score_bruto: null, veredito_bruto: null, percentual: 15, vigencia_fim: null };
 const CAMPANHA_ENCERRADA_SEMANA = {
   id: 'encerrada1', tipo: 'transferencia', origem_code: 'livelo', destino_code: 'azul', estado: 'encerrada',
-  tier: 1, tem_tier1: true, tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: 120, vigencia_fim: '2026-07-12T23:59:00-03:00',
+  tier: 1, tem_tier1: true, triagem_categoria: 'limpo', tl_score_bruto: 88, veredito_bruto: 'Vale agir', percentual: 120, vigencia_fim: '2026-07-12T23:59:00-03:00',
 };
 const CAMPANHAS_V3 = [...CAMPANHAS_HOJE, CAMPANHA_CARTAO, CAMPANHA_BANCO, CAMPANHA_ENCERRADA_SEMANA];
 
@@ -189,7 +193,7 @@ test('checkOfertasAtivas: quebrado — leitura divergente do veredito_bruto real
   const ed = edicaoV3Valida();
   ed.ofertasAtivas[0].leitura = 'vale-agir'; // banco diz casos-especificos
   const results = checkOfertasAtivas(ed, CAMPANHAS_V3);
-  assert.ok(results.some((r) => !r.ok && r.check.includes('leitura bate com veredito_bruto real')));
+  assert.ok(results.some((r) => !r.ok && r.check.includes('leitura bate')));
 });
 
 test('checkOfertasAtivas: quebrado — item não localizável no banco → reprova', () => {
@@ -203,7 +207,7 @@ test('checkOfertasAtivas: quebrado — item não passa mais os 3 portões (estad
   const ed = edicaoV3Valida();
   const campanhasEncerrada = CAMPANHAS_V3.map((c) => (c.id === 'smiles-desconhecido-compra-2026-07-17' ? { ...c, estado: 'encerrada' } : c));
   const results = checkOfertasAtivas(ed, campanhasEncerrada);
-  assert.ok(results.some((r) => !r.ok && r.check.includes('passa os 3 portões')));
+  assert.ok(results.some((r) => !r.ok && r.check.includes('elegível a Ofertas ativas')));
 });
 
 // ── checkCartoesBancos ──
@@ -231,7 +235,7 @@ test('checkCartoesBancos: quebrado — zero itens reais no banco para embasar a 
 });
 
 // ── checkFechouSemana ──
-test('checkFechouSemana: golden — item recomputa estado=encerrada/tier=1/tl_score_bruto/janela', () => {
+test('checkFechouSemana: golden — item recomputa estado=encerrada/tl_score_bruto/janela (sem tier1, D-091)', () => {
   const ed = edicaoV3Valida();
   const results = checkFechouSemana(ed, CAMPANHAS_V3, { hoje: '2026-07-17' });
   const falhas = results.filter((r) => !r.ok);
@@ -249,10 +253,19 @@ test('checkFechouSemana: quebrado — item fora da janela de 7 dias no banco →
   assert.ok(results.some((r) => !r.ok && r.check.includes('janela de 7d')));
 });
 
-test('checkFechouSemana: quebrado — banco mostra tier 2 (não TIER 1) → reprova', () => {
+test('checkFechouSemana: tier 2 encerrada com conta na janela → PASSA (retrospectiva, D-091)', () => {
+  // Pós-C1/D-082 o "o que fechou" NÃO exige tier1 (é histórico, não recomendação):
+  // encerrada + conta + janela basta. Alinhado ao seletor selecionarFechouSemana.
   const campanhasTier2 = CAMPANHAS_V3.map((c) => (c.id === 'encerrada1' ? { ...c, tier: 2 } : c));
   const ed = edicaoV3Valida();
   const results = checkFechouSemana(ed, campanhasTier2, { hoje: '2026-07-17' });
+  assert.deepEqual(results.filter((r) => !r.ok), [], 'tier 2 encerrada com conta na janela passa');
+});
+
+test('checkFechouSemana: quebrado — encerrada SEM conta (tl_score_bruto null) → reprova', () => {
+  const semConta = CAMPANHAS_V3.map((c) => (c.id === 'encerrada1' ? { ...c, tl_score_bruto: null } : c));
+  const ed = edicaoV3Valida();
+  const results = checkFechouSemana(ed, semConta, { hoje: '2026-07-17' });
   assert.ok(results.some((r) => !r.ok && r.check.includes('janela de 7d')));
 });
 
@@ -521,5 +534,5 @@ test('runGate55: leitura de ofertasAtivas divergente derruba o gate mesmo com o 
   ed.ofertasAtivas[0].leitura = 'vale-agir';
   const r = runGate55(ed, { campaignsFromDb: CAMPANHAS_V3, renderedHtml: RENDERED_HTML_SEM_DEAL_DESK, hoje: '2026-07-17' });
   assert.equal(r.pass, false);
-  assert.ok(r.errors.some((e) => e.includes('leitura bate com veredito_bruto real')));
+  assert.ok(r.errors.some((e) => e.includes('leitura bate')));
 });

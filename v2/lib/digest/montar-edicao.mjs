@@ -16,6 +16,7 @@ import { DISCLAIMER } from '../../../scripts/lib.mjs';
 import { selecionarDealDesk, selecionarFechaLogo } from './selecionar.mjs';
 import { selecionarOfertasAtivas, selecionarCartoesBancos } from './ofertas-ativas.mjs';
 import { selecionarFechouSemana, selecionarClipping, selecionarPredict } from './dia-fraco.mjs';
+import { rotuloFonte } from './fontes.mjs';
 import {
   rotaDisplay, tipoLabel, nomePrograma, formatarPredictNarrativa,
   formatarDiaMes, ordenarClippingPorRelevancia, STATUS_SEM_CONFIRMACAO,
@@ -311,12 +312,13 @@ export function montarEdicaoDoDia({ asOf, campaigns = [], newsRaw = [], forecast
   const cartoesBancosItens = dedupe(
     selecionarCartoesBancos(camps).itens
       .map((o) => ({ o, c: findCampanha(camps, o) }))
-      .filter(({ c }) => c && isHttps(c.source_url) && c.source_name && (c.origem_code || c.destino_code)),
+      .filter(({ c }) => c && isHttps(c.source_url) && (c.origem_code || c.destino_code)),
     ({ c }) => `${c.origem_code}|${c.destino_code}|${c.tipo}`,
   )
     .sort((a, b) => (Number(b.c.tl_score_bruto) || -1) - (Number(a.c.tl_score_bruto) || -1) || cmpFirstSeen(a.c, b.c))
-    .slice(0, 6)
-    .map(({ c }) => montarCartaoItem(c));
+    .map(({ c }) => montarCartaoItem(c))
+    .filter(Boolean) // item sem conteúdo real distinto é OMITIDO (regra-mãe), não filler
+    .slice(0, 6);
 
   // 5. O que fechou nesta semana (TIER 1, janela 7d) — dedupe, cap 8.
   const oQueFechouSemana = dedupe(
@@ -390,17 +392,28 @@ function montarFechaItem(c, asOf) {
   };
 }
 
-function montarCartaoItem(c) {
+export function montarCartaoItem(c) {
   const rota = rotaDisplay({ origem: c.origem_code, destino: c.destino_code, tipo: c.tipo });
   const pct = pctNum(c.percentual);
-  const descricao = c.tipo === 'transferencia' && pct !== null
-    ? `Transferência bonificada de ${pct}%, campanha vigente.`
-    : `${tipoLabel(c.tipo)} com acúmulo diferenciado, campanha vigente.`;
+  const cpm = normalizeCpm(c.cpm);
+  const venc = c.vigencia_fim_date ? formatarDiaMes(c.vigencia_fim_date) : null;
+  const pub = c.publico ? publicoLabel(c.publico) : null;
+  // Conteúdo REAL derivado do registro — nada de frase-template. Cada bit só entra
+  // se existir no dado; sem NENHUM bit concreto (só nome+fonte) o item é OMITIDO
+  // (regra-mãe: dia fraco não vira enchimento). O rótulo da fonte vem do HOST.
+  const bits = [];
+  if (c.tipo === 'transferencia' && pct !== null) bits.push(`transferência bonificada de ${pct}%`);
+  else if (pct !== null) bits.push(`bônus de ${pct}%`);
+  if (cpm) bits.push(`${cpm} por milheiro`);
+  if (pub) bits.push(String(pub).toLowerCase());
+  if (venc) bits.push(`vigente até ${venc}`);
+  if (bits.length === 0) return null;
+  const descricao = `${bits[0][0].toUpperCase()}${bits[0].slice(1)}${bits.length > 1 ? `, ${bits.slice(1).join(', ')}` : ''}.`;
   return {
     nome: rota,
     descricao,
     url: c.source_url,
-    fonte: c.source_name,
+    fonte: rotuloFonte(c.source_url),
     status: STATUS_SEM_CONFIRMACAO, // sem nota própria → status honesto (D-059)
     nota: null,
   };
@@ -408,9 +421,16 @@ function montarCartaoItem(c) {
 
 // Clipping só é montável com síntese própria pré-existente (INV-04). Aceita o
 // campo `summary` de news_raw quando presente; aplica o piso de 5 via seletor.
+// Boilerplate/masthead de portal — auto-descrição, não fato/oferta. Ex.: "O maior
+// portal de milhas do Brasil...". Uma síntese que é só masthead não informa "o que
+// mudou" e não pode ocupar vaga no Clipping (EPSILON: dado real, nunca casca).
+const MASTHEAD_RE = /\b(o\s+)?maior\s+(portal|site|comunidade|blog)\s+de\s+(milhas|pontos|viagens)|seu\s+(portal|site|guia)\s+de\s+(milhas|pontos)|seja\s+bem[- ]vindo|seja\s+um\s+assinante|seu\s+destino\s+para\s+milhas/i;
+
 function montarClipping(newsRaw) {
   const comSummary = (newsRaw || []).filter(
-    (n) => n && n.processed === true && n.title && n.url && n.source && typeof n.summary === 'string' && n.summary.trim(),
+    (n) => n && n.processed === true && n.title && n.url && n.source
+      && typeof n.summary === 'string' && n.summary.trim()
+      && !MASTHEAD_RE.test(n.summary), // corta resumos genéricos de masthead (EPSILON)
   );
   const { itens, omitido } = selecionarClipping(comSummary, { minimo: 5 });
   if (omitido) return [];
@@ -439,22 +459,25 @@ function montarPredictNarrativa({ featured, ofertas, deals }) {
 function montarSources({ deals, ofertasAtivas, fechaLogo, cartoesBancosItens, oQueFechouSemana, camps }) {
   const out = [];
   const vistos = new Set();
-  const add = (url, label) => {
+  // O rótulo SEMPRE vem do host (rotuloFonte), nunca do source_name armazenado —
+  // que pode vir errado do coletor (ex.: 'tavily'/outlet trocado). Atribuição casa
+  // o domínio real por construção.
+  const add = (url) => {
     if (!isHttps(url) || vistos.has(url) || out.length >= 6) return;
     vistos.add(url);
-    out.push({ label: label || hostOf(url), url });
+    out.push({ label: rotuloFonte(url), url });
   };
-  for (const d of deals) add(d.sourceUrl, d.source);
-  for (const f of fechaLogo) add(f.url, f.tag);
-  for (const c of cartoesBancosItens) add(c.url, c.fonte);
+  for (const d of deals) add(d.sourceUrl);
+  for (const f of fechaLogo) add(f.url);
+  for (const c of cartoesBancosItens) add(c.url);
   // Ofertas/fechou não carregam url própria → puxa da campanha correspondente.
   for (const o of [...ofertasAtivas, ...oQueFechouSemana]) {
     const c = findCampanha(camps, { origem: o.origem, destino: o.destino, tipo: o.tipo });
-    if (c) add(c.source_url, c.source_name);
+    if (c) add(c.source_url);
   }
   if (out.length === 0) {
     const c = camps.find((x) => isHttps(x.source_url));
-    if (c) add(c.source_url, c.source_name);
+    if (c) add(c.source_url);
   }
   if (out.length === 0) {
     throw new Error('montarEdicaoDoDia: sem nenhuma fonte https no conjunto — edição não publicável (regra-mãe)');
@@ -506,7 +529,4 @@ function pickFeatured(ofertasAtivas, deals, camps) {
     if (c) return { origem: c.origem_code, destino: c.destino_code, tipo: c.tipo, percentual: pctNum(c.percentual), cpm: normalizeCpm(c.cpm) };
   }
   return ofertasAtivas[0] || null;
-}
-function hostOf(url) {
-  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return 'fonte'; }
 }

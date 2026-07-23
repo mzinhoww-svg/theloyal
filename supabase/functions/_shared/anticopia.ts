@@ -74,11 +74,83 @@ export function maiorRunContiguo(sintese: string, textoFonte: string): number {
   return best;
 }
 
+// ─── Fidelidade numérica (INV-25 · DELTA) — ESPELHO EXATO do Node ────────────
+// (v2/lib/digest/sintese-clipping.mjs). O teste de drift reprova o CI se as
+// funções divergirem. Checagem estrutural determinística: número na síntese sem
+// lastro na fonte = INV-25 violado (número sem lastro), tão grave quanto cópia.
+export function normalizarNumero(raw: unknown): number {
+  let s = String(raw ?? "").replace(/[R$\s%]/gi, "").trim();
+  if (!s) return NaN;
+  if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+  else if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  return parseFloat(s);
+}
+
+const MULT: Record<string, number> = { k: 1e3, mil: 1e3, "milhao": 1e6, "milhoes": 1e6 };
+function multiplicador(palavra?: string): number {
+  if (!palavra) return 1;
+  const k = String(palavra).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return MULT[k] || 1;
+}
+
+const PADROES_NUMERO: Array<{ kind: string; re: RegExp; norm: (m: RegExpExecArray) => number | string }> = [
+  { kind: "date", re: /\b(\d{4})-(\d{2})-(\d{2})\b/g, norm: (m) => `${m[3]}-${m[2]}` },
+  { kind: "date", re: /\b(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?\b/g, norm: (m) => `${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}` },
+  { kind: "ratio", re: /(\d+(?:[.,]\d+)?)\s*(?:pontos?|milhas?)\s*por\s*(?:real|reais|d[óo]lar(?:es)?|us\$|usd)/gi, norm: (m) => normalizarNumero(m[1]) },
+  { kind: "qtd", re: /(\d+(?:[.,]\d+)?)\s*(k|mil|milh[õo]es|milh[ãa]o)?\s*(?:pontos?|milhas?|milheiros?)/gi, norm: (m) => normalizarNumero(m[1]) * multiplicador(m[2]) },
+  { kind: "qtd", re: /(\d+(?:[.,]\d+)?)\s*(k)\b/gi, norm: (m) => normalizarNumero(m[1]) * multiplicador(m[2]) },
+  { kind: "brl", re: /R\$\s*(\d[\d.,]*)/gi, norm: (m) => normalizarNumero(m[1]) },
+  { kind: "pct", re: /(\d+(?:[.,]\d+)?)\s*%/g, norm: (m) => normalizarNumero(m[1]) },
+];
+
+export function extrairNumeros(texto: unknown): Array<{ kind: string; value: number | string }> {
+  const s = String(texto ?? "");
+  const consumido = new Array(s.length).fill(false);
+  const out: Array<{ kind: string; value: number | string }> = [];
+  for (const { kind, re, norm } of PADROES_NUMERO) {
+    re.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(s)) !== null) {
+      const ini = m.index;
+      const fim = ini + m[0].length;
+      let overlap = false;
+      for (let i = ini; i < fim; i++) if (consumido[i]) { overlap = true; break; }
+      if (overlap) continue;
+      const value = norm(m);
+      if (kind !== "date" && !Number.isFinite(value as number)) continue;
+      for (let i = ini; i < fim; i++) consumido[i] = true;
+      out.push({ kind, value });
+    }
+  }
+  return out;
+}
+
+function casaNumero(a: { kind: string; value: number | string }, b: { kind: string; value: number | string }): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "date") return a.value === b.value;
+  if (a.kind === "brl") return Math.round((a.value as number) * 100) === Math.round((b.value as number) * 100);
+  return Math.abs((a.value as number) - (b.value as number)) < 1e-9;
+}
+
+export function numerosSemLastro(sintese: string, textoFonte: string): Array<{ kind: string; value: number | string }> {
+  const naFonte = extrairNumeros(textoFonte);
+  return extrairNumeros(sintese).filter((s) => !naFonte.some((f) => casaNumero(s, f)));
+}
+
+function rotularOrfao(o: { kind: string; value: number | string }): string {
+  if (o.kind === "pct") return `${o.value}%`;
+  if (o.kind === "brl") return `R$ ${o.value}`;
+  if (o.kind === "ratio") return `${o.value} por real/dólar`;
+  if (o.kind === "date") return String(o.value);
+  return String(o.value);
+}
+
 /**
  * Validação completa da síntese antes de gravar. Anti-cópia (proporção + trecho
- * contíguo) + guardrails editoriais (emoji/urgência/interno) + tamanho mínimo/máximo.
- * Falha ⇒ { ok:false, motivos } — o chamador NÃO grava summary, grava o motivo em
- * summary_review_reason e a notícia fica para revisão (INV-2).
+ * contíguo) + fidelidade numérica (INV-25) + guardrails editoriais
+ * (emoji/urgência/interno) + tamanho mínimo/máximo. Falha ⇒ { ok:false, motivos }
+ * — o chamador NÃO grava summary, grava o motivo em summary_review_reason e a
+ * notícia fica para revisão (INV-2/INV-25).
  */
 export function validarSintese(
   sintese: string,
@@ -105,6 +177,10 @@ export function validarSintese(
   const run = maiorRunContiguo(s, textoFonte);
   if (run >= MAX_RUN_COPIA) {
     motivos.push(`anti-cópia (trecho contíguo): ${run} palavras seguidas idênticas à fonte (≥ ${MAX_RUN_COPIA}) — cláusula levantada`);
+  }
+  const orfaos = numerosSemLastro(s, textoFonte);
+  if (orfaos.length) {
+    motivos.push(`numero_sem_lastro: ${orfaos.map(rotularOrfao).join(", ")} — número(s) na síntese ausente(s) da fonte (INV-25)`);
   }
   if (EMOJI_RE.test(s)) motivos.push("emoji proibido na síntese");
   if (URGENCY_RE.test(s)) motivos.push("urgência artificial proibida na síntese");

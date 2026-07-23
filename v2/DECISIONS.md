@@ -1045,6 +1045,284 @@ A trava era inerte: um "Re-run job" (runner novo, ledger vazio) via `prev=undefi
   integração provando **exatamente 1** chamada real ao Beehiiv em 2 rodadas do mesmo dia.
   Monotonicidade de `enviado` provada ao vivo. 456/456 verdes.
 
+## D-084 — Outcomes-ledger (daily_outcomes): captura de desfecho, pré-requisito da calibração do limiar (GAMMA)
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** D-048/D-067.2/D-202 (ordem travada do HANDOFF §1). NÃO liga autopublish.
+
+A ordem inviolável (HANDOFF §1 / D-202): **ledger existe e captura → produto opera
+→ ledger acumula → auto-ajuste do gate D-048 liga.** Construir o ledger depois perde
+o histórico dos primeiros dias de 1-clique, justo quando o limiar 0,75 mais precisa
+aprender. Sem ledger capturando, autopublish autônomo (Nível 2) **não liga**.
+
+- **migration 020 `daily_outcomes`:** uma linha por (edição, item surfaceado):
+  identidade (`campaign_id`/`route_key`), o que foi **mostrado** (veredito/score/banda),
+  os **5 sinais objetivos de D-048** (booleans), a **ação humana** (aprovado_1clique/
+  corrigido/rejeitado + motivo) e o **desfecho** (confirmou_real/venceu/mudou). CHECKs
+  no domínio fechado de section/ação/desfecho.
+- **Determinismo (regra 8 + INV-03):** o ledger **CAPTURA**, nunca calcula/prediz. Os
+  5 sinais são **LIDOS** de `campanha_fontes.payload.breakdown` (a confirmação já
+  gravada), não recomputados. Campos de desfecho são **nullable** — preenchidos depois,
+  **nunca chutados** (null ≠ 0; teste prova que confiança 0 real ≠ ausência).
+- **Captura sem depender do shape editorial:** `montarLinhasOutcome` (puro) re-roda os
+  MESMOS seletores determinísticos sobre o MESMO `campaigns` que montou a edição —
+  reproduz quais campanhas foram surfaceadas, com o `id` que o item editorial não
+  carrega. Não é recomputar desfecho; é identificar o mostrado.
+- **Boundaries de captura:** montagem (`daily.mjs` → `capturarEdicao`, no momento da
+  montagem, não bloqueia o runner) + 1-clique (`beehiiv-publish.mjs --publish` registra
+  `aprovado_1clique`, só linhas sem ação prévia). Upsert idempotente (recapture não zera
+  ação/desfecho).
+- **Leitura da calibração:** `vw_calibracao_limiar` projeta só itens com confiança
+  capturada E desfecho conhecido; expõe `publicaria_no_limiar` (≥0,75) × `humano_reverteu`
+  × `desfecho` + `acerto_automatico` default. **Mede-e-propõe; não grava.** 0,75 é
+  constante na view (start conservador D-050) — a calibração o move medindo a view.
+- 8 testes verdes (captura, nullable-não-coage, ação humana, dia-fraco-não-inventa).
+
+## D-085 — Guardrail de fidelidade numérica na síntese (INV-25): número sem lastro = tão grave quanto cópia (DELTA)
+**Data:** 2026-07-22 · **Status:** Aplicada (Node no ar; deploy edge pendente do operador) · **Milestone:** M2.7 · **Origem:** limitação registrada em D-081 (crivo garante NÃO-CÓPIA, não fidelidade numérica)
+
+O anti-cópia (D-081) garante a inviolável 2 (não copiar), **não** que os números da
+síntese existam na fonte. Número inventado/trocado = INV-25 violado (número sem lastro):
+Hyatt "20% e **110k** pontos" quando a fonte só traz 20%; ou classificar "**25%**" o
+que a fonte diz "25 pontos por dólar". Tão grave quanto cópia.
+
+- **Checagem ESTRUTURAL, determinística (regra 8), não julgamento de LLM:**
+  `extrairNumeros` (regex por KIND: %, R$, milheiro, milhas, "X por real/dólar", datas)
+  + `normalizarNumero` (tolerância de formato: R$ 16,84 = 16.84; milhar; %). Cada número
+  da síntese casa contra os da FONTE (título+corpo) por **KIND + valor** com tolerância.
+- **KIND-aware** pega a classe AliExpress: "25%" (pct) não casa "25 pontos por dólar"
+  (ratio) → flag, mesmo com o valor 25 presente na fonte.
+- **Flag não descarta (D-060):** `summary_review_reason` com prefixo `numero_sem_lastro`
+  + o número órfão; vai para revisão, nunca publica (INV-25).
+- **Mesmo boundary do anti-cópia:** `validarSintese` (Node `sintese-clipping.mjs` + Deno
+  `_shared/anticopia.ts`, **espelho exato** com teste de drift Node↔Deno) e o crivo da
+  extração (`campaigns` edge fn `crivoResumo`). Fail-safe (erro no crivo → comportamento
+  antigo, nunca derruba).
+- **Testes (8):** número ausente reprova (Hyatt 110k); classe AliExpress (25% vs 25/dólar)
+  reprova; tolerância 16,84 vs 16.84 sem falso-positivo; todos presentes passa; órfão não
+  descarta. Drift Node↔Deno verde.
+- **Pendências do operador:** (1) redeploy das edge fns `sintese-clipping` (v2-inv25) e
+  `campaigns` (v19-inv25) — código e espelho prontos, deploy é mecânico; (2) volume
+  histórico via `npm run medir:orfao` (read-only sobre `news_raw.summary`, roda com creds).
+
+## D-086 — Dia fraco é caso de 1ª classe: edição enxuta VÁLIDA passa o gate (EPSILON)
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** smoke-run do Dia 1 deu RED tratando dia fraco (8 ofertas triadas + 5 sínteses vivas) como edição vazia. Regra 5 (dia fraco 1ª classe). C1 (D-082) INTACTO.
+
+O runner reportava 0/0 num dia com 8 ofertas vivas triadas e 5 sínteses reais. Três causas:
+
+- **Ofertas ativas herdou o portão de lastro-tier1 do C1.** `selecionarOfertasAtivas`
+  rodava `passaTresPortoes` (portão 2 = `tem_tier1`); pós-C1, 0 vivas têm lastro → tabela
+  vazia. **Correção:** Ofertas ativas é **TABELA DE TRANSPARÊNCIA**, gateada por
+  **TRIAGEM** (`limpo`/`historico_confirmado`, nunca `revisao`/não-triado — mesmo critério
+  da view pública 017/C3) + vivo + conta, **DESACOPLADO do lastro-tier1**. Item sem lastro
+  entra com selo **`nao-confirmado`** (INV-03: mostra o dado, marca a incerteza). Predicado
+  único `elegivelOfertaAtiva` + `leituraOfertaAtiva` reusado por selector, gate e ledger
+  (GAMMA) — sem drift. **O lastro-tier1 gateia SÓ o Deal Desk (recomendação), NUNCA a
+  transparência.** C1 intacto: `passaTresPortoes`/`elegivelDealDesk` seguem exigindo lastro.
+- **Clipping `published_at=hoje` estrito demais → 0.** **Correção:** janela **~7 dias**,
+  síntese própria aprovada (`summary` presente E `summary_review_reason` null — reprovadas
+  pelo crivo A5/INV-25 nunca entram), não usada em edição anterior (dedup por url), filtro
+  de masthead genérico ("O maior portal de milhas…"), piso rígido 5 mantido.
+- **Gate não distinguia dia fraco VÁLIDO de edição VAZIA.** **Correção:**
+  `checkSemDealDesk` exige `temConteudoReal` = ao menos uma seção de transparência com dado
+  real (Ofertas ativas / Clipping / O que fechou / Cartões&bancos). Válido → VERDE, rascunho
+  enxuto sem Deal Desk (regra-mãe: nenhuma seção vazia). Vazio genuíno → RED. Corrigido
+  também o bug de normalização do "signal cita candidato" (nome acentuado "Itaú → Azul
+  Fidelidade" ~ code `itau`/`azul_fidelidade`): deaccent+strip nos dois lados.
+- **Testes:** dia com 0 deals mas Ofertas ativas>0 → verde; nada real em nenhuma seção →
+  red; oferta triada sem lastro aparece em Ofertas ativas com selo `nao-confirmado`, **nunca
+  no Deal Desk**; oferta `revisao`/não-triada fica fora. 476/476 verdes.
+
+## D-087 — RLS nas tabelas internas expostas à anon key (F3 · segurança)
+**Data:** 2026-07-22 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** advisor Supabase (ERROR `rls_disabled_in_public`, 13 tabelas)
+
+O advisor de segurança do Supabase apontou **13 tabelas em `public` com RLS
+DESLIGADO** — expostas via PostgREST à **anon key**. Incluía `daily_sends` (a
+trava de envio C2 podia ser **forjada de fora**), `llm_jobs` (telemetria/custo),
+`custo_base_moeda`/`custo_base_ratio` e `model_registry` (preços),
+`derivacao_config`, `daily_outcomes`, backups e filas.
+
+- **migration 021 APLICADA:** `enable row level security` + policy explícita
+  `svc_role_full FOR ALL TO service_role` nas 13 tabelas
+  (campaigns_bkp_prev2, tl_ruido/generico/tipo_map, rejeicoes, motivos_rejeicao,
+  derivacao_config, custo_base_moeda/ratio, llm_jobs, model_registry, daily_sends,
+  daily_outcomes).
+- **Por que não quebra o runner:** o runner (`daily.mjs`) e as edge functions usam a
+  **service_role key** (BYPASSRLS) → leem/gravam tudo independentemente de policy.
+  A policy explícita documenta a intenção e limpa o lint; **anon/authenticated caem
+  no default-deny** (sem policy que os autorize).
+- **Nenhuma é superfície pública:** a página lê `campaigns` (já com RLS + policy) e
+  `vw_ofertas_vivas`. As 13 são internas → anon sem acesso (INV-03 de segurança).
+- **Provado:** advisor não lista mais nenhum `rls_disabled_in_public` dessas 13;
+  `anon` → `daily_sends`/`llm_jobs` retorna `[]` (bloqueado) enquanto `anon` →
+  `campaigns` retorna dado (a anon-key é válida — é o RLS que barra); o runner leu o
+  banco vivo normalmente no smoke-run (service_role intacto).
+- **Fora do escopo (registrado como proposta, NÃO aplicado):** 4 views
+  `SECURITY DEFINER` (vw_placar_rota, vw_banco_programa, vw_ofertas_vivas,
+  vw_calibracao_limiar) e 6 funções `SECURITY DEFINER` executáveis por anon
+  (jq_*, confirmar_tier1, registrar_coleta_execucao) seguem como ERROR/WARN do
+  advisor — trocar para `security_invoker`/revogar EXECUTE do anon muda comportamento
+  de superfície pública (vw_ofertas_vivas) e precisa de aval por peça.
+
+## D-088 — Passo Beehiiv não-fatal: no tier sem API o runner entrega o rascunho em disco e segue
+**Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** operador (conta Beehiiv em tier **Launch**, sem acesso à API)
+
+O `POST /v2/publications/{id}/posts` só existe em tiers pagos do Beehiiv (Scale+).
+Na conta atual (**Launch**) não há API: o POST volta **400** (`publicationid pattern
+não bate com "***"`) — não é secret com espaço em branco (o `.trim()` já foi
+descartado como causa em D-anterior), é a **plataforma sem endpoint**. O runner
+lançava nesse 400 e **matava o `main()`**, jogando fora a edição, o render, o gate
+e o outcomes-ledger que já estavam prontos.
+
+- **`upsertRascunho` degrada em vez de lançar** quando o **rascunho** (`status: draft`)
+  falha: loga `Beehiiv indisponível — publicação manual na UI`, devolve
+  `enviado: false` e o `main()` segue. A edição em disco + render + gate + ledger
+  **são o produto do dia** sem depender do Beehiiv.
+- **Envio REAL (`publicar: true`) segue RUIDOSO — ainda lança.** Um envio que já
+  reservou o claim atômico (C2/D-083) não pode virar limbo silencioso
+  reservado-mas-não-enviado. Só o caminho de rascunho degrada.
+- **Reforça D-050 (autopublish OFF):** no tier atual o envio automático é
+  *impossível por design da plataforma* — o fluxo já é intrinsecamente
+  manual-com-aprovação (operador revisa e dá Send na UI do Beehiiv).
+- **Zero acoplamento novo:** nenhum wrapper paralelo; reusa `upsertRascunho` +
+  `beehiiv-core`. Quando a conta subir de tier (secret `pub_...` válido + API),
+  o mesmo caminho volta a criar o draft via API sem mudança de código.
+- **Provado:** `node --test scripts/daily.test.mjs` — novo teste "POST 400 (tier sem
+  API) degrada sem lançar" verde; test:v2 476/476 intacto.
+
+## D-089 — Cadência em modo C (disco + revisão): persistir o artefato diário para o operador VER sem rodar nada
+**Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** operador (envio adiado; ESP a definir)
+
+Com o Beehiiv adiado (D-088, tier Launch sem API) a edição do dia **morria no runner
+efêmero** — o operador não tinha como VER o render sem rodar o pipeline. O modo C
+troca "aprovar por 1-clique (envio)" por "**revisar o render em disco**": o motor
+prova-se por 5 dias úteis de edição válida **revisada**, com o envio adiado.
+
+- **Persistência (caminho a — commit versionado):** o runner grava o render FIEL em
+  `content/renders/NNNN.html` (o `renderEmail`, schema v4 inteiro — não o re-render
+  incompleto de `/edicao/[n]`, que só conhece deals/fechaLogo/radar) e o workflow
+  `daily.yml` (`permissions: contents: write`) commita `content/editions` +
+  `content/renders` + o ledger de volta no branch. Durável, diffável, auditável no
+  GitHub (repo privado).
+- **Visualização (caminho c — rota de preview):** `GET /revisao/[numero]` serve os
+  **bytes exatos** do render (força `force-static`, pré-render no build). **404 em
+  produção** (`VERCEL_ENV==='production'` → `generateStaticParams` vazio +
+  `dynamicParams:false`) e `X-Robots-Tag: noindex` → **não é superfície pública**;
+  o operador vê no deploy de **preview** do branch. Por que não `/edicao/[n]`: aquele
+  renderer é subset do schema e mostraria uma edição incompleta.
+- **Ledger auto-atualizável (`content/m2-cadencia-ledger.md`):** tabela entre
+  marcadores `CADENCIA` upsertada pelo runner por data (Data/Nº/Gate/Render);
+  **preserva a coluna "Revisão do operador"** (a marca `✅ ok` humana nunca é
+  sobrescrita em re-run). Verde persiste render + linha; RED registra a linha
+  honesta sem render (não conta — regra 3).
+- **Não liga autopublish, não envia** (D-050 intacto); o passo Beehiiv segue
+  degradado (D-088).
+- **Provado:** `scripts/cadencia.test.mjs` 6/6 (insert, RED, preserva revisão, ordena,
+  idempotência, marcadores ausentes→erro); `tsc --noEmit` limpo na rota; test:v2
+  483/483; smoke local do runner grava a linha do ledger no red-path.
+
+## D-090 — Verde de texto/semântico em green-700 (opção 2 RATIFICADA): green-600 só fill/SVG, hover green-800
+**Data:** 2026-07-23 · **Status:** **RATIFICADA (opção 2)** e aplicada · **Milestone:** M2.7 · **Origem:** design-review (Rams bot) + verificação própria + ratificação do operador
+
+> **Ratificação (operador, 2026-07-23):** escolhida a **opção 2**. green-700
+> `#007A57` passa a ser o verde de **TEXTO e SEMÂNTICO em fundo claro** — links,
+> números/acentos verdes E o veredito **"Vale agir"** do mapa TL Score. green-600
+> `#00A878` fica **só para fill/SVG** (e verde-texto sobre Ink/dark, onde o verde
+> claro contrasta mais). **Hover cravado: green-800 `#005A3B`** (novo token). Fonte
+> de verdade atualizada: tailwind.config.ts (token 800 + papéis), CLAUDE.md (regra 8
+> + tabela + mapa TL Score + contraste + checklist), README.md, docs/CONTEXTO.
+> Nota: os docs DESIGN.md/BRAND-GUIDELINES da hierarquia NÃO são versionados no repo
+> — a fonte de verdade de cor in-repo é tailwind + CLAUDE.md (ambos atualizados).
+
+O review de design apontou que os links do corpo em **green-600 `#00A878`** reprovam
+contraste. **Verifiquei por conta própria** (não confiei no bot): green-600 sobre
+Paper `#FAF7F0` = **2.86:1**, sobre paper-dark `#F1ECE1` = **2.59:1**, sobre Surface
+`#FFFFFF` = **3.06:1** — todos abaixo do piso AA (4.5:1) e até do piso 3:1 nas faixas
+creme. A linha da CLAUDE.md que afirmava "green-600 4.6:1" estava **factualmente
+errada** (corrigida).
+
+- **Decisão do operador:** texto de LINK passa a **green-700 `#007A57`** (mesma
+  matiz, já é token). Mede **5.01 / 4.55 / 5.36** sobre paper/paper-dark/surface →
+  clara AA. green-600 segue em rótulo de veredito/accent e em chip (fill+text-pair).
+- **Correção no RENDERER, não no artefato:** `content/renders/0029.html` (onde o bot
+  comentou) é gerado — a sugestão inline sumiria no próximo run. Ajustei
+  `renderer/email.mjs` (`aLink` default → green-700; dois usos literais de `#00A878`
+  trocados). O beehiiv renderer usa `.link` temado pela plataforma (sem cor
+  hardcoded) → nada a mudar lá; seu `GREEN600` só aparece em fill/on-dark.
+- **Escopo contido:** eyebrows já usavam o accent `E = #007A57` (green-700); veredito
+  usa par bg/text no chip. O link era o único texto verde reprovando. NÃO expandi
+  para outras cores sem ordem.
+- **Junto (mesmo review, sem conflito de regra):** colunas numéricas mono
+  (Bônus/Milheiro) com `text-align:right` e a tabela de Ofertas ativas virou tabela
+  de DADOS real (`th scope="col"`, sem `role="presentation"`) — semântica de
+  cabeçalho para leitor de tela + dígitos empilhados para comparação vertical.
+- **Regra 8:** a CLAUDE.md marca a exceção de link como **PROVISÓRIA (aguarda
+  ratificação)**, não como lei nova; a linha de contraste foi corrigida com valores
+  medidos (fato, não decisão de marca).
+- **Provado:** `#00A878` no corpo do render nº29 = **0** (links → green-700);
+  `th scope=col` ×4; `text-align:right` ×8; `renderer/email.test.mjs` verde.
+
+### Opção 2 RATIFICADA — aplicação e provas de contraste AA (por spot)
+
+Verde-texto/semântico em fundo claro → **green-700 `#007A57`**; green-600 só fill/SVG
+(e verde-texto sobre Ink); hover → **green-800 `#005A3B`** (novo token).
+
+**Provas AA medidas (piso 4.5:1 texto normal):**
+- green-700 texto sobre **Paper 5.01** · **Surface 5.36** · **green-100 fill 4.61** ✅
+- green-800 hover sobre **Paper 7.77** · **Surface 8.31** · **green-100 7.15** ✅
+- (dark) green-500 sobre Ink **8.34** ✅ — por isso o verde-texto sobre Ink fica
+  green-500/600, não green-700 (green-700 sobre Ink = 3.53, reprova).
+
+**Superfícies tocadas:**
+- **email** (renderer/email.mjs): já em green-700 (link + `VERDICT_FAMILY.green.text`
+  + eyebrow). ✅
+- **beehiiv** (render-beehiiv.mjs): `VERDICT_COLOR['vale-agir']` e `eyebrow` default →
+  green-700; conta-resultado sobre Ink mantém green-600 (dark).
+- **/promocoes**: número de vivas `text-green-600` → `text-green-700`.
+- **ProReport**: coluna verde `text-green-600` → `text-green-700`.
+- **TLBadge / DailyEdition / EditionArticle / sections**: veredito já usava
+  `bg-green-100 text-green-700` (par correto) — nada a mudar.
+- **tailwind.config.ts**: `green.800 = #005A3B` + comentário de papéis.
+
+**Observação FORA do escopo desta mudança (reporto, não apliquei):** o **CTA primário**
+é green-600 **fill** com label **Paper** — `Paper sobre green-600 = 2.86:1`, reprova AA.
+Não está na lista de spots desta ratificação (que é texto/semântico) e o operador
+manteve green-600 como fill. `Ink sobre green-600 = 6.18` passa. **Decisão do operador
+pendente:** escurecer o fill do CTA para green-700 (Paper→5.02 AA) OU trocar o label do
+CTA para Ink. Não toquei o CTA sem ordem.
+
+## D-091 — Integridade editorial do render: atribuição de fonte, filler zero, "o que fechou" ligado
+**Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** operador (auditoria do HTML real da nº29)
+
+Quatro furos de integridade no render, corrigidos na **fonte** (renderer/seletor),
+nunca no artefato gerado:
+
+- **1. "fonte oficial" só sobre PROGRAMA.** O Sinal do dia linkava "fonte oficial"
+  para o `sources[0]` — que era iDinheiro (agregador). Novo `v2/lib/digest/fontes.mjs`:
+  `ehFonteOficial(url)` (true só para domínio de programa/emissor; desconhecido/outlet
+  = false, nunca superestima). Sobre outlet o render agora escreve "**segundo
+  <Nome>**" SEM "oficial". Aplicado em email.mjs e render-beehiiv.mjs (todo lugar que
+  imprimia "fonte oficial").
+- **2. Cartões e bancos sem filler.** Os 4 itens tinham a MESMA frase-template
+  ("Cartão com acúmulo diferenciado, campanha vigente"). `montarCartaoItem` agora
+  deriva a descrição de **dado real** (bônus %, milheiro, público, vigência); sem
+  NENHUM bit concreto o item é **OMITIDO** (regra-mãe). Se sobra 0, a seção some.
+- **3. Rótulo de fonte casa o host.** `source_name` armazenado vinha errado ('tavily'
+  — ferramenta de busca — em passageirodeprimeira; 'melhorescartoes' em URL de
+  melhoresdestinos). `montarSources` e `montarCartaoItem` derivam o rótulo de
+  `rotuloFonte(url)` (do HOST), ignorando o `source_name`. Teste `rotuloBateHost`
+  **reprova rótulo≠host**.
+- **4. "O que fechou nesta semana" ligado.** O render já tinha a seção; **duas**
+  camadas exigiam `tier===1` e precisavam concordar: o seletor
+  `selecionarFechouSemana` E a recomputação do gate (`checkFechouSemana`, que
+  reconfere no banco). Pós-C1/D-082 nada é tier=1 por claim → zerava/reprovava todo
+  dia (o gate deu RED nos 2 itens legítimos: tier=2, conta 47/25, na janela). É
+  **retrospectiva** (fato de ciclo de vida encerrada + conta), não recomendação →
+  removido o tier1 nas DUAS camadas; régua = encerrada + conta + janela 7d. Vazio num
+  dia → omite (regra-mãe).
+- **Provado (unit):** `fontes.test.mjs` (rótulo≠host reprova; oficial só programa);
+  `montar-edicao.test.mjs` (cartão sem conteúdo real → null, não filler; fonte pelo
+  host ignora source_name errado); `dia-fraco.test.mjs` (TIER 2 encerrada com conta
+  entra). Prova ao vivo: re-run do runner para 2026-07-22, gate verde, nº29 persistida.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════

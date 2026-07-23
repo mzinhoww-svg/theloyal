@@ -35,3 +35,13 @@ test('o edge exporta as funções do crivo usadas pela síntese', () => {
     assert.ok(new RegExp(`export function ${fn}\\b`).test(EDGE), `edge deve exportar ${fn}`);
   }
 });
+
+test('fidelidade numérica (INV-25) espelhada no edge (sem drift)', () => {
+  // as funções da fidelidade numérica têm de existir no Deno também — senão a
+  // síntese REAL (que roda no edge) publicaria número sem lastro que o Node reprova.
+  for (const fn of ['normalizarNumero', 'extrairNumeros', 'numerosSemLastro']) {
+    assert.ok(new RegExp(`export function ${fn}\\b`).test(EDGE), `edge deve exportar ${fn}`);
+  }
+  // o validarSintese do edge tem de CHAMAR a checagem numérica (não só exportá-la).
+  assert.ok(/numerosSemLastro\(s, textoFonte\)/.test(EDGE), 'validarSintese do edge deve rodar numerosSemLastro');
+});

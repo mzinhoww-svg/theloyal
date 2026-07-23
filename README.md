@@ -42,7 +42,7 @@ tailwind.config.ts  Tokens da marca (nunca hardcodar hex em componente)
 ## Regras de marca aplicadas
 
 - Fundo de página Paper `#FAF7F0`, nunca branco puro. Cards em Surface `#FFFFFF`.
-- Verde de texto `#00A878` (green-600); `#00C48C` (green-500) só em fills e no SVG.
+- Verde de texto/semântico em fundo claro `#007A57` (green-700); hover `#005A3B` (green-800). `#00A878` (green-600) e `#00C48C` (green-500) só em fills/SVG (e verde-texto sobre Ink). (D-090 op.2)
 - Amarelo `#F2C94C` só como fill com texto Ink por cima.
 - Todo número de análise (CPM, VPM, R$, %, TL Score) em JetBrains Mono.
 - Serif (Fraunces) só em títulos; corpo em Inter, mínimo 16px.

@@ -156,7 +156,7 @@ test('precisaRevisaoHumana: score inválido (NaN) exige revisão por padrão seg
   assert.equal(precisaRevisaoHumana(undefined), true);
 });
 
-// ── O que fechou nesta semana: janela de 7 dias, TIER 1, sem cálculo ──
+// ── O que fechou nesta semana: janela de 7 dias, encerrada + conta, sem cálculo ──
 test('selecionarFechouSemana: `hoje` ausente lança (nunca new Date() interno, INV-16)', () => {
   assert.throws(() => selecionarFechouSemana([{ estado: 'encerrada' }], {}), /hoje.*obrigatório/);
 });
@@ -191,12 +191,17 @@ test('selecionarFechouSemana: ainda vivo (não encerrada) → excluído mesmo co
   assert.equal(r.omitido, true);
 });
 
-test('selecionarFechouSemana: TIER 2 excluído (mesmo risco de §1.1, D-045)', () => {
+test('selecionarFechouSemana: TIER 2 encerrada com conta na janela → INCLUÍDO (retrospectiva, não recomendação; pós-C1/D-082)', () => {
+  // "O que fechou" reporta um fato de ciclo de vida (encerrada) com conta — não é
+  // recomendação de ação. Pós-C1 nenhuma campanha é tier=1 por claim, então exigir
+  // tier1 aqui zerava a seção todo dia. A régua é encerrada + conta + janela.
   const campanhas = [
-    { id: 'tier2', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia', estado: 'encerrada', tier: 2, tl_score_bruto: 80, vigencia_fim: '2026-07-15T00:00:00-03:00' },
+    { id: 'tier2', origem_code: 'livelo', destino_code: 'smiles', tipo: 'transferencia', percentual: 100, estado: 'encerrada', tier: 2, tl_score_bruto: 80, vigencia_fim: '2026-07-15T00:00:00-03:00' },
   ];
   const r = selecionarFechouSemana(campanhas, { hoje: '2026-07-17' });
-  assert.equal(r.omitido, true);
+  assert.equal(r.omitido, false);
+  assert.equal(r.itens.length, 1);
+  assert.equal(r.itens[0].encerrouEm, '2026-07-15T00:00:00-03:00');
 });
 
 test('selecionarFechouSemana: tl_score_bruto null (conta_nao_calculavel) excluído', () => {

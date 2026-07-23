@@ -18,6 +18,7 @@ import { editionSlug, loadEdition, pad } from "./lib.mjs";
 import { renderEmail, renderPlain } from "./render.mjs";
 import { report, validateEdition } from "./validate.mjs";
 import { buildPayload, contentHash, fail, parseArgs, publish } from "./beehiiv-core.mjs";
+import { gravarAcaoHumanaEdicao } from "./outcomes.mjs";
 
 // Resolve a edição a publicar: caminho explícito, ou a última em content/latest.json.
 function resolveEdition(path) {
@@ -83,6 +84,22 @@ async function main() {
     slug, action: opts.action, scheduledAt, test: opts.test, force: opts.force, dryRun: opts.dryRun,
   });
   if (errors.length) process.exit(1);
+
+  // Outcomes-ledger (GAMMA · D-048): o `--publish` real É o 1-clique do operador —
+  // registra `aprovado_1clique` nas linhas da edição (só as sem ação prévia; não
+  // sobrescreve correção/rejeição). Nunca bloqueia a publicação já concluída.
+  if (opts.action === "publish" && !opts.dryRun) {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+    if (url && key) {
+      try {
+        await gravarAcaoHumanaEdicao({ url, key, editionDate: ed.date, acao: "aprovado_1clique" });
+        console.log(`[beehiiv] outcomes-ledger: ação humana 'aprovado_1clique' registrada para ${ed.date}.`);
+      } catch (e) {
+        console.warn(`[beehiiv] outcomes-ledger: falha ao registrar ação humana (não bloqueia): ${e.message ?? e}`);
+      }
+    }
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

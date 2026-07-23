@@ -14,7 +14,7 @@
 import { DISCLAIMER, URGENCY_RE, assertEditorialRules, collectStrings, isExpired } from '../../../scripts/lib.mjs';
 import { passaTresPortoes, elegivelDealDesk, selecionarDealDesk, TRES_PORTOES } from './selecionar.mjs';
 import { mapVeredito } from './mapear-contrato.mjs';
-import { BANCOS_ORIGEM } from './ofertas-ativas.mjs';
+import { BANCOS_ORIGEM, elegivelOfertaAtiva, leituraOfertaAtiva } from './ofertas-ativas.mjs';
 import { selecionarPredict, formatarTeaserPredict } from './dia-fraco.mjs';
 import { lintJargao, formatarPredictNarrativa, rotaDisplay, PALAVRA_PROBABILIDADE } from './editorial.mjs';
 
@@ -26,6 +26,13 @@ function has(v) {
 
 function temDigito(texto) {
   return typeof texto === 'string' && /\d/.test(texto);
+}
+
+// Normaliza para casar NOME de programa (acentuado, com espaço) contra CODE
+// (deaccent, com underscore): "Itaú → Azul Fidelidade" ~ codes itau/azul_fidelidade.
+// Sem isso, o Sinal legítimo de um dia fraco falhava por acento/underscore.
+function normProg(s) {
+  return String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 }
 
 // Extrai tokens numéricos (com % e separador decimal/milhar) de um texto —
@@ -206,20 +213,38 @@ export function checkSemDealDesk(edition = {}, campaignsFromDb = [], renderedHtm
     detail: marcadorAusente ? `marcador "${dealDeskMarker}" não encontrado no HTML` : `marcador "${dealDeskMarker}" encontrado — renderer publicou seção vazia`,
   });
 
+  // Dia fraco é CASO DE 1ª CLASSE (regra 5): uma edição SEM Deal Desk é VÁLIDA
+  // desde que traga dado real em pelo menos uma seção de transparência (Ofertas
+  // ativas OU Clipping OU O que fechou OU Cartões&bancos). Vazio genuíno em TODAS
+  // = casca inválida → RED (regra-mãe: nunca publica seção/edição vazia).
+  const temConteudoReal = (Array.isArray(edition.ofertasAtivas) && edition.ofertasAtivas.length > 0)
+    || (Array.isArray(edition.clipping) && edition.clipping.length >= 5)
+    || (Array.isArray(edition.oQueFechouSemana) && edition.oQueFechouSemana.length > 0)
+    || (Array.isArray(edition.cartoesBancosItens) && edition.cartoesBancosItens.length > 0);
+  results.push({
+    ok: temConteudoReal,
+    check: 'dia fraco VÁLIDO: ao menos uma seção com dado real (Ofertas ativas / Clipping / O que fechou / Cartões&bancos)',
+    detail: temConteudoReal
+      ? `ofertasAtivas=${edition.ofertasAtivas?.length || 0}, clipping=${edition.clipping?.length || 0}, fechou=${edition.oQueFechouSemana?.length || 0}, cartoesBancos=${edition.cartoesBancosItens?.length || 0}`
+      : 'edição VAZIA inválida — nada real em nenhuma seção; não publica casca (regra-mãe)',
+  });
+
+  // Sinal do dia: sempre cita um número (INV-03). O "candidato nomeado" só é
+  // exigido quando o sinal está afirmando uma oferta específica — num dia fraco
+  // sem oferta destaque, o sinal honesto ("dia sem oferta viva...") tem número
+  // (nº de registros) mas não cita programa, e isso é legítimo desde que haja
+  // conteúdo real nas outras seções. Normalização deaccent+strip casa nome↔code.
   const codigos = new Set();
   for (const c of campaignsFromDb) {
-    if (c.origem_code) codigos.add(String(c.origem_code).toLowerCase());
-    if (c.destino_code) codigos.add(String(c.destino_code).toLowerCase());
+    if (c.origem_code) codigos.add(normProg(c.origem_code));
+    if (c.destino_code) codigos.add(normProg(c.destino_code));
   }
-  const signalLower = String(edition.signal ?? '').toLowerCase();
-  const citaCandidato = [...codigos].some((cod) => cod && signalLower.includes(cod));
-  const generico = !(temDigito(edition.signal) && citaCandidato);
+  const signalNorm = normProg(edition.signal);
+  const citaCandidato = [...codigos].some((cod) => cod && signalNorm.includes(cod));
   results.push({
-    ok: !generico,
-    check: 'signal não é genérico (contém dígito + candidato nomeado conhecido)',
-    detail: generico
-      ? `signal precisa citar um número e um origem_code/destino_code conhecido — atual: "${edition.signal ?? ''}"`
-      : 'contém número e candidato nomeado',
+    ok: temDigito(edition.signal),
+    check: 'signal cita ao menos um número (INV-03)',
+    detail: temDigito(edition.signal) ? `contém dígito${citaCandidato ? ' + candidato nomeado' : ' (dia fraco sem oferta destaque — sinal honesto)'}` : `signal sem número: "${edition.signal ?? ''}"`,
   });
 
   const { selecionados } = selecionarDealDesk(campaignsFromDb);
@@ -275,37 +300,42 @@ export function checkOfertasAtivas(edition = {}, campaignsFromDb = []) {
   itens.forEach((item, i) => {
     const rota = item.destino ? `${item.origem}->${item.destino}` : `${item.origem}`;
     const tag = `ofertasAtivas[${i}] (${rota})`;
-    const candidato = campaignsFromDb.find(
-      (c) => c && c.origem_code === item.origem && (c.destino_code ?? null) === (item.destino ?? null) && c.tipo === item.tipo,
+    // A rota (origem/destino/tipo) pode ter VÁRIAS campanhas (janelas diferentes,
+    // ex.: latam_pass compra lado-único com uma viva e uma encerrada). Casa por
+    // origem/destino/tipo E percentual (o item deduplica por esse conjunto) e
+    // verifica se ALGUMA das candidatas é a que sustenta o item — não a primeira
+    // que o find topar. Sem isso, uma janela encerrada com a mesma rota derruba
+    // um item legítimo sustentado por outra janela viva (colisão de rota).
+    const candidatos = campaignsFromDb.filter(
+      (c) => c && c.origem_code === item.origem && (c.destino_code ?? null) === (item.destino ?? null) && c.tipo === item.tipo
+        && (item.percentual == null || String(c.percentual ?? '') === String(item.percentual)),
     );
 
-    if (!candidato) {
+    if (candidatos.length === 0) {
       results.push({
         ok: false,
         check: `${tag}: campanha correspondente localizável no banco`,
-        detail: 'não encontrada em campaignsFromDb por origem/destino/tipo',
+        detail: 'não encontrada em campaignsFromDb por origem/destino/tipo/percentual',
       });
       return;
     }
 
-    const passa3 = passaTresPortoes(candidato);
+    // EPSILON/D-086: Ofertas ativas é transparência, gateada por TRIAGEM (não por
+    // lastro-tier1 — esse gateia só o Deal Desk). Basta UMA candidata elegível.
+    const elegiveis = candidatos.filter(elegivelOfertaAtiva);
     results.push({
-      ok: passa3,
-      check: `${tag}: passa os 3 portões recomputado direto no banco`,
-      detail: passa3 ? 'ok' : `falhou: estado=${candidato.estado}, tier=${candidato.tier}, tl_score_bruto=${candidato.tl_score_bruto}`,
+      ok: elegiveis.length > 0,
+      check: `${tag}: elegível a Ofertas ativas recomputado no banco (vivo + conta + triada)`,
+      detail: elegiveis.length > 0 ? 'ok' : `nenhuma das ${candidatos.length} candidatas elegível (ex.: estado=${candidatos[0].estado}, triagem=${candidatos[0].triagem_categoria}, score=${candidatos[0].tl_score_bruto})`,
     });
 
-    let leituraEsperada = null;
-    try {
-      leituraEsperada = mapVeredito(candidato.veredito_bruto);
-    } catch {
-      leituraEsperada = null;
-    }
-    const bate = leituraEsperada !== null && leituraEsperada === item.leitura;
+    // A leitura tem de bater com o selo recomputado de ALGUMA candidata elegível:
+    // 'nao-confirmado' sem lastro; o veredito real com lastro (INV-03).
+    const bate = elegiveis.some((c) => leituraOfertaAtiva(c) === item.leitura);
     results.push({
       ok: bate,
-      check: `${tag}: leitura bate com veredito_bruto real do banco`,
-      detail: bate ? 'ok' : `leitura da edição="${item.leitura}", veredito_bruto do banco="${candidato.veredito_bruto}" (mapeado="${leituraEsperada}")`,
+      check: `${tag}: leitura bate com o selo recomputado (nao-confirmado sem lastro; veredito real com lastro)`,
+      detail: bate ? 'ok' : `leitura da edição="${item.leitura}" não bate com nenhuma candidata elegível (esperado ${elegiveis.map(leituraOfertaAtiva).join('/') || '—'})`,
     });
   });
 
@@ -349,8 +379,9 @@ export function checkCartoesBancos(edition = {}, campaignsFromDb = [], { bancosO
 
 /**
  * O que fechou nesta semana: cada item recomputa `estado='encerrada' AND
- * tier=1 AND tl_score_bruto IS NOT NULL AND vigencia_fim` na janela dos 7
- * dias direto no banco — sem cálculo novo, só leitura conferida.
+ * tl_score_bruto IS NOT NULL AND vigencia_fim` na janela dos 7 dias direto no
+ * banco — sem cálculo novo, só leitura conferida. RETROSPECTIVA, não exige tier=1
+ * (D-091, alinhado ao seletor).
  * @param {object} edition
  * @param {object[]} campaignsFromDb
  * @param {{hoje?:string, janelaDias?:number}} opts  `hoje` ausente ⇒ usa `edition.date`
@@ -383,10 +414,14 @@ export function checkFechouSemana(edition = {}, campaignsFromDb = [], { hoje, ja
 
     const vFimMs = Date.parse(candidato.vigencia_fim);
     const dentroJanela = !Number.isNaN(refMs) && !Number.isNaN(vFimMs) && vFimMs >= inicioMs && vFimMs <= refMs;
-    const ok = candidato.estado === 'encerrada' && Number(candidato.tier) === 1 && candidato.tl_score_bruto !== null && candidato.tl_score_bruto !== undefined && dentroJanela;
+    // RETROSPECTIVA (não recomendação): NÃO exige tier=1 — alinhado ao seletor
+    // (D-091). Pós-C1/D-082 nada é tier=1 por claim; exigir aqui divergia do
+    // seletor e reprovava o gate num dia com "o que fechou" legítimo. Régua =
+    // encerrada + conta (tl_score_bruto) + janela.
+    const ok = candidato.estado === 'encerrada' && candidato.tl_score_bruto !== null && candidato.tl_score_bruto !== undefined && dentroJanela;
     results.push({
       ok,
-      check: `${tag}: estado=encerrada AND tier=1 AND tl_score_bruto not null AND vigencia_fim na janela de ${janelaDias}d recomputado`,
+      check: `${tag}: estado=encerrada AND tl_score_bruto not null AND vigencia_fim na janela de ${janelaDias}d recomputado`,
       detail: ok ? 'ok' : `estado=${candidato.estado}, tier=${candidato.tier}, tl_score_bruto=${candidato.tl_score_bruto}, vigencia_fim=${candidato.vigencia_fim}, dentroJanela=${dentroJanela}`,
     });
   });
