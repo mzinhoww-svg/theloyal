@@ -1219,6 +1219,37 @@ prova-se por 5 dias úteis de edição válida **revisada**, com o envio adiado.
   idempotência, marcadores ausentes→erro); `tsc --noEmit` limpo na rota; test:v2
   483/483; smoke local do runner grava a linha do ledger no red-path.
 
+## D-090 — Texto de link em green-700 #007A57: green-600 reprova contraste AA (emenda à regra 8)
+**Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** design-review (Rams bot) + verificação própria + decisão do operador
+
+O review de design apontou que os links do corpo em **green-600 `#00A878`** reprovam
+contraste. **Verifiquei por conta própria** (não confiei no bot): green-600 sobre
+Paper `#FAF7F0` = **2.86:1**, sobre paper-dark `#F1ECE1` = **2.59:1**, sobre Surface
+`#FFFFFF` = **3.06:1** — todos abaixo do piso AA (4.5:1) e até do piso 3:1 nas faixas
+creme. A linha da CLAUDE.md que afirmava "green-600 4.6:1" estava **factualmente
+errada** (corrigida).
+
+- **Decisão do operador:** texto de LINK passa a **green-700 `#007A57`** (mesma
+  matiz, já é token). Mede **5.01 / 4.55 / 5.36** sobre paper/paper-dark/surface →
+  clara AA. green-600 segue em rótulo de veredito/accent e em chip (fill+text-pair).
+- **Correção no RENDERER, não no artefato:** `content/renders/0029.html` (onde o bot
+  comentou) é gerado — a sugestão inline sumiria no próximo run. Ajustei
+  `renderer/email.mjs` (`aLink` default → green-700; dois usos literais de `#00A878`
+  trocados). O beehiiv renderer usa `.link` temado pela plataforma (sem cor
+  hardcoded) → nada a mudar lá; seu `GREEN600` só aparece em fill/on-dark.
+- **Escopo contido:** eyebrows já usavam o accent `E = #007A57` (green-700); veredito
+  usa par bg/text no chip. O link era o único texto verde reprovando. NÃO expandi
+  para outras cores sem ordem.
+- **Junto (mesmo review, sem conflito de regra):** colunas numéricas mono
+  (Bônus/Milheiro) com `text-align:right` e a tabela de Ofertas ativas virou tabela
+  de DADOS real (`th scope="col"`, sem `role="presentation"`) — semântica de
+  cabeçalho para leitor de tela + dígitos empilhados para comparação vertical.
+- **Regra 8 emendada** na CLAUDE.md (link = green-700; resto = green-600) e a linha
+  de contraste corrigida com valores medidos.
+- **Provado:** `#00A878` no corpo do render nº29 = **0** (13 links → green-700);
+  `th scope=col` ×4; `text-align:right` ×8; test:v2 483/483; `renderer/email.test.mjs`
+  verde.
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Reconciliação C4 — decisões importadas de branches paralelas (2026-07-18)
 # ═══════════════════════════════════════════════════════════════════════════

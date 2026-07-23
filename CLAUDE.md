@@ -46,7 +46,7 @@ Não podem ser quebradas nem por pedido direto no meio da tarefa.
 5. Nunca usar emoji no corpo editorial ou em UI.
 6. Nunca usar avião, cartão 3D genérico, stock photo ou gradiente decorativo.
 7. **Amarelo `#F2C94C` nunca como texto** — somente fill com texto Ink por cima.
-8. **`#00C48C` (green-500) nunca como texto sobre Paper** — texto verde é sempre `#00A878` (green-600). green-500 só em fill/SVG e sobre Ink (dark).
+8. **`#00C48C` (green-500) nunca como texto sobre Paper** — green-500 só em fill/SVG e sobre Ink (dark). Texto verde é `#00A878` (green-600) em rótulos de veredito/accent e em fill+text-pair (chip). **Exceção — texto de LINK: `#007A57` (green-700)**, porque green-600 reprova contraste AA sobre Paper/Surface (~2.6–3.1:1) e green-700 clara ≥4.55:1 na mesma matiz (D-090).
 9. Faltou dado para cálculo ou veredito → classificar **"Não confirmado"**. Nunca chutar.
 10. Todo conteúdo com recomendação carrega o disclaimer: *"Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."*
 
@@ -127,7 +127,7 @@ Vira-lata caramelo cético — **companheiro do leitor, não selo** (o selo é o
 ## Acessibilidade (gates de publicação)
 
 - `html lang="pt-BR"`, skip link → `#conteudo`, landmarks `header`/`main`/`nav`/`footer`, **uma única `h1`**.
-- Contraste AA (Ink/Paper 17.2:1, Muted 7.1:1, green-600 4.6:1, blue-600 6.0:1, red-600 4.9:1). Body ≥ 16px.
+- Contraste AA sobre Paper `#FAF7F0` (medido): Ink 17.2:1, Muted 7.1:1, **green-700 (texto de link) 5.0:1** (green-600 NÃO é texto de link — reprova ~2.9:1, D-090), blue-600 4.8:1, red-600 4.9:1. Body ≥ 16px.
 - Foco visível custom (anel blue-600), alvos de toque ≥ 44px.
 - Formulário: label, `aria-invalid`, erro via `aria-describedby`, status em `aria-live`.
 - `prefers-reduced-motion` desliga idle do mascote, reveals, tilt, tracking de pupilas e smooth scroll.

@@ -49,7 +49,10 @@ const mono = (t, size = 12, color = SOFT) =>
   `<span style="font-family:'Courier New',Courier,monospace; font-size:${size}px; color:${color};">${esc(t)}</span>`;
 const templateImg = (src, alt = "") =>
   `<tr><td style="padding:0;"><img src="${esc(src)}" width="600" alt="${esc(alt)}" style="display:block; width:100%; max-width:600px; height:auto; border:0;" /></td></tr>`;
-const aLink = (url, innerHtml, color = "#00A878") =>
+// green-700 #007A57 em TEXTO DE LINK: green-600 #00A878 reprova contraste AA em
+// Paper/Surface (~2.6–3.1:1); green-700 clara 4.55–5.36:1 na mesma matiz (regra 8
+// emendada — verde de link é green-700; green-600 segue no resto).
+const aLink = (url, innerHtml, color = "#007A57") =>
   `<a href="${esc(url)}" style="color:${color}; text-decoration:underline;">${innerHtml}</a>`;
 
 function chip(vk) {
@@ -96,15 +99,20 @@ function ofertaAtivaRow(o) {
     : mono("—", 13, MUT);
   return `<tr>
 <td style="padding:8px 6px; border-bottom:1px solid ${HAIR}; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:${INK}; width:34%;"><strong>${esc(rotaDisplay(o))}</strong><br /><span style="font-size:11px; color:${MUT};">${sub}</span></td>
-<td style="padding:8px 6px; border-bottom:1px solid ${HAIR}; width:14%;">${mono(percentualLabel(o.percentual), 13, INK)}</td>
-<td style="padding:8px 6px; border-bottom:1px solid ${HAIR}; width:22%;">${cpmCell}</td>
+<td style="padding:8px 6px; border-bottom:1px solid ${HAIR}; width:14%; text-align:right;">${mono(percentualLabel(o.percentual), 13, INK)}</td>
+<td style="padding:8px 6px; border-bottom:1px solid ${HAIR}; width:22%; text-align:right;">${cpmCell}</td>
 <td style="padding:8px 6px; border-bottom:1px solid ${HAIR}; width:30%;">${chip(o.leitura)}</td>
 </tr>`;
 }
 function ofertasAtivasTable(itens) {
-  const th = (label) => `<td style="padding:6px; font-family:Arial,sans-serif; font-size:11px; color:${MUT}; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid ${HAIR};">${esc(label)}</td>`;
-  const header = `<tr>${th("Programa/rota")}${th("Bônus")}${th("Milheiro")}${th("Leitura")}</tr>`;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${header}${itens.map(ofertaAtivaRow).join("")}</table>`;
+  // Tabela de DADOS real (não role=presentation): th scope=col dá semântica de
+  // cabeçalho ao leitor de tela. Colunas numéricas (Bônus/Milheiro) alinhadas à
+  // direita, casando com o text-align:right das células — dígitos empilham na
+  // mesma borda para a comparação vertical que a tabela existe para permitir.
+  const th = (label, align = "left") =>
+    `<th scope="col" style="padding:6px; font-family:Arial,sans-serif; font-size:11px; color:${MUT}; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid ${HAIR}; text-align:${align}; font-weight:normal;">${esc(label)}</th>`;
+  const header = `<tr>${th("Programa/rota")}${th("Bônus", "right")}${th("Milheiro", "right")}${th("Leitura")}</tr>`;
+  return `<table width="100%" cellpadding="0" cellspacing="0" border="0">${header}${itens.map(ofertaAtivaRow).join("")}</table>`;
 }
 
 // Deals do dia (§1.2, D-057): card por item, numerado. Seção inteira omitida
@@ -148,7 +156,7 @@ function fechaLogoItem(f) {
   const partes = [
     `<strong>${esc(f.tag || "")}</strong> — ${esc(f.text || "")}`,
     f.cpm ? mono(f.cpm, 12, SOFT) : null,
-    f.url ? `<span style="font-size:12px; color:${MUT};">(${aLink(f.url, "fonte", "#00A878")})</span>` : null,
+    f.url ? `<span style="font-size:12px; color:${MUT};">(${aLink(f.url, "fonte")})</span>` : null,
   ].filter(Boolean);
   return `${paraRaw(partes.join(" "), 14, INK)}${sp(8)}`;
 }
@@ -321,7 +329,7 @@ ${ed.illustrative ? `<div style="font-family:Arial,sans-serif; font-size:12px; c
   // Fontes — obrigatório.
   const sources = Array.isArray(ed.sources) ? ed.sources : [];
   if (sources.length > 0) {
-    const links = sources.map((s) => `<a href="${esc(s.url)}" style="color:#00A878; text-decoration:underline;">${esc(s.label)}</a>`).join(" &middot; ");
+    const links = sources.map((s) => aLink(s.url, esc(s.label))).join(" &middot; ");
     P.push(sectionRow(18, `${eyebrow("Fontes", MUT)}${sp(6)}<p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:1.7; color:${SOFT};">${links}</p>`));
   }
 
