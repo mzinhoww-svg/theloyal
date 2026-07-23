@@ -31,7 +31,8 @@ import { ehFonteOficial, rotuloFonte } from './fontes.mjs';
 
 const INK = '#111111', PAPER = '#FAF7F0', PAPER_DARK = '#F1ECE1', SURFACE = '#FFFFFF';
 const LINE = '#E5E0D5', GRAY700 = '#3D3A34', GRAY500 = '#555555', GRAY400 = '#8A8578';
-const GREEN600 = '#00A878';
+const GREEN600 = '#00A878';       // fill/SVG e verde-texto sobre Ink (dark)
+const GREEN700 = '#007A57';       // verde de TEXTO/semântico em fundo claro (D-090 op.2)
 const RED600 = '#D64545', BLUE600 = '#315CFF';
 const YELLOW100 = '#FCF0CE', YELLOW500 = '#F2C94C';
 const MONO = 'JetBrains Mono, ui-monospace, monospace';
@@ -57,7 +58,7 @@ const VERDICT_LABEL = {
 // Cores de veredito: yellow-500 nunca como texto (regra 7) — Esperaria usa o
 // tom escuro de leitura sobre fill claro já sancionado no e-mail (#7A5B00).
 const VERDICT_COLOR = {
-  'vale-agir': GREEN600, 'vale-olhar': BLUE600, 'casos-especificos': GRAY400,
+  'vale-agir': GREEN700, 'vale-olhar': BLUE600, 'casos-especificos': GRAY400,
   esperaria: '#7A5B00', evitaria: RED600, 'nao-confirmado': GRAY400,
 };
 
@@ -76,7 +77,7 @@ function img(src, alt = '') { return `<img src="${esc(src)}" alt="${esc(alt)}">`
 function link(url, innerHtml) {
   return `<a class="link" href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">${innerHtml}</a>`;
 }
-function eyebrow(text, color = GREEN600) {
+function eyebrow(text, color = GREEN700) {
   return `<p><span style="color: ${color}; font-family: ${MONO}; font-size: 0.75rem">${esc(text.toUpperCase())}</span></p>`;
 }
 function section(innerHtml, attrs = {}) {

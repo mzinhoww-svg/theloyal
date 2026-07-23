@@ -114,7 +114,7 @@ export function ProReport({ report: r }: { report: ProReport }) {
                       {b.metric}
                       <span className="block font-mono text-xs text-gray-400">{b.unit}</span>
                     </td>
-                    <td className="py-3 pr-4 text-right text-green-600">{num(b.low)}</td>
+                    <td className="py-3 pr-4 text-right text-green-700">{num(b.low)}</td>
                     <td className="py-3 pr-4 text-right">{num(b.normal)}</td>
                     <td className="py-3 text-right text-red-600">{num(b.high)}</td>
                   </tr>

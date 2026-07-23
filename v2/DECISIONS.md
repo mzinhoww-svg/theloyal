@@ -1219,14 +1219,18 @@ prova-se por 5 dias úteis de edição válida **revisada**, com o envio adiado.
   idempotência, marcadores ausentes→erro); `tsc --noEmit` limpo na rota; test:v2
   483/483; smoke local do runner grava a linha do ledger no red-path.
 
-## D-090 — Texto de link em green-700 #007A57: green-600 reprova contraste AA (emenda à regra 8)
-**Data:** 2026-07-23 · **Status:** Fix de código (a11y nos links) APLICADO · emenda de brand-rule **PROPOSTA — aguarda ratificação do operador** · **Milestone:** M2.7 · **Origem:** design-review (Rams bot) + verificação própria
+## D-090 — Verde de texto/semântico em green-700 (opção 2 RATIFICADA): green-600 só fill/SVG, hover green-800
+**Data:** 2026-07-23 · **Status:** **RATIFICADA (opção 2)** e aplicada · **Milestone:** M2.7 · **Origem:** design-review (Rams bot) + verificação própria + ratificação do operador
 
-> **Governança (decisão do operador, 2026-07-23):** o *fix de código* (links →
-> green-700, correção de contraste) fica aplicado — reverter restauraria uma falha
-> WCAG. Mas a **emenda da regra 8** (formalizar "verde-texto = green-700") e qualquer
-> **extensão a texto de veredito** ficam **pendentes de ratificação**. NÃO propaguei
-> para o mapa TL Score nem para novas superfícies. Ver "Proposta pendente" abaixo.
+> **Ratificação (operador, 2026-07-23):** escolhida a **opção 2**. green-700
+> `#007A57` passa a ser o verde de **TEXTO e SEMÂNTICO em fundo claro** — links,
+> números/acentos verdes E o veredito **"Vale agir"** do mapa TL Score. green-600
+> `#00A878` fica **só para fill/SVG** (e verde-texto sobre Ink/dark, onde o verde
+> claro contrasta mais). **Hover cravado: green-800 `#005A3B`** (novo token). Fonte
+> de verdade atualizada: tailwind.config.ts (token 800 + papéis), CLAUDE.md (regra 8
+> + tabela + mapa TL Score + contraste + checklist), README.md, docs/CONTEXTO.
+> Nota: os docs DESIGN.md/BRAND-GUIDELINES da hierarquia NÃO são versionados no repo
+> — a fonte de verdade de cor in-repo é tailwind + CLAUDE.md (ambos atualizados).
 
 O review de design apontou que os links do corpo em **green-600 `#00A878`** reprovam
 contraste. **Verifiquei por conta própria** (não confiei no bot): green-600 sobre
@@ -1256,29 +1260,34 @@ errada** (corrigida).
 - **Provado:** `#00A878` no corpo do render nº29 = **0** (links → green-700);
   `th scope=col` ×4; `text-align:right` ×8; `renderer/email.test.mjs` verde.
 
-### Proposta pendente (para o operador RATIFICAR — não aplicada além do fix a11y)
+### Opção 2 RATIFICADA — aplicação e provas de contraste AA (por spot)
 
-O piso AA (4.5:1 texto normal) sobre Paper elimina green-600 `#00A878` (2.9:1) de
-**qualquer** uso como TEXTO. Hoje isso atinge só link (corrigido). A pergunta de marca
-é se o mapa semântico deve migrar o verde-texto inteiro para green-700. Opções:
+Verde-texto/semântico em fundo claro → **green-700 `#007A57`**; green-600 só fill/SVG
+(e verde-texto sobre Ink); hover → **green-800 `#005A3B`** (novo token).
 
-1. **Só link** (estado atual): link = green-700; veredito "Vale agir" segue green-600
-   em par bg/text no chip (fill claro), onde o contraste é do par, não sobre Paper.
-   *Custo:* nenhum; *risco:* "Vale agir" como TEXTO puro sobre Paper (se algum dia
-   usado assim) reprovaria.
-2. **Verde-texto = green-700 em tudo** (link + veredito "Vale agir" como texto):
-   green-700 vira o verde de texto; **green-600 `#00A878` desce para hover** (troca o
-   par atual green-600→green-700 do mapa TL Score, que passaria a green-700→green-800
-   — exige definir um green-800, ex.: ~`#005A3B`, que mede ~7:1). *Custo:* redefinir 1
-   token + tocar TLBadge/ui.tsx + tailwind.config; *ganho:* AA em todo verde-texto.
-3. **Verde-texto = green-700 em tudo, mantendo green-700 no hover** (sem novo token):
-   texto e hover no mesmo green-700 (sem diferenciação de hover no verde). *Custo:*
-   mínimo; *perda:* hover não muda de cor.
+**Provas AA medidas (piso 4.5:1 texto normal):**
+- green-700 texto sobre **Paper 5.01** · **Surface 5.36** · **green-100 fill 4.61** ✅
+- green-800 hover sobre **Paper 7.77** · **Surface 8.31** · **green-100 7.15** ✅
+- (dark) green-500 sobre Ink **8.34** ✅ — por isso o verde-texto sobre Ink fica
+  green-500/600, não green-700 (green-700 sobre Ink = 3.53, reprova).
 
-**Recomendo a opção 1 por ora** (menor superfície; o veredito não está reprovando hoje
-porque vive em chip com par bg/text). Se você quiser AA garantido em qualquer uso
-futuro de "Vale agir" como texto, opção 2 (com green-800 novo). Aguardo sua escolha
-antes de tocar veredito/TL Score/tailwind.
+**Superfícies tocadas:**
+- **email** (renderer/email.mjs): já em green-700 (link + `VERDICT_FAMILY.green.text`
+  + eyebrow). ✅
+- **beehiiv** (render-beehiiv.mjs): `VERDICT_COLOR['vale-agir']` e `eyebrow` default →
+  green-700; conta-resultado sobre Ink mantém green-600 (dark).
+- **/promocoes**: número de vivas `text-green-600` → `text-green-700`.
+- **ProReport**: coluna verde `text-green-600` → `text-green-700`.
+- **TLBadge / DailyEdition / EditionArticle / sections**: veredito já usava
+  `bg-green-100 text-green-700` (par correto) — nada a mudar.
+- **tailwind.config.ts**: `green.800 = #005A3B` + comentário de papéis.
+
+**Observação FORA do escopo desta mudança (reporto, não apliquei):** o **CTA primário**
+é green-600 **fill** com label **Paper** — `Paper sobre green-600 = 2.86:1`, reprova AA.
+Não está na lista de spots desta ratificação (que é texto/semântico) e o operador
+manteve green-600 como fill. `Ink sobre green-600 = 6.18` passa. **Decisão do operador
+pendente:** escurecer o fill do CTA para green-700 (Paper→5.02 AA) OU trocar o label do
+CTA para Ink. Não toquei o CTA sem ordem.
 
 ## D-091 — Integridade editorial do render: atribuição de fonte, filler zero, "o que fechou" ligado
 **Data:** 2026-07-23 · **Status:** Aplicada · **Milestone:** M2.7 · **Origem:** operador (auditoria do HTML real da nº29)

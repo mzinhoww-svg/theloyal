@@ -40,8 +40,9 @@ blog de cupom, não é comunicação oficial de programa, não é SaaS genérico
   4. Nunca urgência artificial ("corra", countdown, vermelho de urgência).
   5. Nunca emoji no corpo editorial ou UI.
   6. Nunca avião/cartão 3D/stock/gradiente decorativo.
-  7. Amarelo `#F2C94C` nunca como texto; verde de texto é sempre green-600
-     (`#00A878`), nunca green-500.
+  7. Amarelo `#F2C94C` nunca como texto; verde de texto/semântico em fundo claro
+     é green-700 (`#007A57`), hover green-800 (`#005A3B`); green-600 (`#00A878`) e
+     green-500 só em fill/SVG e sobre Ink (D-090 op.2).
   8. Faltou dado → classificar **"Não confirmado"**. Nunca chutar.
   9. Conteúdo com recomendação leva o disclaimer padrão.
 - Acessibilidade é gate: `lang="pt-BR"`, skip link, uma única `h1`, AA, alvos

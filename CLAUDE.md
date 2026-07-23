@@ -46,7 +46,7 @@ Não podem ser quebradas nem por pedido direto no meio da tarefa.
 5. Nunca usar emoji no corpo editorial ou em UI.
 6. Nunca usar avião, cartão 3D genérico, stock photo ou gradiente decorativo.
 7. **Amarelo `#F2C94C` nunca como texto** — somente fill com texto Ink por cima.
-8. **`#00C48C` (green-500) nunca como texto sobre Paper** — green-500 só em fill/SVG e sobre Ink (dark). Texto verde é `#00A878` (green-600). **Exceção a11y PROVISÓRIA (proposta, aguarda ratificação do operador — D-090):** o texto de LINK usa `#007A57` (green-700) *no código* (email/beehiiv), porque green-600 reprova contraste AA sobre Paper/Surface (~2.6–3.1:1). A **formalização** desta emenda e sua **extensão a texto de veredito** (ex.: "Vale agir") NÃO estão decididas — não propagar a novas superfícies nem ao mapa TL Score até o operador confirmar.
+8. **Verde de TEXTO/semântico em fundo claro é `#007A57` (green-700)** — links, veredito **"Vale agir"**, números e acentos verdes sobre Paper/Surface. green-600 `#00A878` reprova AA como texto (~2.6–3.1:1), então **green-600 fica só para FILL/SVG** (fundo de badge/gráfico, com label Ink por cima) **e para verde-texto sobre Ink (dark)**, onde o verde claro contrasta mais. **green-500 `#00C48C` nunca como texto sobre Paper** (só fill/SVG e sobre Ink). **Hover do verde-texto é `#005A3B` (green-800).** (D-090, opção 2 ratificada pelo operador.)
 9. Faltou dado para cálculo ou veredito → classificar **"Não confirmado"**. Nunca chutar.
 10. Todo conteúdo com recomendação carrega o disclaimer: *"Promoções podem mudar sem aviso. Confira sempre as regras no site oficial antes de comprar, transferir ou resgatar."*
 
@@ -68,7 +68,7 @@ Valores exatos (espelhados em `tailwind.config.ts`). Não inventar variações.
 | `surface` | `#FFFFFF` | Cards e painéis |
 | `line` | `#E5E0D5` | Bordas e divisores (nome evita conflito com a utility `border`) |
 | `gray-700/500/400` | `#3D3A34` / `#555555` / `#8A8578` | Ink dark / texto secundário / metadados |
-| `green-100/500/600/700` | `#D9F4E9` / `#00C48C` / `#00A878` / `#007A57` | fill / **fill+SVG** / **texto** / hover-texto |
+| `green-100/500/600/700/800` | `#D9F4E9` / `#00C48C` / `#00A878` / `#007A57` / `#005A3B` | fill claro / fill+SVG (+texto s/ Ink) / **fill+SVG** / **texto+semântico (claro)** / **hover-texto** |
 | `blue-100/600/700` | `#E4EAFF` / `#315CFF` / `#2547CC` | fill / Sinal do dia, links, foco / hover |
 | `yellow-100/500` | `#FCF0CE` / `#F2C94C` | fill claro / **fill (texto Ink)** |
 | `red-100/600/700` | `#F9E2E2` / `#D64545` / `#B53A3A` | fill / Evitaria, risco / hover |
@@ -77,7 +77,7 @@ Valores exatos (espelhados em `tailwind.config.ts`). Não inventar variações.
 **Mapa semântico TL Score** (obrigatório em qualquer UI com veredito):
 
 ```
-85–100  Vale agir             → green-600 (#00A878)
+85–100  Vale agir             → green-700 (#007A57)   [texto/semântico em claro]
 70–84   Vale olhar            → blue-600  (#315CFF)
 55–69   Só casos específicos  → gray-400  (#8A8578)
 40–54   Esperaria             → yellow-500 fill, texto Ink
@@ -127,7 +127,7 @@ Vira-lata caramelo cético — **companheiro do leitor, não selo** (o selo é o
 ## Acessibilidade (gates de publicação)
 
 - `html lang="pt-BR"`, skip link → `#conteudo`, landmarks `header`/`main`/`nav`/`footer`, **uma única `h1`**.
-- Contraste AA sobre Paper `#FAF7F0` (medido): Ink 17.2:1, Muted 7.1:1, **green-700 (texto de link) 5.0:1** (green-600 NÃO é texto de link — reprova ~2.9:1, D-090), blue-600 4.8:1, red-600 4.9:1. Body ≥ 16px.
+- Contraste AA sobre Paper `#FAF7F0` (medido): Ink 17.2:1, Muted 7.1:1, **green-700 (texto/semântico: link, "Vale agir") 5.0:1**, **green-800 (hover) 7.8:1**, blue-600 4.8:1, red-600 4.9:1 (green-600 NÃO é texto sobre claro — reprova ~2.9:1; só fill/SVG ou sobre Ink — D-090 op.2). Body ≥ 16px.
 - Foco visível custom (anel blue-600), alvos de toque ≥ 44px.
 - Formulário: label, `aria-invalid`, erro via `aria-describedby`, status em `aria-live`.
 - `prefers-reduced-motion` desliga idle do mascote, reveals, tilt, tracking de pupilas e smooth scroll.
@@ -153,7 +153,7 @@ Publisher: `npm run beehiiv` publica a edição **já renderizada** no Beehiiv s
 2. Números de análise em JetBrains Mono?
 3. Serif apenas em títulos?
 4. Fundo de página é Paper, não branco puro? Cards em Surface?
-5. Verde de texto é green-600? Amarelo só como fill com Ink?
+5. Verde de texto/semântico em claro é green-700 (green-600 só fill/SVG ou sobre Ink)? Amarelo só como fill com Ink?
 6. Veredito usa o vocabulário e a cor semântica corretos?
 7. Zero emoji, stock photo, avião, gradiente, urgência artificial?
 8. Contraste AA? Body ≥ 16px? Alvos ≥ 44px? Uma h1? Landmarks + skip link?

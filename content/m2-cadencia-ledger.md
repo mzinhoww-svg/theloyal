@@ -30,11 +30,11 @@
 <!-- CADENCIA:START -->
 | Data (BRT) | Nº | Gate | Render (revisão) | Revisão do operador |
 |------------|----|------|------------------|---------------------|
-| 2026-07-22 (QUARTA-FEIRA) | 29 | 🟢 VERDE | [/revisao/29](/revisao/29) | pendente |
+| 2026-07-22 (QUARTA-FEIRA) | 29 | 🟢 VERDE | [/revisao/29](/revisao/29) | ✅ ok (2026-07-23) |
 <!-- CADENCIA:END -->
 
-**Progresso:** 0/5 dias úteis consecutivos revisados. A série inicia no primeiro
-dia com edição VÁLIDA (gate verde) revisada pelo operador.
+**Progresso:** **1/5** dias úteis consecutivos revisados. Dia 1 (nº29, 2026-07-22)
+aprovado pelo operador — render conforme. Faltam 4.
 
 ## Como revisar um dia (operador)
 
